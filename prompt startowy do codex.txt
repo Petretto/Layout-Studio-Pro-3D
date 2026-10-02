@@ -1,0 +1,11 @@
+Kontynuuj realizację PLAN_ROZWOJU.md od bieżącego pakietu. Dobierz właściwy workflow zgodnie z AGENTS.md i dostępnymi skills.
+
+
+---------
+Dodać większe mnożniki przyspieszenia symulacji, niektóre procesy trwają dosyć długo.
+Dodać też czas w minutach i godzinach (dziesiętnie, czyli 120 min lub 2,5h) z możliwością przełączenia. Przy dłuższych procesach sekundy są mało czytelne.
+To zadanie na później - Niech wygenerowany raport w pdf będzie ładniejszy graficznie. Będzie przez to czytelniejszy.
+Przygotować szablon do wprowadzania, importu danych. Zarówno BOM jak i proces. Szablon na pewno w formie pliku .xlsx, mogą być też inne. By sZybko dostosować swoje dane do programu bez konieczności ich wpisywania.
+-------------
+
+

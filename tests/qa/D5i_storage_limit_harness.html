@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pl">
+<meta charset="utf-8">
+<title>D5i — izolowany test limitu localStorage</title>
+<h1>D5i — limit zapisu projektu 4</h1>
+<p>Wyłącznie port 5183. Wypełnia osobny klucz QA, nie zmienia zapisu projektu ani warsztatu.</p>
+<button id="fill" type="button">Wypełnij pamięć QA</button>
+<button id="release" type="button">Zwolnij pamięć QA</button>
+<p id="status" role="status">Oczekiwanie.</p>
+<a href="/">Otwórz aplikację</a>
+<script>
+  const key = 'D5i_storage_fill_QA';
+  const allowed = location.hostname === '127.0.0.1' && location.port === '5183';
+  document.querySelectorAll('button').forEach(button => button.disabled = !allowed);
+  document.querySelector('#fill').addEventListener('click', () => {
+    let content = '';
+    let filled = false;
+    for (const size of [128 * 1024, 2 * 1024]) {
+      const chunk = 'x'.repeat(size);
+      for (let attempt = 0; attempt < 1024; attempt++) {
+        try { localStorage.setItem(key, content + chunk); content += chunk; }
+        catch { filled = true; break; }
+      }
+    }
+    document.querySelector('#status').textContent = `Klucz QA: ${content.length} znaków; limit osiągnięty: ${filled}.`;
+  });
+  document.querySelector('#release').addEventListener('click', () => {
+    localStorage.removeItem(key);
+    document.querySelector('#status').textContent = 'Klucz QA zwolniony.';
+  });
+</script>
+</html>

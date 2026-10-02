@@ -1,0 +1,160 @@
+{
+  "id": "PROJ-MOTOR-01",
+  "name": "Linia Montażu Silników Elektrycznych EV (U-Shape)",
+  "createdAt": "2026-10-01T21:19:24.391Z",
+  "updatedAt": "2026-10-01T21:19:24.391Z",
+  "targetLayoutType": "UShape",
+  "facility": {
+    "widthMm": 24000,
+    "lengthMm": 32000,
+    "heightMm": 6000,
+    "gridSizeMm": 1000
+  },
+  "obstacles": [
+    {
+      "id": "COL-1",
+      "name": "Słup Nośny Hali C1",
+      "xMm": 12000,
+      "yMm": 10000,
+      "widthMm": 800,
+      "lengthMm": 800,
+      "heightMm": 6000
+    },
+    {
+      "id": "COL-2",
+      "name": "Słup Nośny Hali C2",
+      "xMm": 12000,
+      "yMm": 22000,
+      "widthMm": 800,
+      "lengthMm": 800,
+      "heightMm": 6000
+    }
+  ],
+  "demand": {
+    "yearlyDemand": 75000,
+    "workingDaysPerYear": 250,
+    "shiftsPerDay": 2,
+    "hoursPerShift": 8,
+    "plannedBreaksMinutesPerShift": 30,
+    "oeePercent": 90
+  },
+  "processSteps": [
+    {
+      "id": "1",
+      "name": "Przygotowanie korpusu i wprasowanie magnesów",
+      "standardTimeSeconds": 42,
+      "vaTimeSeconds": 36,
+      "nvaTimeSeconds": 6,
+      "sequenceNumber": 1,
+      "predecessorIds": []
+    },
+    {
+      "id": "1.1",
+      "name": "Podmontaż i wyważanie wirnika",
+      "standardTimeSeconds": 35,
+      "vaTimeSeconds": 30,
+      "nvaTimeSeconds": 5,
+      "sequenceNumber": 2,
+      "predecessorIds": [
+        "1"
+      ]
+    },
+    {
+      "id": "1.2",
+      "name": "Zgrzewanie i lutowanie uzwojeń",
+      "standardTimeSeconds": 50,
+      "vaTimeSeconds": 42,
+      "nvaTimeSeconds": 8,
+      "sequenceNumber": 3,
+      "predecessorIds": [
+        "1.1"
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Montaż obudowy i dokręcanie śrub z kontrolą momentu",
+      "standardTimeSeconds": 38,
+      "vaTimeSeconds": 32,
+      "nvaTimeSeconds": 6,
+      "sequenceNumber": 4,
+      "predecessorIds": [
+        "1.2"
+      ]
+    },
+    {
+      "id": "3",
+      "name": "Test elektryczny EOL & bramka jakości AOI",
+      "standardTimeSeconds": 45,
+      "vaTimeSeconds": 40,
+      "nvaTimeSeconds": 5,
+      "sequenceNumber": 5,
+      "predecessorIds": [
+        "2"
+      ]
+    },
+    {
+      "id": "4",
+      "name": "Znakowanie laserowe QR i pakowanie do kartonu EUR",
+      "standardTimeSeconds": 28,
+      "vaTimeSeconds": 22,
+      "nvaTimeSeconds": 6,
+      "sequenceNumber": 6,
+      "predecessorIds": [
+        "3"
+      ]
+    }
+  ],
+  "bom": [
+    {
+      "id": "B1",
+      "partNumber": "MOT-ST-01",
+      "name": "Stojan silnika z uzwojeniem",
+      "quantityPerUnit": 1,
+      "container": "BoxKLT",
+      "packageQuantity": 12,
+      "associatedProcessStepId": "1",
+      "unitCost": 145
+    },
+    {
+      "id": "B2",
+      "partNumber": "MOT-BG-02",
+      "name": "Łożysko kulkowe precyzyjne 6004",
+      "quantityPerUnit": 2,
+      "container": "BoxKLT",
+      "packageQuantity": 40,
+      "associatedProcessStepId": "1.1",
+      "unitCost": 18
+    },
+    {
+      "id": "B3",
+      "partNumber": "MOT-HS-03",
+      "name": "Obudowa aluminiowa IP67",
+      "quantityPerUnit": 1,
+      "container": "Pallet",
+      "packageQuantity": 24,
+      "associatedProcessStepId": "2",
+      "unitCost": 85
+    },
+    {
+      "id": "B4",
+      "partNumber": "MOT-SC-04",
+      "name": "Śruba M6x25 DIN912 kl. 10.9",
+      "quantityPerUnit": 6,
+      "container": "BoxKLT",
+      "packageQuantity": 200,
+      "associatedProcessStepId": "2",
+      "unitCost": 1.2
+    },
+    {
+      "id": "B5",
+      "partNumber": "MOT-BX-05",
+      "name": "Karton transportowy EUR",
+      "quantityPerUnit": 1,
+      "container": "Pallet",
+      "packageQuantity": 50,
+      "associatedProcessStepId": "4",
+      "unitCost": 6.5
+    }
+  ],
+  "layoutObjects": []
+}

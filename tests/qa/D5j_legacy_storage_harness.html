@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pl">
+<meta charset="utf-8">
+<title>D5j — izolowany test starszego zapisu lokalnego</title>
+<h1>D5j — starszy zapis lokalny</h1>
+<p>Wyłącznie port 5184. Zastępuje zapis projektu 4 danymi testowymi z dołączonego przykładu silników EV.</p>
+<button id="seed" type="button">Ustaw starszy zapis QA</button>
+<button id="check" type="button">Sprawdź zapis QA</button>
+<p id="status" role="status">Oczekiwanie.</p>
+<a href="/">Otwórz aplikację</a>
+<script>
+  const key = 'layout-studio-v3';
+  const allowed = location.hostname === '127.0.0.1' && location.port === '5184';
+  document.querySelectorAll('button').forEach(button => button.disabled = !allowed);
+  const inspect = async () => {
+    const raw = localStorage.getItem(key);
+    if (raw === null) { document.querySelector('#status').textContent = 'Brak zapisu.'; return; }
+    const project = JSON.parse(raw).project;
+    const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+    const sha = Array.from(new Uint8Array(hash), b => b.toString(16).padStart(2, '0')).join('');
+    document.querySelector('#status').textContent = `Schemat: ${project.schemaVersion ?? 'brak'}; operacje: ${project.processSteps.length}; BOM: ${project.bom.length}; znaki: ${raw.length}; SHA256: ${sha}`;
+  };
+  document.querySelector('#seed').addEventListener('click', async () => {
+    const response = await fetch('/tests/qa/D5f_legacy_motor_untagged.json');
+    if (!response.ok) throw new Error('Brak fixture QA.');
+    const project = await response.json();
+    localStorage.setItem(key, JSON.stringify({ project, at: '2026-10-02T00:00:00.000Z' }));
+    await inspect();
+  });
+  document.querySelector('#check').addEventListener('click', inspect);
+</script>
+</html>

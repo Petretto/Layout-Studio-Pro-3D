@@ -1,0 +1,1640 @@
+{
+  "id": "5cfaed82-1130-4cc8-bb28-ae31ecc14d5a",
+  "name": "QA pakiet B — Eko",
+  "createdAt": "2026-09-29T21:22:14.115Z",
+  "updatedAt": "2026-09-30T03:53:44.103Z",
+  "targetLayoutType": "ProcessFlow",
+  "facility": {
+    "widthMm": 40000,
+    "lengthMm": 40000,
+    "heightMm": 6000,
+    "gridSizeMm": 100
+  },
+  "obstacles": [],
+  "demand": {
+    "yearlyDemand": 1500,
+    "workingDaysPerYear": 250,
+    "shiftsPerDay": 1,
+    "hoursPerShift": 8,
+    "plannedBreaksMinutesPerShift": 30,
+    "oeePercent": 90
+  },
+  "processSteps": [
+    {
+      "id": "OP10",
+      "name": "Podmontaż stelaża",
+      "standardTimeSeconds": 3480,
+      "vaTimeSeconds": 3340,
+      "nvaTimeSeconds": 140,
+      "sequenceNumber": 1,
+      "predecessorIds": [],
+      "assignedWorkstationId": "ST-QA-01"
+    },
+    {
+      "id": "OP11",
+      "name": "Montaż stelaża w ramie",
+      "standardTimeSeconds": 600,
+      "vaTimeSeconds": 580,
+      "nvaTimeSeconds": 20,
+      "sequenceNumber": 2,
+      "predecessorIds": [
+        "OP10"
+      ],
+      "assignedWorkstationId": "ST-QA-02"
+    },
+    {
+      "id": "OP12",
+      "name": "Etap I",
+      "standardTimeSeconds": 3590,
+      "vaTimeSeconds": 3500,
+      "nvaTimeSeconds": 90,
+      "sequenceNumber": 3,
+      "predecessorIds": [
+        "OP11"
+      ],
+      "assignedWorkstationId": "ST-QA-03"
+    },
+    {
+      "id": "OP13",
+      "name": "Podmontaż drzwi lewych",
+      "standardTimeSeconds": 2640,
+      "vaTimeSeconds": 2600,
+      "nvaTimeSeconds": 40,
+      "sequenceNumber": 4,
+      "predecessorIds": [],
+      "assignedWorkstationId": "ST-QA-04"
+    },
+    {
+      "id": "OP14",
+      "name": "Podmontaż front panel",
+      "standardTimeSeconds": 1320,
+      "vaTimeSeconds": 1210,
+      "nvaTimeSeconds": 110,
+      "sequenceNumber": 5,
+      "predecessorIds": [],
+      "assignedWorkstationId": "ST-QA-05"
+    },
+    {
+      "id": "OP15",
+      "name": "Podmonta drzwi prawych",
+      "standardTimeSeconds": 2640,
+      "vaTimeSeconds": 2600,
+      "nvaTimeSeconds": 40,
+      "sequenceNumber": 6,
+      "predecessorIds": [],
+      "assignedWorkstationId": "ST-QA-06"
+    },
+    {
+      "id": "OP16",
+      "name": "Podmontaż tylnego panela",
+      "standardTimeSeconds": 1920,
+      "vaTimeSeconds": 1840,
+      "nvaTimeSeconds": 80,
+      "sequenceNumber": 7,
+      "predecessorIds": [],
+      "assignedWorkstationId": "ST-QA-07"
+    },
+    {
+      "id": "OP17",
+      "name": "Podmontaż dachu",
+      "standardTimeSeconds": 1680,
+      "vaTimeSeconds": 1540,
+      "nvaTimeSeconds": 140,
+      "sequenceNumber": 8,
+      "predecessorIds": [],
+      "assignedWorkstationId": "ST-QA-08"
+    },
+    {
+      "id": "OP18",
+      "name": "Podmontaż „trumny”",
+      "standardTimeSeconds": 1200,
+      "vaTimeSeconds": 1050,
+      "nvaTimeSeconds": 150,
+      "sequenceNumber": 9,
+      "predecessorIds": [
+        "OP17"
+      ],
+      "assignedWorkstationId": "ST-QA-09"
+    },
+    {
+      "id": "OP22",
+      "name": "Montaż drzwi lewych na ramie [CZAS TESTOWY]",
+      "standardTimeSeconds": 600,
+      "vaTimeSeconds": 510,
+      "nvaTimeSeconds": 90,
+      "sequenceNumber": 10,
+      "predecessorIds": [
+        "OP12",
+        "OP13"
+      ],
+      "assignedWorkstationId": "ST-QA-10"
+    },
+    {
+      "id": "OP23",
+      "name": "Montaż drzwi prawych na ramie [CZAS TESTOWY]",
+      "standardTimeSeconds": 600,
+      "vaTimeSeconds": 510,
+      "nvaTimeSeconds": 90,
+      "sequenceNumber": 11,
+      "predecessorIds": [
+        "OP12",
+        "OP15"
+      ],
+      "assignedWorkstationId": "ST-QA-11"
+    },
+    {
+      "id": "OP24",
+      "name": "Montaż panelu przedniego na ramie [CZAS TESTOWY]",
+      "standardTimeSeconds": 480,
+      "vaTimeSeconds": 408,
+      "nvaTimeSeconds": 72,
+      "sequenceNumber": 12,
+      "predecessorIds": [
+        "OP22",
+        "OP23",
+        "OP14"
+      ],
+      "assignedWorkstationId": "ST-QA-12"
+    },
+    {
+      "id": "OP25",
+      "name": "Montaż panelu tylnego na ramie [CZAS TESTOWY]",
+      "standardTimeSeconds": 480,
+      "vaTimeSeconds": 408,
+      "nvaTimeSeconds": 72,
+      "sequenceNumber": 13,
+      "predecessorIds": [
+        "OP22",
+        "OP23",
+        "OP16"
+      ],
+      "assignedWorkstationId": "ST-QA-13"
+    },
+    {
+      "id": "OP19",
+      "name": "Test",
+      "standardTimeSeconds": 1800,
+      "vaTimeSeconds": 1650,
+      "nvaTimeSeconds": 150,
+      "sequenceNumber": 14,
+      "predecessorIds": [
+        "OP24",
+        "OP25",
+        "OP17"
+      ],
+      "assignedWorkstationId": "ST-QA-14"
+    },
+    {
+      "id": "OP20",
+      "name": "Montaż „trumny” na ramie",
+      "standardTimeSeconds": 1200,
+      "vaTimeSeconds": 1010,
+      "nvaTimeSeconds": 190,
+      "sequenceNumber": 15,
+      "predecessorIds": [
+        "OP19",
+        "OP18"
+      ],
+      "assignedWorkstationId": "ST-QA-15"
+    },
+    {
+      "id": "OP21",
+      "name": "Pakowanie",
+      "standardTimeSeconds": 1320,
+      "vaTimeSeconds": 1200,
+      "nvaTimeSeconds": 120,
+      "sequenceNumber": 16,
+      "predecessorIds": [
+        "OP20"
+      ],
+      "assignedWorkstationId": "ST-QA-16"
+    }
+  ],
+  "bom": [
+    {
+      "id": "BOM-1",
+      "partNumber": "EKO-OP10-01",
+      "name": "Profil stelaża pionowy",
+      "quantityPerUnit": 4,
+      "container": "Pallet",
+      "packageQuantity": 40,
+      "associatedProcessStepId": "OP10",
+      "unitCost": 42
+    },
+    {
+      "id": "BOM-2",
+      "partNumber": "EKO-OP10-02",
+      "name": "Poprzeczka stelaża",
+      "quantityPerUnit": 6,
+      "container": "Pallet",
+      "packageQuantity": 60,
+      "associatedProcessStepId": "OP10",
+      "unitCost": 28
+    },
+    {
+      "id": "BOM-3",
+      "partNumber": "EKO-OP10-03",
+      "name": "Kątownik łączący stelaż",
+      "quantityPerUnit": 8,
+      "container": "BoxKLT",
+      "packageQuantity": 100,
+      "associatedProcessStepId": "OP10",
+      "unitCost": 4.5
+    },
+    {
+      "id": "BOM-4",
+      "partNumber": "EKO-OP10-04",
+      "name": "Śruba M8x20",
+      "quantityPerUnit": 32,
+      "container": "BoxKLT",
+      "packageQuantity": 500,
+      "associatedProcessStepId": "OP10",
+      "unitCost": 0.65
+    },
+    {
+      "id": "BOM-5",
+      "partNumber": "EKO-OP10-05",
+      "name": "Nakrętka kołnierzowa M8",
+      "quantityPerUnit": 32,
+      "container": "BoxKLT",
+      "packageQuantity": 500,
+      "associatedProcessStepId": "OP10",
+      "unitCost": 0.48
+    },
+    {
+      "id": "BOM-6",
+      "partNumber": "EKO-OP11-01",
+      "name": "Rama bazowa",
+      "quantityPerUnit": 1,
+      "container": "Pallet",
+      "packageQuantity": 8,
+      "associatedProcessStepId": "OP11",
+      "unitCost": 320
+    },
+    {
+      "id": "BOM-7",
+      "partNumber": "EKO-OP11-02",
+      "name": "Podkładka poziomująca",
+      "quantityPerUnit": 4,
+      "container": "BoxKLT",
+      "packageQuantity": 100,
+      "associatedProcessStepId": "OP11",
+      "unitCost": 2.2
+    },
+    {
+      "id": "BOM-8",
+      "partNumber": "EKO-OP11-03",
+      "name": "Wspornik mocowania stelaża",
+      "quantityPerUnit": 4,
+      "container": "BoxKLT",
+      "packageQuantity": 40,
+      "associatedProcessStepId": "OP11",
+      "unitCost": 14
+    },
+    {
+      "id": "BOM-9",
+      "partNumber": "EKO-OP11-04",
+      "name": "Śruba M10x30",
+      "quantityPerUnit": 8,
+      "container": "BoxKLT",
+      "packageQuantity": 200,
+      "associatedProcessStepId": "OP11",
+      "unitCost": 1.2
+    },
+    {
+      "id": "BOM-10",
+      "partNumber": "EKO-OP11-05",
+      "name": "Podkładka płaska M10",
+      "quantityPerUnit": 8,
+      "container": "BoxKLT",
+      "packageQuantity": 500,
+      "associatedProcessStepId": "OP11",
+      "unitCost": 0.22
+    },
+    {
+      "id": "BOM-11",
+      "partNumber": "EKO-OP12-01",
+      "name": "Płyta montażowa wewnętrzna",
+      "quantityPerUnit": 1,
+      "container": "Pallet",
+      "packageQuantity": 20,
+      "associatedProcessStepId": "OP12",
+      "unitCost": 185
+    },
+    {
+      "id": "BOM-12",
+      "partNumber": "EKO-OP12-02",
+      "name": "Szyna montażowa DIN",
+      "quantityPerUnit": 2,
+      "container": "Tray",
+      "packageQuantity": 30,
+      "associatedProcessStepId": "OP12",
+      "unitCost": 18
+    },
+    {
+      "id": "BOM-13",
+      "partNumber": "EKO-OP12-03",
+      "name": "Wiązka przewodów wewnętrzna",
+      "quantityPerUnit": 1,
+      "container": "BoxKLT",
+      "packageQuantity": 10,
+      "associatedProcessStepId": "OP12",
+      "unitCost": 95
+    },
+    {
+      "id": "BOM-14",
+      "partNumber": "EKO-OP12-04",
+      "name": "Przepust kablowy",
+      "quantityPerUnit": 6,
+      "container": "BoxKLT",
+      "packageQuantity": 100,
+      "associatedProcessStepId": "OP12",
+      "unitCost": 3.8
+    },
+    {
+      "id": "BOM-15",
+      "partNumber": "EKO-OP12-05",
+      "name": "Opaska kablowa",
+      "quantityPerUnit": 12,
+      "container": "BoxKLT",
+      "packageQuantity": 1000,
+      "associatedProcessStepId": "OP12",
+      "unitCost": 0.18
+    },
+    {
+      "id": "BOM-16",
+      "partNumber": "EKO-OP13-01",
+      "name": "Skrzydło drzwi lewe",
+      "quantityPerUnit": 1,
+      "container": "Pallet",
+      "packageQuantity": 12,
+      "associatedProcessStepId": "OP13",
+      "unitCost": 210
+    },
+    {
+      "id": "BOM-17",
+      "partNumber": "EKO-OP13-02",
+      "name": "Zawias drzwi lewych",
+      "quantityPerUnit": 3,
+      "container": "BoxKLT",
+      "packageQuantity": 60,
+      "associatedProcessStepId": "OP13",
+      "unitCost": 9.5
+    },
+    {
+      "id": "BOM-18",
+      "partNumber": "EKO-OP13-03",
+      "name": "Komplet uszczelki drzwi lewych",
+      "quantityPerUnit": 1,
+      "container": "Carton",
+      "packageQuantity": 20,
+      "associatedProcessStepId": "OP13",
+      "unitCost": 24
+    },
+    {
+      "id": "BOM-19",
+      "partNumber": "EKO-OP13-04",
+      "name": "Zamek drzwi lewych",
+      "quantityPerUnit": 1,
+      "container": "BoxKLT",
+      "packageQuantity": 40,
+      "associatedProcessStepId": "OP13",
+      "unitCost": 32
+    },
+    {
+      "id": "BOM-20",
+      "partNumber": "EKO-OP13-05",
+      "name": "Nit zrywalny 4x10",
+      "quantityPerUnit": 12,
+      "container": "BoxKLT",
+      "packageQuantity": 1000,
+      "associatedProcessStepId": "OP13",
+      "unitCost": 0.25
+    },
+    {
+      "id": "BOM-21",
+      "partNumber": "EKO-OP14-01",
+      "name": "Panel przedni",
+      "quantityPerUnit": 1,
+      "container": "Pallet",
+      "packageQuantity": 15,
+      "associatedProcessStepId": "OP14",
+      "unitCost": 160
+    },
+    {
+      "id": "BOM-22",
+      "partNumber": "EKO-OP14-02",
+      "name": "Ramka panelu sterowania",
+      "quantityPerUnit": 1,
+      "container": "Tray",
+      "packageQuantity": 20,
+      "associatedProcessStepId": "OP14",
+      "unitCost": 38
+    },
+    {
+      "id": "BOM-23",
+      "partNumber": "EKO-OP14-03",
+      "name": "Przycisk podświetlany",
+      "quantityPerUnit": 2,
+      "container": "BoxKLT",
+      "packageQuantity": 50,
+      "associatedProcessStepId": "OP14",
+      "unitCost": 22
+    },
+    {
+      "id": "BOM-24",
+      "partNumber": "EKO-OP14-04",
+      "name": "Tabliczka opisowa panelu",
+      "quantityPerUnit": 1,
+      "container": "Carton",
+      "packageQuantity": 100,
+      "associatedProcessStepId": "OP14",
+      "unitCost": 4.8
+    },
+    {
+      "id": "BOM-25",
+      "partNumber": "EKO-OP14-05",
+      "name": "Śruba panelu M4x12",
+      "quantityPerUnit": 8,
+      "container": "BoxKLT",
+      "packageQuantity": 500,
+      "associatedProcessStepId": "OP14",
+      "unitCost": 0.16
+    },
+    {
+      "id": "BOM-26",
+      "partNumber": "EKO-OP15-01",
+      "name": "Skrzydło drzwi prawe",
+      "quantityPerUnit": 1,
+      "container": "Pallet",
+      "packageQuantity": 12,
+      "associatedProcessStepId": "OP15",
+      "unitCost": 210
+    },
+    {
+      "id": "BOM-27",
+      "partNumber": "EKO-OP15-02",
+      "name": "Zawias drzwi prawych",
+      "quantityPerUnit": 3,
+      "container": "BoxKLT",
+      "packageQuantity": 60,
+      "associatedProcessStepId": "OP15",
+      "unitCost": 9.5
+    },
+    {
+      "id": "BOM-28",
+      "partNumber": "EKO-OP15-03",
+      "name": "Komplet uszczelki drzwi prawych",
+      "quantityPerUnit": 1,
+      "container": "Carton",
+      "packageQuantity": 20,
+      "associatedProcessStepId": "OP15",
+      "unitCost": 24
+    },
+    {
+      "id": "BOM-29",
+      "partNumber": "EKO-OP15-04",
+      "name": "Zamek drzwi prawych",
+      "quantityPerUnit": 1,
+      "container": "BoxKLT",
+      "packageQuantity": 40,
+      "associatedProcessStepId": "OP15",
+      "unitCost": 32
+    },
+    {
+      "id": "BOM-30",
+      "partNumber": "EKO-OP15-05",
+      "name": "Śruba zawiasu M5x16",
+      "quantityPerUnit": 12,
+      "container": "BoxKLT",
+      "packageQuantity": 500,
+      "associatedProcessStepId": "OP15",
+      "unitCost": 0.28
+    },
+    {
+      "id": "BOM-31",
+      "partNumber": "EKO-OP16-01",
+      "name": "Panel tylny",
+      "quantityPerUnit": 1,
+      "container": "Pallet",
+      "packageQuantity": 15,
+      "associatedProcessStepId": "OP16",
+      "unitCost": 145
+    },
+    {
+      "id": "BOM-32",
+      "partNumber": "EKO-OP16-02",
+      "name": "Kratka wentylacyjna",
+      "quantityPerUnit": 2,
+      "container": "Carton",
+      "packageQuantity": 20,
+      "associatedProcessStepId": "OP16",
+      "unitCost": 18
+    },
+    {
+      "id": "BOM-33",
+      "partNumber": "EKO-OP16-03",
+      "name": "Wkład filtra wentylacyjnego",
+      "quantityPerUnit": 2,
+      "container": "Carton",
+      "packageQuantity": 40,
+      "associatedProcessStepId": "OP16",
+      "unitCost": 12
+    },
+    {
+      "id": "BOM-34",
+      "partNumber": "EKO-OP16-04",
+      "name": "Uszczelka panelu tylnego",
+      "quantityPerUnit": 1,
+      "container": "Carton",
+      "packageQuantity": 30,
+      "associatedProcessStepId": "OP16",
+      "unitCost": 19
+    },
+    {
+      "id": "BOM-35",
+      "partNumber": "EKO-OP16-05",
+      "name": "Śruba panelu M5x12",
+      "quantityPerUnit": 10,
+      "container": "BoxKLT",
+      "packageQuantity": 500,
+      "associatedProcessStepId": "OP16",
+      "unitCost": 0.24
+    },
+    {
+      "id": "BOM-36",
+      "partNumber": "EKO-OP17-01",
+      "name": "Panel dachowy",
+      "quantityPerUnit": 1,
+      "container": "Pallet",
+      "packageQuantity": 12,
+      "associatedProcessStepId": "OP17",
+      "unitCost": 190
+    },
+    {
+      "id": "BOM-37",
+      "partNumber": "EKO-OP17-02",
+      "name": "Wspornik dachu",
+      "quantityPerUnit": 4,
+      "container": "BoxKLT",
+      "packageQuantity": 40,
+      "associatedProcessStepId": "OP17",
+      "unitCost": 12
+    },
+    {
+      "id": "BOM-38",
+      "partNumber": "EKO-OP17-03",
+      "name": "Komplet uszczelnienia dachu",
+      "quantityPerUnit": 1,
+      "container": "Carton",
+      "packageQuantity": 20,
+      "associatedProcessStepId": "OP17",
+      "unitCost": 26
+    },
+    {
+      "id": "BOM-39",
+      "partNumber": "EKO-OP17-04",
+      "name": "Śruba dachowa M6x20",
+      "quantityPerUnit": 12,
+      "container": "BoxKLT",
+      "packageQuantity": 300,
+      "associatedProcessStepId": "OP17",
+      "unitCost": 0.42
+    },
+    {
+      "id": "BOM-40",
+      "partNumber": "EKO-OP17-05",
+      "name": "Zaślepka otworu dachowego",
+      "quantityPerUnit": 4,
+      "container": "BoxKLT",
+      "packageQuantity": 200,
+      "associatedProcessStepId": "OP17",
+      "unitCost": 1.1
+    },
+    {
+      "id": "BOM-41",
+      "partNumber": "EKO-OP18-01",
+      "name": "Korpus zespołu górnego",
+      "quantityPerUnit": 1,
+      "container": "Pallet",
+      "packageQuantity": 8,
+      "associatedProcessStepId": "OP18",
+      "unitCost": 280
+    },
+    {
+      "id": "BOM-42",
+      "partNumber": "EKO-OP18-02",
+      "name": "Pokrywa zespołu górnego",
+      "quantityPerUnit": 1,
+      "container": "Pallet",
+      "packageQuantity": 12,
+      "associatedProcessStepId": "OP18",
+      "unitCost": 120
+    },
+    {
+      "id": "BOM-43",
+      "partNumber": "EKO-OP18-03",
+      "name": "Izolator mocowania zespołu",
+      "quantityPerUnit": 4,
+      "container": "BoxKLT",
+      "packageQuantity": 100,
+      "associatedProcessStepId": "OP18",
+      "unitCost": 5.5
+    },
+    {
+      "id": "BOM-44",
+      "partNumber": "EKO-OP18-04",
+      "name": "Złącze zespołu górnego",
+      "quantityPerUnit": 2,
+      "container": "Tray",
+      "packageQuantity": 40,
+      "associatedProcessStepId": "OP18",
+      "unitCost": 16
+    },
+    {
+      "id": "BOM-45",
+      "partNumber": "EKO-OP18-05",
+      "name": "Śruba zespołu M6x16",
+      "quantityPerUnit": 8,
+      "container": "BoxKLT",
+      "packageQuantity": 500,
+      "associatedProcessStepId": "OP18",
+      "unitCost": 0.36
+    },
+    {
+      "id": "BOM-46",
+      "partNumber": "EKO-OP19-01",
+      "name": "Etykieta wyniku testu",
+      "quantityPerUnit": 1,
+      "container": "Carton",
+      "packageQuantity": 1000,
+      "associatedProcessStepId": "OP19",
+      "unitCost": 0.12
+    },
+    {
+      "id": "BOM-47",
+      "partNumber": "EKO-OP19-02",
+      "name": "Plomba kontroli jakości",
+      "quantityPerUnit": 2,
+      "container": "BoxKLT",
+      "packageQuantity": 500,
+      "associatedProcessStepId": "OP19",
+      "unitCost": 0.35
+    },
+    {
+      "id": "BOM-48",
+      "partNumber": "EKO-OP19-03",
+      "name": "Chusteczka bezpyłowa",
+      "quantityPerUnit": 2,
+      "container": "Carton",
+      "packageQuantity": 200,
+      "associatedProcessStepId": "OP19",
+      "unitCost": 0.45
+    },
+    {
+      "id": "BOM-49",
+      "partNumber": "EKO-OP19-04",
+      "name": "Karta pomiarowa wyrobu",
+      "quantityPerUnit": 1,
+      "container": "Carton",
+      "packageQuantity": 500,
+      "associatedProcessStepId": "OP19",
+      "unitCost": 0.08
+    },
+    {
+      "id": "BOM-50",
+      "partNumber": "EKO-OP19-05",
+      "name": "Jednorazowa osłona złącza testowego",
+      "quantityPerUnit": 2,
+      "container": "BoxKLT",
+      "packageQuantity": 100,
+      "associatedProcessStepId": "OP19",
+      "unitCost": 0.6
+    },
+    {
+      "id": "BOM-51",
+      "partNumber": "EKO-OP20-01",
+      "name": "Wspornik zespołu do ramy",
+      "quantityPerUnit": 4,
+      "container": "BoxKLT",
+      "packageQuantity": 40,
+      "associatedProcessStepId": "OP20",
+      "unitCost": 18
+    },
+    {
+      "id": "BOM-52",
+      "partNumber": "EKO-OP20-02",
+      "name": "Poduszka wibroizolacyjna",
+      "quantityPerUnit": 4,
+      "container": "BoxKLT",
+      "packageQuantity": 80,
+      "associatedProcessStepId": "OP20",
+      "unitCost": 8.5
+    },
+    {
+      "id": "BOM-53",
+      "partNumber": "EKO-OP20-03",
+      "name": "Śruba mocująca M8x35",
+      "quantityPerUnit": 8,
+      "container": "BoxKLT",
+      "packageQuantity": 200,
+      "associatedProcessStepId": "OP20",
+      "unitCost": 0.85
+    },
+    {
+      "id": "BOM-54",
+      "partNumber": "EKO-OP20-04",
+      "name": "Podkładka sprężysta M8",
+      "quantityPerUnit": 8,
+      "container": "BoxKLT",
+      "packageQuantity": 500,
+      "associatedProcessStepId": "OP20",
+      "unitCost": 0.19
+    },
+    {
+      "id": "BOM-55",
+      "partNumber": "EKO-OP20-05",
+      "name": "Przewód wyrównawczy z końcówkami",
+      "quantityPerUnit": 1,
+      "container": "BoxKLT",
+      "packageQuantity": 30,
+      "associatedProcessStepId": "OP20",
+      "unitCost": 7.8
+    },
+    {
+      "id": "BOM-56",
+      "partNumber": "EKO-OP21-01",
+      "name": "Paleta transportowa",
+      "quantityPerUnit": 1,
+      "container": "Pallet",
+      "packageQuantity": 15,
+      "associatedProcessStepId": "OP21",
+      "unitCost": 48
+    },
+    {
+      "id": "BOM-57",
+      "partNumber": "EKO-OP21-02",
+      "name": "Karton ochronny wyrobu",
+      "quantityPerUnit": 1,
+      "container": "Pallet",
+      "packageQuantity": 20,
+      "associatedProcessStepId": "OP21",
+      "unitCost": 32
+    },
+    {
+      "id": "BOM-58",
+      "partNumber": "EKO-OP21-03",
+      "name": "Narożnik ochronny piankowy",
+      "quantityPerUnit": 8,
+      "container": "Carton",
+      "packageQuantity": 120,
+      "associatedProcessStepId": "OP21",
+      "unitCost": 1.4
+    },
+    {
+      "id": "BOM-59",
+      "partNumber": "EKO-OP21-04",
+      "name": "Odcinek taśmy spinającej 3 m",
+      "quantityPerUnit": 4,
+      "container": "Carton",
+      "packageQuantity": 100,
+      "associatedProcessStepId": "OP21",
+      "unitCost": 1.65
+    },
+    {
+      "id": "BOM-60",
+      "partNumber": "EKO-OP21-05",
+      "name": "Etykieta wysyłkowa",
+      "quantityPerUnit": 2,
+      "container": "Carton",
+      "packageQuantity": 1000,
+      "associatedProcessStepId": "OP21",
+      "unitCost": 0.15
+    }
+  ],
+  "layoutObjects": [
+    {
+      "id": "TBL-WS-1",
+      "name": "Stanowisko 1",
+      "type": "TableESD",
+      "xMm": 10350,
+      "yMm": 16750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "ST-QA-UNKNOWN"
+    },
+    {
+      "id": "FIFO-WS-1",
+      "name": "FIFO WS-1",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 10350,
+      "yMm": 15350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "ST-QA-01"
+    },
+    {
+      "id": "MAT-WS-1",
+      "name": "Obsada 1 · WS-1",
+      "type": "OperatorErgoMat",
+      "xMm": 10350,
+      "yMm": 17850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "ST-QA-01"
+    },
+    {
+      "id": "TBL-WS-2",
+      "name": "Stanowisko 2",
+      "type": "TableESD",
+      "xMm": 12850,
+      "yMm": 16750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "ST-QA-02"
+    },
+    {
+      "id": "FIFO-WS-2",
+      "name": "FIFO WS-2",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 12850,
+      "yMm": 15350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "ST-QA-02"
+    },
+    {
+      "id": "MAT-WS-2",
+      "name": "Obsada 1 · WS-2",
+      "type": "OperatorErgoMat",
+      "xMm": 12850,
+      "yMm": 17850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "ST-QA-02"
+    },
+    {
+      "id": "TBL-WS-3",
+      "name": "Stanowisko 3",
+      "type": "TableESD",
+      "xMm": 15350,
+      "yMm": 16750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "ST-QA-03"
+    },
+    {
+      "id": "FIFO-WS-3",
+      "name": "FIFO WS-3",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 15350,
+      "yMm": 15350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "ST-QA-03"
+    },
+    {
+      "id": "MAT-WS-3",
+      "name": "Obsada 1 · WS-3",
+      "type": "OperatorErgoMat",
+      "xMm": 15350,
+      "yMm": 17850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "ST-QA-03"
+    },
+    {
+      "id": "TBL-WS-4",
+      "name": "Stanowisko 4",
+      "type": "TableESD",
+      "xMm": 10350,
+      "yMm": 22750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "ST-QA-04"
+    },
+    {
+      "id": "FIFO-WS-4",
+      "name": "FIFO WS-4",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 10350,
+      "yMm": 21350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "ST-QA-04"
+    },
+    {
+      "id": "MAT-WS-4",
+      "name": "Obsada 1 · WS-4",
+      "type": "OperatorErgoMat",
+      "xMm": 10350,
+      "yMm": 23850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "ST-QA-04"
+    },
+    {
+      "id": "TBL-WS-5",
+      "name": "Stanowisko 5",
+      "type": "TableESD",
+      "xMm": 10350,
+      "yMm": 10750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "ST-QA-05"
+    },
+    {
+      "id": "FIFO-WS-5",
+      "name": "FIFO WS-5",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 10350,
+      "yMm": 9350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "ST-QA-05"
+    },
+    {
+      "id": "MAT-WS-5",
+      "name": "Obsada 1 · WS-5",
+      "type": "OperatorErgoMat",
+      "xMm": 10350,
+      "yMm": 11850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "ST-QA-05"
+    },
+    {
+      "id": "TBL-WS-6",
+      "name": "Stanowisko 6",
+      "type": "TableESD",
+      "xMm": 10350,
+      "yMm": 28750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "ST-QA-06"
+    },
+    {
+      "id": "FIFO-WS-6",
+      "name": "FIFO WS-6",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 10350,
+      "yMm": 27350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "ST-QA-06"
+    },
+    {
+      "id": "MAT-WS-6",
+      "name": "Obsada 1 · WS-6",
+      "type": "OperatorErgoMat",
+      "xMm": 10350,
+      "yMm": 29850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "ST-QA-06"
+    },
+    {
+      "id": "TBL-WS-7",
+      "name": "Stanowisko 7",
+      "type": "TableESD",
+      "xMm": 10350,
+      "yMm": 4750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "ST-QA-07"
+    },
+    {
+      "id": "FIFO-WS-7",
+      "name": "FIFO WS-7",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 10350,
+      "yMm": 3350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "ST-QA-07"
+    },
+    {
+      "id": "MAT-WS-7",
+      "name": "Obsada 1 · WS-7",
+      "type": "OperatorErgoMat",
+      "xMm": 10350,
+      "yMm": 5850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "ST-QA-07"
+    },
+    {
+      "id": "TBL-WS-8",
+      "name": "Stanowisko 8",
+      "type": "TableESD",
+      "xMm": 10350,
+      "yMm": 34750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "ST-QA-08"
+    },
+    {
+      "id": "FIFO-WS-8",
+      "name": "FIFO WS-8",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 10350,
+      "yMm": 33350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "ST-QA-08"
+    },
+    {
+      "id": "MAT-WS-8",
+      "name": "Obsada 1 · WS-8",
+      "type": "OperatorErgoMat",
+      "xMm": 10350,
+      "yMm": 35850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "ST-QA-08"
+    },
+    {
+      "id": "TBL-WS-9",
+      "name": "Stanowisko 9",
+      "type": "TableESD",
+      "xMm": 12850,
+      "yMm": 22750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "ST-QA-09"
+    },
+    {
+      "id": "FIFO-WS-9",
+      "name": "FIFO WS-9",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 12850,
+      "yMm": 21350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "ST-QA-09"
+    },
+    {
+      "id": "MAT-WS-9",
+      "name": "Obsada 1 · WS-9",
+      "type": "OperatorErgoMat",
+      "xMm": 12850,
+      "yMm": 23850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "ST-QA-09"
+    },
+    {
+      "id": "TBL-WS-10",
+      "name": "Stanowisko 10",
+      "type": "TableESD",
+      "xMm": 17850,
+      "yMm": 16750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "ST-QA-10"
+    },
+    {
+      "id": "FIFO-WS-10",
+      "name": "FIFO WS-10",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 17850,
+      "yMm": 15350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "ST-QA-10"
+    },
+    {
+      "id": "MAT-WS-10",
+      "name": "Obsada 1 · WS-10",
+      "type": "OperatorErgoMat",
+      "xMm": 17850,
+      "yMm": 17850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "ST-QA-10"
+    },
+    {
+      "id": "TBL-WS-11",
+      "name": "Stanowisko 11",
+      "type": "TableESD",
+      "xMm": 17850,
+      "yMm": 22750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "ST-QA-11"
+    },
+    {
+      "id": "FIFO-WS-11",
+      "name": "FIFO WS-11",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 17850,
+      "yMm": 21350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "ST-QA-11"
+    },
+    {
+      "id": "MAT-WS-11",
+      "name": "Obsada 1 · WS-11",
+      "type": "OperatorErgoMat",
+      "xMm": 17850,
+      "yMm": 23850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "ST-QA-11"
+    },
+    {
+      "id": "TBL-WS-12",
+      "name": "Stanowisko 12",
+      "type": "TableESD",
+      "xMm": 20350,
+      "yMm": 16750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "ST-QA-12"
+    },
+    {
+      "id": "FIFO-WS-12",
+      "name": "FIFO WS-12",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 20350,
+      "yMm": 15350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "ST-QA-12"
+    },
+    {
+      "id": "MAT-WS-12",
+      "name": "Obsada 1 · WS-12",
+      "type": "OperatorErgoMat",
+      "xMm": 20350,
+      "yMm": 17850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "ST-QA-12"
+    },
+    {
+      "id": "TBL-WS-13",
+      "name": "Stanowisko 13",
+      "type": "TableESD",
+      "xMm": 20350,
+      "yMm": 22750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "ST-QA-13"
+    },
+    {
+      "id": "FIFO-WS-13",
+      "name": "FIFO WS-13",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 20350,
+      "yMm": 21350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "ST-QA-13"
+    },
+    {
+      "id": "MAT-WS-13",
+      "name": "Obsada 1 · WS-13",
+      "type": "OperatorErgoMat",
+      "xMm": 20350,
+      "yMm": 23850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "ST-QA-13"
+    },
+    {
+      "id": "TBL-WS-14",
+      "name": "Stanowisko 14",
+      "type": "TableESD",
+      "xMm": 22850,
+      "yMm": 16750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "ST-QA-14"
+    },
+    {
+      "id": "FIFO-WS-14",
+      "name": "FIFO WS-14",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 22850,
+      "yMm": 15350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "ST-QA-14"
+    },
+    {
+      "id": "MAT-WS-14",
+      "name": "Obsada 1 · WS-14",
+      "type": "OperatorErgoMat",
+      "xMm": 22850,
+      "yMm": 17850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "ST-QA-14"
+    },
+    {
+      "id": "TBL-WS-15",
+      "name": "Stanowisko 15",
+      "type": "TableESD",
+      "xMm": 25350,
+      "yMm": 16750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "ST-QA-15"
+    },
+    {
+      "id": "FIFO-WS-15",
+      "name": "FIFO WS-15",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 25350,
+      "yMm": 15350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "ST-QA-15"
+    },
+    {
+      "id": "MAT-WS-15",
+      "name": "Obsada 1 · WS-15",
+      "type": "OperatorErgoMat",
+      "xMm": 25350,
+      "yMm": 17850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "ST-QA-15"
+    },
+    {
+      "id": "TBL-WS-16",
+      "name": "Stanowisko 16",
+      "type": "TableESD",
+      "xMm": 27850,
+      "yMm": 16750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "ST-QA-16"
+    },
+    {
+      "id": "FIFO-WS-16",
+      "name": "FIFO WS-16",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 27850,
+      "yMm": 15350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "ST-QA-16"
+    },
+    {
+      "id": "MAT-WS-16",
+      "name": "Obsada 1 · WS-16",
+      "type": "OperatorErgoMat",
+      "xMm": 27850,
+      "yMm": 17850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "ST-QA-16"
+    },
+    {
+      "id": "MAT-IN",
+      "name": "Wejście materiału",
+      "type": "MaterialIn",
+      "xMm": 7250,
+      "yMm": 16750,
+      "zMm": 0,
+      "widthMm": 2400,
+      "lengthMm": 1600,
+      "heightMm": 100,
+      "rotationDeg": 0,
+      "colorHex": "#7c3aed"
+    },
+    {
+      "id": "FINISHED-GOODS",
+      "name": "Wyroby gotowe",
+      "type": "FinishedGoods",
+      "xMm": 30350,
+      "yMm": 16750,
+      "zMm": 0,
+      "widthMm": 2400,
+      "lengthMm": 1600,
+      "heightMm": 100,
+      "rotationDeg": 0,
+      "colorHex": "#10b981"
+    }
+  ],
+  "schemaVersion": 5,
+  "algorithm": "Manual",
+  "currency": "PLN",
+  "layoutMode": "auto",
+  "layoutSettings": {
+    "tableWidthMm": 1800,
+    "tableLengthMm": 900,
+    "spacingMm": 700,
+    "aisleMm": 2000
+  },
+  "workstationSettings": {},
+  "stations": [
+    {
+      "id": "ST-QA-01",
+      "name": "Stanowisko 1",
+      "operationIds": [
+        "OP10"
+      ]
+    },
+    {
+      "id": "ST-QA-02",
+      "name": "Stanowisko 2",
+      "operationIds": [
+        "OP11"
+      ]
+    },
+    {
+      "id": "ST-QA-03",
+      "name": "Stanowisko 3",
+      "operationIds": [
+        "OP12"
+      ]
+    },
+    {
+      "id": "ST-QA-04",
+      "name": "Stanowisko 4",
+      "operationIds": [
+        "OP13"
+      ]
+    },
+    {
+      "id": "ST-QA-05",
+      "name": "Stanowisko 5",
+      "operationIds": [
+        "OP14"
+      ]
+    },
+    {
+      "id": "ST-QA-06",
+      "name": "Stanowisko 6",
+      "operationIds": [
+        "OP15"
+      ]
+    },
+    {
+      "id": "ST-QA-07",
+      "name": "Stanowisko 7",
+      "operationIds": [
+        "OP16"
+      ]
+    },
+    {
+      "id": "ST-QA-08",
+      "name": "Stanowisko 8",
+      "operationIds": [
+        "OP17"
+      ]
+    },
+    {
+      "id": "ST-QA-09",
+      "name": "Stanowisko 9",
+      "operationIds": [
+        "OP18"
+      ]
+    },
+    {
+      "id": "ST-QA-10",
+      "name": "Stanowisko 10",
+      "operationIds": [
+        "OP22"
+      ]
+    },
+    {
+      "id": "ST-QA-11",
+      "name": "Stanowisko 11",
+      "operationIds": [
+        "OP23"
+      ]
+    },
+    {
+      "id": "ST-QA-12",
+      "name": "Stanowisko 12",
+      "operationIds": [
+        "OP24"
+      ]
+    },
+    {
+      "id": "ST-QA-13",
+      "name": "Stanowisko 13",
+      "operationIds": [
+        "OP25"
+      ]
+    },
+    {
+      "id": "ST-QA-14",
+      "name": "Stanowisko 14",
+      "operationIds": [
+        "OP19"
+      ]
+    },
+    {
+      "id": "ST-QA-15",
+      "name": "Stanowisko 15",
+      "operationIds": [
+        "OP20"
+      ]
+    },
+    {
+      "id": "ST-QA-16",
+      "name": "Stanowisko 16",
+      "operationIds": [
+        "OP21"
+      ]
+    }
+  ]
+}

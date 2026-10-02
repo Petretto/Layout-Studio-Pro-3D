@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="pl">
+<meta charset="utf-8">
+<title>D5g — zgodność starszych zapisów</title>
+<h1>D5g — izolowany test starszych otoczek localStorage</h1>
+<p>Wyłącznie port 5180. Przycisk usuwa nowe pole archiwum z obu testowych zapisów, zachowując projekty.</p>
+<button id="seed" type="button">Utwórz starsze otoczki QA</button>
+<p id="status" role="status">Oczekiwanie.</p>
+<a href="/">Otwórz aplikację</a>
+<script>
+  const allowed = location.hostname === '127.0.0.1' && location.port === '5180';
+  const button = document.querySelector('#seed');
+  button.disabled = !allowed;
+  button.addEventListener('click', () => {
+    const keys = ['layout-studio-v3', 'layout-studio-stations-v5'];
+    for (const key of keys) {
+      const saved = JSON.parse(localStorage.getItem(key));
+      if (!saved?.project) throw new Error(`Brak projektu QA: ${key}`);
+      delete saved.importSourceBase64;
+      localStorage.setItem(key, JSON.stringify(saved));
+    }
+    document.querySelector('#status').textContent = 'Zapisano obie starsze otoczki bez pola archiwum.';
+  });
+</script>
+</html>

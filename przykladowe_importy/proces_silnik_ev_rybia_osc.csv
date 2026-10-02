@@ -1,0 +1,17 @@
+ID Kroku;Nazwa Operacji;Czas Standardowy [s];VA [s];NVA [s];Poprzednicy
+10;Przyjecie korpusu i bazowanie na przyrzadzie;24;19;5;
+11;Przygotowanie magnesow i kontrola polaryzacji;38;32;6;
+12;Wprasowanie magnesow do korpusu wirnika;46;40;6;11
+20;Montaz pakietu wirnika w korpusie;42;35;7;"10;12"
+21;Przygotowanie drutu nawojowego i izolacji;34;28;6;
+22;Nawijanie uzwojen stojana;68;60;8;21
+23;Lutowanie wyprowadzen i test ciaglosci stojana;49;41;8;22
+30;Osadzenie stojana i polaczenie z korpusem;55;46;9;"20;23"
+31;Przygotowanie wiazki elektrycznej i zlaczy;31;25;6;
+32;Montaz wiazki i czujnika polozenia;43;35;8;31
+40;Montaz pokryw oraz dokrecanie srub momentem;51;42;9;"30;32"
+41;Przygotowanie elementow chlodzenia i uszczelnien;27;21;6;
+42;Montaz krocow chlodzenia i test szczelnosci;44;35;9;41
+50;Test elektryczny EOL i kontrola jakosci AOI;62;52;10;"40;42"
+51;Przygotowanie etykiet QR i dokumentacji jakosciowej;18;12;6;
+60;Znakowanie laserowe QR i pakowanie koncowe;36;27;9;"50;51"

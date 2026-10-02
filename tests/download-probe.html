@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pl">
+<meta charset="utf-8">
+<title>Diagnostyka pobierania — dane syntetyczne</title>
+<h1>Diagnostyka pobierania</h1>
+<p>Wyłącznie syntetyczny plik JSON. Strona nie odczytuje danych projektu.</p>
+<p><a href="/probe.json" download="probe-http.json">Pobierz JSON przez HTTP</a></p>
+<p><a id="blob-link" download="probe-blob.json">Pobierz JSON przez stały link Blob</a></p>
+<p><a id="data-link" download="probe-data.json">Pobierz JSON przez link Data</a></p>
+<button id="detached">Pobierz JSON przez chwilowy link Blob</button>
+<p role="status" id="status">Gotowe</p>
+<script>
+const content = JSON.stringify({test:'download-probe',value:42});
+const link = document.getElementById('blob-link');
+link.href = URL.createObjectURL(new Blob([content],{type:'application/json'}));
+document.getElementById('data-link').href = 'data:application/json;charset=utf-8,' + encodeURIComponent(content);
+document.getElementById('detached').addEventListener('click',()=>{
+  const url = URL.createObjectURL(new Blob([content],{type:'application/json'}));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'probe-detached.json';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  document.getElementById('status').textContent = 'Wywołano pobieranie chwilowego linku';
+});
+</script>
+</html>

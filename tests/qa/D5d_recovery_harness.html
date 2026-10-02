@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="pl">
+<meta charset="utf-8">
+<title>D5d — test odzyskiwania zapisu v5</title>
+<h1>D5d — izolowany test localStorage</h1>
+<p>Ta strona działa wyłącznie na 127.0.0.1:5177. Przycisk zastępuje testowy zapis warsztatu v5 uszkodzonym znacznikiem.</p>
+<button id="seed" type="button">Ustaw uszkodzony zapis QA</button>
+<p id="status" role="status">Oczekiwanie.</p>
+<a href="/">Otwórz aplikację</a>
+<script>
+  const marker = 'D5d_CORRUPTED_LOCAL_STORAGE_QA_20261001';
+  const allowed = location.hostname === '127.0.0.1' && location.port === '5177';
+  document.querySelector('#seed').disabled = !allowed;
+  document.querySelector('#seed').addEventListener('click', () => {
+    localStorage.setItem('layout-studio-stations-v5', marker);
+    document.querySelector('#status').textContent = `Zapisano znacznik: ${marker}`;
+  });
+</script>
+</html>

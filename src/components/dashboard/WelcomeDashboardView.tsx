@@ -1,0 +1,27 @@
+import React, { useRef } from 'react';
+import { ArrowRight, Box, FileUp, FolderOpen, GitCommit, Plus, Sparkles } from 'lucide-react';
+import { ProjectData } from '../../core/models/types';
+
+interface WelcomeDashboardViewProps { project: ProjectData; setProject: React.Dispatch<React.SetStateAction<ProjectData>>; onOpenTab: (tabId: string) => void; }
+
+export const WelcomeDashboardView: React.FC<WelcomeDashboardViewProps> = ({ project, setProject, onOpenTab }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const processCount = project.processSteps.length;
+  const workContent = project.processSteps.reduce((total, step) => total + step.standardTimeSeconds, 0);
+  const createProject = () => {
+    const now = new Date().toISOString();
+    setProject({ id: `PROJ-${Date.now().toString().slice(-6)}`, name: 'Nowy projekt linii', createdAt: now, updatedAt: now, targetLayoutType: 'UShape', facility: { widthMm: 24000, lengthMm: 30000, heightMm: 6000, gridSizeMm: 1000 }, obstacles: [], demand: { yearlyDemand: 60000, workingDaysPerYear: 250, shiftsPerDay: 2, hoursPerShift: 8, plannedBreaksMinutesPerShift: 30, oeePercent: 90 }, processSteps: [], bom: [], layoutObjects: [] });
+    onOpenTab('demand');
+  };
+  const importProject = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (loadEvent) => { try { const imported = JSON.parse(loadEvent.target?.result as string); if (!imported?.name || !imported?.demand || !Array.isArray(imported?.processSteps)) throw new Error('invalid'); setProject(imported); onOpenTab('dashboard'); } catch { alert('Wybierz poprawny plik projektu JSON.'); } };
+    reader.readAsText(file); event.target.value = '';
+  };
+  return <div className="h-full overflow-y-auto"><div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+    <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-6 shadow-xl"><div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between"><div><div className="mb-2 flex items-center gap-2 text-xs font-semibold text-blue-400"><Sparkles className="h-4 w-4" /> PROJEKT LINII</div><h1 className="text-2xl font-bold text-slate-100">{project.name}</h1><p className="mt-1 text-sm text-slate-400">Zacznij od popytu, ułóż przepływ, a potem przejdź do materiałów i layoutu.</p></div><button onClick={() => onOpenTab(processCount ? 'process' : 'demand')} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500">{processCount ? 'Kontynuuj projekt' : 'Skonfiguruj projekt'} <ArrowRight className="h-4 w-4" /></button></div></section>
+    <section className="grid gap-4 sm:grid-cols-3"><button onClick={createProject} className="rounded-2xl border border-slate-800 bg-slate-900 p-5 text-left transition hover:border-blue-500/60 hover:bg-slate-800"><span className="mb-4 inline-flex rounded-xl bg-blue-500/10 p-2.5 text-blue-400"><Plus className="h-5 w-5" /></span><h2 className="font-semibold text-slate-100">Nowy projekt</h2><p className="mt-1 text-xs leading-relaxed text-slate-400">Ustaw popyt i zbuduj własny proces od zera.</p></button><button onClick={() => fileInputRef.current?.click()} className="rounded-2xl border border-slate-800 bg-slate-900 p-5 text-left transition hover:border-emerald-500/60 hover:bg-slate-800"><span className="mb-4 inline-flex rounded-xl bg-emerald-500/10 p-2.5 text-emerald-400"><FileUp className="h-5 w-5" /></span><h2 className="font-semibold text-slate-100">Importuj JSON</h2><p className="mt-1 text-xs leading-relaxed text-slate-400">Wczytaj zapisany projekt i pracuj dalej.</p></button><button onClick={() => onOpenTab('viewport3d')} className="rounded-2xl border border-slate-800 bg-slate-900 p-5 text-left transition hover:border-violet-500/60 hover:bg-slate-800"><span className="mb-4 inline-flex rounded-xl bg-violet-500/10 p-2.5 text-violet-400"><Box className="h-5 w-5" /></span><h2 className="font-semibold text-slate-100">Zobacz layout 3D</h2><p className="mt-1 text-xs leading-relaxed text-slate-400">Otwórz aktualny układ hali i symulację.</p></button></section>
+    <section className="rounded-2xl border border-slate-800 bg-slate-900/70"><div className="flex items-center justify-between border-b border-slate-800 px-5 py-4"><div className="flex items-center gap-2 text-sm font-semibold text-slate-100"><FolderOpen className="h-4 w-4 text-blue-400" /> Stan projektu</div><button onClick={() => onOpenTab('process')} className="inline-flex items-center gap-1 text-xs font-semibold text-blue-400 hover:text-blue-300">Edytuj przepływ <GitCommit className="h-3.5 w-3.5" /></button></div><div className="grid divide-y divide-slate-800 sm:grid-cols-3 sm:divide-x sm:divide-y-0"><div className="p-5"><p className="text-xs text-slate-500">Operacje</p><p className="mt-1 text-xl font-bold text-slate-100">{processCount}</p></div><div className="p-5"><p className="text-xs text-slate-500">Czas pracy</p><p className="mt-1 text-xl font-bold text-slate-100">{workContent} <span className="text-sm font-medium text-slate-500">s / szt.</span></p></div><div className="p-5"><p className="text-xs text-slate-500">Materiałów BOM</p><p className="mt-1 text-xl font-bold text-slate-100">{project.bom.length}</p></div></div></section>
+  </div><input ref={fileInputRef} type="file" accept=".json" onChange={importProject} className="hidden" /></div>;
+};
