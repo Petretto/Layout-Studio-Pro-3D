@@ -87,3 +87,7 @@ Jest to moduł trwałości niepodłączony jeszcze do interfejsu. Następny paki
 ## Pakiet 2.1f — kontrolowane zastąpienie
 
 Istniejący szkic można teraz zastąpić po pobraniu jego kopii, przygotowaniu nowego podglądu i osobnym potwierdzeniu. Dla uszkodzonego zapisu pobierany jest dokładny surowy tekst; dla poprawnego — pełna koperta wraz z oryginalnym źródłem. `replaceDomainDraft` porównuje poprzedni tekst tuż przed zapisem i zapisuje tylko zweryfikowany szkic. Konflikt lub błąd pamięci pozostawia poprzednią wartość; UI wymaga ponownego pobrania kopii. Zapis szkicu nadal nie zmienia aktywnych danych v4/v5 ani wyników bilansu i symulacji. Dalszy zakres 2.1 to edytor jawnych danych domenowych i odbiór ich zapisania, ponownego otwarcia oraz referencji.
+
+## Pakiet 2.1g — osoby i pule
+
+Szkic 6 ma osobny edytor osób i pul z ręcznie podawanymi ID, nazwami oraz członkostwem. Zmiana nazwy zachowuje ID i powiązania. Usunięcie osoby wskazanej w puli jest blokowane, dopóki użytkownik nie zmieni członkostwa. Każda zaakceptowana edycja oraz Cofnij/Ponów są walidowane i zapisywane pod odrębnym kluczem szkicu; źródło v4/v5 pozostaje nienaruszone. Osoby i pule są obecnie definicjami roboczymi, bez przypisania do operacji i bez udziału w bilansie lub symulacji. Kolejne pakiety powinny objąć wyposażenie, wyrób, podzespoły i odpowiednie referencje bez domyślania się danych procesu.

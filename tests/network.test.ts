@@ -13,6 +13,7 @@ import {reviseStations} from '../src/core/stationRegistry';
 import {previewStationMigration,prepareStationMigration} from '../src/core/stationMigration';
 import {previewDomainMigrationFromV4,previewDomainMigrationFromV5,verifyDomainMigrationPreview} from '../src/core/domainMigrationPreview';
 import {parseDomainProjectV6,prepareDomainMigration} from '../src/core/domainProject';
+import {editDomainPeople} from '../src/core/domainPeopleEditing';
 import {DOMAIN_DRAFT_STORAGE_KEY,readDomainDraft,replaceDomainDraft,saveDomainDraft} from '../src/core/domainDraftStorage';
 import {parseStationProjectV5} from '../src/core/stationProject';
 import {runStationBalancing,moveStationOperation} from '../src/core/stationBalancing';
@@ -126,6 +127,42 @@ test('2.1f: jawne zastąpienie szkicu zachowuje aktywne projekty i wymaga dokła
   assert.equal(recovered.saved.originalJson,v5);
   assert.equal(readDomainDraft(storage).status,'valid');
   assert.throws(()=>replaceDomainDraft(storage,fromV4,recovered.raw+'x'),/zmienił się/);
+});
+
+test('2.1g: osoby i pule mają trwałe ID, kontrolowane referencje i bezpieczny zapis',()=>{
+  const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+  const prepared=prepareDomainMigration(previewDomainMigrationFromV5(original));
+  const start=prepared.project;
+  const a=editDomainPeople(start,{kind:'add-worker',id:'PERSON-1',name:'Anna QA'});
+  const b=editDomainPeople(a,{kind:'add-worker',id:'PERSON-2',name:'Bartek QA'});
+  assert.deepEqual(start.workers,[]);
+  assert.throws(()=>editDomainPeople(b,{kind:'add-worker',id:'PERSON-1',name:'Duplikat'}),/już istnieje/);
+  const renamed=editDomainPeople(b,{kind:'rename-worker',id:'PERSON-1',name:'Anna Nowa'});
+  assert.deepEqual(renamed.workers.map(worker=>worker.id),['PERSON-1','PERSON-2']);
+  assert.equal(renamed.workers[0].name,'Anna Nowa');
+  const pooled=editDomainPeople(renamed,{kind:'add-pool',id:'POOL-1',name:'Zespół QA',workerIds:['PERSON-1','PERSON-2']});
+  assert.throws(()=>editDomainPeople(pooled,{kind:'remove-worker',id:'PERSON-1'}),/należy do puli/);
+  assert.throws(()=>editDomainPeople(pooled,{kind:'add-pool',id:'POOL-2',name:'Błąd',workerIds:['OBCA']}),/nieznany lub powtórzony/);
+  assert.throws(()=>editDomainPeople(pooled,{kind:'edit-pool',id:'POOL-1',name:'Błąd',workerIds:['PERSON-1','PERSON-1']}),/nieznany lub powtórzony/);
+  const revised=editDomainPeople(pooled,{kind:'edit-pool',id:'POOL-1',name:'Zespół drugi',workerIds:['PERSON-2']});
+  const removed=editDomainPeople(revised,{kind:'remove-worker',id:'PERSON-1'});
+  assert.deepEqual(removed.workerPools[0].workerIds,['PERSON-2']);
+  assert.equal(removed.workers[0].id,'PERSON-2');
+  const storage=new DraftStorage();
+  storage.values.set('layout-studio-v3','active-v4');
+  storage.values.set('layout-studio-stations-v5','active-v5');
+  const first=saveDomainDraft(storage,prepared,null);
+  const written=saveDomainDraft(storage,{originalJson:original,project:removed},first.raw);
+  const reopened=readDomainDraft(storage);
+  assert.equal(reopened.status,'valid');
+  if(reopened.status!=='valid')throw new Error('Brak zapisu.');
+  assert.deepEqual(reopened.saved.project.workers,removed.workers);
+  assert.deepEqual(reopened.saved.project.workerPools,removed.workerPools);
+  assert.equal(reopened.saved.originalJson,original);
+  assert.equal(reopened.raw,written.raw);
+  assert.equal(storage.getItem('layout-studio-v3'),'active-v4');
+  assert.equal(storage.getItem('layout-studio-stations-v5'),'active-v5');
+  assert.deepEqual(editDomainPeople(removed,{kind:'remove-pool',id:'POOL-1'}).workerPools,[]);
 });
 
 test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{

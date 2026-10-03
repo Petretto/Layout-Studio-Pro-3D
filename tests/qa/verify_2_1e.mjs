@@ -47,7 +47,7 @@ try {
   });
   const evaluate = async expression => {
     const result = await send('Runtime.evaluate', {expression, returnByValue: true, awaitPromise: true});
-    if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
+    if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
     return result.result.value;
   };
   const click = label => evaluate(`(() => {
@@ -56,6 +56,19 @@ try {
     if (!button) throw new Error('Brak przycisku: ' + ${JSON.stringify(label)});
     if (button.disabled) throw new Error('Przycisk jest zablokowany: ' + ${JSON.stringify(label)});
     button.click();
+  })()`);
+  const setInput = (label, value) => evaluate(`(() => {
+    const input = document.querySelector('input[aria-label=' + JSON.stringify(${JSON.stringify(label)}) + ']');
+    if (!input) throw new Error('Brak pola: ' + ${JSON.stringify(label)});
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+    setter.call(input, ${JSON.stringify(value)});
+    input.dispatchEvent(new Event('input', {bubbles: true}));
+  })()`);
+  const choose = (label, value) => evaluate(`(() => {
+    const select = document.querySelector('select[aria-label=' + JSON.stringify(${JSON.stringify(label)}) + ']');
+    if (!select) throw new Error('Brak listy: ' + ${JSON.stringify(label)});
+    select.value = ${JSON.stringify(value)};
+    select.dispatchEvent(new Event('change', {bubbles: true}));
   })()`);
   const openStations = async () => {
     await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(item => item.textContent.includes('Stanowiska v5')).click()`);
@@ -99,6 +112,42 @@ try {
       JSON.parse(saved.originalJson).stations.length !== 17) {
     throw new Error('Zapis szkicu nie zachował projektu i źródła.');
   }
+
+  // 2.1g: edit draft-only people and pools, including references and undo/redo.
+  await setInput('ID osoby', 'PERSON-QA-1');
+  await setInput('Nazwa osoby', 'Anna testowa');
+  await click('Dodaj osobę');
+  await setInput('ID osoby', 'PERSON-QA-2');
+  await setInput('Nazwa osoby', 'Bartek testowy');
+  await click('Dodaj osobę');
+  await setInput('ID puli', 'POOL-QA-1');
+  await setInput('Nazwa puli', 'Pula testowa');
+  await evaluate(`document.querySelectorAll('[aria-label="Edytor osób i pul szkicu 6"] fieldset input[type="checkbox"]')[0].click()`);
+  await sleep(50);
+  await evaluate(`document.querySelectorAll('[aria-label="Edytor osób i pul szkicu 6"] fieldset input[type="checkbox"]')[1].click()`);
+  await sleep(100);
+  if (await evaluate(`document.querySelectorAll('[aria-label="Edytor osób i pul szkicu 6"] fieldset input[type="checkbox"]:checked').length`) !== 2) throw new Error('Nie zaznaczono członków puli.');
+  await click('Dodaj pulę');
+  let people = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (people.workers.length !== 2 || people.workerPools.length !== 1 || people.workerPools[0].workerIds.length !== 2) throw new Error(`Nie zapisano osób i puli: ${JSON.stringify({workers:people.workers,pools:people.workerPools,ui:await evaluate('document.querySelector(\'section[aria-label="Podgląd modelu procesu v6"]\')?.innerText.slice(-500)')})}`);
+  const withPool = await evaluate(`localStorage.getItem('layout-studio-domain-v6-draft-v1')`);
+  await choose('Osoba do edycji', 'PERSON-QA-1');
+  await click('Usuń osobę');
+  const refused = await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"]')?.innerText`);
+  if (!refused.includes('należy do puli') || await evaluate(`localStorage.getItem('layout-studio-domain-v6-draft-v1')`) !== withPool) throw new Error('Usunięto osobę używaną przez pulę.');
+  await click('Cofnij dane szkicu');
+  people = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (people.workerPools.length !== 0 || people.workers.length !== 2) throw new Error('Cofnij nie przywróciło stanu sprzed puli.');
+  await click('Ponów dane szkicu');
+  people = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (people.workerPools.length !== 1 || people.workerPools[0].workerIds.length !== 2) throw new Error('Ponów nie przywróciło puli.');
+  await choose('Osoba do edycji', 'PERSON-QA-1');
+  await setInput('Nazwa osoby', 'Anna po zmianie');
+  await click('Zmień nazwę osoby');
+  people = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (people.workers[0].id !== 'PERSON-QA-1' || people.workers[0].name !== 'Anna po zmianie' ||
+      !people.workerPools[0].workerIds.includes('PERSON-QA-1')) throw new Error('Zmiana nazwy naruszyła trwałe ID lub członkostwo.');
+
   const v4After = await evaluate(`localStorage.getItem('layout-studio-v3')`);
   const v5After = await evaluate(`localStorage.getItem('layout-studio-stations-v5')`);
   if (JSON.stringify(JSON.parse(v4After).project) !== JSON.stringify(JSON.parse(v4Before).project) ||
@@ -108,7 +157,26 @@ try {
   await openStations();
   const reopened = await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"]')?.innerText`);
   if (!reopened.includes('Zapisany szkic:') || !reopened.includes('16 operacji · 17 stanowisk')) throw new Error('Szkic nie otworzył się po przeładowaniu.');
+  people = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (people.workers[0].name !== 'Anna po zmianie' || people.workerPools[0].workerIds.length !== 2) throw new Error('Osoby i pule zniknęły po przeładowaniu.');
+  await choose('Pula do edycji', 'POOL-QA-1');
+  await evaluate(`document.querySelectorAll('[aria-label="Edytor osób i pul szkicu 6"] fieldset input[type="checkbox"]')[0].click()`);
+  await click('Zapisz pulę');
+  await choose('Osoba do edycji', 'PERSON-QA-1');
+  await click('Usuń osobę');
+  people = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (people.workers.length !== 1 || people.workers[0].id !== 'PERSON-QA-2' ||
+      JSON.stringify(people.workerPools[0].workerIds) !== JSON.stringify(['PERSON-QA-2'])) throw new Error('Bezpieczne usunięcie osoby nie zachowało referencji.');
+  await click('Cofnij dane szkicu');
+  people = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (people.workers.length !== 2) throw new Error('Cofnij nie przywróciło usuniętej osoby.');
+  await click('Ponów dane szkicu');
+  people = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (people.workers.length !== 1) throw new Error('Ponów nie usunęło osoby ponownie.');
   mkdirSync('outputs/qa', {recursive: true});
+  await evaluate(`document.querySelector('[aria-label="Edytor osób i pul szkicu 6"]').scrollIntoView()`);
+  const peopleShot = await send('Page.captureScreenshot', {format: 'png'});
+  writeFileSync('outputs/qa/verify_2_1g_people.png', Buffer.from(peopleShot.data, 'base64'));
   await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"]').scrollIntoView()`);
   const savedShot = await send('Page.captureScreenshot', {format: 'png'});
   writeFileSync('outputs/qa/verify_2_1e_saved.png', Buffer.from(savedShot.data, 'base64'));
@@ -193,7 +261,7 @@ try {
   if (JSON.stringify(JSON.parse(await evaluate(`localStorage.getItem('layout-studio-v3')`)).project) !== JSON.stringify(JSON.parse(v4Before).project) ||
       await evaluate(`localStorage.getItem('layout-studio-stations-v5')`) !== v5Before) throw new Error('Zastąpienie szkicu zmieniło aktywny projekt v4/v5.');
   if (errors.length) throw new Error(`Błędy konsoli: ${errors.join('; ')}`);
-  console.log('PASS: podgląd, zapis, odzyskanie uszkodzonego szkicu, jawne zastąpienie, konflikt i limit pamięci.');
+  console.log('PASS: podgląd, osoby i pule z Cofnij/Ponów, odzyskanie, zastąpienie, konflikt i limit pamięci.');
 } finally {
   if (ws) ws.close();
   browser.kill();

@@ -4,8 +4,11 @@ import type {StationProjectV5} from '../../core/stationMigration';
 import {previewDomainMigrationFromV4, previewDomainMigrationFromV5,
   type DomainGap, type DomainMigrationPreview} from '../../core/domainMigrationPreview';
 import {prepareDomainMigration} from '../../core/domainProject';
+import type {DomainProjectV6} from '../../core/domainProject';
+import {editDomainPeople, type DomainPeopleChange} from '../../core/domainPeopleEditing';
 import {readDomainDraft, replaceDomainDraft, saveDomainDraft} from '../../core/domainDraftStorage';
 import {download} from '../../core/project';
+import {DomainPeopleEditor} from './DomainPeopleEditor';
 
 const gapLabels: Record<DomainGap, string> = {
   'worker-identities': 'Tożsamość pracowników',
@@ -27,6 +30,8 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
   const [message, setMessage] = useState('');
   const [downloadedRaw, setDownloadedRaw] = useState<string | null>(null);
   const [confirmReplace, setConfirmReplace] = useState(false);
+  const [past, setPast] = useState<DomainProjectV6[]>([]);
+  const [future, setFuture] = useState<DomainProjectV6[]>([]);
   const stale = !!preview && (preview.sourceSchemaVersion === 5
     ? JSON.stringify(stationProject) !== preview.originalJson
     : JSON.stringify(legacyProject) !== preview.originalJson);
@@ -50,11 +55,13 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
       const prepared = prepareDomainMigration(preview);
       saveDomainDraft(localStorage, prepared, null);
       setDraft(readDomainDraft(localStorage));
+      setPast([]); setFuture([]);
       setPreview(null);
       setReviewed(false);
       setMessage('Niekompletny szkic 6 zapisano osobno. Aktywny projekt i symulacja nie zostały zmienione.');
     } catch (error) {
       setDraft(readDomainDraft(localStorage));
+      setPast([]); setFuture([]);
       setMessage(`Nie zapisano szkicu: ${(error as Error).message}`);
     }
   };
@@ -66,6 +73,7 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
       const prepared = prepareDomainMigration(preview);
       replaceDomainDraft(localStorage, prepared, draft.raw);
       setDraft(readDomainDraft(localStorage));
+      setPast([]); setFuture([]);
       setPreview(null);
       setReviewed(false);
       setDownloadedRaw(null);
@@ -73,9 +81,56 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
       setMessage('Zastąpiono szkic 6 po pobraniu poprzedniej kopii. Aktywne projekty v4/v5 nie zostały zmienione.');
     } catch (error) {
       setDraft(readDomainDraft(localStorage));
+      setPast([]); setFuture([]);
       setDownloadedRaw(null);
       setConfirmReplace(false);
       setMessage(`Nie zastąpiono szkicu: ${(error as Error).message}`);
+    }
+  };
+
+  const applyPeople = (change: DomainPeopleChange): boolean => {
+    if (draft.status !== 'valid') return false;
+    let next: DomainProjectV6;
+    try { next = editDomainPeople(draft.saved.project, change); }
+    catch (error) {
+      setMessage(`Nie zmieniono danych szkicu: ${(error as Error).message}`);
+      return false;
+    }
+    try {
+      const written = saveDomainDraft(localStorage, {originalJson: draft.saved.originalJson, project: next}, draft.raw);
+      setPast(history => [...history.slice(-39), draft.saved.project]);
+      setFuture([]);
+      setDraft({status: 'valid', ...written});
+      setMessage('Zapisano dane osób i pul w szkicu 6.');
+      return true;
+    } catch (error) {
+      setDraft(readDomainDraft(localStorage));
+      setPast([]); setFuture([]);
+      setMessage(`Nie zmieniono danych szkicu: ${(error as Error).message}`);
+      return false;
+    }
+  };
+
+  const navigatePeopleHistory = (direction: 'undo' | 'redo') => {
+    if (draft.status !== 'valid') return;
+    const source = direction === 'undo' ? past : future;
+    const target = source[source.length - 1];
+    if (!target) return;
+    try {
+      const written = saveDomainDraft(localStorage, {originalJson: draft.saved.originalJson, project: target}, draft.raw);
+      if (direction === 'undo') {
+        setPast(past.slice(0, -1));
+        setFuture([...future, draft.saved.project]);
+      } else {
+        setFuture(future.slice(0, -1));
+        setPast([...past, draft.saved.project]);
+      }
+      setDraft({status: 'valid', ...written});
+      setMessage(direction === 'undo' ? 'Cofnięto zmianę danych szkicu.' : 'Ponowiono zmianę danych szkicu.');
+    } catch (error) {
+      setDraft(readDomainDraft(localStorage));
+      setPast([]); setFuture([]);
+      setMessage(`Nie zmieniono danych szkicu: ${(error as Error).message}`);
     }
   };
 
@@ -90,6 +145,9 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
     {draft.status === 'unavailable' && <p className="error" role="alert">Pamięć przeglądarki jest niedostępna: {draft.error}. Nie można zapisać szkicu.</p>}
     {draft.status === 'corrupt' && <div className="notice" role="alert"><p>Istniejący szkic jest uszkodzony: {draft.error}. Zachowano go bez zmian; zastąpienie wymaga pobrania surowej kopii i potwierdzenia.</p><button onClick={() => {download(draft.raw, 'Odzyskiwanie_szkicu_v6.json', 'application/json'); setDownloadedRaw(draft.raw);}}>Pobierz surową kopię szkicu</button></div>}
     {draft.status === 'valid' && <div className="notice"><p>Zapisany szkic: {draft.saved.project.name} · źródło v{draft.saved.sourceSchemaVersion} · {draft.saved.project.operations.length} operacji · {draft.saved.project.stations.length} stanowisk · {new Date(draft.saved.at).toLocaleString('pl-PL')}. Status: niekompletny.</p><div className="toolbar"><button onClick={() => {download(draft.raw, 'Szkic_modelu_v6_z_oryginalem.json', 'application/json'); setDownloadedRaw(draft.raw);}}>Pobierz szkic z oryginałem</button><button onClick={() => download(draft.saved.originalJson, `Oryginalny_projekt_v${draft.saved.sourceSchemaVersion}.json`, 'application/json')}>Pobierz źródło</button></div></div>}
+    {draft.status === 'valid' && <DomainPeopleEditor key={draft.raw} project={draft.saved.project} onApply={applyPeople}
+      onUndo={() => navigatePeopleHistory('undo')} onRedo={() => navigatePeopleHistory('redo')}
+      canUndo={past.length > 0} canRedo={future.length > 0} />}
     {preview && <div className="panel">
       <h3>Podgląd źródła v{preview.sourceSchemaVersion}</h3>
       <p>{preview.stationProject.processSteps.length} operacji · {preview.stationProject.stations.length} stanowisk · {preview.stationProject.bom.length} pozycji BOM · {preview.visualBindings.length} obiektów geometrii.</p>
@@ -110,6 +168,6 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
       </div>
       {confirmReplace && (draft.status === 'valid' || draft.status === 'corrupt') && <div className="notice" role="alertdialog" aria-label="Potwierdź zastąpienie szkicu 6"><p>Poprzedni szkic zostanie zastąpiony projektem z podglądu v{preview.sourceSchemaVersion}. Sprawdź, czy pobrana kopia jest dostępna.</p><div className="toolbar"><button onClick={() => setConfirmReplace(false)}>Anuluj zastąpienie</button><button onClick={replace}>Potwierdź zastąpienie szkicu 6</button></div></div>}
     </div>}
-    {message && <p role="status" className={message.includes('odrzucon') || message.includes('Nie zapisano') || message.includes('Nie zastąpiono') ? 'error' : 'muted'}>{message}</p>}
+    {message && <p role="status" className={message.includes('odrzucon') || message.includes('Nie zapisano') || message.includes('Nie zastąpiono') || message.includes('Nie zmieniono') ? 'error' : 'muted'}>{message}</p>}
   </section>;
 }
