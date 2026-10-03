@@ -6,9 +6,11 @@ import {previewDomainMigrationFromV4, previewDomainMigrationFromV5,
 import {prepareDomainMigration} from '../../core/domainProject';
 import type {DomainProjectV6} from '../../core/domainProject';
 import {editDomainPeople, type DomainPeopleChange} from '../../core/domainPeopleEditing';
+import {editDomainProduct, type DomainProductChange} from '../../core/domainProductEditing';
 import {readDomainDraft, replaceDomainDraft, saveDomainDraft} from '../../core/domainDraftStorage';
 import {download} from '../../core/project';
 import {DomainPeopleEditor} from './DomainPeopleEditor';
+import {DomainProductEditor} from './DomainProductEditor';
 
 const gapLabels: Record<DomainGap, string> = {
   'worker-identities': 'Tożsamość pracowników',
@@ -88,10 +90,10 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
     }
   };
 
-  const applyPeople = (change: DomainPeopleChange): boolean => {
+  const applyDraftChange = (edit: (project: DomainProjectV6) => DomainProjectV6, successMessage: string): boolean => {
     if (draft.status !== 'valid') return false;
     let next: DomainProjectV6;
-    try { next = editDomainPeople(draft.saved.project, change); }
+    try { next = edit(draft.saved.project); }
     catch (error) {
       setMessage(`Nie zmieniono danych szkicu: ${(error as Error).message}`);
       return false;
@@ -101,7 +103,7 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
       setPast(history => [...history.slice(-39), draft.saved.project]);
       setFuture([]);
       setDraft({status: 'valid', ...written});
-      setMessage('Zapisano dane osób i pul w szkicu 6.');
+      setMessage(successMessage);
       return true;
     } catch (error) {
       setDraft(readDomainDraft(localStorage));
@@ -111,7 +113,12 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
     }
   };
 
-  const navigatePeopleHistory = (direction: 'undo' | 'redo') => {
+  const applyPeople = (change: DomainPeopleChange) => applyDraftChange(
+    project => editDomainPeople(project, change), 'Zapisano dane osób i pul w szkicu 6.');
+  const applyProduct = (change: DomainProductChange) => applyDraftChange(
+    project => editDomainProduct(project, change), 'Zapisano wyrób lub podzespół w szkicu 6.');
+
+  const navigateDraftHistory = (direction: 'undo' | 'redo') => {
     if (draft.status !== 'valid') return;
     const source = direction === 'undo' ? past : future;
     const target = source[source.length - 1];
@@ -145,8 +152,11 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
     {draft.status === 'unavailable' && <p className="error" role="alert">Pamięć przeglądarki jest niedostępna: {draft.error}. Nie można zapisać szkicu.</p>}
     {draft.status === 'corrupt' && <div className="notice" role="alert"><p>Istniejący szkic jest uszkodzony: {draft.error}. Zachowano go bez zmian; zastąpienie wymaga pobrania surowej kopii i potwierdzenia.</p><button onClick={() => {download(draft.raw, 'Odzyskiwanie_szkicu_v6.json', 'application/json'); setDownloadedRaw(draft.raw);}}>Pobierz surową kopię szkicu</button></div>}
     {draft.status === 'valid' && <div className="notice"><p>Zapisany szkic: {draft.saved.project.name} · źródło v{draft.saved.sourceSchemaVersion} · {draft.saved.project.operations.length} operacji · {draft.saved.project.stations.length} stanowisk · {new Date(draft.saved.at).toLocaleString('pl-PL')}. Status: niekompletny.</p><div className="toolbar"><button onClick={() => {download(draft.raw, 'Szkic_modelu_v6_z_oryginalem.json', 'application/json'); setDownloadedRaw(draft.raw);}}>Pobierz szkic z oryginałem</button><button onClick={() => download(draft.saved.originalJson, `Oryginalny_projekt_v${draft.saved.sourceSchemaVersion}.json`, 'application/json')}>Pobierz źródło</button></div></div>}
-    {draft.status === 'valid' && <DomainPeopleEditor key={draft.raw} project={draft.saved.project} onApply={applyPeople}
-      onUndo={() => navigatePeopleHistory('undo')} onRedo={() => navigatePeopleHistory('redo')}
+    {draft.status === 'valid' && <DomainPeopleEditor key={`people-${draft.raw}`} project={draft.saved.project} onApply={applyPeople}
+      onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
+      canUndo={past.length > 0} canRedo={future.length > 0} />}
+    {draft.status === 'valid' && <DomainProductEditor key={`product-${draft.raw}`} project={draft.saved.project} onApply={applyProduct}
+      onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
       canUndo={past.length > 0} canRedo={future.length > 0} />}
     {preview && <div className="panel">
       <h3>Podgląd źródła v{preview.sourceSchemaVersion}</h3>

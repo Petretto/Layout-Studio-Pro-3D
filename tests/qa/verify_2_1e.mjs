@@ -50,26 +50,35 @@ try {
     if (result.exceptionDetails) throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
     return result.result.value;
   };
-  const click = label => evaluate(`(() => {
+  const click = async label => {
+    await evaluate(`(() => {
     const scope = document.querySelector('section[aria-label="Podgląd modelu procesu v6"]') || document;
     const button = [...scope.querySelectorAll('button')].find(item => item.textContent.trim() === ${JSON.stringify(label)});
     if (!button) throw new Error('Brak przycisku: ' + ${JSON.stringify(label)});
     if (button.disabled) throw new Error('Przycisk jest zablokowany: ' + ${JSON.stringify(label)});
     button.click();
-  })()`);
-  const setInput = (label, value) => evaluate(`(() => {
+    })()`);
+    await sleep(60);
+  };
+  const setInput = async (label, value) => {
+    await evaluate(`(() => {
     const input = document.querySelector('input[aria-label=' + JSON.stringify(${JSON.stringify(label)}) + ']');
     if (!input) throw new Error('Brak pola: ' + ${JSON.stringify(label)});
     const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
     setter.call(input, ${JSON.stringify(value)});
     input.dispatchEvent(new Event('input', {bubbles: true}));
-  })()`);
-  const choose = (label, value) => evaluate(`(() => {
+    })()`);
+    await sleep(50);
+  };
+  const choose = async (label, value) => {
+    await evaluate(`(() => {
     const select = document.querySelector('select[aria-label=' + JSON.stringify(${JSON.stringify(label)}) + ']');
     if (!select) throw new Error('Brak listy: ' + ${JSON.stringify(label)});
     select.value = ${JSON.stringify(value)};
     select.dispatchEvent(new Event('change', {bubbles: true}));
-  })()`);
+    })()`);
+    await sleep(50);
+  };
   const openStations = async () => {
     await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(item => item.textContent.includes('Stanowiska v5')).click()`);
     await sleep(300);
@@ -116,11 +125,14 @@ try {
   // 2.1g: edit draft-only people and pools, including references and undo/redo.
   await setInput('ID osoby', 'PERSON-QA-1');
   await setInput('Nazwa osoby', 'Anna testowa');
+  if (await evaluate(`document.querySelector('input[aria-label="ID osoby"]').value`) !== 'PERSON-QA-1') throw new Error('Pole ID osoby nie przyjęło wartości.');
   await click('Dodaj osobę');
+  if (await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project.workers.length`) !== 1) throw new Error('Pierwszej osoby nie zapisano.');
   await setInput('ID osoby', 'PERSON-QA-2');
   await setInput('Nazwa osoby', 'Bartek testowy');
   await click('Dodaj osobę');
   await setInput('ID puli', 'POOL-QA-1');
+  if (await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project.workers.length`) !== 2) throw new Error('Drugiej osoby nie zapisano.');
   await setInput('Nazwa puli', 'Pula testowa');
   await evaluate(`document.querySelectorAll('[aria-label="Edytor osób i pul szkicu 6"] fieldset input[type="checkbox"]')[0].click()`);
   await sleep(50);
@@ -173,7 +185,56 @@ try {
   await click('Ponów dane szkicu');
   people = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
   if (people.workers.length !== 1) throw new Error('Ponów nie usunęło osoby ponownie.');
+
+  // 2.1h: definitions are entered manually and share one draft history with people.
+  await setInput('ID wyrobu', 'PRODUCT-QA');
+  await setInput('Nazwa wyrobu', 'Wyrób testowy');
+  await click('Dodaj wyrób');
+  await setInput('ID podzespołu', 'SUB-QA');
+  await setInput('Nazwa podzespołu', 'Podzespół testowy');
+  await choose('Operacja tworząca', 'OP10');
+  await evaluate(`document.querySelectorAll('[aria-label="Operacje zużywające podzespół"] input[type="checkbox"]')[1].click()`);
+  await click('Dodaj podzespół');
+  let productDraft = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (productDraft.product?.id !== 'PRODUCT-QA' || productDraft.subassemblies[0]?.producerOperationId !== 'OP10' ||
+      JSON.stringify(productDraft.subassemblies[0]?.consumerOperationIds) !== JSON.stringify(['OP11'])) throw new Error('Nie zapisano ręcznych definicji wyrobu i podzespołu.');
+  await click('Cofnij dane szkicu');
+  await click('Cofnij dane szkicu');
+  productDraft = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (productDraft.product !== null || productDraft.subassemblies.length || productDraft.workers.length !== 1) throw new Error('Wspólna historia nie cofnęła definicji bez zmiany osób.');
+  await click('Cofnij dane szkicu');
+  if (await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project.workers.length`) !== 2) throw new Error('Historia szkicu nie sięgnęła poprzedniej zmiany osób.');
+  await click('Ponów dane szkicu');
+  await click('Ponów dane szkicu');
+  await click('Ponów dane szkicu');
+  await choose('Podzespół do edycji', 'SUB-QA');
+  await setInput('Nazwa podzespołu', 'Podzespół po zmianie');
+  await click('Zapisz podzespół');
+  await setInput('Nazwa wyrobu', 'Wyrób po zmianie');
+  await click('Zmień nazwę wyrobu');
+  productDraft = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (productDraft.product?.id !== 'PRODUCT-QA' || productDraft.product.name !== 'Wyrób po zmianie' ||
+      productDraft.subassemblies[0]?.id !== 'SUB-QA' || productDraft.subassemblies[0].name !== 'Podzespół po zmianie') throw new Error('Zmiana nazw naruszyła trwałe ID.');
+  await choose('Podzespół do edycji', 'SUB-QA');
+  await click('Usuń podzespół');
+  if (await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project.subassemblies.length`) !== 0) throw new Error('Nie usunięto podzespołu.');
+  await click('Cofnij dane szkicu');
+  await click('Usuń definicję wyrobu');
+  if (await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project.product`) !== null) throw new Error('Nie usunięto definicji wyrobu.');
+  await click('Cofnij dane szkicu');
+  productDraft = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (productDraft.product?.id !== 'PRODUCT-QA' || productDraft.subassemblies[0]?.id !== 'SUB-QA') throw new Error('Cofnij nie przywróciło usuniętych definicji.');
   mkdirSync('outputs/qa', {recursive: true});
+  await evaluate(`document.querySelector('[aria-label="Edytor wyrobu i podzespołów szkicu 6"]').scrollIntoView()`);
+  const productShot = await send('Page.captureScreenshot', {format: 'png'});
+  writeFileSync('outputs/qa/verify_2_1h_product.png', Buffer.from(productShot.data, 'base64'));
+  await send('Page.reload');
+  await sleep(900);
+  await openStations();
+  productDraft = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (productDraft.product?.name !== 'Wyrób po zmianie' || productDraft.subassemblies[0]?.name !== 'Podzespół po zmianie' ||
+      productDraft.subassemblies[0].producerOperationId !== 'OP10' || productDraft.subassemblies[0].consumerOperationIds[0] !== 'OP11') throw new Error('Wyrób lub podzespół zniknął po przeładowaniu.');
+  if (await evaluate(`localStorage.getItem('layout-studio-stations-v5')`) !== v5Before) throw new Error('Edycja produktu zmieniła aktywny projekt v5.');
   await evaluate(`document.querySelector('[aria-label="Edytor osób i pul szkicu 6"]').scrollIntoView()`);
   const peopleShot = await send('Page.captureScreenshot', {format: 'png'});
   writeFileSync('outputs/qa/verify_2_1g_people.png', Buffer.from(peopleShot.data, 'base64'));
@@ -226,8 +287,10 @@ try {
   await sleep(650);
   const previousFile = join(downloads, 'Szkic_modelu_v6_z_oryginalem.json');
   if (!existsSync(previousFile) || readFileSync(previousFile, 'utf8') !== v4DraftRaw) throw new Error('Nie pobrano poprzedniego poprawnego szkicu.');
+  if (await evaluate(`localStorage.getItem('layout-studio-domain-v6-draft-v1')`) !== v4DraftRaw) throw new Error('Zmiana szkicu po pobraniu v4.');
   await click('Podgląd z warsztatu 5');
-  await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"] input[type="checkbox"]').click()`);
+  await evaluate(`[...document.querySelectorAll('section[aria-label="Podgląd modelu procesu v6"] input[type="checkbox"]')].at(-1).click()`);
+  await sleep(60);
   await click('Zastąp szkic 6');
   await click('Potwierdź zastąpienie szkicu 6');
   const replacedValid = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1'))`);
@@ -236,7 +299,8 @@ try {
   // Simulate an external tab changing the value after the copy was downloaded.
   await click('Pobierz szkic z oryginałem');
   await click('Podgląd z bieżącego projektu 4');
-  await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"] input[type="checkbox"]').click()`);
+  await evaluate(`[...document.querySelectorAll('section[aria-label="Podgląd modelu procesu v6"] input[type="checkbox"]')].at(-1).click()`);
+  await sleep(60);
   await click('Zastąp szkic 6');
   await evaluate(`localStorage.setItem('layout-studio-domain-v6-draft-v1', '{zmiana-zewnetrzna')`);
   await click('Potwierdź zastąpienie szkicu 6');
@@ -248,7 +312,8 @@ try {
   // A quota error must leave the previous raw value intact.
   await click('Pobierz surową kopię szkicu');
   await click('Podgląd z warsztatu 5');
-  await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"] input[type="checkbox"]').click()`);
+  await evaluate(`[...document.querySelectorAll('section[aria-label="Podgląd modelu procesu v6"] input[type="checkbox"]')].at(-1).click()`);
+  await sleep(60);
   await click('Zastąp szkic 6');
   await evaluate(`(() => {window.__qaSetItem = Storage.prototype.setItem; Storage.prototype.setItem = function(key, value) {if (key === 'layout-studio-domain-v6-draft-v1') throw new Error('quota-qa'); return window.__qaSetItem.call(this, key, value);};})()`);
   await click('Potwierdź zastąpienie szkicu 6');
@@ -261,7 +326,7 @@ try {
   if (JSON.stringify(JSON.parse(await evaluate(`localStorage.getItem('layout-studio-v3')`)).project) !== JSON.stringify(JSON.parse(v4Before).project) ||
       await evaluate(`localStorage.getItem('layout-studio-stations-v5')`) !== v5Before) throw new Error('Zastąpienie szkicu zmieniło aktywny projekt v4/v5.');
   if (errors.length) throw new Error(`Błędy konsoli: ${errors.join('; ')}`);
-  console.log('PASS: podgląd, osoby i pule z Cofnij/Ponów, odzyskanie, zastąpienie, konflikt i limit pamięci.');
+  console.log('PASS: podgląd, osoby, pule, wyrób i podzespoły z Cofnij/Ponów, ponowne otwarcie, odzyskanie, zastąpienie, konflikt i limit pamięci.');
 } finally {
   if (ws) ws.close();
   browser.kill();

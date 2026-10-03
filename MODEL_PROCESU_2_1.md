@@ -90,4 +90,8 @@ Istniejący szkic można teraz zastąpić po pobraniu jego kopii, przygotowaniu 
 
 ## Pakiet 2.1g — osoby i pule
 
-Szkic 6 ma osobny edytor osób i pul z ręcznie podawanymi ID, nazwami oraz członkostwem. Zmiana nazwy zachowuje ID i powiązania. Usunięcie osoby wskazanej w puli jest blokowane, dopóki użytkownik nie zmieni członkostwa. Każda zaakceptowana edycja oraz Cofnij/Ponów są walidowane i zapisywane pod odrębnym kluczem szkicu; źródło v4/v5 pozostaje nienaruszone. Osoby i pule są obecnie definicjami roboczymi, bez przypisania do operacji i bez udziału w bilansie lub symulacji. Kolejne pakiety powinny objąć wyposażenie, wyrób, podzespoły i odpowiednie referencje bez domyślania się danych procesu.
+Szkic 6 ma osobny edytor osób i pul z ręcznie podawanymi ID, nazwami oraz członkostwem. Zmiana nazwy zachowuje ID i powiązania. Usunięcie osoby wskazanej w puli jest blokowane, dopóki użytkownik nie zmieni członkostwa. Każda zaakceptowana edycja oraz Cofnij/Ponów są walidowane i zapisywane pod odrębnym kluczem szkicu; źródło v4/v5 pozostaje nienaruszone. Osoby i pule są obecnie definicjami roboczymi, bez przypisania do operacji i bez udziału w bilansie lub symulacji.
+
+## Pakiet 2.1h — wyrób i podzespoły
+
+Wyrób ma ręcznie podane ID i nazwę. Podzespół ma własne trwałe ID, nazwę, opcjonalną operację tworzącą i listę jawnie wybranych operacji zużywających. Brak wyboru pozostaje brakiem danych; parser odrzuca obce i powtórzone referencje. W edytorze można dodać, zmienić nazwę, usunąć oraz cofnąć lub ponowić definicję. Historia szkicu jest wspólna z edycją osób i pul. Żadne definicje nie powstają z BOM, nazw operacji, grafu lub geometrii. Schemat 6 nadal ma status `incomplete`; definiuje typy, a nie instancje wyrobów i podzespołów w symulacji. Kolejny zakres 2.1 obejmuje wyposażenie technologiczne, jego jawne możliwości i referencje oraz pełny odbiór modelu.

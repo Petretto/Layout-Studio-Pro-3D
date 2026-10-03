@@ -14,6 +14,7 @@ import {previewStationMigration,prepareStationMigration} from '../src/core/stati
 import {previewDomainMigrationFromV4,previewDomainMigrationFromV5,verifyDomainMigrationPreview} from '../src/core/domainMigrationPreview';
 import {parseDomainProjectV6,prepareDomainMigration} from '../src/core/domainProject';
 import {editDomainPeople} from '../src/core/domainPeopleEditing';
+import {editDomainProduct} from '../src/core/domainProductEditing';
 import {DOMAIN_DRAFT_STORAGE_KEY,readDomainDraft,replaceDomainDraft,saveDomainDraft} from '../src/core/domainDraftStorage';
 import {parseStationProjectV5} from '../src/core/stationProject';
 import {runStationBalancing,moveStationOperation} from '../src/core/stationBalancing';
@@ -163,6 +164,48 @@ test('2.1g: osoby i pule mają trwałe ID, kontrolowane referencje i bezpieczny 
   assert.equal(storage.getItem('layout-studio-v3'),'active-v4');
   assert.equal(storage.getItem('layout-studio-stations-v5'),'active-v5');
   assert.deepEqual(editDomainPeople(removed,{kind:'remove-pool',id:'POOL-1'}).workerPools,[]);
+});
+
+test('2.1h: wyrób i podzespoły mają trwałe ID, poprawne referencje i osobny zapis',()=>{
+  const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+  const prepared=prepareDomainMigration(previewDomainMigrationFromV5(original));
+  const start=prepared.project;
+  assert.equal(start.product,null);
+  assert.deepEqual(start.subassemblies,[]);
+  assert.throws(()=>editDomainProduct(start,{kind:'set-product',id:'',name:'Test'}),/ID wyrobu/);
+  const product=editDomainProduct(start,{kind:'set-product',id:'PRODUCT-QA',name:'Wyrób testowy'});
+  const named=editDomainProduct(product,{kind:'set-product',id:'PRODUCT-QA',name:'Nowa nazwa'});
+  assert.deepEqual(named.product,{id:'PRODUCT-QA',name:'Nowa nazwa'});
+  assert.throws(()=>editDomainProduct(named,{kind:'set-product',id:'INNY',name:'Inny'}),/trwałe/);
+  assert.equal(start.product,null);
+  const assembly=editDomainProduct(named,{kind:'add-subassembly',id:'SUB-QA',name:'Podzespół testowy',
+    producerOperationId:'OP10',consumerOperationIds:['OP11']});
+  assert.deepEqual(assembly.subassemblies[0],{id:'SUB-QA',name:'Podzespół testowy',
+    producerOperationId:'OP10',consumerOperationIds:['OP11']});
+  assert.throws(()=>editDomainProduct(assembly,{kind:'add-subassembly',id:'SUB-QA',name:'Duplikat',consumerOperationIds:[]}),/już istnieje/);
+  assert.throws(()=>editDomainProduct(assembly,{kind:'add-subassembly',id:'SUB-2',name:'Błąd',producerOperationId:'OBCA',consumerOperationIds:[]}),/nieznana operacja tworząca/);
+  assert.throws(()=>editDomainProduct(assembly,{kind:'edit-subassembly',id:'SUB-QA',name:'Błąd',consumerOperationIds:['OBCA']}),/nieznana lub powtórzona/);
+  assert.throws(()=>editDomainProduct(assembly,{kind:'edit-subassembly',id:'SUB-QA',name:'Błąd',consumerOperationIds:['OP11','OP11']}),/nieznana lub powtórzona/);
+  const revised=editDomainProduct(assembly,{kind:'edit-subassembly',id:'SUB-QA',name:'Podzespół po zmianie',consumerOperationIds:['OP12']});
+  assert.equal(revised.subassemblies[0].id,'SUB-QA');
+  assert.equal(revised.subassemblies[0].producerOperationId,undefined);
+  assert.deepEqual(revised.subassemblies[0].consumerOperationIds,['OP12']);
+  const storage=new DraftStorage();
+  storage.values.set('layout-studio-v3','active-v4');
+  storage.values.set('layout-studio-stations-v5','active-v5');
+  const first=saveDomainDraft(storage,prepared,null);
+  const written=saveDomainDraft(storage,{originalJson:original,project:revised},first.raw);
+  const reopened=readDomainDraft(storage);
+  assert.equal(reopened.status,'valid');
+  if(reopened.status!=='valid')throw new Error('Brak zapisu.');
+  assert.deepEqual(reopened.saved.project.product,revised.product);
+  assert.deepEqual(reopened.saved.project.subassemblies,revised.subassemblies);
+  assert.equal(reopened.saved.originalJson,original);
+  assert.equal(reopened.raw,written.raw);
+  assert.equal(storage.getItem('layout-studio-v3'),'active-v4');
+  assert.equal(storage.getItem('layout-studio-stations-v5'),'active-v5');
+  assert.deepEqual(editDomainProduct(revised,{kind:'remove-subassembly',id:'SUB-QA'}).subassemblies,[]);
+  assert.equal(editDomainProduct(revised,{kind:'clear-product'}).product,null);
 });
 
 test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{
