@@ -130,12 +130,70 @@ try {
   if (!v4Review.includes('Podgląd źródła v4')) throw new Error('Brak podglądu źródła v4.');
   if (JSON.stringify(JSON.parse(await evaluate(`localStorage.getItem('layout-studio-v3')`)).project) !== JSON.stringify(JSON.parse(v4Before).project) ||
       await evaluate(`localStorage.getItem('layout-studio-stations-v5')`) !== v5Before) throw new Error('Regresja aktywnych zapisów.');
-  await evaluate(`localStorage.setItem('layout-studio-domain-v6-draft-v1', ${JSON.stringify(originalRaw)})`);
   await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"]').scrollIntoView()`);
   const shot = await send('Page.captureScreenshot', {format: 'png'});
   writeFileSync('outputs/qa/verify_2_1e.png', Buffer.from(shot.data, 'base64'));
+
+  // 2.1f: the downloaded damaged value can be replaced only after a separate confirmation.
+  await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"] input[type="checkbox"]').click()`);
+  await click('Zastąp szkic 6');
+  await click('Potwierdź zastąpienie szkicu 6');
+  await sleep(250);
+  const recovered = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1'))`);
+  if (recovered.sourceSchemaVersion !== 4 || recovered.project.schemaVersion !== 6 || recovered.project.modelStatus !== 'incomplete') {
+    throw new Error('Nie zastąpiono uszkodzonego szkicu projektem v4.');
+  }
+  await send('Page.reload');
+  await sleep(900);
+  await openStations();
+  const recoveryView = await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"]')?.innerText`);
+  if (!recoveryView.includes('Zapisany szkic:') || !recoveryView.includes('źródło v4')) throw new Error('Odzyskany szkic nie otworzył się po przeładowaniu.');
+  await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"]').scrollIntoView()`);
+  const recoveryShot = await send('Page.captureScreenshot', {format: 'png'});
+  writeFileSync('outputs/qa/verify_2_1f_recovered.png', Buffer.from(recoveryShot.data, 'base64'));
+
+  // A valid sketch from another source also requires its complete envelope as a backup.
+  const v4DraftRaw = await evaluate(`localStorage.getItem('layout-studio-domain-v6-draft-v1')`);
+  await click('Pobierz szkic z oryginałem');
+  await sleep(650);
+  const previousFile = join(downloads, 'Szkic_modelu_v6_z_oryginalem.json');
+  if (!existsSync(previousFile) || readFileSync(previousFile, 'utf8') !== v4DraftRaw) throw new Error('Nie pobrano poprzedniego poprawnego szkicu.');
+  await click('Podgląd z warsztatu 5');
+  await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"] input[type="checkbox"]').click()`);
+  await click('Zastąp szkic 6');
+  await click('Potwierdź zastąpienie szkicu 6');
+  const replacedValid = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1'))`);
+  if (replacedValid.sourceSchemaVersion !== 5 || replacedValid.project.operations.length !== 16) throw new Error('Nie zastąpiono poprawnego szkicu źródłem v5.');
+
+  // Simulate an external tab changing the value after the copy was downloaded.
+  await click('Pobierz szkic z oryginałem');
+  await click('Podgląd z bieżącego projektu 4');
+  await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"] input[type="checkbox"]').click()`);
+  await click('Zastąp szkic 6');
+  await evaluate(`localStorage.setItem('layout-studio-domain-v6-draft-v1', '{zmiana-zewnetrzna')`);
+  await click('Potwierdź zastąpienie szkicu 6');
+  const conflictText = await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"]')?.innerText`);
+  if (!conflictText.includes('Nie zastąpiono szkicu') || await evaluate(`localStorage.getItem('layout-studio-domain-v6-draft-v1')`) !== '{zmiana-zewnetrzna') {
+    throw new Error('Konflikt zapisu zastąpił nowszą wartość.');
+  }
+
+  // A quota error must leave the previous raw value intact.
+  await click('Pobierz surową kopię szkicu');
+  await click('Podgląd z warsztatu 5');
+  await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"] input[type="checkbox"]').click()`);
+  await click('Zastąp szkic 6');
+  await evaluate(`(() => {window.__qaSetItem = Storage.prototype.setItem; Storage.prototype.setItem = function(key, value) {if (key === 'layout-studio-domain-v6-draft-v1') throw new Error('quota-qa'); return window.__qaSetItem.call(this, key, value);};})()`);
+  await click('Potwierdź zastąpienie szkicu 6');
+  await evaluate(`Storage.prototype.setItem = window.__qaSetItem`);
+  const quotaText = await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"]')?.innerText`);
+  if (!quotaText.includes('Nie zastąpiono szkicu: quota-qa') || await evaluate(`localStorage.getItem('layout-studio-domain-v6-draft-v1')`) !== '{zmiana-zewnetrzna') {
+    throw new Error('Błąd pamięci zmienił poprzedni szkic.');
+  }
+  await evaluate(`localStorage.setItem('layout-studio-domain-v6-draft-v1', ${JSON.stringify(originalRaw)})`);
+  if (JSON.stringify(JSON.parse(await evaluate(`localStorage.getItem('layout-studio-v3')`)).project) !== JSON.stringify(JSON.parse(v4Before).project) ||
+      await evaluate(`localStorage.getItem('layout-studio-stations-v5')`) !== v5Before) throw new Error('Zastąpienie szkicu zmieniło aktywny projekt v4/v5.');
   if (errors.length) throw new Error(`Błędy konsoli: ${errors.join('; ')}`);
-  console.log('PASS: podgląd v4/v5, zapis, ponowne otwarcie, ochrona v4/v5 i pobranie uszkodzonego szkicu.');
+  console.log('PASS: podgląd, zapis, odzyskanie uszkodzonego szkicu, jawne zastąpienie, konflikt i limit pamięci.');
 } finally {
   if (ws) ws.close();
   browser.kill();

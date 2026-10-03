@@ -83,3 +83,7 @@ Jest to moduł trwałości niepodłączony jeszcze do interfejsu. Następny paki
 ## Pakiet 2.1e — podgląd i pierwszy zapis w UI
 
 `DomainDraftPanel` w warsztacie stanowisk pokazuje podgląd migracji v4 lub v5 z jawnymi lukami danych i tabelą powiązań. Pierwszy zapis szkicu jest osobnym działaniem po potwierdzeniu niekompletności. Panel odczytuje szkic po przeładowaniu, pozwala pobrać zapis wraz ze źródłem oraz surową kopię uszkodzonej wartości. Nie pozwala automatycznie nadpisać już istniejącego szkicu ani zapisać podglądu, jeśli źródło zmieniło się w trakcie przeglądu. Dalsza praca nad 2.1 wymaga edycji danych domenowych i kontrolowanej ścieżki zastąpienia szkicu po zabezpieczeniu poprzedniej wersji. Bilans i symulacja nadal korzystają wyłącznie z dotychczasowych modeli.
+
+## Pakiet 2.1f — kontrolowane zastąpienie
+
+Istniejący szkic można teraz zastąpić po pobraniu jego kopii, przygotowaniu nowego podglądu i osobnym potwierdzeniu. Dla uszkodzonego zapisu pobierany jest dokładny surowy tekst; dla poprawnego — pełna koperta wraz z oryginalnym źródłem. `replaceDomainDraft` porównuje poprzedni tekst tuż przed zapisem i zapisuje tylko zweryfikowany szkic. Konflikt lub błąd pamięci pozostawia poprzednią wartość; UI wymaga ponownego pobrania kopii. Zapis szkicu nadal nie zmienia aktywnych danych v4/v5 ani wyników bilansu i symulacji. Dalszy zakres 2.1 to edytor jawnych danych domenowych i odbiór ich zapisania, ponownego otwarcia oraz referencji.

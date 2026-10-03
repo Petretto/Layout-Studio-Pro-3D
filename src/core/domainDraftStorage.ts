@@ -60,6 +60,14 @@ export function readDomainDraft(storage: Pick<DomainDraftStoragePort, 'getItem'>
   catch (error) { return {status: 'corrupt', raw, error: (error as Error).message}; }
 }
 
+function serializeDraft(draft: Pick<PreparedDomainMigration, 'originalJson' | 'project'>, at: string) {
+  const sourceSchemaVersion = sourceVersion(draft.originalJson);
+  const project = parseDomainProjectV6(JSON.stringify(draft.project));
+  const saved = parseSave(JSON.stringify({kind: 'domain-draft-save', version: 1, sourceSchemaVersion,
+    originalJson: draft.originalJson, project, at}));
+  return {raw: JSON.stringify(saved), saved};
+}
+
 /** Caller passes the exact value last read (or null for an empty slot). No failure clears a previous save. */
 export function saveDomainDraft(
   storage: DomainDraftStoragePort,
@@ -67,11 +75,7 @@ export function saveDomainDraft(
   expectedRaw: string | null,
   at = new Date().toISOString(),
 ): {raw: string; saved: DomainDraftSave} {
-  const sourceSchemaVersion = sourceVersion(draft.originalJson);
-  const project = parseDomainProjectV6(JSON.stringify(draft.project));
-  const saved = parseSave(JSON.stringify({kind: 'domain-draft-save', version: 1, sourceSchemaVersion,
-    originalJson: draft.originalJson, project, at}));
-  const raw = JSON.stringify(saved);
+  const {raw, saved} = serializeDraft(draft, at);
   const current = storage.getItem(DOMAIN_DRAFT_STORAGE_KEY);
   if (current !== expectedRaw) {
     throw new Error('Zapis szkicu zmienił się od ostatniego odczytu. Wczytaj go ponownie przed zastąpieniem.');
@@ -81,4 +85,20 @@ export function saveDomainDraft(
   }
   storage.setItem(DOMAIN_DRAFT_STORAGE_KEY, raw);
   return {raw, saved};
+}
+
+/** Explicit recovery path. The caller must first export the exact previous raw value and confirm replacement. */
+export function replaceDomainDraft(
+  storage: DomainDraftStoragePort,
+  draft: Pick<PreparedDomainMigration, 'originalJson' | 'project'>,
+  expectedRaw: string,
+  at = new Date().toISOString(),
+): {raw: string; saved: DomainDraftSave} {
+  const next = serializeDraft(draft, at);
+  const current = storage.getItem(DOMAIN_DRAFT_STORAGE_KEY);
+  if (current === null || current !== expectedRaw) {
+    throw new Error('Zapis szkicu zmienił się od pobrania kopii. Wczytaj go i pobierz ponownie.');
+  }
+  storage.setItem(DOMAIN_DRAFT_STORAGE_KEY, next.raw);
+  return next;
 }

@@ -13,7 +13,7 @@ import {reviseStations} from '../src/core/stationRegistry';
 import {previewStationMigration,prepareStationMigration} from '../src/core/stationMigration';
 import {previewDomainMigrationFromV4,previewDomainMigrationFromV5,verifyDomainMigrationPreview} from '../src/core/domainMigrationPreview';
 import {parseDomainProjectV6,prepareDomainMigration} from '../src/core/domainProject';
-import {DOMAIN_DRAFT_STORAGE_KEY,readDomainDraft,saveDomainDraft} from '../src/core/domainDraftStorage';
+import {DOMAIN_DRAFT_STORAGE_KEY,readDomainDraft,replaceDomainDraft,saveDomainDraft} from '../src/core/domainDraftStorage';
 import {parseStationProjectV5} from '../src/core/stationProject';
 import {runStationBalancing,moveStationOperation} from '../src/core/stationBalancing';
 import {deriveStationProject} from '../src/core/stationDerivation';
@@ -92,6 +92,40 @@ test('2.1d: błędny, obcy lub zmieniony zapis nie jest nadpisywany',()=>{
   storage.values.set(DOMAIN_DRAFT_STORAGE_KEY,JSON.stringify({...JSON.parse(first.raw),sourceSchemaVersion:4}));
   assert.equal(readDomainDraft(storage).status,'corrupt');
   assert.equal(readDomainDraft({getItem:()=>{throw new Error('blocked');}}).status,'unavailable');
+});
+
+test('2.1f: jawne zastąpienie szkicu zachowuje aktywne projekty i wymaga dokładnej poprzedniej wartości',()=>{
+  const v5=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+  const v4=readFileSync('tests/qa/Eko_B_export_20260930_183858.json','utf8');
+  const fromV5=prepareDomainMigration(previewDomainMigrationFromV5(v5));
+  let id=0;
+  const fromV4=prepareDomainMigration(previewDomainMigrationFromV4(v4,()=>`ST-replace-${++id}`));
+  const storage=new DraftStorage();
+  storage.values.set('layout-studio-v3','active-v4');
+  storage.values.set('layout-studio-stations-v5','active-v5');
+  const first=saveDomainDraft(storage,fromV5,null);
+  assert.throws(()=>replaceDomainDraft(storage,fromV4,'stary-odczyt'),/zmienił się/);
+  assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),first.raw);
+  const invalid={...fromV4,project:{...fromV4.project,modelStatus:'ready' as 'incomplete'}};
+  assert.throws(()=>replaceDomainDraft(storage,invalid,first.raw),/niekompletny/);
+  assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),first.raw);
+  storage.failWrite=true;
+  assert.throws(()=>replaceDomainDraft(storage,fromV4,first.raw),/quota/);
+  assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),first.raw);
+  storage.failWrite=false;
+  const replaced=replaceDomainDraft(storage,fromV4,first.raw);
+  assert.equal(replaced.saved.originalJson,v4);
+  assert.equal(replaced.saved.sourceSchemaVersion,4);
+  assert.equal(readDomainDraft(storage).status,'valid');
+  assert.equal(storage.getItem('layout-studio-v3'),'active-v4');
+  assert.equal(storage.getItem('layout-studio-stations-v5'),'active-v5');
+  storage.values.set(DOMAIN_DRAFT_STORAGE_KEY,'{uszkodzony');
+  assert.throws(()=>replaceDomainDraft(storage,fromV5,replaced.raw),/zmienił się/);
+  assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),'{uszkodzony');
+  const recovered=replaceDomainDraft(storage,fromV5,'{uszkodzony');
+  assert.equal(recovered.saved.originalJson,v5);
+  assert.equal(readDomainDraft(storage).status,'valid');
+  assert.throws(()=>replaceDomainDraft(storage,fromV4,recovered.raw+'x'),/zmienił się/);
 });
 
 test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{
