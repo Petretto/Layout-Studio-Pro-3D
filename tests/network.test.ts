@@ -11,6 +11,9 @@ import {layoutWarnings} from '../src/core/algorithms/layoutEngine';
 import {DEFAULT_EKO_PROJECT} from '../src/core/models/ekoProject';
 import {reviseStations} from '../src/core/stationRegistry';
 import {previewStationMigration,prepareStationMigration} from '../src/core/stationMigration';
+import {previewDomainMigrationFromV4,previewDomainMigrationFromV5,verifyDomainMigrationPreview} from '../src/core/domainMigrationPreview';
+import {parseDomainProjectV6,prepareDomainMigration} from '../src/core/domainProject';
+import {DOMAIN_DRAFT_STORAGE_KEY,readDomainDraft,saveDomainDraft} from '../src/core/domainDraftStorage';
 import {parseStationProjectV5} from '../src/core/stationProject';
 import {runStationBalancing,moveStationOperation} from '../src/core/stationBalancing';
 import {deriveStationProject} from '../src/core/stationDerivation';
@@ -20,6 +23,184 @@ import {addStationEquipment,updateStationEquipment,removeStationEquipment} from 
 import {readFileSync} from 'node:fs';
 import {encodeImport} from '../src/core/importArchive';
 import {makePortableArchive,readPortableArchive} from '../src/core/portableArchive';
+
+class DraftStorage {
+  values = new Map<string,string>();
+  failWrite = false;
+  getItem(key:string){return this.values.get(key)??null;}
+  setItem(key:string,value:string){if(this.failWrite)throw new Error('quota');this.values.set(key,value);}
+}
+
+test('2.1d: szkic v6 zapisuje się osobno, otwiera ponownie i zachowuje dokładne źródło v4/v5',()=>{
+  for(const version of [4,5] as const){
+    const original=readFileSync(version===4?'tests/qa/Eko_B_export_20260930_183858.json':'tests/qa/Eko_D5_actual_export_v5.json','utf8');
+    let id=0;
+    const preview=version===4?previewDomainMigrationFromV4(original,()=>`ST-draft-${++id}`):previewDomainMigrationFromV5(original);
+    const prepared=prepareDomainMigration(preview);
+    const storage=new DraftStorage();
+    storage.values.set('layout-studio-v3','active-v4');
+    storage.values.set('layout-studio-stations-v5','active-v5');
+    assert.deepEqual(readDomainDraft(storage),{status:'empty'});
+    const written=saveDomainDraft(storage,prepared,null,'2026-10-03T08:00:00.000Z');
+    const reopened=readDomainDraft(storage);
+    assert.equal(reopened.status,'valid');
+    if(reopened.status!=='valid')throw new Error('Brak zapisu.');
+    assert.equal(reopened.raw,written.raw);
+    assert.equal(reopened.saved.sourceSchemaVersion,version);
+    assert.equal(reopened.saved.originalJson,original);
+    assert.deepEqual(reopened.saved.project,prepared.project);
+    assert.equal(reopened.saved.project.modelStatus,'incomplete');
+    assert.equal(storage.getItem('layout-studio-v3'),'active-v4');
+    assert.equal(storage.getItem('layout-studio-stations-v5'),'active-v5');
+    assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),written.raw);
+  }
+});
+
+test('2.1d: błędny, obcy lub zmieniony zapis nie jest nadpisywany',()=>{
+  const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+  const prepared=prepareDomainMigration(previewDomainMigrationFromV5(original));
+  const storage=new DraftStorage();
+  const first=saveDomainDraft(storage,prepared,null);
+  assert.throws(()=>saveDomainDraft(storage,prepared,null),/zmienił się/);
+  assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),first.raw);
+  const edited=structuredClone(prepared);
+  edited.project.workers=[{id:'WORKER-QA',name:'Osoba testowa'}];
+  const updated=saveDomainDraft(storage,edited,first.raw);
+  assert.equal(updated.saved.project.workers[0].id,'WORKER-QA');
+  assert.equal(updated.saved.originalJson,original);
+  assert.equal(readDomainDraft(storage).status,'valid');
+  const second=updated.raw;
+  assert.throws(()=>saveDomainDraft(storage,{...edited,originalJson:JSON.stringify({...JSON.parse(original),name:'Inny projekt'})},second),/Źródło istniejącego/);
+  assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),second);
+  const badProject={...prepared,project:{...prepared.project,modelStatus:'complete' as 'incomplete'}};
+  assert.throws(()=>saveDomainDraft(storage,badProject,second),/niekompletny/);
+  assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),second);
+  storage.failWrite=true;
+  assert.throws(()=>saveDomainDraft(storage,prepared,second),/quota/);
+  assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),second);
+  storage.failWrite=false;
+  storage.values.set(DOMAIN_DRAFT_STORAGE_KEY,'{uszkodzony');
+  const corrupt=readDomainDraft(storage);
+  assert.equal(corrupt.status,'corrupt');
+  if(corrupt.status!=='corrupt')throw new Error('Brak stanu odzyskiwania.');
+  assert.equal(corrupt.raw,'{uszkodzony');
+  assert.throws(()=>saveDomainDraft(storage,prepared,first.raw),/zmienił się/);
+  assert.throws(()=>saveDomainDraft(storage,prepared,'{uszkodzony'));
+  assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),'{uszkodzony');
+  storage.values.set(DOMAIN_DRAFT_STORAGE_KEY,JSON.stringify({...JSON.parse(first.raw),version:2}));
+  assert.equal(readDomainDraft(storage).status,'corrupt');
+  storage.values.set(DOMAIN_DRAFT_STORAGE_KEY,JSON.stringify({...JSON.parse(first.raw),sourceSchemaVersion:4}));
+  assert.equal(readDomainDraft(storage).status,'corrupt');
+  assert.equal(readDomainDraft({getItem:()=>{throw new Error('blocked');}}).status,'unavailable');
+});
+
+test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{
+  const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+  const before=JSON.parse(original);
+  const preview=previewDomainMigrationFromV5(original);
+  assert.equal(preview.originalJson,original);
+  assert.equal(preview.operationStations.length,16);
+  assert.equal(preview.stationStaffing.length,17);
+  assert.equal(preview.visualBindings.length,53);
+  assert.deepEqual(preview.stationProject.stations.map(s=>s.id),before.stations.map((s:{id:string})=>s.id));
+  assert.deepEqual(preview.stationProject.layoutObjects,before.layoutObjects);
+  assert.ok(preview.operationStations.every(link=>link.stationId&&preview.stationProject.stations.some(s=>s.id===link.stationId)));
+  assert.ok(preview.unresolved.includes('worker-identities'));
+  assert.ok(preview.unresolved.includes('product-definition'));
+  assert.ok(preview.unresolved.includes('subassembly-definitions'));
+  assert.equal(verifyDomainMigrationPreview(preview).originalJson,original);
+  const configured=structuredClone(before);
+  configured.workstationSettings={[configured.stations[0].id]:{operators:2,parallelStations:3,assistedCycleSeconds:3481}};
+  const withStaffing=previewDomainMigrationFromV5(JSON.stringify(configured));
+  assert.deepEqual(withStaffing.stationStaffing[0],{stationId:configured.stations[0].id,
+    operatorsPerCopy:2,parallelCopies:3,assistedCycleSeconds:3481});
+  assert.equal(withStaffing.stationStaffing[1].operatorsPerCopy,null);
+  const altered=structuredClone(preview);altered.operationStations[0].stationId=altered.stationProject.stations[1].id;
+  assert.throws(()=>verifyDomainMigrationPreview(altered),/nieaktualny lub zmieniony/);
+  assert.equal(readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8'),original);
+});
+
+test('2.1b: podgląd v4 korzysta z jawnej migracji stanowisk i nie zgaduje osób',()=>{
+  const original=JSON.stringify(derive(structuredClone(base)).project);
+  let next=0;
+  const preview=previewDomainMigrationFromV4(original,()=>`ST-domain-${++next}`);
+  assert.equal(preview.originalJson,original);
+  assert.equal(preview.stationProject.schemaVersion,5);
+  assert.equal(preview.operationStations.length,base.processSteps.length);
+  assert.ok(preview.stationStaffing.every(s=>s.operatorsPerCopy===null&&s.parallelCopies===null));
+  assert.deepEqual(preview.unassignedOperationIds,[]);
+  assert.deepEqual(verifyDomainMigrationPreview(preview).operationStations,preview.operationStations);
+  const eko=readFileSync('tests/qa/Eko_B_export_20260930_183858.json','utf8');
+  let ekoId=0;
+  const ekoPreview=previewDomainMigrationFromV4(eko,()=>`ST-domain-eko-${++ekoId}`);
+  assert.equal(ekoPreview.originalJson,eko);
+  assert.equal(ekoPreview.stationProject.stations.length,16);
+  assert.equal(ekoPreview.stationProject.bom.length,60);
+  assert.deepEqual(ekoPreview.stationProject.layoutObjects.map(o=>o.id),JSON.parse(eko).layoutObjects.map((o:{id:string})=>o.id));
+  const orphan=readFileSync('tests/qa/Eko_D5e_orphan_resource_v4.json','utf8');
+  assert.throws(()=>previewDomainMigrationFromV4(orphan),/Osierocone ustawienia/);
+  assert.throws(()=>previewDomainMigrationFromV5(readFileSync('tests/qa/Eko_D5_v5_bad_binding.json','utf8')),/nieznane stanowisko/);
+});
+
+test('2.1c: Eko v5 przechodzi do niekompletnego schematu 6 bez utraty powiązań',()=>{
+  const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+  const preview=previewDomainMigrationFromV5(original);
+  const prepared=prepareDomainMigration(preview);
+  const p=parseDomainProjectV6(JSON.stringify(prepared.project));
+  assert.equal(prepared.originalJson,original);
+  assert.equal(p.schemaVersion,6);
+  assert.equal(p.modelStatus,'incomplete');
+  assert.equal(p.operations.length,16);
+  assert.equal(p.stations.length,17);
+  assert.equal(p.bom.length,60);
+  assert.equal(p.layoutObjects.length,53);
+  assert.deepEqual(p.stations,preview.stationProject.stations);
+  assert.deepEqual(p.stationSettings,preview.stationProject.workstationSettings);
+  assert.ok(p.operations.every(s=>!('assignedWorkstationId' in s)));
+  assert.deepEqual([p.workers,p.workerPools,p.equipment,p.subassemblies],[[],[],[],[]]);
+  assert.equal(p.product,null);
+  assert.equal(JSON.stringify(p).includes('processSteps'),false);
+  assert.equal(readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8'),original);
+});
+
+test('2.1c: Eko v4 zachowuje źródło i pozwala później jawnie dodać osobne byty',()=>{
+  const original=readFileSync('tests/qa/Eko_B_export_20260930_183858.json','utf8');
+  let next=0;
+  const preview=previewDomainMigrationFromV4(original,()=>`ST-v6-eko-${++next}`);
+  const prepared=prepareDomainMigration(preview);
+  assert.equal(prepared.originalJson,original);
+  assert.equal(prepared.project.stations.length,16);
+  assert.equal(prepared.project.bom.length,60);
+  const p=structuredClone(prepared.project);
+  const visual=p.layoutObjects.find(o=>o.workstationId);
+  assert.ok(visual);
+  p.workers=[{id:'WORKER-QA',name:'Osoba testowa'}];
+  p.workerPools=[{id:'POOL-QA',name:'Pula testowa',workerIds:['WORKER-QA']}];
+  p.equipment=[{id:'EQ-QA',name:'Wyposażenie testowe',stationId:visual.workstationId,layoutObjectId:visual.id}];
+  p.product={id:'PRODUCT-QA',name:'Wyrób testowy'};
+  p.subassemblies=[{id:'SUB-QA',name:'Podzespół testowy',producerOperationId:'OP10',consumerOperationIds:['OP11']}];
+  assert.deepEqual(parseDomainProjectV6(JSON.stringify(p)),p);
+  assert.equal(p.modelStatus,'incomplete');
+  assert.equal(readFileSync('tests/qa/Eko_B_export_20260930_183858.json','utf8'),original);
+});
+
+test('2.1c: schemat 6 odrzuca podwójne źródła prawdy i błędne referencje',()=>{
+  const source=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+  const p=prepareDomainMigration(previewDomainMigrationFromV5(source)).project;
+  const invalid=(edit:(candidate:typeof p)=>void,pattern:RegExp)=>{
+    const candidate=structuredClone(p);edit(candidate);
+    assert.throws(()=>parseDomainProjectV6(JSON.stringify(candidate)),pattern);
+  };
+  invalid(p=>{(p as typeof p & {processSteps:unknown}).processSteps=[];},/drugiego źródła/);
+  invalid(p=>{(p.operations[0] as typeof p.operations[0] & {assignedWorkstationId:string}).assignedWorkstationId=p.stations[0].id;},/wyłącznie do rejestru/);
+  invalid(p=>{p.modelStatus='ready' as 'incomplete';},/niekompletny/);
+  invalid(p=>{p.workerPools=[{id:'POOL-1',name:'Zespół',workerIds:['OSOBA-1']}];},/nieznany lub powtórzony pracownik/);
+  invalid(p=>{p.equipment=[{id:'EQ-1',name:'Narzędzie',stationId:'ST-obce'}];},/nieznane stanowisko/);
+  invalid(p=>{p.equipment=[{id:'EQ-1',name:'Narzędzie',layoutObjectId:p.layoutObjects[0].id},{id:'EQ-2',name:'Drugie',layoutObjectId:p.layoutObjects[0].id}];},/więcej niż jednego wyposażenia/);
+  invalid(p=>{p.subassemblies=[{id:'SUB-1',name:'Podzespół',producerOperationId:'OP-obca',consumerOperationIds:[]}];},/nieznana operacja tworząca/);
+  invalid(p=>{p.stations[0].operationIds.push(p.stations[1].operationIds[0]);},/więcej niż raz/);
+  assert.throws(()=>parseDomainProjectV6(JSON.stringify({...p,schemaVersion:7})),/schematu 6/);
+});
 
 test('archiwum v5 przenosi projekt, migawkę v4 i pierwotny plik osobno',()=>{
   const project=parseStationProjectV5(readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8'));

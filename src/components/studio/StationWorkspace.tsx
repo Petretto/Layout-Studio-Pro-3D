@@ -15,6 +15,7 @@ import {parseProject} from '../../core/validation';
 import {fmt} from './Fields';
 import {StationGeometryEditor} from './StationGeometryEditor';
 import {Simulation} from './Simulation';
+import {DomainDraftPanel} from './DomainDraftPanel';
 
 const Scene = lazy(() => import('./Scene').then(module => ({default: module.Scene})));
 
@@ -219,6 +220,7 @@ export function StationWorkspace({legacyProject, legacyImportSourceBase64, simul
     {confirmRecovery && !allowSave && <div className="panel notice" role="alertdialog" aria-label="Potwierdź zastąpienie uszkodzonego zapisu"><p>Po odblokowaniu poprawny import lub migracja będzie mogła zastąpić uszkodzony zapis. Pobierz jego kopię przed kontynuowaniem.</p><div className="toolbar"><button onClick={() => setConfirmRecovery(false)}>Anuluj zastąpienie</button><button onClick={() => {setAllowSave(true); setConfirmRecovery(false); setMessage('Możesz teraz wczytać projekt lub przygotować migrację.');}}>Potwierdź zastąpienie zapisu</button></div></div>}
     <p className="muted">{project ? `Projekt: ${project.name} · ${stations.length} stanowisk · zapis: ${savedAt ? new Date(savedAt).toLocaleString('pl-PL') : 'oczekuje'}` : 'Wybierz migrację bieżącego projektu albo import projektu 5.'}</p>
     {message && <p className={message.includes('odrzucon') || message.includes('zatrzyman') || message.includes('Nie zapisano') ? 'error' : 'notice'} role="status">{message}</p>}
+    <DomainDraftPanel legacyProject={legacyProject} stationProject={project} />
     {derived?.error && <p className="error">{derived.error}</p>}
     {project && derived?.value && <>
       <div className="toolbar"><button disabled={!past.length} onClick={undo}>Cofnij</button><button disabled={!future.length} onClick={redo}>Ponów</button><button onClick={() => change(current => reviseStationProject(current, [...current.stations, {name: 'Nowe stanowisko', operationIds: []}]).project)}>Dodaj puste stanowisko</button><button onClick={() => {if (window.confirm('Wygenerować layout od nowa? Zapisane pozycje i obiekty wyposażenia zostaną zastąpione.')) change(current => {const balance = deriveStationProject(current).project.balancing; return {...current, layoutMode: 'auto', layoutObjects: generate3DLayout(balance.workstations, current.targetLayoutType, current.facility, current.layoutSettings ?? defaultLayoutSettings, current.processSteps)};});}}>Wygeneruj layout od nowa</button></div>

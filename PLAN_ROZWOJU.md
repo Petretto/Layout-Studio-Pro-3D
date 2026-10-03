@@ -1,7 +1,7 @@
 # Plan rozwoju i rejestr postępu aplikacji
 
 Data utworzenia: 2026-09-29  
-Ostatnia aktualizacja: 2026-10-02  
+Ostatnia aktualizacja: 2026-10-03
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
 Główny przypadek testowy: proces Eko.
 
@@ -51,7 +51,7 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | Etap | Zakres | Status | Zależności |
 | --- | --- | --- | --- |
 | 1 | Stabilizacja i bezpieczeństwo projektu | wdrożone | Punkt wyjścia 0.4.0 |
-| 2 | Model procesu i zasobów | nierozpoczęte | Fundament etapu 1 |
+| 2 | Model procesu i zasobów | w trakcie | Fundament etapu 1 |
 | 3 | Symulacja powiązana z layoutem | nierozpoczęte | Etap 2; podstawowe trasy i punkty transportowe |
 | 4 | Balansowanie i porównywanie wariantów | nierozpoczęte | Etapy 2–3 |
 | 5 | Edytor hali i spójny interfejs | w trakcie | Stabilny model danych; podstawowe poprawki UX od etapu 1 |
@@ -59,6 +59,16 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 7 | Walidacja Eko i przygotowanie komercyjne | nierozpoczęte | Etapy 1–6; zbieranie danych od początku |
 
 ## Bieżący pakiet
+
+2.1e (2026-10-03): UI podglądu migracji v4/v5 do niekompletnego szkicu v6 w warsztacie stanowisk. Pokazuje powiązania i luki danych, wymaga potwierdzenia przed pierwszym zapisem, odrzuca nieaktualny podgląd, odczytuje szkic po przeładowaniu i pozwala pobrać surową kopię uszkodzonej wartości. Backup 121 plików: `backup/v0.4.0_przed_2_1e_20261003_084320` (zgodne SHA256). Odbiór Edge CDP `tests/qa/verify_2_1e.mjs` potwierdził przepływ Eko v5, podgląd v4, zapis/ponowne otwarcie, ochronę aktywnych projektów v4/v5 i pobranie uszkodzonego szkicu; zrzuty `outputs/qa/verify_2_1e_saved.png` oraz `outputs/qa/verify_2_1e.png`. 83/83 testy i build poprawne. Raport `WERYFIKACJA_MODELU_2_1.md`. Punkt 2.1 w trakcie: szkic wymaga późniejszego edytora uzupełniania danych, jawnego zastąpienia po odzyskaniu oraz dalszego odbioru migracji.
+
+2.1d (2026-10-03): izolowany moduł zapisu/odczytu szkicu schematu 6 pod osobnym kluczem `layout-studio-domain-v6-draft-v1`. Zachowuje dokładny tekst źródła v4/v5, waliduje oba projekty przy zapisie i odczycie, odróżnia pusty, poprawny, uszkodzony i niedostępny zapis. Odmawia nadpisania przy konflikcie, uszkodzeniu, zmianie źródła lub błędzie walidacji; błąd limitu pamięci zachowuje poprzednią wartość. Backup 120 plików: `backup/v0.4.0_przed_2_1d_20261003_083551` (zgodne SHA256). Testy Eko v4/v5, ponownego odczytu, aktualizacji i odmów: 83/83; build poprawny. Raport `WERYFIKACJA_MODELU_2_1.md`. Punkt 2.1 pozostaje w trakcie: moduł nie jest jeszcze podłączony do UI i nie ma odbioru zapisu w przeglądarce.
+
+2.1c (2026-10-03): osobny, nieaktywny schemat roboczy 6 i parser rozdzielają operacje, stanowiska, obsadę, osoby/pule, wyposażenie technologiczne, wyrób i podzespoły. Migracja wymaga zweryfikowanego podglądu 2.1b i zachowuje dokładny tekst źródła osobno. Brakujących bytów nie dopowiedziano, szkic ma wyłącznie status `incomplete`. Backup 119 plików: `backup/v0.4.0_przed_2_1c_20261003_082515` (zgodne SHA256). Eko v4/v5, roundtrip i odmowy błędnych referencji: 81/81 testów, build poprawny; raport `WERYFIKACJA_MODELU_2_1.md`. Punkt 2.1 w trakcie do zapisu, UI i odbioru ponownego otwarcia.
+
+2.1b (2026-10-03): odczytowy, wersjonowany podgląd migracji modelu procesu ze schematów 4/5 zachowuje oryginalny JSON, mapy operacja–stanowisko, jawnie zapisane liczby obsady/kopii i wizualne powiązania wyposażenia; wskazuje luki danych bez tworzenia osób, podzespołów ani możliwości maszyn. Backup 117 plików: `backup/v0.4.0_przed_2_1b_20261003_081637` (zgodne SHA256). Testy Eko i silników, błędnych referencji, odmowy zmienionego podglądu: 78/78; build poprawny. Raport `WERYFIKACJA_MODELU_2_1.md`. Punkt 2.1 w trakcie; nie podłączono nowego modelu do UI, zapisu ani symulacji.
+
+2.1a (2026-10-03): opisano kontrakt oddzielnych operacji, stanowisk, pracowników/pul, wyposażenia, wyrobu i podzespołów oraz jednostki, referencje i ścieżkę migracji v4/v5. Dokument `MODEL_PROCESU_2_1.md` wskazuje dane, których nie wolno dopowiadać z obecnego projektu, i kryteria następnego pakietu. Zweryfikowano liczby w rzeczywistym eksporcie Eko i 76/76 testów; kod, schematy i wyniki symulacji bez zmian. Punkt 2.1 pozostaje w trakcie do implementacji wersjonowanego modelu, parsera, migracji i odbioru UI.
  
 1.5/1.6 (2026-10-02): Domknięcie i całościowy odbiór punktów 1.5 i 1.6 (trwałe identyfikatory stanowisk niezależne od numeracji i zestawu operacji; eliminacja niejawnego resetowania zasobów i wyposażenia przy zmianie przydziału, podziale, scaleniu i usunięciu operacji). Wprowadzono i zweryfikowano: trwałe identyfikatory `ST-...` generowane stabilnie w rejestrze stanowisk v5; przesuwanie stanowisk w górę/dół bez mutacji ID i geometrii; ochronę kolejności grafu technologicznego przed niepoprawnym przestawieniem; jawny podział stanowiska z zachowaniem starego ID, zasobów i geometrii stacji źródłowej oraz utworzeniem nowego unikalnego ID bez powiązań; jawne scalenie wymagające wskazania pozostającego ID z prezentacją obiektów i ustawień wycofywanego ID przed zatwierdzeniem; panel usuwania operacji ze stanowiska (`removeStationOperation`), który czyści relacje technologiczne i referencje BOM, lecz zachowuje stanowisko jako puste (`operationIds: []`), z cyklem 0 s, nienaruszonym trwałym ID, wyposażeniem w `layoutObjects` i zasobami w `workstationSettings`. Brak wymaganego wyposażenia (np. brak stołów) natychmiast blokuje symulację jawnym błędem layoutu bez domyślania się geometrii. Zautomatyzowany odbiór UI w przeglądarce Edge (CDP) na porcie 5197 (`tests/qa/verify_1_5_1_6.mjs`) potwierdził: odmowę zamiany kolejności naruszającej graf OP10/OP11, zamianę kolejności niezależnych stacji z zachowaniem ID, podział stacji z blokadą brakującego stołu i ręczne dodanie stołu w edytorze geometrii, usunięcie OP10 ze stanowiska 1 z zachowaniem pustego stanowiska i jego ID, pełny cykl Cofnij/Ponów oraz odczyt po przeładowaniu strony (18 stanowisk z zachowanymi danymi). 76/76 testów jednostkowych i build poprawne. Raporty: `WERYFIKACJA_STALE_ID_1_5_1_6.md` oraz uzupełnienie `WERYFIKACJA_STABILIZACJA_D.md`. Punkty 1.5 i 1.6 wdrożone; Etap 1 wdrożony w całości.
  
@@ -169,7 +179,12 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 
 | ID | Krok / oczekiwany rezultat | Status |
 | --- | --- | --- |
-| 2.1 | Rozdzielić operację, stanowisko, pracownika/pulę pracowników, wyposażenie, wyrób i podzespół; opisać jednostki, relacje i migrację danych. | nierozpoczęte |
+| 2.1 | Rozdzielić operację, stanowisko, pracownika/pulę pracowników, wyposażenie, wyrób i podzespół; opisać jednostki, relacje i migrację danych. | w trakcie |
+| 2.1.1 | Spisać kontrakt bytów, jednostek i referencji oraz bezstratną ścieżkę migracji v4/v5 z jawnymi lukami danych; dowód w `MODEL_PROCESU_2_1.md`. | wdrożone |
+| 2.1.2 | Przygotować odczytowy podgląd migracji v4/v5 z zachowaniem źródła, trwałych ID i jawnymi brakami danych; odrzucać błędne referencje i zmieniony podgląd. | wdrożone |
+| 2.1.3 | Dodać osobny roboczy schemat 6, parser referencji i przygotowanie migracji tylko po zweryfikowanym podglądzie, bez aktywowania zapisu i symulacji. | wdrożone |
+| 2.1.4 | Dodać izolowany zapis szkicu 6 i odczyt z walidacją, zachowując dokładne źródło v4/v5 i chroniąc poprzedni zapis przy błędzie lub konflikcie. | wdrożone |
+| 2.1.5 | Pokazać podgląd migracji i luki danych w UI, jawnie zapisać pierwszy szkic 6, ponownie go otworzyć i udostępnić surową kopię uszkodzonego zapisu. | wdrożone |
 | 2.2 | Rozdzielić czas pracy ręcznej, automatyczny czas maszyny i okres wymaganej obecności operatora. | nierozpoczęte |
 | 2.3 | Określać wymaganą liczbę pracowników przy operacji oraz jawne warianty czasu dla obsady, bez automatycznego dzielenia czasu przez liczbę osób. | nierozpoczęte |
 | 2.4 | Obsłużyć operatorów współdzielonych między stanowiskami, ich rezerwację i zwalnianie bez nakładania przydziałów w czasie. | nierozpoczęte |
@@ -320,6 +335,11 @@ Każdy kolejny wpis powinien wskazywać konkretne ID. Nie usuwać historii przy 
 | 2026-10-02 | 5.11 | nierozpoczęte → wdrożone | Przełączanie jednostek czasu s/min/h w całym UI (nagłówek, popyt, proces, bilans, symulacja, warianty). Komponent TimeField z automatycznym przeliczaniem, dynamiczne etykiety [s/min/h]. Zachowanie niezmiennika modelu czasu w sekundach potwierdzone testami jednostkowymi i zapisem localStorage. Backup 124 plików `backup/v0.4.0_przed_5_11_20261002_215000`, odbiór UI CDP na porcie 5195 (`outputs/qa/verify_5_11_time_units.png`), 75/75 testów i build poprawne; raport `WERYFIKACJA_JEDNOSTKI_CZASU_5_11.md`. |
 | 2026-10-02 | 5.12 | nierozpoczęte → wdrożone | Pobieralne szablony importu procesu i BOM w XLSX (arkusz Dane do natychmiastowego importu, arkusz Opis kolumn ze specyfikacją techniczną) oraz CSV. Wzorcowy proces wielogałęziowy (OP10 → OP20, OP25 → OP30), 5 komponentów ze wszystkimi pojemnikami (BoxKLT, Tray, Carton, Pallet), rozwijana specyfikacja w UI oraz precyzyjne zgłaszanie brakujących wymaganych kolumn przy zachowaniu atomowości. Backup 105 plików `backup/v0.4.0_przed_5_12_20261002_213500`, odbiór UI na porcie 5196, 73/73 testy i build poprawne; raport `WERYFIKACJA_SZABLONY_5_12.md`. |
 | 2026-10-01 | 3.10, 5.11, 5.12, 7.10 | dodano do planu — nierozpoczęte | Zapisano wymagania użytkownika: wyższe mnożniki odtwarzania, przełączane s/min/h, szablony importu XLSX procesu i BOM oraz późniejsze dopracowanie PDF. Nie zmieniono statusu aktywnego pakietu D. |
+| 2026-10-03 | 2.1.2 | wdrożone — 2.1b | Wersjonowany podgląd migracji v4/v5 bez zapisu i symulacji; zachowuje źródło, ID, jawne ustawienia i pokazuje luki. Backup 117 plików, 78/78 testów i build; raport `WERYFIKACJA_MODELU_2_1.md`. Punkt 2.1 nadal w trakcie. |
+| 2026-10-03 | 2.1.3 | wdrożone — 2.1c | Roboczy schemat 6, parser i przygotowanie migracji po podglądzie 2.1b; Eko v4/v5 i przypadki negatywne, 81/81 testów, build, backup 119 plików. Bez aktywnego zapisu i UI; punkt 2.1 w trakcie. Raport `WERYFIKACJA_MODELU_2_1.md`. |
+| 2026-10-03 | 2.1.4 | w trakcie → wdrożone — 2.1d | Izolowany zapis i odczyt szkicu 6 z zachowaniem źródła v4/v5, kontrolą konfliktu i odmową nadpisania uszkodzonego szkicu; 83/83 testy, build, backup 120 plików. Bez podłączenia do UI; punkt 2.1 w trakcie. Raport `WERYFIKACJA_MODELU_2_1.md`. |
+| 2026-10-03 | 2.1.5 | w trakcie → wdrożone — 2.1e | Podgląd migracji i luk w UI, pierwszy zapis szkicu i odczyt po przeładowaniu, pobranie uszkodzonej wartości. Edge CDP na porcie 5198 potwierdził też niezmienność danych v4/v5 i blokadę nieaktualnego podglądu. Backup 121 plików, 83/83 testy i build. Punkt 2.1 w trakcie; raport `WERYFIKACJA_MODELU_2_1.md`. |
+| 2026-10-03 | 2.1, 2.1.1 | 2.1 nierozpoczęte → w trakcie; 2.1.1 wdrożone — 2.1a | Kontrakt nowego modelu i migracji w `MODEL_PROCESU_2_1.md`; potwierdzono fakty w pliku Eko, 76/76 testów. Brak zmiany kodu i schematów; parser, migracja i UI pozostają do wykonania. |
 
 ### Szablon wpisu odbioru pakietu
 
