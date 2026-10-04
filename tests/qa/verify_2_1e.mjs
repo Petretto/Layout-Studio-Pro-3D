@@ -282,6 +282,38 @@ try {
   equipmentDraft = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
   if (equipmentDraft.equipment[0]?.name !== 'Urządzenie po zmianie' || equipmentDraft.equipment[0]?.stationId !== stationA ||
       equipmentDraft.equipment[0]?.layoutObjectId !== visualA || await evaluate(`localStorage.getItem('layout-studio-stations-v5')`) !== v5Before) throw new Error('Powiązanie wyposażenia nie przetrwało przeładowania lub zmieniło v5.');
+
+  // 2.1j: capability is an explicit optional declaration, independent of visual binding.
+  await choose('Wyposażenie do edycji', 'EQ-QA-1');
+  await evaluate(`document.querySelectorAll('[aria-label="Możliwości wyposażenia"] input[type="checkbox"]')[0].click()`);
+  await sleep(50);
+  await evaluate(`document.querySelectorAll('[aria-label="Możliwości wyposażenia"] input[type="checkbox"]')[1].click()`);
+  await sleep(50);
+  await click('Zapisz wyposażenie');
+  equipmentDraft = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (JSON.stringify(equipmentDraft.equipment[0]?.capableOperationIds) !== JSON.stringify(['OP10','OP11'])) throw new Error('Nie zapisano jawnych możliwości wyposażenia.');
+  await click('Cofnij dane szkicu');
+  if (await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project.equipment[0].capableOperationIds`) !== undefined) throw new Error('Cofnij nie przywróciło nieokreślonych możliwości.');
+  await click('Ponów dane szkicu');
+  await send('Page.reload');
+  await sleep(900);
+  await openStations();
+  equipmentDraft = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (JSON.stringify(equipmentDraft.equipment[0]?.capableOperationIds) !== JSON.stringify(['OP10','OP11'])) throw new Error('Możliwości zniknęły po przeładowaniu.');
+  await choose('Wyposażenie do edycji', 'EQ-QA-1');
+  await evaluate(`document.querySelectorAll('[aria-label="Możliwości wyposażenia"] input[type="checkbox"]')[0].click()`);
+  await sleep(50);
+  await evaluate(`document.querySelectorAll('[aria-label="Możliwości wyposażenia"] input[type="checkbox"]')[1].click()`);
+  await sleep(50);
+  await click('Zapisz wyposażenie');
+  if (await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project.equipment[0].capableOperationIds`) !== undefined) throw new Error('Pusty wybór nie przywrócił stanu nieokreślonego.');
+  await click('Cofnij dane szkicu');
+  equipmentDraft = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (JSON.stringify(equipmentDraft.equipment[0]?.capableOperationIds) !== JSON.stringify(['OP10','OP11']) ||
+      await evaluate(`localStorage.getItem('layout-studio-stations-v5')`) !== v5Before) throw new Error('Przywrócenie możliwości zmieniło aktywny projekt v5.');
+  await evaluate(`document.querySelector('[aria-label="Edytor wyposażenia szkicu 6"]').scrollIntoView()`);
+  const capabilityShot = await send('Page.captureScreenshot', {format: 'png'});
+  writeFileSync('outputs/qa/verify_2_1j_capabilities.png', Buffer.from(capabilityShot.data, 'base64'));
   await evaluate(`document.querySelector('[aria-label="Edytor osób i pul szkicu 6"]').scrollIntoView()`);
   const peopleShot = await send('Page.captureScreenshot', {format: 'png'});
   writeFileSync('outputs/qa/verify_2_1g_people.png', Buffer.from(peopleShot.data, 'base64'));
@@ -373,7 +405,7 @@ try {
   if (JSON.stringify(JSON.parse(await evaluate(`localStorage.getItem('layout-studio-v3')`)).project) !== JSON.stringify(JSON.parse(v4Before).project) ||
       await evaluate(`localStorage.getItem('layout-studio-stations-v5')`) !== v5Before) throw new Error('Zastąpienie szkicu zmieniło aktywny projekt v4/v5.');
   if (errors.length) throw new Error(`Błędy konsoli: ${errors.join('; ')}`);
-  console.log('PASS: podgląd, osoby, pule, wyrób, podzespoły i wyposażenie z Cofnij/Ponów, ponowne otwarcie, odzyskanie, zastąpienie, konflikt i limit pamięci.');
+  console.log('PASS: podgląd, osoby, pule, wyrób, podzespoły, wyposażenie i możliwości z Cofnij/Ponów, ponowne otwarcie, odzyskanie, zastąpienie, konflikt i limit pamięci.');
 } finally {
   if (ws) ws.close();
   browser.kill();

@@ -1,8 +1,8 @@
 import {parseDomainProjectV6, type DomainEquipment, type DomainProjectV6} from './domainProject';
 
 export type DomainEquipmentChange =
-  | {kind: 'add-equipment'; id: string; name: string; stationId?: string; layoutObjectId?: string}
-  | {kind: 'edit-equipment'; id: string; name: string; stationId?: string; layoutObjectId?: string}
+  | {kind: 'add-equipment'; id: string; name: string; stationId?: string; layoutObjectId?: string; capableOperationIds?: string[]}
+  | {kind: 'edit-equipment'; id: string; name: string; stationId?: string; layoutObjectId?: string; capableOperationIds?: string[]}
   | {kind: 'remove-equipment'; id: string};
 
 function required(value: string, label: string): string {
@@ -14,7 +14,8 @@ function required(value: string, label: string): string {
 function equipment(change: Extract<DomainEquipmentChange, {kind: 'add-equipment' | 'edit-equipment'}>): DomainEquipment {
   return {id: required(change.id, 'ID wyposażenia'), name: required(change.name, 'Nazwa wyposażenia'),
     ...(change.stationId ? {stationId: change.stationId} : {}),
-    ...(change.layoutObjectId ? {layoutObjectId: change.layoutObjectId} : {})};
+    ...(change.layoutObjectId ? {layoutObjectId: change.layoutObjectId} : {}),
+    ...(change.capableOperationIds?.length ? {capableOperationIds: [...change.capableOperationIds]} : {})};
 }
 
 /** Explicit draft identities and bindings; geometry never implies a technological capability. */

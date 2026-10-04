@@ -246,6 +246,40 @@ test('2.1i: wyposażenie ma trwałe ID i jawne powiązania bez zmiany geometrii'
   assert.deepEqual(editDomainEquipment(revised,{kind:'remove-equipment',id:'EQ-QA'}).equipment,[]);
 });
 
+test('2.1j: jawne możliwości wyposażenia zachowują zgodność starego szkicu i referencje operacji',()=>{
+  const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+  const prepared=prepareDomainMigration(previewDomainMigrationFromV5(original));
+  const equipment=editDomainEquipment(prepared.project,{kind:'add-equipment',id:'EQ-CAP',name:'Wyposażenie QA'});
+  assert.equal(equipment.equipment[0].capableOperationIds,undefined);
+  const oldRaw=JSON.stringify(equipment);
+  assert.deepEqual(parseDomainProjectV6(oldRaw).equipment,equipment.equipment);
+  const withCapability=editDomainEquipment(equipment,{kind:'edit-equipment',id:'EQ-CAP',name:'Wyposażenie QA',capableOperationIds:['OP10','OP11']});
+  assert.deepEqual(withCapability.equipment[0].capableOperationIds,['OP10','OP11']);
+  assert.equal(equipment.equipment[0].capableOperationIds,undefined);
+  assert.throws(()=>editDomainEquipment(equipment,{kind:'edit-equipment',id:'EQ-CAP',name:'Błąd',capableOperationIds:['OBCA']}),/nieznana lub powtórzona operacja/);
+  assert.throws(()=>editDomainEquipment(equipment,{kind:'edit-equipment',id:'EQ-CAP',name:'Błąd',capableOperationIds:['OP10','OP10']}),/nieznana lub powtórzona operacja/);
+  assert.throws(()=>parseDomainProjectV6(JSON.stringify({...equipment,equipment:[{...equipment.equipment[0],capableOperationIds:[]}]})),/nieznana lub powtórzona operacja/);
+  const cleared=editDomainEquipment(withCapability,{kind:'edit-equipment',id:'EQ-CAP',name:'Wyposażenie QA'});
+  assert.equal(cleared.equipment[0].capableOperationIds,undefined);
+  const storage=new DraftStorage();
+  storage.values.set('layout-studio-v3','active-v4');
+  storage.values.set('layout-studio-stations-v5','active-v5');
+  const initial=saveDomainDraft(storage,{originalJson:original,project:equipment},null);
+  const reopenedOld=readDomainDraft(storage);
+  assert.equal(reopenedOld.status,'valid');
+  if(reopenedOld.status!=='valid')throw new Error('Nie odczytano starego szkicu.');
+  assert.equal(reopenedOld.saved.project.equipment[0].capableOperationIds,undefined);
+  const written=saveDomainDraft(storage,{originalJson:original,project:withCapability},initial.raw);
+  const reopened=readDomainDraft(storage);
+  assert.equal(reopened.status,'valid');
+  if(reopened.status!=='valid')throw new Error('Nie odczytano możliwości.');
+  assert.deepEqual(reopened.saved.project.equipment[0].capableOperationIds,['OP10','OP11']);
+  assert.equal(reopened.saved.originalJson,original);
+  assert.equal(reopened.raw,written.raw);
+  assert.equal(storage.getItem('layout-studio-v3'),'active-v4');
+  assert.equal(storage.getItem('layout-studio-stations-v5'),'active-v5');
+});
+
 test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{
   const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
   const before=JSON.parse(original);

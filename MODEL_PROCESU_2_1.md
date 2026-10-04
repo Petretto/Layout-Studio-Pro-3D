@@ -99,3 +99,7 @@ Wyrób ma ręcznie podane ID i nazwę. Podzespół ma własne trwałe ID, nazwę
 ## Pakiet 2.1i — tożsamość wyposażenia i powiązania
 
 Wyposażenie technologiczne jest definiowane ręcznie przez trwałe ID i nazwę. Może opcjonalnie wskazywać istniejące stanowisko i istniejący obiekt layoutu. Te referencje są kontrolowane przy każdej zmianie; jeden obiekt wizualny może należeć najwyżej do jednego wyposażenia, a jawne stanowisko nie może być sprzeczne ze stanowiskiem obiektu. Usunięcie definicji nie usuwa geometrii. Powiązanie nie dowodzi zdolności do wykonania operacji ani nie określa wymagań technologicznych. Możliwości wyposażenia pozostają osobnym brakującym polem przyszłego modelu, bez wpływu na obecną symulację.
+
+## Pakiet 2.1j — jawne możliwości wyposażenia
+
+Opcjonalne `capableOperationIds` na definicji wyposażenia to niepusta lista ID operacji, które użytkownik jawnie potwierdził jako możliwe do obsługi przez dany zasób. Brak pola oznacza „nie określono”, także w szkicach zapisanych przed tym pakietem; pustej listy nie zapisuje się. Parser odrzuca obce i powtórzone ID. Lista nie powstaje z geometrii, przypisania stanowiska, typu obiektu ani nazwy urządzenia. Możliwość wykonania operacji nie oznacza, że operacja wymaga danego wyposażenia; reguły wymagań i wyboru stanowisk należą do późniejszego punktu 2.6. Dane nie są konsumowane przez bilans ani symulację, a `modelStatus` pozostaje `incomplete`.

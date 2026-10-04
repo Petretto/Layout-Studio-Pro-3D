@@ -8,7 +8,7 @@ import {parseStationProjectV5} from './stationProject';
 export type DomainOperation = Omit<ProcessStep, 'assignedWorkstationId'>;
 export interface DomainWorker {id: string; name: string}
 export interface DomainWorkerPool {id: string; name: string; workerIds: string[]}
-export interface DomainEquipment {id: string; name: string; stationId?: string; layoutObjectId?: string}
+export interface DomainEquipment {id: string; name: string; stationId?: string; layoutObjectId?: string; capableOperationIds?: string[]}
 export interface DomainProduct {id: string; name: string}
 export interface DomainSubassembly {id: string; name: string; producerOperationId?: string; consumerOperationIds: string[]}
 
@@ -105,10 +105,17 @@ export function parseDomainProjectV6(text: string): DomainProjectV6 {
     }
   }
   const stationIds = new Set(stations.map(station => station.id));
+  const operationIds = new Set(operations.map(operation => operation.id));
   const layoutObjects = raw.layoutObjects as {id: string; workstationId?: string}[];
   const layoutById = new Map(layoutObjects.map(object => [object.id, object]));
   const usedVisualIds = new Set<string>();
   for (const item of equipment) {
+    if (item.capableOperationIds !== undefined && (!Array.isArray(item.capableOperationIds) ||
+        item.capableOperationIds.length === 0 ||
+        item.capableOperationIds.some(id => typeof id !== 'string' || !operationIds.has(id)) ||
+        new Set(item.capableOperationIds).size !== item.capableOperationIds.length)) {
+      throw new Error(`Wyposażenie ${item.id}: nieznana lub powtórzona operacja w możliwościach.`);
+    }
     if (item.stationId !== undefined && (typeof item.stationId !== 'string' || !stationIds.has(item.stationId))) {
       throw new Error(`Wyposażenie ${item.id}: nieznane stanowisko.`);
     }
@@ -128,7 +135,6 @@ export function parseDomainProjectV6(text: string): DomainProjectV6 {
       typeof raw.product.name !== 'string' || !raw.product.name.trim())) {
     throw new Error('Niepoprawna definicja wyrobu.');
   }
-  const operationIds = new Set(operations.map(operation => operation.id));
   for (const item of subassemblies) {
     if (item.producerOperationId !== undefined &&
         (typeof item.producerOperationId !== 'string' || !operationIds.has(item.producerOperationId))) {
