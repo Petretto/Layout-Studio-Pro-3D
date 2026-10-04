@@ -19,3 +19,11 @@ Przed zmianą ścieżki edycji wykonano kopię `backup/v0.4.0_przed_2_2b_2026100
 `npm.cmd run test -- --run`: 92/92; `npm.cmd run build`: poprawny. Rozszerzony `node tests/qa/verify_2_1e.mjs` w Edge CDP na eksporcie Eko v5 potwierdził wpis czasu 2,5 min jako dokładnych 150 s, pomierzony czas ręczny i założony czas maszyny, zmianę jednostki na godziny bez mutacji sekund, odmowę przedziału poza czasem całkowitym bez nadpisania szkicu, Cofnij/Ponów, odczyt po przeładowaniu, usunięcie profilu i przywrócenie przez Cofnij. Profil OP11 oraz aktywne projekty v4/v5 pozostały nienaruszone. Zrzut UI: `outputs/qa/verify_2_2b_time_profile.png`.
 
 Punkt 2.2 pozostaje **w trakcie** do zbiorczego odbioru 2.2.3 na Eko i silnikach. Profil nadal nie jest wejściem bilansu ani symulacji.
+
+## Pakiet 2.2c / 2.2.3 — zbiorczy odbiór 2026-10-04
+
+Nowy test objął przykład silników po normalizacji do schematu 4, rzeczywisty eksport Eko v4 oraz eksport warsztatu Eko v5. W każdym przypadku migracja pozostawiła profil nieokreślony. Po jawnym dodaniu profilu test zapisał i odczytał szkic, porównał stary czas standardowy, pozostałe operacje, dokładny źródłowy JSON i cały wynik `simulateNetwork` dla tej samej partii i odstępu. Aktywne dane v4/v5 i wyniki pozostały identyczne. Profil był wyłącznie danymi niekompletnego szkicu 6.
+
+`npm.cmd run test -- --run`: 93/93. `npm.cmd run build`: poprawny. Ponowiony `node tests/qa/verify_2_1e.mjs` w Edge CDP przeszedł całą ścieżkę UI z pakietu 2.2b, włącznie z edycją 2,5 min, przełączeniem na godziny, odmową błędu, Cofnij/Ponów, przeładowaniem, usunięciem i przywróceniem profilu. Test nie wykazał zmiany projektów aktywnych. Istniejący zrzut `outputs/qa/verify_2_2b_time_profile.png` dokumentuje edytor. Nie zmieniano schematu, modułów produkcyjnych ani ścieżki trwałości, więc nie wykonywano nowej kopii przed przebudową.
+
+Punkt **2.2 wdrożony** w zakresie oddzielonego profilu czasu w szkicu 6. Etap 2 pozostaje **w trakcie**. Profil nie rezerwuje operatora ani wyposażenia i nie zmienia harmonogramu bieżącej symulacji; odpowiednie reguły zasobów należą do 2.3–2.8.

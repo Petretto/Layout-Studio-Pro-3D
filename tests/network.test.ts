@@ -406,6 +406,44 @@ test('2.2b: edycja profilu czasu dotyczy tylko wskazanej operacji i ma bezpieczn
   assert.deepEqual(editDomainTime(cleared,{kind:'set-time-profile',operationId:'OP10',profile}).operations[0].timeProfile,profile);
 });
 
+test('2.2c: profil czasu po migracji Eko i silników zachowuje źródło oraz pełny wynik symulacji',()=>{
+  const cases=[
+    {name:'silniki v4',version:4,source:JSON.stringify(derive(parseProject(JSON.stringify(base))).project)},
+    {name:'Eko v4',version:4,source:readFileSync('tests/qa/Eko_B_export_20260930_183858.json','utf8')},
+    {name:'Eko v5',version:5,source:readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8')},
+  ] as const;
+  const profile:DomainTimeProfile={durationSeconds:150,durationBasis:'assumed',
+    manualWork:[{startSeconds:0,endSeconds:30,basis:'measured'}],
+    machineRun:[{startSeconds:15,endSeconds:120,basis:'assumed'}],
+    operatorPresence:[{startSeconds:0,endSeconds:30,basis:'measured'}]};
+  for(const {name,version,source} of cases){
+    const activeKey=version===4?'layout-studio-v3':'layout-studio-stations-v5';
+    const baselineProject=version===4?derive(parseProject(source)).project:deriveStationProject(parseStationProjectV5(source)).project;
+    const baseline=simulateNetwork(baselineProject,4050,3);
+    let id=0;
+    const preview=version===4?previewDomainMigrationFromV4(source,()=>`ST-time-${++id}`):previewDomainMigrationFromV5(source);
+    const prepared=prepareDomainMigration(preview);
+    assert.ok(prepared.project.operations.every(operation=>operation.timeProfile===undefined),name);
+    const operationId=prepared.project.operations[0].id;
+    const legacyTime=prepared.project.operations[0].standardTimeSeconds;
+    const storage=new DraftStorage();
+    storage.values.set(activeKey,source);
+    const first=saveDomainDraft(storage,prepared,null);
+    const edited=editDomainTime(prepared.project,{kind:'set-time-profile',operationId,profile});
+    saveDomainDraft(storage,{originalJson:source,project:edited},first.raw);
+    const reopened=readDomainDraft(storage);
+    assert.equal(reopened.status,'valid',name);
+    if(reopened.status!=='valid')throw new Error(`Nie odczytano profilu: ${name}`);
+    assert.equal(reopened.saved.originalJson,source,name);
+    assert.equal(reopened.saved.project.operations[0].standardTimeSeconds,legacyTime,name);
+    assert.deepEqual(reopened.saved.project.operations[0].timeProfile,profile,name);
+    assert.ok(reopened.saved.project.operations.slice(1).every(operation=>operation.timeProfile===undefined),name);
+    assert.equal(storage.getItem(activeKey),source,name);
+    const afterProject=version===4?derive(parseProject(storage.getItem(activeKey)!)).project:deriveStationProject(parseStationProjectV5(storage.getItem(activeKey)!)).project;
+    assert.deepEqual(simulateNetwork(afterProject,4050,3),baseline,name);
+  }
+});
+
 test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{
   const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
   const before=JSON.parse(original);

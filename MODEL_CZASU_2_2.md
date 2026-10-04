@@ -1,6 +1,6 @@
 # Model czasu operacji — punkt 2.2
 
-Status 2026-10-04: pakiety 2.2a / 2.2.1 i 2.2b / 2.2.2 wdrożone w niekompletnym szkicu 6; cały punkt 2.2 pozostaje w trakcie do odbioru zbiorczego.
+Status 2026-10-04: punkt 2.2 wdrożony w zakresie niekompletnego szkicu 6 po odbiorze 2.2a–2.2c. Aktywna symulacja nadal używa projektów 4/5.
 
 ## Kontrakt danych
 
@@ -10,7 +10,7 @@ Profil zawiera `durationSeconds` i `durationBasis` oraz trzy osobne listy przedz
 
 Przedziały w jednej kategorii muszą być uporządkowane, rozłączne, mieć dodatnią długość i mieścić się w `durationSeconds`. Każdy przedział pracy ręcznej musi w całości leżeć w jednym z przedziałów wymaganej obecności operatora. Przedziały różnych kategorii mogą się pokrywać, lecz takie nakładanie wynika wyłącznie z jawnych wartości. Nie dodaje się czasów kategorii ani nie oblicza `durationSeconds` z ich sumy. Czas standardowy starej operacji pozostaje osobnym polem i nie jest automatycznie zastępowany czasem profilu.
 
-Profil jest nadal danymi szkicu, nie wejściem aktywnego bilansu ani symulacji. `operatorPresence` nie rezerwuje jeszcze konkretnego człowieka; to zakres późniejszego punktu 2.4. Kalendarz i przerwy należą do 2.5. Szczegółowa obsada operacji i warianty czasu należą do 2.3. Pakiet 2.2c obejmie odbiór całego punktu.
+Profil jest nadal danymi szkicu, nie wejściem aktywnego bilansu ani symulacji. `operatorPresence` nie rezerwuje jeszcze konkretnego człowieka; to zakres późniejszego punktu 2.4. Kalendarz i przerwy należą do 2.5. Szczegółowa obsada operacji i warianty czasu należą do 2.3.
 
 ## Zgodność
 
@@ -19,3 +19,7 @@ Nie zmieniono numeru schematu szkicu, koperty zapisu ani aktywnych schematów 4/
 ## Pakiet 2.2b — edycja w UI
 
 Panel szkicu 6 pozwala wskazać operację, ręcznie dodać lub usunąć przedziały każdej kategorii, podać czas całkowity i osobno oznaczyć pochodzenie każdej wartości. Lokalny przełącznik s/min/h zmienia tylko prezentację; zapis nadal używa sekund. Puste pola nie są zamieniane w zero. Zapis przechodzi parser szkicu i istniejącą kontrolę poprzedniej wartości localStorage; błędny profil pozostawia poprzedni zapis. Usunięcie profilu przywraca stan „brak danych”. Edycja korzysta z tej samej historii Cofnij/Ponów co osoby, wyrób i wyposażenie. Stary czas standardowy jest widoczny do porównania, lecz nie jest aktualizowany przez edytor.
+
+## Odbiór punktu 2.2 — pakiet 2.2c
+
+Na Eko v4/v5 i przykładzie silników v4 sprawdzono brak profilu po migracji, jawny profil po edycji i ponownym odczycie, niezmienność dawnego czasu standardowego, dokładnego aktywnego źródła oraz całego wyniku obecnej symulacji. Scenariusz UI potwierdził jednostki s/min/h, pochodzenie, ochronę zapisu przy błędzie, Cofnij/Ponów, usunięcie i odczyt po przeładowaniu. Te dowody zamykają rozdzielenie danych czasu w szkicu; nie oznaczają obsługi obsady, kalendarza lub fizycznej pracy maszyny w harmonogramie.
