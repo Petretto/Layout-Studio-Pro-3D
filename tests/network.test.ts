@@ -12,7 +12,7 @@ import {DEFAULT_EKO_PROJECT} from '../src/core/models/ekoProject';
 import {reviseStations} from '../src/core/stationRegistry';
 import {previewStationMigration,prepareStationMigration} from '../src/core/stationMigration';
 import {previewDomainMigrationFromV4,previewDomainMigrationFromV5,verifyDomainMigrationPreview} from '../src/core/domainMigrationPreview';
-import {parseDomainProjectV6,prepareDomainMigration,type DomainTimeProfile} from '../src/core/domainProject';
+import {parseDomainProjectV6,prepareDomainMigration,type DomainOperationStaffing,type DomainTimeProfile} from '../src/core/domainProject';
 import {editDomainPeople} from '../src/core/domainPeopleEditing';
 import {editDomainProduct} from '../src/core/domainProductEditing';
 import {editDomainEquipment} from '../src/core/domainEquipmentEditing';
@@ -442,6 +442,72 @@ test('2.2c: profil czasu po migracji Eko i silników zachowuje źródło oraz pe
     const afterProject=version===4?derive(parseProject(storage.getItem(activeKey)!)).project:deriveStationProject(parseStationProjectV5(storage.getItem(activeKey)!)).project;
     assert.deepEqual(simulateNetwork(afterProject,4050,3),baseline,name);
   }
+});
+
+test('2.3a: wymagana obsada i jawne warianty czasu zachowują dawne szkice i źródło',()=>{
+  const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+  const prepared=prepareDomainMigration(previewDomainMigrationFromV5(original));
+  assert.ok(prepared.project.operations.every(operation=>operation.staffing===undefined));
+  const profile:DomainTimeProfile={durationSeconds:120,durationBasis:'measured',
+    manualWork:[{startSeconds:0,endSeconds:30,basis:'measured'}],
+    machineRun:[{startSeconds:20,endSeconds:100,basis:'assumed'}],
+    operatorPresence:[{startSeconds:0,endSeconds:30,basis:'measured'}]};
+  const staffing:DomainOperationStaffing={requiredWorkers:2,timeVariants:[
+    {workerCount:2,timeProfile:profile},
+    {workerCount:3,timeProfile:{...profile,durationSeconds:113,durationBasis:'assumed'}},
+  ]};
+  const storage=new DraftStorage();
+  storage.values.set('layout-studio-stations-v5',original);
+  const first=saveDomainDraft(storage,prepared,null);
+  const old=readDomainDraft(storage);
+  assert.equal(old.status,'valid');
+  if(old.status!=='valid')throw new Error('Nie odczytano dawnego szkicu.');
+  assert.equal(old.saved.project.operations[0].staffing,undefined);
+  const candidate=structuredClone(prepared.project);
+  candidate.operations[0].staffing=staffing;
+  const checked=parseDomainProjectV6(JSON.stringify(candidate));
+  assert.deepEqual(checked.operations[0].staffing,staffing);
+  candidate.operations[0].staffing={requiredWorkers:2,timeVariants:[]};
+  assert.deepEqual(parseDomainProjectV6(JSON.stringify(candidate)).operations[0].staffing,candidate.operations[0].staffing);
+  assert.equal(checked.operations[0].standardTimeSeconds,prepared.project.operations[0].standardTimeSeconds);
+  assert.equal(checked.operations[0].timeProfile,undefined);
+  assert.ok(checked.operations.slice(1).every(operation=>operation.staffing===undefined));
+  saveDomainDraft(storage,{originalJson:original,project:checked},first.raw);
+  const reopened=readDomainDraft(storage);
+  assert.equal(reopened.status,'valid');
+  if(reopened.status!=='valid')throw new Error('Nie odczytano wariantów obsady.');
+  assert.deepEqual(reopened.saved.project.operations[0].staffing,staffing);
+  assert.equal(reopened.saved.originalJson,original);
+  assert.equal(storage.getItem('layout-studio-stations-v5'),original);
+  const legacyWithUnknownStaffing=JSON.parse(original);
+  legacyWithUnknownStaffing.processSteps[0].staffing=staffing;
+  const migrated=prepareDomainMigration(previewDomainMigrationFromV5(JSON.stringify(legacyWithUnknownStaffing)));
+  assert.equal(migrated.project.operations[0].staffing,undefined);
+});
+
+test('2.3a: niepoprawna obsada lub wariant nie nadpisuje szkicu',()=>{
+  const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+  const prepared=prepareDomainMigration(previewDomainMigrationFromV5(original));
+  const profile:DomainTimeProfile={durationSeconds:120,durationBasis:'assumed',
+    manualWork:[{startSeconds:0,endSeconds:20,basis:'assumed'}],machineRun:[],
+    operatorPresence:[{startSeconds:0,endSeconds:20,basis:'assumed'}]};
+  const staffing:DomainOperationStaffing={requiredWorkers:2,timeVariants:[{workerCount:2,timeProfile:profile}]};
+  const storage=new DraftStorage();
+  const first=saveDomainDraft(storage,prepared,null);
+  const invalid=(change:(item:DomainOperationStaffing)=>void,pattern:RegExp)=>{
+    const candidate=structuredClone(prepared.project);
+    candidate.operations[0].staffing=structuredClone(staffing);
+    change(candidate.operations[0].staffing!);
+    assert.throws(()=>parseDomainProjectV6(JSON.stringify(candidate)),pattern);
+    assert.throws(()=>saveDomainDraft(storage,{originalJson:original,project:candidate},first.raw),pattern);
+    assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),first.raw);
+  };
+  invalid(item=>{item.requiredWorkers=0;},/dodatnia liczba/);
+  invalid(item=>{item.requiredWorkers=1.5;},/dodatnia liczba/);
+  invalid(item=>{item.timeVariants[0].workerCount=1;},/nie mniejszej od minimum/);
+  invalid(item=>{item.timeVariants.push({workerCount:2,timeProfile:profile});},/unikalnej liczby/);
+  invalid(item=>{item.timeVariants[0].timeProfile.operatorPresence=[];},/wymaga obecności/);
+  invalid(item=>{(item as DomainOperationStaffing & {unknown?:number}).unknown=1;},/dodatnia liczba/);
 });
 
 test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{

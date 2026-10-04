@@ -14,7 +14,15 @@ export interface DomainTimeProfile {
   machineRun: DomainTimeInterval[];
   operatorPresence: DomainTimeInterval[];
 }
-export type DomainOperation = Omit<ProcessStep, 'assignedWorkstationId'> & {timeProfile?: DomainTimeProfile};
+export interface DomainStaffingTimeVariant {workerCount: number; timeProfile: DomainTimeProfile}
+export interface DomainOperationStaffing {
+  requiredWorkers: number;
+  timeVariants: DomainStaffingTimeVariant[];
+}
+export type DomainOperation = Omit<ProcessStep, 'assignedWorkstationId'> & {
+  timeProfile?: DomainTimeProfile;
+  staffing?: DomainOperationStaffing;
+};
 export interface DomainWorker {id: string; name: string}
 export interface DomainWorkerPool {id: string; name: string; workerIds: string[]}
 export interface DomainEquipment {id: string; name: string; stationId?: string; layoutObjectId?: string; capableOperationIds?: string[]}
@@ -102,6 +110,24 @@ function validateTimeProfile(value: unknown, operationId: string) {
     throw new Error(`${label}: praca ręczna wymaga obecności operatora przez cały przedział.`);
   }
 }
+function validateStaffing(value: unknown, operationId: string) {
+  const label = `Operacja ${operationId}: obsada`;
+  if (!record(value) || Object.keys(value).some(key => !['requiredWorkers', 'timeVariants'].includes(key)) ||
+      !Number.isSafeInteger(value.requiredWorkers) || (value.requiredWorkers as number) < 1 ||
+      !Array.isArray(value.timeVariants) || value.timeVariants.length > 500) {
+    throw new Error(`${label}: wymagana dodatnia liczba pracowników i lista wariantów.`);
+  }
+  const seen = new Set<number>();
+  for (const variant of value.timeVariants) {
+    if (!record(variant) || Object.keys(variant).some(key => !['workerCount', 'timeProfile'].includes(key)) ||
+        !Number.isSafeInteger(variant.workerCount) || (variant.workerCount as number) < (value.requiredWorkers as number) ||
+        seen.has(variant.workerCount as number)) {
+      throw new Error(`${label}: wariant wymaga unikalnej liczby pracowników nie mniejszej od minimum.`);
+    }
+    seen.add(variant.workerCount as number);
+    validateTimeProfile(variant.timeProfile, `${operationId}, wariant ${variant.workerCount} osób`);
+  }
+}
 
 /** Validate a draft without enabling schema 6 in the active app or its storage. */
 export function parseDomainProjectV6(text: string): DomainProjectV6 {
@@ -133,6 +159,9 @@ export function parseDomainProjectV6(text: string): DomainProjectV6 {
   }
   for (const operation of operations) if (has(operation, 'timeProfile')) {
     validateTimeProfile(operation.timeProfile, operation.id as string);
+  }
+  for (const operation of operations) if (has(operation, 'staffing')) {
+    validateStaffing(operation.staffing, operation.id as string);
   }
   if (!record(raw.stationSettings)) throw new Error('Niepoprawne ustawienia stanowisk.');
   if (!Array.isArray(raw.layoutObjects)) throw new Error('Brak listy obiektów wizualnych.');
@@ -201,8 +230,9 @@ export function prepareDomainMigration(preview: DomainMigrationPreview): Prepare
   const checked = verifyDomainMigrationPreview(preview);
   const {schemaVersion: _version, processSteps, workstationSettings, stations, ...source} = checked.stationProject;
   const operations = processSteps.map(step => {
-    const {assignedWorkstationId: _assignment, timeProfile: _unsupportedProfile, ...operation} =
-      step as ProcessStep & {timeProfile?: unknown};
+    const {assignedWorkstationId: _assignment, timeProfile: _unsupportedProfile,
+      staffing: _unsupportedStaffing, ...operation} =
+      step as ProcessStep & {timeProfile?: unknown; staffing?: unknown};
     return operation;
   });
   const project: DomainProjectV6 = {...source, schemaVersion: 6, modelStatus: 'incomplete',
