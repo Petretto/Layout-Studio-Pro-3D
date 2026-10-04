@@ -1,6 +1,6 @@
 # Model procesu i zasobów — kontrakt 2.1a
 
-Data: 2026-10-03. Status: **kontrakt przygotowany; punkt 2.1 w trakcie**. Ten dokument wyznacza granice przyszłego modelu i migracji. Nie jest formatem pliku ani deklaracją, że obecna symulacja obsługuje wymienione zasoby.
+Data: 2026-10-03; odbiór: 2026-10-04. Status: **punkt 2.1 wdrożony w zakresie fundamentu modelu i bezpiecznej migracji**. Dokument wyznacza granice dalszego modelu; schemat 6 pozostaje niekompletnym szkicem i nie jest wejściem aktywnej symulacji.
 
 ## Stan wejściowy potwierdzony w kodzie
 
@@ -49,10 +49,9 @@ Pakiet 2.1c ustanawia nieaktywny, roboczy schemat 6 dla niekompletnego projektu.
 
 ## Warunki odbioru punktu 2.1
 
-- Wykonano w 2.1c: wersjonowany typ i parser niekompletnego modelu z walidacją powiązań. Osobna przestrzeń trwałego zapisu pozostaje do wykonania.
-- Wykonano w 2.1b: odczytowy podgląd migracji v5 oraz drogę v4 przez sprawdzoną migrację do v5, z jawnymi brakami danych.
-- Testować stary projekt silników i Eko: komplet ID operacji/BOM/stanowisk, brak utraty geometrii i ustawień, rozpoznanie nieznanych referencji, brak fikcyjnych osób/podzespołów, niezmienność źródłowego JSON przy odmowie oraz ponowny odczyt po zapisie.
-- Potwierdzić w UI wybór i wynik migracji, Cofnij/Ponów lub osobną bezpieczną ścieżkę zastąpienia, a także brak zmiany dotychczasowych czasów i wyników dla niezmigrowanych projektów. Dopiero wtedy rozważyć status „wdrożone” dla 2.1.
+- Wykonano w 2.1b–2.1d: podgląd migracji v4/v5, wersjonowany typ i parser niekompletnego modelu z walidacją powiązań oraz osobny, chroniony zapis szkicu.
+- Testy Eko i silników potwierdzają kompletność ID operacji/BOM/stanowisk, zachowanie geometrii i ustawień, odmowę nieznanych referencji, brak fikcyjnych osób i podzespołów, ochronę źródłowego JSON oraz ponowny odczyt.
+- Odbiór UI potwierdził podgląd, jawny zapis, Cofnij/Ponów, bezpieczne zastąpienie i ponowne otwarcie. Test 2.1k potwierdził identyczny aktywny JSON i pełne wyniki symulacji Eko v4/v5 oraz silników v4 przed i po edycji szkicu. Dowody i ograniczenia: `WERYFIKACJA_MODELU_2_1.md`.
 
 Podczas przeglądu rzeczywistego pliku `tests/qa/Eko_D5_actual_export_v5.json` stwierdzono: schemat 5, 16 operacji, 17 trwałych stanowisk, 60 pozycji BOM, 53 obiekty layoutu i 16 ręcznych przypisań. To jest przypadek regresyjny, nie źródło pomiarów produkcyjnych ani definicji podzespołów.
 
@@ -103,3 +102,7 @@ Wyposażenie technologiczne jest definiowane ręcznie przez trwałe ID i nazwę.
 ## Pakiet 2.1j — jawne możliwości wyposażenia
 
 Opcjonalne `capableOperationIds` na definicji wyposażenia to niepusta lista ID operacji, które użytkownik jawnie potwierdził jako możliwe do obsługi przez dany zasób. Brak pola oznacza „nie określono”, także w szkicach zapisanych przed tym pakietem; pustej listy nie zapisuje się. Parser odrzuca obce i powtórzone ID. Lista nie powstaje z geometrii, przypisania stanowiska, typu obiektu ani nazwy urządzenia. Możliwość wykonania operacji nie oznacza, że operacja wymaga danego wyposażenia; reguły wymagań i wyboru stanowisk należą do późniejszego punktu 2.6. Dane nie są konsumowane przez bilans ani symulację, a `modelStatus` pozostaje `incomplete`.
+
+## Odbiór punktu 2.1 — pakiet 2.1k
+
+Odrębny szkic 6, migracja, walidacja, zapis i UI spełniają powyższe warunki odbioru. Zmiany osób i wyposażenia w szkicu nie modyfikują aktywnych projektów ani wyników ich symulacji. `modelStatus: incomplete` pozostaje obowiązkowy; definicje robocze nie są instancjami zasobów w czasie. Czas ręczny i automatyczny, obsada operacji, współdzielenie pracowników, kalendarz, wymagane wyposażenie, stan korpusu i równoległość będą definiowane i weryfikowane w punktach 2.2–2.9 przed użyciem nowego modelu do symulacji.

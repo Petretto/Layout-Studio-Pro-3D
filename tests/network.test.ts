@@ -280,6 +280,37 @@ test('2.1j: jawne możliwości wyposażenia zachowują zgodność starego szkicu
   assert.equal(storage.getItem('layout-studio-stations-v5'),'active-v5');
 });
 
+test('2.1k: edycja szkicu 6 nie zmienia źródła ani wyników symulacji silników i Eko',()=>{
+  const cases=[
+    {name:'silniki v4',version:4,source:JSON.stringify(derive(parseProject(JSON.stringify(base))).project)},
+    {name:'Eko v4',version:4,source:readFileSync('tests/qa/Eko_B_export_20260930_183858.json','utf8')},
+    {name:'Eko v5',version:5,source:readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8')},
+  ] as const;
+  for(const {name,version,source} of cases){
+    const activeKey=version===4?'layout-studio-v3':'layout-studio-stations-v5';
+    const activeProject=version===4?derive(parseProject(source)).project:deriveStationProject(parseStationProjectV5(source)).project;
+    const before=simulateNetwork(activeProject,4050,3);
+    const storage=new DraftStorage();
+    storage.values.set(activeKey,source);
+    let nextId=0;
+    const preview=version===4?previewDomainMigrationFromV4(source,()=>`ST-accept-${++nextId}`):previewDomainMigrationFromV5(source);
+    const prepared=prepareDomainMigration(preview);
+    const first=saveDomainDraft(storage,prepared,null);
+    const withWorker=editDomainPeople(prepared.project,{kind:'add-worker',id:'PERSON-ACCEPT',name:'Osoba QA'});
+    const edited=editDomainEquipment(withWorker,{kind:'add-equipment',id:'EQ-ACCEPT',name:'Wyposażenie QA'});
+    saveDomainDraft(storage,{originalJson:source,project:edited},first.raw);
+    const reopened=readDomainDraft(storage);
+    assert.equal(reopened.status,'valid',name);
+    if(reopened.status!=='valid')throw new Error(`Nie odczytano szkicu: ${name}`);
+    assert.equal(reopened.saved.originalJson,source,name);
+    assert.deepEqual(reopened.saved.project.equipment,edited.equipment,name);
+    assert.deepEqual(reopened.saved.project.workers,edited.workers,name);
+    assert.equal(storage.getItem(activeKey),source,name);
+    const activeAfter=version===4?derive(parseProject(storage.getItem(activeKey)!)).project:deriveStationProject(parseStationProjectV5(storage.getItem(activeKey)!)).project;
+    assert.deepEqual(simulateNetwork(activeAfter,4050,3),before,name);
+  }
+});
+
 test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{
   const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
   const before=JSON.parse(original);
