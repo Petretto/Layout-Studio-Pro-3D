@@ -16,6 +16,7 @@ import {parseDomainProjectV6,prepareDomainMigration,type DomainTimeProfile} from
 import {editDomainPeople} from '../src/core/domainPeopleEditing';
 import {editDomainProduct} from '../src/core/domainProductEditing';
 import {editDomainEquipment} from '../src/core/domainEquipmentEditing';
+import {editDomainTime} from '../src/core/domainTimeEditing';
 import {DOMAIN_DRAFT_STORAGE_KEY,readDomainDraft,replaceDomainDraft,saveDomainDraft} from '../src/core/domainDraftStorage';
 import {parseStationProjectV5} from '../src/core/stationProject';
 import {runStationBalancing,moveStationOperation} from '../src/core/stationBalancing';
@@ -373,6 +374,36 @@ test('2.2a: profil czasu odrzuca błędne przedziały i brak obecności przy pra
   check(value=>{value.manualWork[0].basis='estimated' as 'assumed';},/pochodzeniem/);
   check(value=>{(value as DomainTimeProfile & {unknown?:number}).unknown=1;},/dodatni czas/);
   assert.equal(prepared.project.operations[0].timeProfile,undefined);
+});
+
+test('2.2b: edycja profilu czasu dotyczy tylko wskazanej operacji i ma bezpieczny zapis',()=>{
+  const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+  const project=prepareDomainMigration(previewDomainMigrationFromV5(original)).project;
+  const before=JSON.stringify(project);
+  const profile:DomainTimeProfile={durationSeconds:120,durationBasis:'measured',
+    manualWork:[{startSeconds:0,endSeconds:30,basis:'measured'}],
+    machineRun:[{startSeconds:20,endSeconds:100,basis:'assumed'}],
+    operatorPresence:[{startSeconds:0,endSeconds:30,basis:'measured'}]};
+  const edited=editDomainTime(project,{kind:'set-time-profile',operationId:'OP10',profile});
+  assert.equal(JSON.stringify(project),before);
+  assert.deepEqual(edited.operations[0].timeProfile,profile);
+  assert.equal(edited.operations[1].timeProfile,undefined);
+  assert.throws(()=>editDomainTime(project,{kind:'set-time-profile',operationId:'OBCA',profile}),/nie istnieje/);
+  const invalid=structuredClone(profile);
+  invalid.operatorPresence=[];
+  assert.throws(()=>editDomainTime(edited,{kind:'set-time-profile',operationId:'OP10',profile:invalid}),/wymaga obecności/);
+  assert.deepEqual(edited.operations[0].timeProfile,profile);
+  const storage=new DraftStorage();
+  const saved=saveDomainDraft(storage,{originalJson:original,project:edited},null);
+  const reopened=readDomainDraft(storage);
+  assert.equal(reopened.status,'valid');
+  if(reopened.status!=='valid')throw new Error('Nie odczytano profilu czasu.');
+  assert.deepEqual(reopened.saved.project.operations[0].timeProfile,profile);
+  const cleared=editDomainTime(reopened.saved.project,{kind:'clear-time-profile',operationId:'OP10'});
+  saveDomainDraft(storage,{originalJson:original,project:cleared},saved.raw);
+  assert.equal(cleared.operations[0].timeProfile,undefined);
+  assert.equal(readDomainDraft(storage).status,'valid');
+  assert.deepEqual(editDomainTime(cleared,{kind:'set-time-profile',operationId:'OP10',profile}).operations[0].timeProfile,profile);
 });
 
 test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{

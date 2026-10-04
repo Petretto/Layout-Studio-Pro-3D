@@ -314,6 +314,59 @@ try {
   await evaluate(`document.querySelector('[aria-label="Edytor wyposażenia szkicu 6"]').scrollIntoView()`);
   const capabilityShot = await send('Page.captureScreenshot', {format: 'png'});
   writeFileSync('outputs/qa/verify_2_1j_capabilities.png', Buffer.from(capabilityShot.data, 'base64'));
+
+  // 2.2b: explicit time profile in the separate draft, with unit display and shared history.
+  await choose('Operacja profilu czasu', 'OP10');
+  await choose('Jednostka profilu czasu', 'min');
+  await setInput('Czas całkowity profilu', '2.5');
+  await choose('Pochodzenie czasu całkowitego', 'assumed');
+  await click('Dodaj przedział praca ręczna');
+  await setInput('Praca ręczna początek 1', '0');
+  await setInput('Praca ręczna koniec 1', '0.5');
+  await choose('Praca ręczna pochodzenie 1', 'measured');
+  await click('Dodaj przedział praca maszyny');
+  await setInput('Praca maszyny początek 1', '0.25');
+  await setInput('Praca maszyny koniec 1', '2');
+  await choose('Praca maszyny pochodzenie 1', 'assumed');
+  await click('Dodaj przedział obecność operatora');
+  await setInput('Obecność operatora początek 1', '0');
+  await setInput('Obecność operatora koniec 1', '0.5');
+  await choose('Obecność operatora pochodzenie 1', 'measured');
+  await click('Zapisz profil czasu');
+  const expectedProfile = {durationSeconds: 150, durationBasis: 'assumed',
+    manualWork: [{startSeconds: 0, endSeconds: 30, basis: 'measured'}],
+    machineRun: [{startSeconds: 15, endSeconds: 120, basis: 'assumed'}],
+    operatorPresence: [{startSeconds: 0, endSeconds: 30, basis: 'measured'}]};
+  const readProfile = () => evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project.operations.find(item => item.id === 'OP10').timeProfile`);
+  if (JSON.stringify(await readProfile()) !== JSON.stringify(expectedProfile)) throw new Error('Nie zapisano profilu czasu z minutami i pochodzeniem.');
+  await choose('Jednostka profilu czasu', 'h');
+  if (await evaluate(`document.querySelector('input[aria-label="Czas całkowity profilu"]').value`) !== '0.041667' ||
+      JSON.stringify(await readProfile()) !== JSON.stringify(expectedProfile)) throw new Error('Zmiana jednostki zmieniła sekundy profilu.');
+  await choose('Jednostka profilu czasu', 'min');
+  const beforeInvalid = await evaluate(`localStorage.getItem('layout-studio-domain-v6-draft-v1')`);
+  await setInput('Praca ręczna koniec 1', '3');
+  await click('Zapisz profil czasu');
+  if (await evaluate(`localStorage.getItem('layout-studio-domain-v6-draft-v1')`) !== beforeInvalid ||
+      !(await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"]')?.innerText`)).includes('Nie zmieniono danych szkicu')) {
+    throw new Error('Niepoprawny przedział nadpisał szkic.');
+  }
+  await click('Cofnij dane szkicu');
+  if (await readProfile() !== undefined) throw new Error('Cofnij nie usunęło profilu czasu.');
+  await click('Ponów dane szkicu');
+  if (JSON.stringify(await readProfile()) !== JSON.stringify(expectedProfile)) throw new Error('Ponów nie przywróciło profilu czasu.');
+  await send('Page.reload');
+  await sleep(900);
+  await openStations();
+  if (JSON.stringify(await readProfile()) !== JSON.stringify(expectedProfile) ||
+      await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project.operations.find(item => item.id === 'OP11').timeProfile`) !== undefined ||
+      await evaluate(`localStorage.getItem('layout-studio-stations-v5')`) !== v5Before) throw new Error('Profil czasu nie przetrwał przeładowania lub zmienił aktywny projekt.');
+  await evaluate(`document.querySelector('[aria-label="Edytor profilu czasu szkicu 6"]').scrollIntoView()`);
+  const timeShot = await send('Page.captureScreenshot', {format: 'png'});
+  writeFileSync('outputs/qa/verify_2_2b_time_profile.png', Buffer.from(timeShot.data, 'base64'));
+  await click('Usuń profil czasu');
+  if (await readProfile() !== undefined) throw new Error('Nie usunięto profilu czasu.');
+  await click('Cofnij dane szkicu');
+  if (JSON.stringify(await readProfile()) !== JSON.stringify(expectedProfile)) throw new Error('Nie przywrócono usuniętego profilu.');
   await evaluate(`document.querySelector('[aria-label="Edytor osób i pul szkicu 6"]').scrollIntoView()`);
   const peopleShot = await send('Page.captureScreenshot', {format: 'png'});
   writeFileSync('outputs/qa/verify_2_1g_people.png', Buffer.from(peopleShot.data, 'base64'));
@@ -405,7 +458,7 @@ try {
   if (JSON.stringify(JSON.parse(await evaluate(`localStorage.getItem('layout-studio-v3')`)).project) !== JSON.stringify(JSON.parse(v4Before).project) ||
       await evaluate(`localStorage.getItem('layout-studio-stations-v5')`) !== v5Before) throw new Error('Zastąpienie szkicu zmieniło aktywny projekt v4/v5.');
   if (errors.length) throw new Error(`Błędy konsoli: ${errors.join('; ')}`);
-  console.log('PASS: podgląd, osoby, pule, wyrób, podzespoły, wyposażenie i możliwości z Cofnij/Ponów, ponowne otwarcie, odzyskanie, zastąpienie, konflikt i limit pamięci.');
+  console.log('PASS: podgląd, osoby, pule, wyrób, podzespoły, wyposażenie, możliwości i profil czasu z Cofnij/Ponów, ponowne otwarcie, odzyskanie, zastąpienie, konflikt i limit pamięci.');
 } finally {
   if (ws) ws.close();
   browser.kill();

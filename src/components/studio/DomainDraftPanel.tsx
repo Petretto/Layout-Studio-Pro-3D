@@ -8,11 +8,13 @@ import type {DomainProjectV6} from '../../core/domainProject';
 import {editDomainPeople, type DomainPeopleChange} from '../../core/domainPeopleEditing';
 import {editDomainProduct, type DomainProductChange} from '../../core/domainProductEditing';
 import {editDomainEquipment, type DomainEquipmentChange} from '../../core/domainEquipmentEditing';
+import {editDomainTime, type DomainTimeChange} from '../../core/domainTimeEditing';
 import {readDomainDraft, replaceDomainDraft, saveDomainDraft} from '../../core/domainDraftStorage';
 import {download} from '../../core/project';
 import {DomainPeopleEditor} from './DomainPeopleEditor';
 import {DomainProductEditor} from './DomainProductEditor';
 import {DomainEquipmentEditor} from './DomainEquipmentEditor';
+import {DomainTimeEditor} from './DomainTimeEditor';
 
 const gapLabels: Record<DomainGap, string> = {
   'worker-identities': 'Tożsamość pracowników',
@@ -121,6 +123,8 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
     project => editDomainProduct(project, change), 'Zapisano wyrób lub podzespół w szkicu 6.');
   const applyEquipment = (change: DomainEquipmentChange) => applyDraftChange(
     project => editDomainEquipment(project, change), 'Zapisano wyposażenie w szkicu 6.');
+  const applyTime = (change: DomainTimeChange) => applyDraftChange(
+    project => editDomainTime(project, change), 'Zapisano profil czasu operacji w szkicu 6.');
 
   const navigateDraftHistory = (direction: 'undo' | 'redo') => {
     if (draft.status !== 'valid') return;
@@ -163,6 +167,9 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
       canUndo={past.length > 0} canRedo={future.length > 0} />}
     {draft.status === 'valid' && <DomainEquipmentEditor key={`equipment-${draft.raw}`} project={draft.saved.project} onApply={applyEquipment}
+      onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
+      canUndo={past.length > 0} canRedo={future.length > 0} />}
+    {draft.status === 'valid' && <DomainTimeEditor project={draft.saved.project} onApply={applyTime}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
       canUndo={past.length > 0} canRedo={future.length > 0} />}
     {preview && <div className="panel">
