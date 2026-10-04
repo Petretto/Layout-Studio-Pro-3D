@@ -12,7 +12,7 @@ import {DEFAULT_EKO_PROJECT} from '../src/core/models/ekoProject';
 import {reviseStations} from '../src/core/stationRegistry';
 import {previewStationMigration,prepareStationMigration} from '../src/core/stationMigration';
 import {previewDomainMigrationFromV4,previewDomainMigrationFromV5,verifyDomainMigrationPreview} from '../src/core/domainMigrationPreview';
-import {parseDomainProjectV6,prepareDomainMigration} from '../src/core/domainProject';
+import {parseDomainProjectV6,prepareDomainMigration,type DomainTimeProfile} from '../src/core/domainProject';
 import {editDomainPeople} from '../src/core/domainPeopleEditing';
 import {editDomainProduct} from '../src/core/domainProductEditing';
 import {editDomainEquipment} from '../src/core/domainEquipmentEditing';
@@ -309,6 +309,70 @@ test('2.1k: edycja szkicu 6 nie zmienia źródła ani wyników symulacji silnik�
     const activeAfter=version===4?derive(parseProject(storage.getItem(activeKey)!)).project:deriveStationProject(parseStationProjectV5(storage.getItem(activeKey)!)).project;
     assert.deepEqual(simulateNetwork(activeAfter,4050,3),before,name);
   }
+});
+
+test('2.2a: profil czasu zapisuje jawne przedziały bez zmiany starego czasu i wyniku',()=>{
+  const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+  const prepared=prepareDomainMigration(previewDomainMigrationFromV5(original));
+  const legacyStandard=prepared.project.operations[0].standardTimeSeconds;
+  assert.equal(prepared.project.operations[0].timeProfile,undefined);
+  const oldStorage=new DraftStorage();
+  saveDomainDraft(oldStorage,prepared,null);
+  const oldDraft=readDomainDraft(oldStorage);
+  assert.equal(oldDraft.status,'valid');
+  if(oldDraft.status!=='valid')throw new Error('Dawny szkic jest nieczytelny.');
+  assert.equal(oldDraft.saved.project.operations[0].timeProfile,undefined);
+  const profile:DomainTimeProfile={durationSeconds:100,durationBasis:'assumed',
+    manualWork:[{startSeconds:0,endSeconds:20,basis:'measured'}],
+    machineRun:[{startSeconds:10,endSeconds:80,basis:'assumed'}],
+    operatorPresence:[{startSeconds:0,endSeconds:20,basis:'measured'},
+      {startSeconds:75,endSeconds:90,basis:'assumed'}]};
+  const legacyWithUnknownProfile=JSON.parse(original);
+  legacyWithUnknownProfile.processSteps[0].timeProfile=profile;
+  const migrated=prepareDomainMigration(previewDomainMigrationFromV5(JSON.stringify(legacyWithUnknownProfile)));
+  assert.equal(migrated.project.operations[0].timeProfile,undefined);
+  const candidate=structuredClone(prepared.project);
+  candidate.operations[0].timeProfile=profile;
+  assert.deepEqual(parseDomainProjectV6(JSON.stringify(candidate)).operations[0].timeProfile,profile);
+  assert.equal(candidate.operations[0].standardTimeSeconds,legacyStandard);
+  const storage=new DraftStorage();
+  storage.values.set('layout-studio-stations-v5',original);
+  const written=saveDomainDraft(storage,{originalJson:original,project:candidate},null);
+  const reopened=readDomainDraft(storage);
+  assert.equal(reopened.status,'valid');
+  if(reopened.status!=='valid')throw new Error('Nie odczytano profilu czasu.');
+  assert.equal(reopened.raw,written.raw);
+  assert.equal(reopened.saved.originalJson,original);
+  assert.deepEqual(reopened.saved.project.operations[0].timeProfile,profile);
+  assert.equal(storage.getItem('layout-studio-stations-v5'),original);
+  const baseline=simulateNetwork(deriveStationProject(parseStationProjectV5(original)).project,4050,3);
+  assert.deepEqual(simulateNetwork(deriveStationProject(parseStationProjectV5(storage.getItem('layout-studio-stations-v5')!)).project,4050,3),baseline);
+});
+
+test('2.2a: profil czasu odrzuca błędne przedziały i brak obecności przy pracy ręcznej',()=>{
+  const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+  const prepared=prepareDomainMigration(previewDomainMigrationFromV5(original));
+  const profile:DomainTimeProfile={durationSeconds:100,durationBasis:'measured',
+    manualWork:[{startSeconds:10,endSeconds:30,basis:'measured'}],
+    machineRun:[{startSeconds:20,endSeconds:90,basis:'assumed'}],
+    operatorPresence:[{startSeconds:0,endSeconds:30,basis:'measured'}]};
+  const storage=new DraftStorage();
+  const initial=saveDomainDraft(storage,prepared,null);
+  const check=(change:(value:DomainTimeProfile)=>void,pattern:RegExp)=>{
+    const candidate=structuredClone(prepared.project);
+    candidate.operations[0].timeProfile=structuredClone(profile);
+    change(candidate.operations[0].timeProfile!);
+    assert.throws(()=>parseDomainProjectV6(JSON.stringify(candidate)),pattern);
+    assert.throws(()=>saveDomainDraft(storage,{originalJson:original,project:candidate},initial.raw),pattern);
+    assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),initial.raw);
+  };
+  check(value=>{value.durationSeconds=0;},/dodatni czas/);
+  check(value=>{value.machineRun[0].endSeconds=101;},/granicach/);
+  check(value=>{value.manualWork.push({startSeconds:20,endSeconds:40,basis:'assumed'});},/niepokrywające/);
+  check(value=>{value.operatorPresence=[];},/wymaga obecności/);
+  check(value=>{value.manualWork[0].basis='estimated' as 'assumed';},/pochodzeniem/);
+  check(value=>{(value as DomainTimeProfile & {unknown?:number}).unknown=1;},/dodatni czas/);
+  assert.equal(prepared.project.operations[0].timeProfile,undefined);
 });
 
 test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{

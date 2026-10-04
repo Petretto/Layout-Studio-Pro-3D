@@ -60,6 +60,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
+2.2a / 2.2.1 (2026-10-04): opcjonalny, jawny profil czasowy operacji w niekompletnym szkicu 6. Rozdziela przedziały pracy ręcznej, pracy automatu i wymaganej obecności operatora oraz pochodzenie pomierzone/założone bez wyprowadzania ich z dawnego czasu standardowego. Walidacja i zapis odrzucają niepoprawne przedziały bez nadpisania szkicu; dawne szkice pozostają czytelne, aktywne v4/v5 i wyniki symulacji bez zmian. Backup 146 plików: `backup/v0.4.0_przed_2_2a_20261004_214349` (zgodne SHA256). 91/91 testów i build poprawne; kontrakt `MODEL_CZASU_2_2.md`, raport `WERYFIKACJA_CZASU_2_2.md`. Punkt 2.2 w trakcie do edytora UI i odbioru końcowego.
+
 2.1k / 2.1.11 (2026-10-04): zbiorczy odbiór punktu 2.1 na Eko v4/v5 i silnikach v4. Po edycji i ponownym otwarciu odrębnego szkicu 6 aktywne źródła i pełne wyniki dotychczasowej symulacji są identyczne; istniejące testy potwierdzają kompletność referencji, ochronę źródła i odmowy migracji, a Edge CDP potwierdza UI, Cofnij/Ponów, odczyt, odzyskanie i zastąpienie. 89/89 testów, build i UI poprawne. Bez zmian struktury modułów lub schematu; nowa kopia nie była wymagana. Raport `WERYFIKACJA_MODELU_2_1.md`. Punkt 2.1 wdrożony jako fundament odrębnego, nadal niekompletnego modelu; reguły zasobów i aktywacja nowej symulacji należą do 2.2–2.9.
 
 2.1j / 2.1.10 (2026-10-04): opcjonalna, ręczna lista operacji, które wyposażenie technologiczne może obsłużyć w szkicu 6. Brak pola oznacza „nie określono” także w dawnych szkicach. Backup 129 plików: `backup/v0.4.0_przed_2_1j_20261004_211725` (zgodne SHA256). 88/88 testów i build poprawne. Edge CDP potwierdził zapis OP10/OP11, Cofnij/Ponów, przeładowanie, wyczyszczenie i przywrócenie z nienaruszonym v4/v5; zrzut `outputs/qa/verify_2_1j_capabilities.png`. Raport `WERYFIKACJA_MODELU_2_1.md`. Deklaracja możliwości nie oznacza wymagania operacji ani nie zmienia bilansu lub symulacji; punkt 2.1 nadal w trakcie.
@@ -203,7 +205,10 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 2.1.9 | Edytować wyposażenie technologiczne w szkicu 6 po trwałym ID, z jawnymi opcjonalnymi powiązaniami do stanowiska i obiektu layoutu, bez wnioskowania możliwości z geometrii. | wdrożone |
 | 2.1.10 | Pozwolić ręcznie deklarować operacje obsługiwane przez wyposażenie w szkicu 6, z walidacją referencji i zgodnością wcześniejszych szkiców; nie utożsamiać możliwości z wymaganiem operacji. | wdrożone |
 | 2.1.11 | Zbiorczo odebrać migrację Eko i silników, odrębny zapis szkicu, UI oraz niezmienność wyników aktywnej symulacji v4/v5 po edycji szkicu. | wdrożone |
-| 2.2 | Rozdzielić czas pracy ręcznej, automatyczny czas maszyny i okres wymaganej obecności operatora. | nierozpoczęte |
+| 2.2 | Rozdzielić czas pracy ręcznej, automatyczny czas maszyny i okres wymaganej obecności operatora. | w trakcie |
+| 2.2.1 | W szkicu 6 zdefiniować opcjonalny profil z jawnymi przedziałami czasu ręcznego, automatu i obecności operatora; walidować go bez zgadywania podziału z v4/v5 i zachować zgodność dawnych szkiców. | wdrożone |
+| 2.2.2 | Dodać edycję profilu w UI, odrębny zapis, Cofnij/Ponów i ponowny odczyt z jawnymi jednostkami i pochodzeniem czasu. | nierozpoczęte |
+| 2.2.3 | Zbiorczo odebrać spójność profilu, migracji i UI na Eko i silnikach oraz niezmienność dotychczasowej symulacji. | nierozpoczęte |
 | 2.3 | Określać wymaganą liczbę pracowników przy operacji oraz jawne warianty czasu dla obsady, bez automatycznego dzielenia czasu przez liczbę osób. | nierozpoczęte |
 | 2.4 | Obsłużyć operatorów współdzielonych między stanowiskami, ich rezerwację i zwalnianie bez nakładania przydziałów w czasie. | nierozpoczęte |
 | 2.5 | Uwzględnić kalendarz zasobów, zmiany i przerwy; jednoznacznie określić zachowanie rozpoczętej operacji na granicy przerwy. | nierozpoczęte |
@@ -364,6 +369,7 @@ Każdy kolejny wpis powinien wskazywać konkretne ID. Nie usuwać historii przy 
 | 2026-10-04 | 2.1.10 | w trakcie → wdrożone — 2.1j | Opcjonalne jawne możliwości wyposażenia po ID operacji, zgodny odczyt dawnych szkiców. Edge CDP potwierdził wybór, wyczyszczenie, Cofnij/Ponów i ponowny odczyt bez zmiany v4/v5. Backup 129 plików, 88/88 testów i build. Punkt 2.1 w trakcie; raport `WERYFIKACJA_MODELU_2_1.md`. |
 | 2026-10-04 | 2.1, 2.1.11 | w trakcie → wdrożone — 2.1k | Zbiorczy odbiór Eko v4/v5 i silników v4: po edycji szkicu 6 dokładne aktywne JSON i pełne wyniki symulacji bez zmian; istniejące testy referencji/migracji i ponowny odbiór UI Edge CDP (zapis, Cofnij/Ponów, odczyt, odzyskanie, zastąpienie). 89/89 testów i build; raport `WERYFIKACJA_MODELU_2_1.md`. Etap 2 pozostaje w trakcie. |
 | 2026-10-04 | Etap 3 | nierozpoczęte → w trakcie | Korekta podsumowania zgodnie z zasadą statusu etapu: punkt 3.10 został wcześniej odebrany, choć pozostałe kroki etapu czekają. |
+| 2026-10-04 | 2.2, 2.2.1 | 2.2 nierozpoczęte → w trakcie; 2.2.1 w trakcie → wdrożone — 2.2a | Opcjonalny profil czasu w szkicu 6 z jawnymi przedziałami i pochodzeniem; brak wnioskowania z czasu v4/v5, odczyt dawnych szkiców, ochrona zapisu i niezmienny wynik starej symulacji. Backup 146 plików zgodny SHA256, 91/91 testów i build; `MODEL_CZASU_2_2.md`, `WERYFIKACJA_CZASU_2_2.md`. UI i odbiór całego 2.2 pozostają do wykonania. |
 | 2026-10-03 | 2.1, 2.1.1 | 2.1 nierozpoczęte → w trakcie; 2.1.1 wdrożone — 2.1a | Kontrakt nowego modelu i migracji w `MODEL_PROCESU_2_1.md`; potwierdzono fakty w pliku Eko, 76/76 testów. Brak zmiany kodu i schematów; parser, migracja i UI pozostają do wykonania. |
 
 ### Szablon wpisu odbioru pakietu

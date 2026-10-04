@@ -5,7 +5,16 @@ import type {DomainMigrationPreview} from './domainMigrationPreview';
 import {verifyDomainMigrationPreview} from './domainMigrationPreview';
 import {parseStationProjectV5} from './stationProject';
 
-export type DomainOperation = Omit<ProcessStep, 'assignedWorkstationId'>;
+export type DomainTimeBasis = 'measured' | 'assumed';
+export interface DomainTimeInterval {startSeconds: number; endSeconds: number; basis: DomainTimeBasis}
+export interface DomainTimeProfile {
+  durationSeconds: number;
+  durationBasis: DomainTimeBasis;
+  manualWork: DomainTimeInterval[];
+  machineRun: DomainTimeInterval[];
+  operatorPresence: DomainTimeInterval[];
+}
+export type DomainOperation = Omit<ProcessStep, 'assignedWorkstationId'> & {timeProfile?: DomainTimeProfile};
 export interface DomainWorker {id: string; name: string}
 export interface DomainWorkerPool {id: string; name: string; workerIds: string[]}
 export interface DomainEquipment {id: string; name: string; stationId?: string; layoutObjectId?: string; capableOperationIds?: string[]}
@@ -58,6 +67,42 @@ function named(items: Record<string, unknown>[], label: string) {
   }
 }
 
+function timeBasis(value: unknown): value is DomainTimeBasis {
+  return value === 'measured' || value === 'assumed';
+}
+function validateTimeIntervals(value: unknown, label: string, duration: number): DomainTimeInterval[] {
+  if (!Array.isArray(value) || value.length > 500) throw new Error(`${label}: wymagana lista przedziałów.`);
+  let previousEnd = 0;
+  for (const interval of value) {
+    if (!record(interval) || Object.keys(interval).some(key => !['startSeconds', 'endSeconds', 'basis'].includes(key)) ||
+        typeof interval.startSeconds !== 'number' || !Number.isFinite(interval.startSeconds) ||
+        typeof interval.endSeconds !== 'number' || !Number.isFinite(interval.endSeconds) ||
+        interval.startSeconds < previousEnd || interval.startSeconds < 0 ||
+        interval.endSeconds <= interval.startSeconds || interval.endSeconds > duration || !timeBasis(interval.basis)) {
+      throw new Error(`${label}: przedziały muszą być uporządkowane, niepokrywające się, w granicach czasu operacji i z jawnym pochodzeniem.`);
+    }
+    previousEnd = interval.endSeconds;
+  }
+  return value as DomainTimeInterval[];
+}
+function validateTimeProfile(value: unknown, operationId: string) {
+  const label = `Operacja ${operationId}: profil czasu`;
+  if (!record(value) || Object.keys(value).some(key => ![
+    'durationSeconds', 'durationBasis', 'manualWork', 'machineRun', 'operatorPresence',
+  ].includes(key)) || typeof value.durationSeconds !== 'number' ||
+      !Number.isFinite(value.durationSeconds) || value.durationSeconds <= 0 ||
+      !timeBasis(value.durationBasis)) {
+    throw new Error(`${label}: wymagany dodatni czas całkowity i jawne pochodzenie.`);
+  }
+  const manual = validateTimeIntervals(value.manualWork, `${label} — praca ręczna`, value.durationSeconds);
+  validateTimeIntervals(value.machineRun, `${label} — praca maszyny`, value.durationSeconds);
+  const presence = validateTimeIntervals(value.operatorPresence, `${label} — obecność operatora`, value.durationSeconds);
+  for (const interval of manual) if (!presence.some(item =>
+    item.startSeconds <= interval.startSeconds && item.endSeconds >= interval.endSeconds)) {
+    throw new Error(`${label}: praca ręczna wymaga obecności operatora przez cały przedział.`);
+  }
+}
+
 /** Validate a draft without enabling schema 6 in the active app or its storage. */
 export function parseDomainProjectV6(text: string): DomainProjectV6 {
   const raw: unknown = JSON.parse(text);
@@ -85,6 +130,9 @@ export function parseDomainProjectV6(text: string): DomainProjectV6 {
   named(subassemblies, 'Podzespoły');
   if (operations.some(operation => has(operation, 'assignedWorkstationId'))) {
     throw new Error('Przypisanie operacji należy wyłącznie do rejestru stanowisk.');
+  }
+  for (const operation of operations) if (has(operation, 'timeProfile')) {
+    validateTimeProfile(operation.timeProfile, operation.id as string);
   }
   if (!record(raw.stationSettings)) throw new Error('Niepoprawne ustawienia stanowisk.');
   if (!Array.isArray(raw.layoutObjects)) throw new Error('Brak listy obiektów wizualnych.');
@@ -153,7 +201,8 @@ export function prepareDomainMigration(preview: DomainMigrationPreview): Prepare
   const checked = verifyDomainMigrationPreview(preview);
   const {schemaVersion: _version, processSteps, workstationSettings, stations, ...source} = checked.stationProject;
   const operations = processSteps.map(step => {
-    const {assignedWorkstationId: _assignment, ...operation} = step;
+    const {assignedWorkstationId: _assignment, timeProfile: _unsupportedProfile, ...operation} =
+      step as ProcessStep & {timeProfile?: unknown};
     return operation;
   });
   const project: DomainProjectV6 = {...source, schemaVersion: 6, modelStatus: 'incomplete',
