@@ -510,6 +510,46 @@ test('2.3a: niepoprawna obsada lub wariant nie nadpisuje szkicu',()=>{
   invalid(item=>{(item as DomainOperationStaffing & {unknown?:number}).unknown=1;},/dodatnia liczba/);
 });
 
+test('2.3b: edycja obsady i wariantów zachowuje profil referencyjny, historię zapisu i źródło',()=>{
+  const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+  const project=prepareDomainMigration(previewDomainMigrationFromV5(original)).project;
+  const before=JSON.stringify(project);
+  const profile:DomainTimeProfile={durationSeconds:120,durationBasis:'measured',
+    manualWork:[{startSeconds:0,endSeconds:30,basis:'measured'}],machineRun:[],
+    operatorPresence:[{startSeconds:0,endSeconds:30,basis:'measured'}]};
+  const reference=editDomainTime(project,{kind:'set-time-profile',operationId:'OP10',profile});
+  assert.throws(()=>editDomainTime(reference,{kind:'set-staffing-variant',operationId:'OP10',workerCount:2,profile}),/najpierw zapisz/);
+  const minimum=editDomainTime(reference,{kind:'set-required-workers',operationId:'OP10',requiredWorkers:2});
+  assert.deepEqual(minimum.operations[0].staffing,{requiredWorkers:2,timeVariants:[]});
+  const first=editDomainTime(minimum,{kind:'set-staffing-variant',operationId:'OP10',workerCount:2,profile});
+  const shorter={...profile,durationSeconds:113,durationBasis:'assumed' as const};
+  const second=editDomainTime(first,{kind:'set-staffing-variant',operationId:'OP10',workerCount:3,profile:shorter});
+  assert.deepEqual(second.operations[0].staffing?.timeVariants.map(item=>item.timeProfile.durationSeconds),[120,113]);
+  assert.deepEqual(second.operations[0].timeProfile,profile);
+  assert.equal(second.operations[0].standardTimeSeconds,project.operations[0].standardTimeSeconds);
+  assert.equal(second.operations[1].staffing,undefined);
+  assert.equal(JSON.stringify(project),before);
+  assert.throws(()=>editDomainTime(second,{kind:'set-required-workers',operationId:'OP10',requiredWorkers:4}),/minimum/);
+  assert.throws(()=>editDomainTime(second,{kind:'set-staffing-variant',operationId:'OP10',workerCount:1,profile}),/minimum/);
+  assert.throws(()=>editDomainTime(second,{kind:'set-required-workers',operationId:'OBCA',requiredWorkers:1}),/nie istnieje/);
+  const storage=new DraftStorage();
+  const initial=saveDomainDraft(storage,{originalJson:original,project:second},null);
+  const reopened=readDomainDraft(storage);
+  assert.equal(reopened.status,'valid');
+  if(reopened.status!=='valid')throw new Error('Nie odczytano obsady.');
+  assert.deepEqual(reopened.saved.project.operations[0].staffing,second.operations[0].staffing);
+  assert.equal(reopened.saved.originalJson,original);
+  const removed=editDomainTime(reopened.saved.project,{kind:'clear-staffing-variant',operationId:'OP10',workerCount:3});
+  assert.deepEqual(removed.operations[0].staffing?.timeVariants.map(item=>item.workerCount),[2]);
+  const undone=editDomainTime(removed,{kind:'set-staffing-variant',operationId:'OP10',workerCount:3,profile:shorter});
+  assert.deepEqual(undone.operations[0].staffing,second.operations[0].staffing);
+  const cleared=editDomainTime(undone,{kind:'clear-staffing',operationId:'OP10'});
+  assert.equal(cleared.operations[0].staffing,undefined);
+  assert.deepEqual(cleared.operations[0].timeProfile,profile);
+  saveDomainDraft(storage,{originalJson:original,project:cleared},initial.raw);
+  assert.equal(readDomainDraft(storage).status,'valid');
+});
+
 test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{
   const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
   const before=JSON.parse(original);

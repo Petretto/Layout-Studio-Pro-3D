@@ -35,13 +35,24 @@ export function DomainTimeEditor({project, onApply, onUndo, onRedo, canUndo, can
 }) {
   const [selected, setSelected] = useState(project.operations[0]?.id ?? '');
   const [unit, setUnit] = useState<TimeUnit>(project.timeUnit ?? 's');
+  const [target, setTarget] = useState<'reference' | 'variant'>('reference');
+  const [requiredWorkers, setRequiredWorkers] = useState('');
+  const [variantCount, setVariantCount] = useState('');
   const [form, setForm] = useState<EditableProfile>(() => editable(project.operations[0]?.timeProfile));
   const [error, setError] = useState('');
   const operation = project.operations.find(item => item.id === selected);
+  useEffect(() => setVariantCount(''), [selected]);
   useEffect(() => {
-    setForm(editable(project.operations.find(item => item.id === selected)?.timeProfile));
-    setError('');
+    setRequiredWorkers(operation?.staffing ? String(operation.staffing.requiredWorkers) : '');
   }, [project, selected]);
+  useEffect(() => {
+    const profile = target === 'reference' ? operation?.timeProfile
+      : operation?.staffing?.timeVariants.find(item => String(item.workerCount) === variantCount)?.timeProfile;
+    setForm(editable(profile));
+    setError('');
+  }, [project, selected, target, variantCount]);
+
+  const existingVariant = operation?.staffing?.timeVariants.find(item => String(item.workerCount) === variantCount);
 
   const numeric = (value: string) => value.trim() === '' || !Number.isFinite(Number(value))
     ? undefined : toSeconds(Number(value), unit);
@@ -62,7 +73,24 @@ export function DomainTimeEditor({project, onApply, onUndo, onRedo, canUndo, can
     }
     const profile: DomainTimeProfile = {durationSeconds: form.durationSeconds, durationBasis: form.durationBasis,
       manualWork, machineRun, operatorPresence};
-    if (onApply({kind: 'set-time-profile', operationId: operation.id, profile})) setError('');
+    if (target === 'variant') {
+      const workerCount = Number(variantCount);
+      if (!operation.staffing || !variantCount.trim() || !Number.isSafeInteger(workerCount) ||
+          workerCount < operation.staffing.requiredWorkers) {
+        setError('Najpierw zapisz minimalną obsadę, a potem podaj całkowitą liczbę osób nie mniejszą od minimum.');
+        return;
+      }
+      if (onApply({kind: 'set-staffing-variant', operationId: operation.id, workerCount, profile})) setError('');
+    } else if (onApply({kind: 'set-time-profile', operationId: operation.id, profile})) setError('');
+  };
+  const saveRequiredWorkers = () => {
+    if (!operation) return;
+    const count = Number(requiredWorkers);
+    if (!requiredWorkers.trim() || !Number.isSafeInteger(count) || count < 1) {
+      setError('Podaj dodatnią, całkowitą minimalną liczbę pracowników.');
+      return;
+    }
+    if (onApply({kind: 'set-required-workers', operationId: operation.id, requiredWorkers: count})) setError('');
   };
   const intervalFields = ({key, label}: {key: Category; label: string}) =>
     <fieldset key={key} aria-label={label}>
@@ -84,7 +112,7 @@ export function DomainTimeEditor({project, onApply, onUndo, onRedo, canUndo, can
     </fieldset>;
 
   return <div className="panel" aria-label="Edytor profilu czasu szkicu 6">
-    <h3>Profil czasu operacji — szkic 6</h3>
+    <h3>Profil czasu i obsada operacji — szkic 6</h3>
     <p className="muted">Wpisz potwierdzone czasy względem początku operacji. Brak profilu oznacza brak podziału; nie wyliczamy go ze starego czasu standardowego. Przedziały różnych kategorii mogą się nakładać, a praca ręczna wymaga obecności operatora. Profil nie steruje jeszcze symulacją.</p>
     <div className="toolbar"><button disabled={!canUndo} onClick={onUndo}>Cofnij dane szkicu</button><button disabled={!canRedo} onClick={onRedo}>Ponów dane szkicu</button></div>
     <div className="toolbar">
@@ -97,6 +125,34 @@ export function DomainTimeEditor({project, onApply, onUndo, onRedo, canUndo, can
     </div>
     {operation && <>
       <p>Stary czas standardowy: {formatTimeWithUnit(operation.standardTimeSeconds, unit)} · Profil: {operation.timeProfile ? 'jawnie zapisany' : 'brak danych'}.</p>
+      <fieldset aria-label="Obsada operacji">
+        <legend>Wymagana obsada operacji</legend>
+        <p className="muted">Podaj minimum dla tej operacji. Obsada stanowiska nie jest tu kopiowana; dodatkowe osoby nie skracają czasu bez jawnego wariantu.</p>
+        <div className="toolbar">
+          <label className="field">Minimalna liczba pracowników<input type="number" step="1" min="1"
+            aria-label="Minimalna liczba pracowników operacji" value={requiredWorkers}
+            onChange={event => setRequiredWorkers(event.target.value)} /></label>
+          <button onClick={saveRequiredWorkers}>Zapisz minimalną obsadę</button>
+          {operation.staffing && <button className="danger" onClick={() => onApply({kind: 'clear-staffing', operationId: operation.id})}>Usuń obsadę i warianty</button>}
+        </div>
+        <p>Warianty czasu: {operation.staffing?.timeVariants.length
+          ? operation.staffing.timeVariants.map(item => `${item.workerCount} osób`).join(', ') : 'brak'}.</p>
+      </fieldset>
+      <div className="toolbar">
+        <label className="field">Edytowany profil<select aria-label="Edytowany profil operacji" value={target}
+          onChange={event => setTarget(event.target.value as 'reference' | 'variant')}>
+          <option value="reference">Profil referencyjny (bez obsady)</option>
+          <option value="variant">Wariant dla liczebności zespołu</option>
+        </select></label>
+        {target === 'variant' && <label className="field">Liczba pracowników wariantu<input type="number" step="1" min="1"
+          aria-label="Liczba pracowników wariantu" value={variantCount}
+          onChange={event => setVariantCount(event.target.value)} /></label>}
+      </div>
+      {target === 'variant' && <div className="toolbar">
+        {operation.staffing?.timeVariants.map(item => <button key={item.workerCount}
+          onClick={() => setVariantCount(String(item.workerCount))}>Edytuj wariant {item.workerCount} osób</button>)}
+        <p className="muted">Wpisz nową liczbę osób, aby dodać kolejny wariant. Każdy wariant wymaga pełnego, jawnego profilu.</p>
+      </div>}
       <div className="toolbar">
         <label className="field">Czas całkowity [{unit}]<input type="number" step="any" min="0"
           aria-label="Czas całkowity profilu" value={display(form.durationSeconds)}
@@ -107,8 +163,9 @@ export function DomainTimeEditor({project, onApply, onUndo, onRedo, canUndo, can
         </select></label>
       </div>
       {categories.map(intervalFields)}
-      <div className="toolbar"><button onClick={save}>Zapisz profil czasu</button>
-        {operation.timeProfile && <button className="danger" onClick={() => onApply({kind: 'clear-time-profile', operationId: operation.id})}>Usuń profil czasu</button>}
+      <div className="toolbar"><button onClick={save}>{target === 'reference' ? 'Zapisz profil czasu' : 'Zapisz wariant czasu'}</button>
+        {target === 'reference' && operation.timeProfile && <button className="danger" onClick={() => onApply({kind: 'clear-time-profile', operationId: operation.id})}>Usuń profil czasu</button>}
+        {target === 'variant' && existingVariant && <button className="danger" onClick={() => onApply({kind: 'clear-staffing-variant', operationId: operation.id, workerCount: existingVariant.workerCount})}>Usuń wariant {existingVariant.workerCount} osób</button>}
       </div>
     </>}
     {error && <p className="error" role="alert">{error}</p>}

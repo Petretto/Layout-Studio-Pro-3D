@@ -1,6 +1,6 @@
 # Obsada operacji i warianty czasu — punkt 2.3
 
-Status 2026-10-04: pakiet 2.3a / 2.3.1 wdrożony w niekompletnym szkicu schematu 6. Edycja w interfejsie i odbiór zbiorczy są kolejnymi krokami 2.3.
+Status 2026-10-04: pakiety 2.3a / 2.3.1 i 2.3b / 2.3.2 wdrożone w niekompletnym szkicu schematu 6. Odbiór zbiorczy pozostaje krokiem 2.3.3.
 
 ## Kontrakt danych
 
@@ -17,3 +17,9 @@ Numer szkicu pozostaje 6; dawne szkice bez `staffing` są czytelne. Migracja z a
 Obsada i warianty są na razie wyłącznie danymi szkicu. Nie są wybierane przez aktywny bilans ani symulację. Przypisanie osób, kontrola równoczesnych rezerwacji, reguły wyboru wariantu, kalendarz i użycie czasu wariantu w symulacji wymagają późniejszych kroków planu. `modelStatus` pozostaje `incomplete`.
 
 Przed zmianą schematu wykonano kopię `backup/v0.4.0_przed_2_3a_20261004_224147`. Obejmuje 150 plików zgodnych z manifestem SHA256; pomija zależności, build, wcześniejsze kopie, `outputs` i metadane Git. Dane localStorage przeglądarki nie należą do kopii.
+
+## Pakiet 2.3b — edycja w UI
+
+W panelu czasu szkicu 6 można wskazać operację, zapisać lub usunąć jej minimalną obsadę i edytować osobny profil dla liczebności zespołu. Przełącznik odróżnia wariant od profilu referencyjnego bez obsady. Dla istniejących wariantów są przyciski wyboru, a wpisanie nowej liczby pracowników tworzy kolejny wariant po podaniu pełnego profilu. Pola czasu mają jawne jednostki s/min/h i pochodzenie zgodnie z punktem 2.2. Zapis minimum większego niż liczba osób w istniejącym wariancie jest odrzucany; usunięcie minimum usuwa również warianty.
+
+Edycja korzysta z tego samego parsera, odrębnego zapisu szkicu i historii Cofnij/Ponów co pozostałe dane szkicu. Błędny profil lub minimum nie nadpisuje wcześniejszego zapisu. Po przeładowaniu zapisane warianty można ponownie wybrać i edytować. Przed zmianą ścieżki edycji wykonano kopię `backup/v0.4.0_przed_2_3b_20261004` (152 pliki zgodne z manifestem SHA256). Dane localStorage nie należą do kopii.
