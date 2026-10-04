@@ -235,6 +235,53 @@ try {
   if (productDraft.product?.name !== 'Wyrób po zmianie' || productDraft.subassemblies[0]?.name !== 'Podzespół po zmianie' ||
       productDraft.subassemblies[0].producerOperationId !== 'OP10' || productDraft.subassemblies[0].consumerOperationIds[0] !== 'OP11') throw new Error('Wyrób lub podzespół zniknął po przeładowaniu.');
   if (await evaluate(`localStorage.getItem('layout-studio-stations-v5')`) !== v5Before) throw new Error('Edycja produktu zmieniła aktywny projekt v5.');
+
+  // 2.1i: explicit equipment identity and optional station/visual binding.
+  const stationA = productDraft.stations[0].id;
+  const stationB = productDraft.stations[1].id;
+  const visualA = productDraft.layoutObjects.find(object => object.workstationId === stationA).id;
+  await setInput('ID wyposażenia', 'EQ-QA-1');
+  await setInput('Nazwa wyposażenia', 'Urządzenie testowe');
+  await choose('Stanowisko wyposażenia', stationA);
+  await choose('Obiekt layoutu wyposażenia', visualA);
+  await click('Dodaj wyposażenie');
+  let equipmentDraft = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (equipmentDraft.equipment.length !== 1 || equipmentDraft.equipment[0].stationId !== stationA ||
+      equipmentDraft.equipment[0].layoutObjectId !== visualA) throw new Error('Nie zapisano jawnego powiązania wyposażenia.');
+  const firstEquipmentRaw = await evaluate(`localStorage.getItem('layout-studio-domain-v6-draft-v1')`);
+  await setInput('ID wyposażenia', 'EQ-QA-2');
+  await setInput('Nazwa wyposażenia', 'Drugie urządzenie');
+  await choose('Obiekt layoutu wyposażenia', visualA);
+  await click('Dodaj wyposażenie');
+  if (await evaluate(`localStorage.getItem('layout-studio-domain-v6-draft-v1')`) !== firstEquipmentRaw ||
+      !(await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"] [role="status"]')?.innerText`)).includes('więcej niż jednego wyposażenia')) throw new Error('Dwa urządzenia powiązano z jednym obiektem.');
+  await choose('Wyposażenie do edycji', 'EQ-QA-1');
+  await choose('Stanowisko wyposażenia', stationB);
+  await click('Zapisz wyposażenie');
+  if (await evaluate(`localStorage.getItem('layout-studio-domain-v6-draft-v1')`) !== firstEquipmentRaw ||
+      !(await evaluate(`document.querySelector('section[aria-label="Podgląd modelu procesu v6"] [role="status"]')?.innerText`)).includes('sprzeczne powiązanie')) throw new Error('Zapisano sprzeczne stanowisko i geometrię.');
+  await choose('Stanowisko wyposażenia', stationA);
+  await setInput('Nazwa wyposażenia', 'Urządzenie po zmianie');
+  await click('Zapisz wyposażenie');
+  await click('Cofnij dane szkicu');
+  equipmentDraft = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (equipmentDraft.equipment[0]?.name !== 'Urządzenie testowe') throw new Error('Cofnij nie przywróciło nazwy wyposażenia.');
+  await click('Ponów dane szkicu');
+  await choose('Wyposażenie do edycji', 'EQ-QA-1');
+  await click('Usuń wyposażenie');
+  if (await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project.equipment.length`) !== 0) throw new Error('Nie usunięto wyposażenia.');
+  await click('Cofnij dane szkicu');
+  equipmentDraft = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (equipmentDraft.equipment[0]?.id !== 'EQ-QA-1' || equipmentDraft.equipment[0]?.name !== 'Urządzenie po zmianie') throw new Error('Nie przywrócono wyposażenia.');
+  await evaluate(`document.querySelector('[aria-label="Edytor wyposażenia szkicu 6"]').scrollIntoView()`);
+  const equipmentShot = await send('Page.captureScreenshot', {format: 'png'});
+  writeFileSync('outputs/qa/verify_2_1i_equipment.png', Buffer.from(equipmentShot.data, 'base64'));
+  await send('Page.reload');
+  await sleep(900);
+  await openStations();
+  equipmentDraft = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  if (equipmentDraft.equipment[0]?.name !== 'Urządzenie po zmianie' || equipmentDraft.equipment[0]?.stationId !== stationA ||
+      equipmentDraft.equipment[0]?.layoutObjectId !== visualA || await evaluate(`localStorage.getItem('layout-studio-stations-v5')`) !== v5Before) throw new Error('Powiązanie wyposażenia nie przetrwało przeładowania lub zmieniło v5.');
   await evaluate(`document.querySelector('[aria-label="Edytor osób i pul szkicu 6"]').scrollIntoView()`);
   const peopleShot = await send('Page.captureScreenshot', {format: 'png'});
   writeFileSync('outputs/qa/verify_2_1g_people.png', Buffer.from(peopleShot.data, 'base64'));
@@ -326,7 +373,7 @@ try {
   if (JSON.stringify(JSON.parse(await evaluate(`localStorage.getItem('layout-studio-v3')`)).project) !== JSON.stringify(JSON.parse(v4Before).project) ||
       await evaluate(`localStorage.getItem('layout-studio-stations-v5')`) !== v5Before) throw new Error('Zastąpienie szkicu zmieniło aktywny projekt v4/v5.');
   if (errors.length) throw new Error(`Błędy konsoli: ${errors.join('; ')}`);
-  console.log('PASS: podgląd, osoby, pule, wyrób i podzespoły z Cofnij/Ponów, ponowne otwarcie, odzyskanie, zastąpienie, konflikt i limit pamięci.');
+  console.log('PASS: podgląd, osoby, pule, wyrób, podzespoły i wyposażenie z Cofnij/Ponów, ponowne otwarcie, odzyskanie, zastąpienie, konflikt i limit pamięci.');
 } finally {
   if (ws) ws.close();
   browser.kill();

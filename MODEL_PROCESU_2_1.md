@@ -94,4 +94,8 @@ Szkic 6 ma osobny edytor osób i pul z ręcznie podawanymi ID, nazwami oraz czł
 
 ## Pakiet 2.1h — wyrób i podzespoły
 
-Wyrób ma ręcznie podane ID i nazwę. Podzespół ma własne trwałe ID, nazwę, opcjonalną operację tworzącą i listę jawnie wybranych operacji zużywających. Brak wyboru pozostaje brakiem danych; parser odrzuca obce i powtórzone referencje. W edytorze można dodać, zmienić nazwę, usunąć oraz cofnąć lub ponowić definicję. Historia szkicu jest wspólna z edycją osób i pul. Żadne definicje nie powstają z BOM, nazw operacji, grafu lub geometrii. Schemat 6 nadal ma status `incomplete`; definiuje typy, a nie instancje wyrobów i podzespołów w symulacji. Kolejny zakres 2.1 obejmuje wyposażenie technologiczne, jego jawne możliwości i referencje oraz pełny odbiór modelu.
+Wyrób ma ręcznie podane ID i nazwę. Podzespół ma własne trwałe ID, nazwę, opcjonalną operację tworzącą i listę jawnie wybranych operacji zużywających. Brak wyboru pozostaje brakiem danych; parser odrzuca obce i powtórzone referencje. W edytorze można dodać, zmienić nazwę, usunąć oraz cofnąć lub ponowić definicję. Historia szkicu jest wspólna z edycją osób i pul. Żadne definicje nie powstają z BOM, nazw operacji, grafu lub geometrii. Schemat 6 nadal ma status `incomplete`; definiuje typy, a nie instancje wyrobów i podzespołów w symulacji.
+
+## Pakiet 2.1i — tożsamość wyposażenia i powiązania
+
+Wyposażenie technologiczne jest definiowane ręcznie przez trwałe ID i nazwę. Może opcjonalnie wskazywać istniejące stanowisko i istniejący obiekt layoutu. Te referencje są kontrolowane przy każdej zmianie; jeden obiekt wizualny może należeć najwyżej do jednego wyposażenia, a jawne stanowisko nie może być sprzeczne ze stanowiskiem obiektu. Usunięcie definicji nie usuwa geometrii. Powiązanie nie dowodzi zdolności do wykonania operacji ani nie określa wymagań technologicznych. Możliwości wyposażenia pozostają osobnym brakującym polem przyszłego modelu, bez wpływu na obecną symulację.

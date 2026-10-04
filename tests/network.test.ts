@@ -15,6 +15,7 @@ import {previewDomainMigrationFromV4,previewDomainMigrationFromV5,verifyDomainMi
 import {parseDomainProjectV6,prepareDomainMigration} from '../src/core/domainProject';
 import {editDomainPeople} from '../src/core/domainPeopleEditing';
 import {editDomainProduct} from '../src/core/domainProductEditing';
+import {editDomainEquipment} from '../src/core/domainEquipmentEditing';
 import {DOMAIN_DRAFT_STORAGE_KEY,readDomainDraft,replaceDomainDraft,saveDomainDraft} from '../src/core/domainDraftStorage';
 import {parseStationProjectV5} from '../src/core/stationProject';
 import {runStationBalancing,moveStationOperation} from '../src/core/stationBalancing';
@@ -206,6 +207,43 @@ test('2.1h: wyrób i podzespoły mają trwałe ID, poprawne referencje i osobny 
   assert.equal(storage.getItem('layout-studio-stations-v5'),'active-v5');
   assert.deepEqual(editDomainProduct(revised,{kind:'remove-subassembly',id:'SUB-QA'}).subassemblies,[]);
   assert.equal(editDomainProduct(revised,{kind:'clear-product'}).product,null);
+});
+
+test('2.1i: wyposażenie ma trwałe ID i jawne powiązania bez zmiany geometrii',()=>{
+  const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+  const prepared=prepareDomainMigration(previewDomainMigrationFromV5(original));
+  const start=prepared.project;
+  const stationId=start.stations[0].id;
+  const otherStationId=start.stations[1].id;
+  const visualId=start.layoutObjects.find(object=>object.workstationId===stationId)!.id;
+  assert.deepEqual(start.equipment,[]);
+  assert.throws(()=>editDomainEquipment(start,{kind:'add-equipment',id:'',name:'Urządzenie'}),/ID wyposażenia/);
+  const added=editDomainEquipment(start,{kind:'add-equipment',id:'EQ-QA',name:'Urządzenie testowe',stationId,layoutObjectId:visualId});
+  assert.deepEqual(added.equipment,[{id:'EQ-QA',name:'Urządzenie testowe',stationId,layoutObjectId:visualId}]);
+  assert.deepEqual(added.layoutObjects,start.layoutObjects);
+  assert.deepEqual(start.equipment,[]);
+  assert.throws(()=>editDomainEquipment(added,{kind:'add-equipment',id:'EQ-QA',name:'Duplikat'}),/już istnieje/);
+  assert.throws(()=>editDomainEquipment(added,{kind:'add-equipment',id:'EQ-2',name:'Błąd',stationId:'OBCE'}),/nieznane stanowisko/);
+  assert.throws(()=>editDomainEquipment(added,{kind:'add-equipment',id:'EQ-2',name:'Błąd',layoutObjectId:'OBCE'}),/nieznany obiekt wizualny/);
+  assert.throws(()=>editDomainEquipment(added,{kind:'add-equipment',id:'EQ-2',name:'Błąd',layoutObjectId:visualId}),/więcej niż jednego wyposażenia/);
+  assert.throws(()=>editDomainEquipment(added,{kind:'edit-equipment',id:'EQ-QA',name:'Błąd',stationId:otherStationId,layoutObjectId:visualId}),/sprzeczne powiązanie/);
+  const revised=editDomainEquipment(added,{kind:'edit-equipment',id:'EQ-QA',name:'Nowa nazwa',stationId});
+  assert.deepEqual(revised.equipment,[{id:'EQ-QA',name:'Nowa nazwa',stationId}]);
+  const storage=new DraftStorage();
+  storage.values.set('layout-studio-v3','active-v4');
+  storage.values.set('layout-studio-stations-v5','active-v5');
+  const first=saveDomainDraft(storage,prepared,null);
+  const written=saveDomainDraft(storage,{originalJson:original,project:revised},first.raw);
+  const reopened=readDomainDraft(storage);
+  assert.equal(reopened.status,'valid');
+  if(reopened.status!=='valid')throw new Error('Brak zapisu.');
+  assert.deepEqual(reopened.saved.project.equipment,revised.equipment);
+  assert.deepEqual(reopened.saved.project.layoutObjects,start.layoutObjects);
+  assert.equal(reopened.saved.originalJson,original);
+  assert.equal(reopened.raw,written.raw);
+  assert.equal(storage.getItem('layout-studio-v3'),'active-v4');
+  assert.equal(storage.getItem('layout-studio-stations-v5'),'active-v5');
+  assert.deepEqual(editDomainEquipment(revised,{kind:'remove-equipment',id:'EQ-QA'}).equipment,[]);
 });
 
 test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{
