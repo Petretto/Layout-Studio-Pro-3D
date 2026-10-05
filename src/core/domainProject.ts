@@ -5,6 +5,7 @@ import type {DomainMigrationPreview} from './domainMigrationPreview';
 import {verifyDomainMigrationPreview} from './domainMigrationPreview';
 import {parseStationProjectV5} from './stationProject';
 import {validateWorkerRunSelection, type WorkerRunSelection} from './workerRunSelection';
+import {validateResourceCalendars, type ResourceCalendarsV6} from './resourceCalendar';
 
 export type DomainTimeBasis = 'measured' | 'assumed';
 export interface DomainTimeInterval {startSeconds: number; endSeconds: number; basis: DomainTimeBasis}
@@ -44,6 +45,7 @@ export interface DomainProjectV6 extends Omit<StationProjectV5,
   product: DomainProduct | null;
   subassemblies: DomainSubassembly[];
   workerRunSelection?: WorkerRunSelection;
+  resourceCalendars?: ResourceCalendarsV6;
 }
 
 export interface PreparedDomainMigration {
@@ -183,7 +185,10 @@ export function parseDomainProjectV6(text: string): DomainProjectV6 {
       throw new Error(`Pula ${pool.id}: nieznany lub powtórzony pracownik.`);
     }
   }
-  const stationIds = new Set(stations.map(station => station.id));
+  const stationIds = new Set(stations.map(station => station.id as string));
+  if (has(raw, 'resourceCalendars')) {
+    validateResourceCalendars(raw.resourceCalendars, workerIds, stationIds);
+  }
   const operationIds = new Set(operations.map(operation => operation.id));
   const layoutObjects = raw.layoutObjects as {id: string; workstationId?: string}[];
   const layoutById = new Map(layoutObjects.map(object => [object.id, object]));

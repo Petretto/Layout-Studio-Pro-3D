@@ -21,6 +21,7 @@ import {editDomainWorkerRun} from '../src/core/domainWorkerRunEditing';
 import {createWorkerReservationBook,reserveWorkerTeam,releaseWorkerTeam} from '../src/core/workerReservations';
 import {createWorkerRunPlan,type WorkerOperationSelection} from '../src/core/workerRunPlan';
 import {scheduleWorkerRun} from '../src/core/workerSchedule';
+import {availableWindows,intersectWindows,sharedAvailability,validateResourceCalendars} from '../src/core/resourceCalendar';
 import {DOMAIN_DRAFT_STORAGE_KEY,readDomainDraft,replaceDomainDraft,saveDomainDraft} from '../src/core/domainDraftStorage';
 import {parseStationProjectV5} from '../src/core/stationProject';
 import {runStationBalancing,moveStationOperation} from '../src/core/stationBalancing';
@@ -800,6 +801,56 @@ test('2.4d: graf poprzedników, kopie stanowisk i stały skład nie dopuszczają
   parallel.operations[1].predecessorIds=[];
   const conservative=scheduleWorkerRun(parallel,1,1);
   assert.equal(conservative.runs[1].startSeconds,10);
+});
+
+test('2.5a: jawne zmiany i przerwy zasobów zachowują starszy szkic oraz odrębny zapis',()=>{
+  const original=JSON.stringify(derive(parseProject(JSON.stringify(base))).project);
+  let id=0;
+  const project=prepareDomainMigration(previewDomainMigrationFromV4(original,()=>`ST-calendar-${++id}`)).project;
+  assert.equal(project.resourceCalendars,undefined);
+  const stationId=project.stations[0].id;
+  project.workers=[{id:'W-A',name:'A'},{id:'W-B',name:'B'}];
+  project.resourceCalendars={workers:{
+    'W-A':{shifts:[{startSeconds:0,endSeconds:100,basis:'assumed'},{startSeconds:200,endSeconds:300,basis:'assumed'}],
+      breaks:[{startSeconds:40,endSeconds:60,basis:'assumed'}]},
+    'W-B':{shifts:[{startSeconds:20,endSeconds:100,basis:'assumed'},{startSeconds:200,endSeconds:280,basis:'assumed'}],
+      breaks:[{startSeconds:70,endSeconds:80,basis:'assumed'}]},
+  },stations:{[stationId]:{shifts:[{startSeconds:0,endSeconds:100,basis:'assumed'},
+    {startSeconds:200,endSeconds:300,basis:'assumed'}],
+    breaks:[{startSeconds:50,endSeconds:55,basis:'assumed'}]}}};
+  const checked=parseDomainProjectV6(JSON.stringify(project));
+  assert.deepEqual(availableWindows(checked.resourceCalendars!.workers['W-A']),[
+    {startSeconds:0,endSeconds:40},{startSeconds:60,endSeconds:100},
+    {startSeconds:200,endSeconds:300}]);
+  assert.deepEqual(intersectWindows([{startSeconds:0,endSeconds:50},{startSeconds:80,endSeconds:100}],
+    [{startSeconds:20,endSeconds:90}]),[
+    {startSeconds:20,endSeconds:50},{startSeconds:80,endSeconds:90}]);
+  assert.deepEqual(sharedAvailability(checked.resourceCalendars!,stationId,['W-A','W-B']),[
+    {startSeconds:20,endSeconds:40},{startSeconds:60,endSeconds:70},
+    {startSeconds:80,endSeconds:100},{startSeconds:200,endSeconds:280}]);
+  const storage=new DraftStorage();
+  storage.values.set('layout-studio-v3','active-v4');
+  storage.values.set('layout-studio-stations-v5','active-v5');
+  const saved=saveDomainDraft(storage,{originalJson:original,project},null);
+  const reopened=readDomainDraft(storage);
+  assert.equal(reopened.status,'valid');
+  if(reopened.status==='valid')assert.deepEqual(reopened.saved.project.resourceCalendars,project.resourceCalendars);
+  assert.equal(storage.values.get('layout-studio-v3'),'active-v4');
+  assert.equal(storage.values.get('layout-studio-stations-v5'),'active-v5');
+  const invalid=(change:(value:NonNullable<typeof project.resourceCalendars>)=>void,pattern:RegExp)=>{
+    const copy=structuredClone(project);
+    change(copy.resourceCalendars!);
+    assert.throws(()=>parseDomainProjectV6(JSON.stringify(copy)),pattern);
+    assert.equal(storage.values.get(DOMAIN_DRAFT_STORAGE_KEY),saved.raw);
+  };
+  invalid(value=>{value.workers['W-X']=value.workers['W-A'];},/nieznany zasób/);
+  invalid(value=>{value.workers['W-A'].shifts[1].startSeconds=90;},/bez nakładania/);
+  invalid(value=>{value.workers['W-A'].breaks[0].endSeconds=110;},/mieścić się/);
+  invalid(value=>{value.workers['W-A'].breaks[0].startSeconds=-1;},/bez nakładania/);
+  invalid(value=>{value.workers['W-A'].shifts[0].basis='unknown' as 'assumed';},/jawnym pochodzeniem/);
+  assert.throws(()=>sharedAvailability({workers:{},stations:checked.resourceCalendars!.stations},stationId,['W-A']),/brak jawnego kalendarza/);
+  assert.deepEqual(validateResourceCalendars({workers:{},stations:{}},new Set(['W-A']),new Set([stationId])),
+    {workers:{},stations:{}});
 });
 
 test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{

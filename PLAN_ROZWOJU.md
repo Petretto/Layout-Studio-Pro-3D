@@ -65,6 +65,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
+2.5a / 2.5.1 (2026-10-05): opcjonalne kalendarze po ID osób i stanowisk w szkicu 6, walidacja zmian, przerw i pochodzenia czasu oraz wyznaczanie wspólnej dostępności bez domyślnych godzin. Starsze szkice pozostają czytelne. Backup 164 plików: `backup/v0.4.0_przed_2_5a_20261005` (164 zgodne SHA256, 0 rozbieżności). Testy 104/104 i build poprawne; zapis/odczyt na niezależnym przykładzie silników, odmowy błędnych danych i izolacja 4/5. Kontrakt `MODEL_KALENDARZA_2_5.md`, raport `WERYFIKACJA_KALENDARZA_2_5.md`. Punkt 2.5.1 wdrożony; 2.5 w trakcie do zastosowania pauzy i wznowienia z tym samym zespołem w 2.5.2 oraz UI w 2.5.3.
+
 2.4f / 2.4.4 (2026-10-05): zbiorczy odbiór logicznego przydziału w niekompletnym szkicu 6 — Edge CDP potwierdził brak nakładających się rezerwacji tej samej osoby w 32 wykonaniach, identyczny wynik po ponownym otwarciu szkicu, nietrwałość samego wyniku i odmowę brakującego odstępu wejścia. Testy rdzenia objęły także niezależne scenariusze silników, dwie osoby, graf poprzedników i odmowy błędnych danych. Dokładne zapisy szkicu 6 i warsztatu 5 oraz dane projektu 4 bez zmian; ponowne otwarcie odświeża tylko znacznik automatycznego zapisu 4. Punkty 2.4.4 i 2.4 wdrożone w zakresie szkicu 6. Produkcyjna walidacja Eko należy do 7.1/7.2, a fizyczna równoległość podzespołów do 2.8. Raport `WERYFIKACJA_OPERATOROW_2_4.md`.
 
 2.4e / 2.4.3.2 (2026-10-05): osobny podgląd harmonogramu szkicu 6 przyjmuje jawną partię i odstęp przybycia, pokazuje przydział osób/kopii, czas i przyczyny oczekiwania oraz odmawia brakujących danych. Wynik jest tylko w pamięci widoku i znika po zmianie wejścia lub szkicu. Edge CDP potwierdził 32 wykonania na przykładowym Eko z syntetyczną obsadą, oczekiwanie na osobę, odmowę braku odstępu i brak zmian zapisów 4/5/6. Testy 103/103 i build poprawne. Raport `WERYFIKACJA_OPERATOROW_2_4.md`. Punkty 2.4.3.2 i 2.4.3 wdrożone; 2.4 pozostaje w trakcie do odbioru 2.4.4.
@@ -251,7 +253,10 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 2.4.3.1 | Zbudować odrębny rdzeń harmonogramu z jawnym składem, wariantami, kopiami stanowisk, kolejkami i rezerwacjami osób bez podwójnego zajęcia. | wdrożone |
 | 2.4.3.2 | Podłączyć nową ścieżkę do szkicu 6, pokazać oczekiwanie i przydział oraz odebrać scenariusze UI bez zmiany aktywnej symulacji 4/5. | wdrożone |
 | 2.4.4 | Odebrać brak podwójnego przydziału, zapis/odczyt, UI i odmowy błędnych danych na jawnych scenariuszach różnych procesów, w tym Eko z wyraźnie testowymi założeniami. Zgodność Eko z produkcją odbierać osobno w 7.1/7.2, a fizyczną równoległość w 2.8. | wdrożone |
-| 2.5 | Uwzględnić kalendarz zasobów, zmiany i przerwy; jednoznacznie określić zachowanie rozpoczętej operacji na granicy przerwy. | nierozpoczęte |
+| 2.5 | Uwzględnić kalendarz zasobów, zmiany i przerwy; rozpoczętą operację zatrzymać na przerwę i wznowić z tym samym zespołem. | w trakcie |
+| 2.5.1 | Zdefiniować i walidować jawne kalendarze zmian i przerw osób oraz stanowisk w szkicu 6, zachowując odczyt starszych szkiców; wyznaczać dostępne okna bez domyślnych godzin. | wdrożone |
+| 2.5.2 | Włączyć kalendarze do odrębnego harmonogramu szkicu 6: pauza operacji na niedostępność, wznowienie z tym samym zespołem i kopią stanowiska, bez podwójnej rezerwacji i bez zmiany aktywnej symulacji 4/5. | nierozpoczęte |
+| 2.5.3 | Udostępnić edycję kalendarzy i czytelny podgląd pauz/oczekiwania w UI szkicu 6; odebrać zapis, ponowny odczyt, Cofnij/Ponów i scenariusze różnych procesów. | nierozpoczęte |
 | 2.6 | Przypisywać operację do wielu dopuszczalnych stanowisk, z określoną regułą wyboru i wymaganym wyposażeniem. | nierozpoczęte |
 | 2.7 | Rozróżnić przygotowanie podzespołu od montażu na wspólnym korpusie; śledzić miejsce i dostępność korpusu. | nierozpoczęte |
 | 2.8 | Wprowadzić reguły dopuszczalnej równoległości i wzajemnego wykluczania czynności na jednym wyrobie. | nierozpoczęte |
@@ -376,6 +381,8 @@ Każdy kolejny wpis powinien wskazywać konkretne ID. Nie usuwać historii przy 
 
 | Data | ID | Zmiana statusu | Rezultat / dowód / uwagi |
 | --- | --- | --- | --- |
+| 2026-10-05 | 2.5.1 | w trakcie → wdrożone | Jawne kalendarze osób i stanowisk w szkicu 6, walidacja przedziałów i źródła, obliczenie wspólnej dostępności, zapis/odczyt i odmowy; backup 164 zgodne SHA256, 104/104 testy, build. Kontrakt `MODEL_KALENDARZA_2_5.md`, raport `WERYFIKACJA_KALENDARZA_2_5.md`. Punkt 2.5 pozostaje w trakcie. |
+| 2026-10-05 | 2.5, 2.5.1 | nierozpoczęte → w trakcie | Rozpoczęto kontrakt kalendarzy osób i stanowisk. Użytkownik wybrał pauzę rozpoczętej operacji z późniejszym wznowieniem przez ten sam zespół. Rozdzielono kontrakt, harmonogram i UI na 2.5.1–2.5.3. |
 | 2026-10-05 | 2.4, 2.4.4 | w trakcie → wdrożone; w trakcie → wdrożone | Odbiór logicznego harmonogramu szkicu 6: 32 wykonania bez podwójnej rezerwacji, identyczne wyniki po ponownym otwarciu, odmowa braku danych i izolacja projektów 4/5. Testy rdzenia objęły także scenariusze silników i graf poprzedników. Rzeczywiste Eko pozostaje w 7.1/7.2, reguły fizyczne w 2.8; raport `WERYFIKACJA_OPERATOROW_2_4.md`. |
 | 2026-10-05 | 2.4.4 | nierozpoczęte → w trakcie | Rozpoczęto odbiór zbiorczy rezerwacji, odczytu, UI i izolacji aktywnych projektów. |
 | 2026-10-05 | 2.4.3, 2.4.3.2 | w trakcie → wdrożone; w trakcie → wdrożone | Odrębny podgląd szkicu 6, oczekiwanie i przydział; Edge CDP 32 wykonania na danych testowych, odmowa braku odstępu, izolacja zapisów 4/5/6. Testy 103/103, build. Punkt 2.4 pozostaje w trakcie do 2.4.4. |
