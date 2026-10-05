@@ -17,6 +17,7 @@ import {DomainProductEditor} from './DomainProductEditor';
 import {DomainEquipmentEditor} from './DomainEquipmentEditor';
 import {DomainTimeEditor} from './DomainTimeEditor';
 import {DomainWorkerRunEditor} from './DomainWorkerRunEditor';
+import {DomainWorkerSchedulePanel} from './DomainWorkerSchedulePanel';
 
 const gapLabels: Record<DomainGap, string> = {
   'worker-identities': 'Tożsamość pracowników',
@@ -155,7 +156,7 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
 
   return <section className="panel" aria-label="Podgląd modelu procesu v6">
     <h2>Model procesu — szkic schematu 6</h2>
-    <p className="muted">Podgląd pokazuje oddzielne operacje i stanowiska oraz dane, których obecny projekt nie zawiera. Szkic jest niekompletny i nie jest używany przez bilans ani symulację. Zapisuje się pod osobnym kluczem przeglądarki.</p>
+    <p className="muted">Podgląd pokazuje oddzielne operacje i stanowiska oraz dane, których obecny projekt nie zawiera. Szkic jest niekompletny; ma osobny podgląd harmonogramu zespołu, ale nie steruje aktywnym bilansem ani symulacją projektów 4/5. Zapisuje się pod osobnym kluczem przeglądarki.</p>
     <div className="toolbar">
       <button onClick={() => inspect(4)}>Podgląd z bieżącego projektu 4</button>
       <button disabled={!stationProject} onClick={() => inspect(5)}>Podgląd z warsztatu 5</button>
@@ -179,6 +180,7 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
     {draft.status === 'valid' && <DomainWorkerRunEditor key={`run-${draft.raw}`} project={draft.saved.project} onApply={applyWorkerRun}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
       canUndo={past.length > 0} canRedo={future.length > 0} />}
+    {draft.status === 'valid' && <DomainWorkerSchedulePanel key={`schedule-${draft.raw}`} project={draft.saved.project} />}
     {preview && <div className="panel">
       <h3>Podgląd źródła v{preview.sourceSchemaVersion}</h3>
       <p>{preview.stationProject.processSteps.length} operacji · {preview.stationProject.stations.length} stanowisk · {preview.stationProject.bom.length} pozycji BOM · {preview.visualBindings.length} obiektów geometrii.</p>

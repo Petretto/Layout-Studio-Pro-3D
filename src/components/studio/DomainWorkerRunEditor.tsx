@@ -58,7 +58,7 @@ export function DomainWorkerRunEditor({project, onApply, onUndo, onRedo, canUndo
 
   return <div className="panel" aria-label="Plan zespołu przebiegu szkicu 6">
     <h3>Stały zespół przebiegu — szkic 6</h3>
-    <p className="muted">Wskaż skład przed przebiegiem, potem wariant czasu i osoby dopuszczone do każdej operacji. Harmonogram nie dobierze nikogo spoza składu. Lista dopuszczonych nie oznacza jeszcze przydziału konkretnej podgrupy; planowanie i oczekiwanie na wolne osoby będą dodane w 2.4.3.</p>
+    <p className="muted">Wskaż skład przed przebiegiem, potem wariant czasu i osoby dopuszczone do każdej operacji. Harmonogram nie dobierze nikogo spoza składu. Lista dopuszczonych nie oznacza przydziału konkretnej podgrupy; zobacz faktyczny przydział i oczekiwanie w podglądzie harmonogramu poniżej.</p>
     <p>Zapisany wybór: {project.workerRunSelection ? 'kompletny' : 'brak'}.</p>
     {changed && <p className="muted">Zmiany formularza nie są jeszcze zapisane.</p>}
     <div className="toolbar"><button disabled={!canUndo} onClick={onUndo}>Cofnij dane szkicu</button>

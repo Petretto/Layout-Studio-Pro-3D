@@ -61,8 +61,11 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 5 | Edytor hali i spójny interfejs | w trakcie | Stabilny model danych; podstawowe poprawki UX od etapu 1 |
 | 6 | Biblioteka wyposażenia i 3D | nierozpoczęte | Etapy 3 i 5 |
 | 7 | Walidacja różnych procesów i przygotowanie komercyjne | nierozpoczęte | Etapy 1–6; zbieranie danych od początku |
+| 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+2.4e / 2.4.3.2 (2026-10-05): osobny podgląd harmonogramu szkicu 6 przyjmuje jawną partię i odstęp przybycia, pokazuje przydział osób/kopii, czas i przyczyny oczekiwania oraz odmawia brakujących danych. Wynik jest tylko w pamięci widoku i znika po zmianie wejścia lub szkicu. Edge CDP potwierdził 32 wykonania na przykładowym Eko z syntetyczną obsadą, oczekiwanie na osobę, odmowę braku odstępu i brak zmian zapisów 4/5/6. Testy 103/103 i build poprawne. Raport `WERYFIKACJA_OPERATOROW_2_4.md`. Punkty 2.4.3.2 i 2.4.3 wdrożone; 2.4 pozostaje w trakcie do odbioru 2.4.4.
 
 2.4d / 2.4.3.1 (2026-10-05): odrębny rdzeń zdarzeniowy szkicu 6 wyznacza przydział konkretnych osób z zamrożonego składu, zajmuje jawną kopię stanowiska, rezerwuje te same osoby od pierwszej do ostatniej obecności i raportuje czas oraz przyczyny oczekiwania. Brak jawnej liczby kopii albo przypisania operacji blokuje przebieg. Z ostrożności jedna sztuka ma jedną trwającą operację; równoległość podzespołów czeka na reguły fizyczne 2.8. Backup 161 plików: `backup/v0.4.0_przed_2_4d_20261005` (161 zgodnych SHA256, 0 rozbieżności). Testy 103/103 i build poprawne; raport `WERYFIKACJA_OPERATOROW_2_4.md`. Punkty 2.4.2 i 2.4.3.1 wdrożone; 2.4.3 i 2.4 w trakcie do integracji UI i odbioru.
 
@@ -242,9 +245,9 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 2.4.2 | Przed przebiegiem jawnie ustalić stały skład zespołu po ID; powiązać wymagania operacji, profil obecności i wybrany wariant czasu z przydziałem wyłącznie z tego składu. Nie dodawać ani nie zamieniać osób w trakcie przebiegu. | wdrożone |
 | 2.4.2.1 | Zbudować walidowany plan przebiegu ze stałą listą osób, jawnym wyborem wariantu i dopuszczonych osób dla każdej operacji; obliczyć okres wymaganej rezerwacji. | wdrożone |
 | 2.4.2.2 | Udostępnić wybór składu i wariantów w UI, bezpieczny zapis i ponowny odczyt wyborów oraz Cofnij/Ponów bez zmiany aktywnych projektów 4/5. | wdrożone |
-| 2.4.3 | Włączyć rezerwacje do nowej ścieżki harmonogramowania z oczekiwaniem na osoby z ustalonego zespołu; przy operacji utrzymać te same osoby od pierwszego do ostatniego przedziału obecności i zwolnić je po nim. Zachować wyniki aktywnych projektów 4/5. | w trakcie |
+| 2.4.3 | Włączyć rezerwacje do nowej ścieżki harmonogramowania z oczekiwaniem na osoby z ustalonego zespołu; przy operacji utrzymać te same osoby od pierwszego do ostatniego przedziału obecności i zwolnić je po nim. Zachować wyniki aktywnych projektów 4/5. | wdrożone |
 | 2.4.3.1 | Zbudować odrębny rdzeń harmonogramu z jawnym składem, wariantami, kopiami stanowisk, kolejkami i rezerwacjami osób bez podwójnego zajęcia. | wdrożone |
-| 2.4.3.2 | Podłączyć nową ścieżkę do szkicu 6, pokazać oczekiwanie i przydział oraz odebrać scenariusze UI bez zmiany aktywnej symulacji 4/5. | nierozpoczęte |
+| 2.4.3.2 | Podłączyć nową ścieżkę do szkicu 6, pokazać oczekiwanie i przydział oraz odebrać scenariusze UI bez zmiany aktywnej symulacji 4/5. | wdrożone |
 | 2.4.4 | Odebrać brak podwójnego przydziału, zapis/odczyt, UI i scenariusze Eko po określeniu danych oraz reguł domenowych. | nierozpoczęte |
 | 2.5 | Uwzględnić kalendarz zasobów, zmiany i przerwy; jednoznacznie określić zachowanie rozpoczętej operacji na granicy przerwy. | nierozpoczęte |
 | 2.6 | Przypisywać operację do wielu dopuszczalnych stanowisk, z określoną regułą wyboru i wymaganym wyposażeniem. | nierozpoczęte |
@@ -341,9 +344,16 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 
 Po ustabilizowaniu pakietu D punkty 3.10, 5.11 i 5.12 można wykonać jako małe, niezależne pakiety wcześniej niż resztę ich etapów, jeżeli nie zmienią modelu czasu ani kontraktu importu. Punkt 7.10 jest zaplanowany później, po ustaleniu docelowej zawartości raportu.
 
-## Po pierwszym wydaniu
+## Etap 8 — Po pierwszym wydaniu
 
-VSM (mapa strumienia wartości) należy do zakresu następnej wersji. Przed rozpoczęciem nadać mu osobne ID, ustalić wymagane dane i kryteria odbioru. Nie uzależniać wydania pierwszej użytecznej wersji od VSM ani funkcji wspólnego logowania i edycji online.
+Poniższe kroki należą do kolejnej wersji (np. 1.5 lub 2.0). Nie są warunkiem odbioru pierwszego użytecznego wydania.
+
+| ID | Krok / oczekiwany rezultat | Status |
+| --- | --- | --- |
+| 8.1 | Dodać VSM: mapę obecnego i docelowego strumienia wartości z przepływem materiału i informacji, zapasami, czasami oraz jawnymi źródłami danych. Przed implementacją ustalić zakres symboli, poziom agregacji i kryteria odbioru. | nierozpoczęte |
+| 8.2 | Dodać kartę A3 analizy problemu powiązaną z projektem i wariantami: stan obecny, cel, rozpoznanie przyczyn, proponowane działania, odpowiedzialność i termin, wyniki weryfikacji oraz eksport czytelny do omówienia z klientem. Przed implementacją ustalić zakres danych i kryteria odbioru. | nierozpoczęte |
+
+Wspólne logowanie i jednoczesna edycja online również pozostają poza zakresem pierwszego wydania; nie są automatyczną częścią 8.1 ani 8.2.
 
 ## Dane i decyzje do uzupełnienia
 
@@ -364,6 +374,8 @@ Każdy kolejny wpis powinien wskazywać konkretne ID. Nie usuwać historii przy 
 
 | Data | ID | Zmiana statusu | Rezultat / dowód / uwagi |
 | --- | --- | --- | --- |
+| 2026-10-05 | 2.4.3, 2.4.3.2 | w trakcie → wdrożone; w trakcie → wdrożone | Odrębny podgląd szkicu 6, oczekiwanie i przydział; Edge CDP 32 wykonania na danych testowych, odmowa braku odstępu, izolacja zapisów 4/5/6. Testy 103/103, build. Punkt 2.4 pozostaje w trakcie do 2.4.4. |
+| 2026-10-05 | PLAN, 8.1, 8.2, 2.4.3.2 | Dodano 8.1 i 8.2 jako nierozpoczęte; 2.4.3.2 nierozpoczęte → w trakcie | VSM i A3 zapisano na kolejną wersję. Rozpoczęto integrację UI odrębnego harmonogramu szkicu 6; aktywne projekty 4/5 pozostają poza zakresem zmian. |
 | 2026-10-05 | PLAN, 5.13 | Doprecyzowanie zakresu; dodano 5.13 jako nierozpoczęte | Ustalono samodzielny przepływ pierwszego wydania, automatyczną wstępną propozycję layoutu po danych procesu, pracę konsultanta na danych klienta bez współedycji online i VSM w kolejnej wersji. Bez zmian kodu i statusów dotychczasowych kroków. |
 | 2026-10-05 | PLAN, 7.11 | Doprecyzowanie celu; dodano 7.11 jako nierozpoczęte | Eko określono jako niepełny przykład testowy. Zapisano odbiór uniwersalności na niezależnych procesach oraz w pracy inżyniera i konsultanta Lean. Bez zmian kodu i statusów dotychczasowych kroków. |
 | 2026-09-29 | PLAN | Utworzenie rejestru | Zapisano uzgodniony plan w `PLAN_ROZWOJU.md`. Wszystkie kroki implementacyjne i odbiorowe pozostają nierozpoczęte. Nie zmieniano kodu ani nie uruchamiano ponownie testów aplikacji. |
