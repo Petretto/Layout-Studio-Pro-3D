@@ -60,6 +60,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
+2.4b / 2.4.2.1 (2026-10-05): nieaktywny, walidowany plan pojedynczego przebiegu ze stałą listą ID pracowników, jawnym wariantem czasu każdej operacji i wskazanymi osobami dopuszczonymi do niej. Okres rezerwacji obejmuje pierwszy do ostatniego przedziału obecności, również przerwę między nimi. Brak danych, obce ID i zbyt mały skład blokują plan. Backup 156 plików: `backup/v0.4.0_przed_2_4b_20261005` (156 zgodnych SHA256, 0 rozbieżności). Testy 100/100 i build poprawne. Kontrakt `MODEL_OPERATOROW_2_4.md`, raport `WERYFIKACJA_OPERATOROW_2_4.md`. Punkt 2.4.2.1 wdrożony; 2.4.2 w trakcie do UI i zapisu wyborów.
+
 2.4 — doprecyzowanie reguły (2026-10-05): przed każdym przebiegiem produkcyjnym użytkownik wskazuje stały skład zespołu. Harmonogram może przydzielać operacje tylko tym osobom, bez automatycznego dodawania lub zamiany pracowników w trakcie. Brak wystarczającej liczby wolnych osób powoduje oczekiwanie; po zwolnieniu pracownik może przejść na inne stanowisko. Dla pojedynczej operacji przydzielone osoby pozostają te same od pierwszego do ostatniego przedziału obecności. Kontrakt `MODEL_OPERATOROW_2_4.md`; status 2.4 pozostaje w trakcie.
 
 2.4a / 2.4.1 (2026-10-05): niezależny od aktywnej symulacji rejestr rezerwacji konkretnych pracowników po trwałych ID i jawnych przedziałach czasu. Odrzuca nieznane lub powtórzone osoby i nakładające się rezerwacje, pozwala na ponowne użycie od chwili zwolnienia. Użytkownik ustalił, że przy operacji te same osoby pozostaną zarezerwowane od pierwszego do ostatniego przedziału obecności, także między nimi; powiązanie reguły z operacją należy do 2.4.2. Backup 153 plików: `backup/v0.4.0_przed_2_4a_20261005` (153 zgodne SHA256, 0 rozbieżności). Testy 99/99 i build poprawne. Kontrakt `MODEL_OPERATOROW_2_4.md`, raport `WERYFIKACJA_OPERATOROW_2_4.md`. Punkt 2.4.1 wdrożony; 2.4 w trakcie.
@@ -229,7 +231,9 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 2.3.3 | Odebrać spójność obsady, wariantów, migracji i niezmienność aktywnej symulacji na Eko i silnikach. | wdrożone |
 | 2.4 | Obsłużyć operatorów współdzielonych między stanowiskami, ich rezerwację i zwalnianie bez nakładania przydziałów w czasie. | w trakcie |
 | 2.4.1 | Zbudować niezależny rejestr rezerwacji konkretnych osób w jawnych przedziałach czasu, z ochroną trwałych ID, odmową kolizji i sprawdzonym zwalnianiem. | wdrożone |
-| 2.4.2 | Przed przebiegiem jawnie ustalić stały skład zespołu po ID; powiązać wymagania operacji, profil obecności i wybrany wariant czasu z przydziałem wyłącznie z tego składu. Nie dodawać ani nie zamieniać osób w trakcie przebiegu. | nierozpoczęte |
+| 2.4.2 | Przed przebiegiem jawnie ustalić stały skład zespołu po ID; powiązać wymagania operacji, profil obecności i wybrany wariant czasu z przydziałem wyłącznie z tego składu. Nie dodawać ani nie zamieniać osób w trakcie przebiegu. | w trakcie |
+| 2.4.2.1 | Zbudować walidowany plan przebiegu ze stałą listą osób, jawnym wyborem wariantu i dopuszczonych osób dla każdej operacji; obliczyć okres wymaganej rezerwacji. | wdrożone |
+| 2.4.2.2 | Udostępnić wybór składu i wariantów w UI, bezpieczny zapis i ponowny odczyt wyborów oraz Cofnij/Ponów bez zmiany aktywnych projektów 4/5. | nierozpoczęte |
 | 2.4.3 | Włączyć rezerwacje do nowej ścieżki harmonogramowania z oczekiwaniem na osoby z ustalonego zespołu; przy operacji utrzymać te same osoby od pierwszego do ostatniego przedziału obecności i zwolnić je po nim. Zachować wyniki aktywnych projektów 4/5. | nierozpoczęte |
 | 2.4.4 | Odebrać brak podwójnego przydziału, zapis/odczyt, UI i scenariusze Eko po określeniu danych oraz reguł domenowych. | nierozpoczęte |
 | 2.5 | Uwzględnić kalendarz zasobów, zmiany i przerwy; jednoznacznie określić zachowanie rozpoczętej operacji na granicy przerwy. | nierozpoczęte |

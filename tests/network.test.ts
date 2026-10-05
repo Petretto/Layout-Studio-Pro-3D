@@ -18,6 +18,7 @@ import {editDomainProduct} from '../src/core/domainProductEditing';
 import {editDomainEquipment} from '../src/core/domainEquipmentEditing';
 import {editDomainTime} from '../src/core/domainTimeEditing';
 import {createWorkerReservationBook,reserveWorkerTeam,releaseWorkerTeam} from '../src/core/workerReservations';
+import {createWorkerRunPlan,type WorkerOperationSelection} from '../src/core/workerRunPlan';
 import {DOMAIN_DRAFT_STORAGE_KEY,readDomainDraft,replaceDomainDraft,saveDomainDraft} from '../src/core/domainDraftStorage';
 import {parseStationProjectV5} from '../src/core/stationProject';
 import {runStationBalancing,moveStationOperation} from '../src/core/stationBalancing';
@@ -634,6 +635,45 @@ test('2.4a: nieznane osoby, duplikaty i niepoprawny czas są odrzucane bez mutac
   assert.throws(()=>releaseWorkerTeam(booked,'R1',11),/nie później/);
   assert.throws(()=>releaseWorkerTeam(booked,'missing',5),/nie istnieje/);
   assert.equal(booked.reservations[0].endSeconds,10);
+});
+
+test('2.4b: plan przebiegu zamraża skład i jawny wariant oraz rezerwuje przerwę między obecnościami',()=>{
+  const source=JSON.stringify(derive(parseProject(JSON.stringify(base))).project);
+  let id=0;
+  const project=prepareDomainMigration(previewDomainMigrationFromV4(source,()=>`ST-run-${++id}`)).project;
+  project.workers=[{id:'W-A',name:'A'},{id:'W-B',name:'B'}];
+  const profile:DomainTimeProfile={durationSeconds:120,durationBasis:'assumed',manualWork:[],machineRun:[],
+    operatorPresence:[{startSeconds:10,endSeconds:20,basis:'assumed'},
+      {startSeconds:70,endSeconds:80,basis:'assumed'}]};
+  for(const operation of project.operations) operation.staffing={requiredWorkers:1,timeVariants:[
+    {workerCount:1,timeProfile:profile},{workerCount:2,timeProfile:{...profile,durationSeconds:110}},
+  ]};
+  const selections:WorkerOperationSelection[]=project.operations.map((operation,index)=>({
+    operationId:operation.id,workerCount:index===0?2:1,eligibleWorkerIds:['W-A','W-B'],
+  }));
+  const before=JSON.stringify(project);
+  const plan=createWorkerRunPlan(project,['W-A','W-B'],selections);
+  assert.deepEqual(plan.teamWorkerIds,['W-A','W-B']);
+  assert.equal(plan.operations[0].workerCount,2);
+  assert.equal(plan.operations[0].durationSeconds,110);
+  assert.equal(plan.operations[0].reserveFromSeconds,10);
+  assert.equal(plan.operations[0].reserveUntilSeconds,80);
+  assert.ok(Object.isFrozen(plan) && Object.isFrozen(plan.teamWorkerIds) && Object.isFrozen(plan.operations[0].eligibleWorkerIds));
+  assert.equal(JSON.stringify(project),before);
+  const ledger=createWorkerReservationBook(plan.teamWorkerIds);
+  assert.throws(()=>reserveWorkerTeam(ledger,{reservationId:'outside',workerIds:['W-C'],startSeconds:10,endSeconds:80}),/znanych/);
+  const invalid=(team:string[],choices:WorkerOperationSelection[],pattern:RegExp)=>
+    assert.throws(()=>createWorkerRunPlan(project,team,choices),pattern);
+  invalid(['W-A','W-C'],selections,/istniejących/);
+  invalid(['W-A','W-A'],selections,/unikalnych/);
+  invalid(['W-A','W-B'],selections.slice(1),/Każda operacja/);
+  invalid(['W-A','W-B'],selections.map((item,index)=>index===0?{...item,operationId:'OBCA'}:item),/obcą/);
+  invalid(['W-A','W-B'],selections.map((item,index)=>index===0?{...item,workerCount:3}:item),/wariantu/);
+  invalid(['W-A','W-B'],selections.map((item,index)=>index===0?{...item,eligibleWorkerIds:['W-A']}:item),/wystarczyć/);
+  invalid(['W-A','W-B'],selections.map((item,index)=>index===0?{...item,eligibleWorkerIds:['W-A','W-C']}:item),/ustalonego składu/);
+  const missingPresence=structuredClone(project);
+  missingPresence.operations[0].staffing!.timeVariants[1].timeProfile.operatorPresence=[];
+  assert.throws(()=>createWorkerRunPlan(missingPresence,['W-A','W-B'],selections),/brak jawnego okresu/);
 });
 
 test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{

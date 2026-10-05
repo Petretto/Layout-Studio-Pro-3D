@@ -1,6 +1,6 @@
 # Współdzieleni operatorzy — punkt 2.4
 
-Status 2026-10-05: pakiet 2.4a / 2.4.1 wdrożony jako niezależny rejestr rezerwacji. Punkt 2.4 pozostaje w trakcie; rejestr nie jest jeszcze wejściem aktywnej symulacji ani edytora szkicu 6.
+Status 2026-10-05: pakiety 2.4a / 2.4.1 i 2.4b / 2.4.2.1 wdrożone jako niezależny rejestr i walidowany plan przebiegu. Punkt 2.4 pozostaje w trakcie; te moduły nie są jeszcze wejściem aktywnej symulacji ani edytora szkicu 6.
 
 ## Potwierdzona reguła procesu
 
@@ -17,3 +17,11 @@ Gdy profil jednej operacji ma kilka przedziałów wymaganej obecności operatora
 `releaseWorkerTeam` kończy rezerwację wcześniej albo dokładnie w planowanym końcu; skrócony przedział pozostaje w rejestrze jako ślad. Od chwili zwolnienia osoba może być zarezerwowana ponownie. Ponowne zwolnienie tej samej rezerwacji jest błędem. Operacje są niemutujące: odmowa nie zmienia wcześniejszego rejestru, a zapis aktywnych projektów 4/5 i szkicu 6 pozostaje nietknięty.
 
 To jest fundament do późniejszego powiązania z operacjami i harmonogramem. Nie potwierdza jeszcze wyboru wariantu, doboru osób z puli, oczekiwania na zasób ani poprawności całej symulacji. Te elementy należą do pakietów 2.4.2–2.4.4. Przed dodaniem modułu wykonano kopię `backup/v0.4.0_przed_2_4a_20261005`; dane localStorage nie należą do kopii.
+
+## Pakiet 2.4b — walidowany plan przebiegu
+
+`src/core/workerRunPlan.ts` przyjmuje istniejący szkic 6, jawną listę ID stanowiącą stały skład przebiegu oraz dokładnie jeden wybór dla każdej operacji. Wybór wskazuje istniejący wariant czasu przez liczebność zespołu i listę osób dopuszczonych do tej operacji. Dopuszczeni pracownicy muszą należeć do składu przebiegu, być unikalni i wystarczyć liczbowo do wybranego wariantu. Lista nie przydziela jeszcze konkretnej podgrupy do realizacji operacji; ten wybór i ewentualne oczekiwanie należą do harmonogramu 2.4.3. Nie zakłada się, że każdy członek całego zespołu umie wykonać każdą operację.
+
+Plan jest odrzucany, gdy brakuje osoby, operacji, wariantu, wymaganej obecności lub jawnej listy dopuszczonych osób. Z profilu wariantu wyznacza się czas operacji oraz jeden **okres rezerwacji od początku pierwszego do końca ostatniego przedziału obecności**; przerwy między przedziałami pozostają objęte rezerwacją tych samych osób. Wynik jest niemutowalną migawką danych wejściowych przebiegu. Nie modyfikuje szkicu, nie dodaje pracowników i nie wyprowadza ich z dawnej obsady stanowiska.
+
+Plan jest obecnie obiektem w pamięci, bez UI i trwałego zapisu wyborów. Wprowadzenie oraz bezpieczne zachowanie wyborów należy do 2.4.2.2, a planowanie startów i fizyczne rezerwacje do 2.4.3. Przed dodaniem modułu wykonano kopię `backup/v0.4.0_przed_2_4b_20261005`; localStorage nie należy do kopii.
