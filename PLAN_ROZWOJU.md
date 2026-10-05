@@ -3,11 +3,13 @@
 Data utworzenia: 2026-09-29  
 Ostatnia aktualizacja: 2026-10-05
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
-Główny przypadek testowy: proces Eko.
+Przykładowy przypadek testowy: niepełny proces Eko; odbiór uniwersalności wymaga także niezależnych procesów.
 
 ## Cel i zakres
 
 Dopracować obecną aplikację React/TypeScript/Three.js do projektowania, balansowania i porównywania wariantów linii produkcyjnych. Najpierw zapewnić poprawność modelu, bezpieczeństwo danych i wygodę pracy, następnie rozbudować symulację, CAD i 3D oraz przygotować wydanie komercyjne o jasno określonym zakresie.
+
+Produkt jest przeznaczony dla inżynierów projektujących procesy oraz konsultantów Lean analizujących i usprawniających procesy różnych klientów. Użytkownik ma móc wprowadzić własne dane procesu i BOM, zbudować wariant bazowy i warianty usprawnień oraz porównać wyniki. Reguły aplikacji nie mogą zależeć od struktury przykładu Eko. Eko służy do rozwoju i regresji; jego dane są niepełne i nie stanowią wzorca rzeczywistego procesu produkcyjnego.
 
 Plan nie zakłada migracji do C# ani Unity. Figma lub Pencil mogą wspierać projektowanie interfejsu, a Blender przygotowanie modeli wyposażenia. Nie są wymagane do rozpoczęcia prac.
 
@@ -316,7 +318,7 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 
 **Odbiór etapu:** 3D pozwala zlokalizować problem i edytować układ, a animacja pozostaje zgodna z harmonogramem. Model wizualny nie jest źródłem czasów operacji ani niezależną kopią danych procesu.
 
-## Etap 7 — Walidacja Eko i przygotowanie komercyjne
+## Etap 7 — Walidacja różnych procesów i przygotowanie komercyjne
 
 | ID | Krok / oczekiwany rezultat | Status |
 | --- | --- | --- |
@@ -330,8 +332,9 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 | 7.8 | Zaktualizować edytowalną instrukcję ze screenshotami, pełny opis funkcji, rejestr zmian i znane ograniczenia. | nierozpoczęte |
 | 7.9 | Wykonać pilotażowy odbiór z użytkownikiem na uzgodnionych scenariuszach, usunąć błędy krytyczne i zapisać zakres gotowego wydania. | nierozpoczęte |
 | 7.10 | Dopracować wygląd generowanego raportu PDF: czytelną hierarchię, typografię, tabele i wykresy, podziały stron oraz wersję do druku. Sprawdzić na krótkim i długim projekcie, także pod kątem obciętego tekstu i zgodności liczb z wynikami aplikacji. | nierozpoczęte |
+| 7.11 | Odebrać uniwersalność na co najmniej dwóch odmiennych procesach niezależnych od Eko, w zadaniach inżyniera procesu i konsultanta Lean: wprowadzenie lub import własnych danych procesu i BOM, wariant bazowy i usprawniony, porównanie, eksport oraz ponowny odczyt projektu. Sprawdzić brak założeń zakodowanych pod Eko, rozdzielenie danych projektów i jawne wskazanie brakujących danych. | nierozpoczęte |
 
-**Odbiór etapu:** wyniki mieszczą się w wcześniej uzgodnionych tolerancjach dla zweryfikowanych przypadków. Aplikację można zainstalować, zaktualizować i odzyskać dane na docelowym komputerze. Dostępne są instrukcja, rejestr zmian, jawne ograniczenia i raport odbioru. Testy nie zastępują oceny technologicznej, ergonomicznej ani certyfikacji przemysłowej.
+**Odbiór etapu:** wyniki mieszczą się w wcześniej uzgodnionych tolerancjach dla zweryfikowanych przypadków, a scenariusze 7.11 potwierdzają pracę na różnych procesach i danych klientów. Aplikację można zainstalować, zaktualizować i odzyskać dane na docelowym komputerze. Dostępne są instrukcja, rejestr zmian, jawne ograniczenia i raport odbioru. Testy nie zastępują oceny technologicznej, ergonomicznej ani certyfikacji przemysłowej.
 
 Po ustabilizowaniu pakietu D punkty 3.10, 5.11 i 5.12 można wykonać jako małe, niezależne pakiety wcześniej niż resztę ich etapów, jeżeli nie zmienią modelu czasu ani kontraktu importu. Punkt 7.10 jest zaplanowany później, po ustaleniu docelowej zawartości raportu.
 
@@ -354,6 +357,7 @@ Każdy kolejny wpis powinien wskazywać konkretne ID. Nie usuwać historii przy 
 
 | Data | ID | Zmiana statusu | Rezultat / dowód / uwagi |
 | --- | --- | --- | --- |
+| 2026-10-05 | PLAN, 7.11 | Doprecyzowanie celu; dodano 7.11 jako nierozpoczęte | Eko określono jako niepełny przykład testowy. Zapisano odbiór uniwersalności na niezależnych procesach oraz w pracy inżyniera i konsultanta Lean. Bez zmian kodu i statusów dotychczasowych kroków. |
 | 2026-09-29 | PLAN | Utworzenie rejestru | Zapisano uzgodniony plan w `PLAN_ROZWOJU.md`. Wszystkie kroki implementacyjne i odbiorowe pozostają nierozpoczęte. Nie zmieniano kodu ani nie uruchamiano ponownie testów aplikacji. |
 | 2026-09-29 | 1.1–1.3 | nierozpoczęte → w trakcie | Rozpoczęto pakiet A: zabezpieczenie wersji 0.4.0, ponowna weryfikacja bazowa i przegląd wspólnych operacji edycji. |
 | 2026-09-29 | 1.1 | w trakcie → wdrożone | Backup 81 plików, zgodne SHA256, procedura powrotu w `WERYFIKACJA_STABILIZACJA_A.md`. Nie uruchamiano osobnej instalacji z backupu. |

@@ -3,6 +3,7 @@
 Stan: 29.09.2026. Rejestr zmian i odbioru: `ZMIANY_v0.4.0.md`.
 Uzupełnienie stabilizacyjne z 29.09.2026: `WERYFIKACJA_STABILIZACJA_A.md`; bieżący plan i statusy: `PLAN_ROZWOJU.md`.
 Program służy do koncepcyjnego projektowania, bilansowania i porównywania wariantów linii. Jest lokalną aplikacją inżynierską, nie odpowiednikiem pełnego systemu Visual Components.
+Docelowo ma obsługiwać własne procesy inżynierów i konsultantów Lean pracujących z różnymi klientami. Eko jest niepełnym przykładem testowym, a nie wymaganą strukturą projektu ani zweryfikowanym modelem produkcji.
 
 ## Uruchamianie i zapisy
 
