@@ -1,7 +1,7 @@
 # Plan rozwoju i rejestr postępu aplikacji
 
 Data utworzenia: 2026-09-29  
-Ostatnia aktualizacja: 2026-10-04
+Ostatnia aktualizacja: 2026-10-05
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
 Główny przypadek testowy: proces Eko.
 
@@ -59,6 +59,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 7 | Walidacja Eko i przygotowanie komercyjne | nierozpoczęte | Etapy 1–6; zbieranie danych od początku |
 
 ## Bieżący pakiet
+
+2.3c / 2.3.3 (2026-10-05): zbiorczy odbiór obsady na Eko v4/v5 i silnikach v4. Po jawnym wpisaniu dwóch założonych wariantów zapis i odczyt szkicu zachowały dokładne źródło, pozostałe dane operacji i aktywne projekty; pełne wyniki dotychczasowej symulacji są identyczne. Ponowiony Edge CDP potwierdził edytor, odmowę błędu, Cofnij/Ponów, usuwanie i odczyt po przeładowaniu. Testy 97/97 oraz build poprawne. Bez zmiany schematu, algorytmu lub ścieżki trwałości; nowa kopia strukturalna nie była wymagana. Raport `WERYFIKACJA_OBSADY_2_3.md`. Punkt 2.3 wdrożony w zakresie niekompletnego szkicu 6; etap 2 pozostaje w trakcie.
 
 2.3b / 2.3.2 (2026-10-04): edytor minimum obsady i jawnych wariantów czasu w szkicu 6, z walidacją, bezpiecznym zapisem, usuwaniem, wspólnym Cofnij/Ponów i odczytem po przeładowaniu. Profil referencyjny i aktywne projekty 4/5 pozostały odrębne. Backup 152 plików: `backup/v0.4.0_przed_2_3b_20261004` (152 zgodne SHA256, 0 rozbieżności). Testy 96/96 i build poprawne; Edge CDP potwierdził dwa warianty, odmowę błędnego minimum, historię, usuwanie i ponowny odczyt. Ponowiony test UI profilu czasu 2.2 przeszedł. Raport `WERYFIKACJA_OBSADY_2_3.md`, zrzut `outputs/qa/verify_2_3b_staffing.png`. Punkt 2.3.2 wdrożony; 2.3 w trakcie do odbioru zbiorczego.
 
@@ -217,10 +219,10 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 2.2.1 | W szkicu 6 zdefiniować opcjonalny profil z jawnymi przedziałami czasu ręcznego, automatu i obecności operatora; walidować go bez zgadywania podziału z v4/v5 i zachować zgodność dawnych szkiców. | wdrożone |
 | 2.2.2 | Dodać edycję profilu w UI, odrębny zapis, Cofnij/Ponów i ponowny odczyt z jawnymi jednostkami i pochodzeniem czasu. | wdrożone |
 | 2.2.3 | Zbiorczo odebrać spójność profilu, migracji i UI na Eko i silnikach oraz niezmienność dotychczasowej symulacji. | wdrożone |
-| 2.3 | Określać wymaganą liczbę pracowników przy operacji oraz jawne warianty czasu dla obsady, bez automatycznego dzielenia czasu przez liczbę osób. | w trakcie |
+| 2.3 | Określać wymaganą liczbę pracowników przy operacji oraz jawne warianty czasu dla obsady, bez automatycznego dzielenia czasu przez liczbę osób. | wdrożone |
 | 2.3.1 | Zdefiniować opcjonalne wymaganie minimalnej obsady i odrębne jawne profile czasu dla liczebności zespołu w szkicu 6, z walidacją i zgodnością dawnych szkiców. | wdrożone |
 | 2.3.2 | Umożliwić edycję obsady i wariantów czasu w UI szkicu, z zapisem, usuwaniem, Cofnij/Ponów i ponownym odczytem. | wdrożone |
-| 2.3.3 | Odebrać spójność obsady, wariantów, migracji i niezmienność aktywnej symulacji na Eko i silnikach. | nierozpoczęte |
+| 2.3.3 | Odebrać spójność obsady, wariantów, migracji i niezmienność aktywnej symulacji na Eko i silnikach. | wdrożone |
 | 2.4 | Obsłużyć operatorów współdzielonych między stanowiskami, ich rezerwację i zwalnianie bez nakładania przydziałów w czasie. | nierozpoczęte |
 | 2.5 | Uwzględnić kalendarz zasobów, zmiany i przerwy; jednoznacznie określić zachowanie rozpoczętej operacji na granicy przerwy. | nierozpoczęte |
 | 2.6 | Przypisywać operację do wielu dopuszczalnych stanowisk, z określoną regułą wyboru i wymaganym wyposażeniem. | nierozpoczęte |

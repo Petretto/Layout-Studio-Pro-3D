@@ -550,6 +550,52 @@ test('2.3b: edycja obsady i wariantów zachowuje profil referencyjny, historię 
   assert.equal(readDomainDraft(storage).status,'valid');
 });
 
+test('2.3c: warianty obsady po migracji Eko i silników nie zmieniają aktywnej symulacji',()=>{
+  const cases=[
+    {name:'silniki v4',version:4,source:JSON.stringify(derive(parseProject(JSON.stringify(base))).project)},
+    {name:'Eko v4',version:4,source:readFileSync('tests/qa/Eko_B_export_20260930_183858.json','utf8')},
+    {name:'Eko v5',version:5,source:readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8')},
+  ] as const;
+  const profile:DomainTimeProfile={durationSeconds:150,durationBasis:'assumed',
+    manualWork:[{startSeconds:0,endSeconds:30,basis:'assumed'}],
+    machineRun:[{startSeconds:20,endSeconds:120,basis:'assumed'}],
+    operatorPresence:[{startSeconds:0,endSeconds:30,basis:'assumed'}]};
+  for(const {name,version,source} of cases){
+    const activeKey=version===4?'layout-studio-v3':'layout-studio-stations-v5';
+    const activeProject=version===4?derive(parseProject(source)).project:deriveStationProject(parseStationProjectV5(source)).project;
+    const baseline=simulateNetwork(activeProject,4050,3);
+    let id=0;
+    const preview=version===4?previewDomainMigrationFromV4(source,()=>`ST-staffing-${++id}`):previewDomainMigrationFromV5(source);
+    const prepared=prepareDomainMigration(preview);
+    assert.ok(prepared.project.operations.every(operation=>operation.staffing===undefined),name);
+    const operationId=prepared.project.operations[0].id;
+    const oldOperation=structuredClone(prepared.project.operations[0]);
+    const storage=new DraftStorage();
+    storage.values.set(activeKey,source);
+    const first=saveDomainDraft(storage,prepared,null);
+    const withMinimum=editDomainTime(prepared.project,{kind:'set-required-workers',operationId,requiredWorkers:2});
+    const withTwo=editDomainTime(withMinimum,{kind:'set-staffing-variant',operationId,workerCount:2,profile});
+    const withThree=editDomainTime(withTwo,{kind:'set-staffing-variant',operationId,workerCount:3,
+      profile:{...profile,durationSeconds:135}});
+    const written=saveDomainDraft(storage,{originalJson:source,project:withThree},first.raw);
+    const reopened=readDomainDraft(storage);
+    assert.equal(reopened.status,'valid',name);
+    if(reopened.status!=='valid')throw new Error(`Nie odczytano obsady: ${name}`);
+    assert.equal(reopened.saved.originalJson,source,name);
+    assert.equal(reopened.saved.project.modelStatus,'incomplete',name);
+    assert.deepEqual(reopened.saved.project.operations[0].staffing?.timeVariants.map(item=>
+      [item.workerCount,item.timeProfile.durationSeconds]),[[2,150],[3,135]],name);
+    const {staffing: _added, ...withoutStaffing}=reopened.saved.project.operations[0];
+    assert.deepEqual(withoutStaffing,oldOperation,name);
+    assert.deepEqual(reopened.saved.project.operations.slice(1),prepared.project.operations.slice(1),name);
+    assert.equal(storage.getItem(activeKey),source,name);
+    const unchangedProject=version===4?derive(parseProject(storage.getItem(activeKey)!)).project:
+      deriveStationProject(parseStationProjectV5(storage.getItem(activeKey)!)).project;
+    assert.deepEqual(simulateNetwork(unchangedProject,4050,3),baseline,name);
+    assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),written.raw,name);
+  }
+});
+
 test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{
   const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
   const before=JSON.parse(original);
