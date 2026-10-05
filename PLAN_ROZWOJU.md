@@ -60,6 +60,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
+2.4a / 2.4.1 (2026-10-05): niezależny od aktywnej symulacji rejestr rezerwacji konkretnych pracowników po trwałych ID i jawnych przedziałach czasu. Odrzuca nieznane lub powtórzone osoby i nakładające się rezerwacje, pozwala na ponowne użycie od chwili zwolnienia. Użytkownik ustalił, że przy operacji te same osoby pozostaną zarezerwowane od pierwszego do ostatniego przedziału obecności, także między nimi; powiązanie reguły z operacją należy do 2.4.2. Backup 153 plików: `backup/v0.4.0_przed_2_4a_20261005` (153 zgodne SHA256, 0 rozbieżności). Testy 99/99 i build poprawne. Kontrakt `MODEL_OPERATOROW_2_4.md`, raport `WERYFIKACJA_OPERATOROW_2_4.md`. Punkt 2.4.1 wdrożony; 2.4 w trakcie.
+
 2.3c / 2.3.3 (2026-10-05): zbiorczy odbiór obsady na Eko v4/v5 i silnikach v4. Po jawnym wpisaniu dwóch założonych wariantów zapis i odczyt szkicu zachowały dokładne źródło, pozostałe dane operacji i aktywne projekty; pełne wyniki dotychczasowej symulacji są identyczne. Ponowiony Edge CDP potwierdził edytor, odmowę błędu, Cofnij/Ponów, usuwanie i odczyt po przeładowaniu. Testy 97/97 oraz build poprawne. Bez zmiany schematu, algorytmu lub ścieżki trwałości; nowa kopia strukturalna nie była wymagana. Raport `WERYFIKACJA_OBSADY_2_3.md`. Punkt 2.3 wdrożony w zakresie niekompletnego szkicu 6; etap 2 pozostaje w trakcie.
 
 2.3b / 2.3.2 (2026-10-04): edytor minimum obsady i jawnych wariantów czasu w szkicu 6, z walidacją, bezpiecznym zapisem, usuwaniem, wspólnym Cofnij/Ponów i odczytem po przeładowaniu. Profil referencyjny i aktywne projekty 4/5 pozostały odrębne. Backup 152 plików: `backup/v0.4.0_przed_2_3b_20261004` (152 zgodne SHA256, 0 rozbieżności). Testy 96/96 i build poprawne; Edge CDP potwierdził dwa warianty, odmowę błędnego minimum, historię, usuwanie i ponowny odczyt. Ponowiony test UI profilu czasu 2.2 przeszedł. Raport `WERYFIKACJA_OBSADY_2_3.md`, zrzut `outputs/qa/verify_2_3b_staffing.png`. Punkt 2.3.2 wdrożony; 2.3 w trakcie do odbioru zbiorczego.
@@ -223,7 +225,11 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 2.3.1 | Zdefiniować opcjonalne wymaganie minimalnej obsady i odrębne jawne profile czasu dla liczebności zespołu w szkicu 6, z walidacją i zgodnością dawnych szkiców. | wdrożone |
 | 2.3.2 | Umożliwić edycję obsady i wariantów czasu w UI szkicu, z zapisem, usuwaniem, Cofnij/Ponów i ponownym odczytem. | wdrożone |
 | 2.3.3 | Odebrać spójność obsady, wariantów, migracji i niezmienność aktywnej symulacji na Eko i silnikach. | wdrożone |
-| 2.4 | Obsłużyć operatorów współdzielonych między stanowiskami, ich rezerwację i zwalnianie bez nakładania przydziałów w czasie. | nierozpoczęte |
+| 2.4 | Obsłużyć operatorów współdzielonych między stanowiskami, ich rezerwację i zwalnianie bez nakładania przydziałów w czasie. | w trakcie |
+| 2.4.1 | Zbudować niezależny rejestr rezerwacji konkretnych osób w jawnych przedziałach czasu, z ochroną trwałych ID, odmową kolizji i sprawdzonym zwalnianiem. | wdrożone |
+| 2.4.2 | Powiązać jawne wymagania operacji, profil obecności, wybrany wariant czasu oraz wskazane osoby lub pulę z regułą przydziału i oczekiwania na zasób. | nierozpoczęte |
+| 2.4.3 | Włączyć rezerwacje do nowej ścieżki harmonogramowania z jawnym oczekiwaniem i zwalnianiem, bez zmiany wyników aktywnych projektów 4/5. | nierozpoczęte |
+| 2.4.4 | Odebrać brak podwójnego przydziału, zapis/odczyt, UI i scenariusze Eko po określeniu danych oraz reguł domenowych. | nierozpoczęte |
 | 2.5 | Uwzględnić kalendarz zasobów, zmiany i przerwy; jednoznacznie określić zachowanie rozpoczętej operacji na granicy przerwy. | nierozpoczęte |
 | 2.6 | Przypisywać operację do wielu dopuszczalnych stanowisk, z określoną regułą wyboru i wymaganym wyposażeniem. | nierozpoczęte |
 | 2.7 | Rozróżnić przygotowanie podzespołu od montażu na wspólnym korpusie; śledzić miejsce i dostępność korpusu. | nierozpoczęte |

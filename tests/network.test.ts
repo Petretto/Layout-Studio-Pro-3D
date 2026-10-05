@@ -17,6 +17,7 @@ import {editDomainPeople} from '../src/core/domainPeopleEditing';
 import {editDomainProduct} from '../src/core/domainProductEditing';
 import {editDomainEquipment} from '../src/core/domainEquipmentEditing';
 import {editDomainTime} from '../src/core/domainTimeEditing';
+import {createWorkerReservationBook,reserveWorkerTeam,releaseWorkerTeam} from '../src/core/workerReservations';
 import {DOMAIN_DRAFT_STORAGE_KEY,readDomainDraft,replaceDomainDraft,saveDomainDraft} from '../src/core/domainDraftStorage';
 import {parseStationProjectV5} from '../src/core/stationProject';
 import {runStationBalancing,moveStationOperation} from '../src/core/stationBalancing';
@@ -594,6 +595,45 @@ test('2.3c: warianty obsady po migracji Eko i silników nie zmieniają aktywnej 
     assert.deepEqual(simulateNetwork(unchangedProject,4050,3),baseline,name);
     assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),written.raw,name);
   }
+});
+
+test('2.4a: współdzielone osoby nie mogą mieć nakładających się rezerwacji',()=>{
+  const empty=createWorkerReservationBook(['W-A','W-B','W-C']);
+  const first=reserveWorkerTeam(empty,{reservationId:'ST-A-1',workerIds:['W-A','W-B'],startSeconds:0,endSeconds:10});
+  assert.throws(()=>reserveWorkerTeam(first,{reservationId:'ST-B-1',workerIds:['W-A'],startSeconds:5,endSeconds:12}),/W-A.*nakładającą/);
+  assert.throws(()=>reserveWorkerTeam(first,{reservationId:'ST-B-2',workerIds:['W-B'],startSeconds:9,endSeconds:11}),/W-B.*nakładającą/);
+  const independent=reserveWorkerTeam(first,{reservationId:'ST-B-3',workerIds:['W-C'],startSeconds:5,endSeconds:9});
+  const adjacent=reserveWorkerTeam(independent,{reservationId:'ST-B-4',workerIds:['W-A'],startSeconds:10,endSeconds:12});
+  assert.equal(adjacent.reservations.length,3);
+  assert.equal(first.reservations.length,1);
+  const released=releaseWorkerTeam(first,'ST-A-1',6);
+  const reused=reserveWorkerTeam(released,{reservationId:'ST-B-5',workerIds:['W-A'],startSeconds:6,endSeconds:12});
+  assert.equal(reused.reservations[0].endSeconds,6);
+  assert.equal(reused.reservations[0].releasedAtSeconds,6);
+  assert.equal(first.reservations[0].endSeconds,10);
+  assert.throws(()=>releaseWorkerTeam(released,'ST-A-1',6),/już zwolniona/);
+  assert.throws(()=>reserveWorkerTeam(released,{reservationId:'ST-A-1',workerIds:['W-A'],startSeconds:12,endSeconds:13}),/nowego/);
+});
+
+test('2.4a: nieznane osoby, duplikaty i niepoprawny czas są odrzucane bez mutacji',()=>{
+  assert.throws(()=>createWorkerReservationBook(['W-A','W-A']),/unikalnych/);
+  const legacyId=createWorkerReservationBook([' W-A ']);
+  assert.equal(reserveWorkerTeam(legacyId,{reservationId:'R-old',workerIds:[' W-A '],startSeconds:0,endSeconds:1}).reservations.length,1);
+  const empty=createWorkerReservationBook(['W-A','W-B']);
+  const invalid=(request:{reservationId:string;workerIds:string[];startSeconds:number;endSeconds:number},pattern:RegExp)=>{
+    assert.throws(()=>reserveWorkerTeam(empty,request),pattern);
+    assert.equal(empty.reservations.length,0);
+  };
+  invalid({reservationId:'R1',workerIds:['W-X'],startSeconds:0,endSeconds:10},/znanych/);
+  invalid({reservationId:'R1',workerIds:['W-A','W-A'],startSeconds:0,endSeconds:10},/niepowtórzonych/);
+  invalid({reservationId:'R1',workerIds:[],startSeconds:0,endSeconds:10},/znanych/);
+  invalid({reservationId:'R1',workerIds:['W-A'],startSeconds:10,endSeconds:10},/dodatniej długości/);
+  invalid({reservationId:'R1',workerIds:['W-A'],startSeconds:NaN,endSeconds:10},/granic/);
+  const booked=reserveWorkerTeam(empty,{reservationId:'R1',workerIds:['W-A'],startSeconds:0,endSeconds:10});
+  assert.throws(()=>releaseWorkerTeam(booked,'R1',0),/po rozpoczęciu/);
+  assert.throws(()=>releaseWorkerTeam(booked,'R1',11),/nie później/);
+  assert.throws(()=>releaseWorkerTeam(booked,'missing',5),/nie istnieje/);
+  assert.equal(booked.reservations[0].endSeconds,10);
 });
 
 test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{
