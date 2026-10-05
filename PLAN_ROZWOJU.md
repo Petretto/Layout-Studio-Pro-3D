@@ -11,6 +11,8 @@ Dopracować obecną aplikację React/TypeScript/Three.js do projektowania, balan
 
 Produkt jest przeznaczony dla inżynierów projektujących procesy oraz konsultantów Lean analizujących i usprawniających procesy różnych klientów. Użytkownik ma móc wprowadzić własne dane procesu i BOM, zbudować wariant bazowy i warianty usprawnień oraz porównać wyniki. Reguły aplikacji nie mogą zależeć od struktury przykładu Eko. Eko służy do rozwoju i regresji; jego dane są niepełne i nie stanowią wzorca rzeczywistego procesu produkcyjnego.
 
+Pierwsze użyteczne wydanie ma zapewnić samodzielny przepływ od danych klienta do wstępnego layoutu, jego korekty, symulacji, porównania wariantów i raportu. Konsultant korzysta z aplikacji razem z klientem przy analizie jego danych; wspólne logowanie i jednoczesna edycja online nie należą do tego wydania. VSM zaplanować na kolejną wersję (np. 1.5 lub 2.0), po odbiorze pierwszego wydania.
+
 Plan nie zakłada migracji do C# ani Unity. Figma lub Pencil mogą wspierać projektowanie interfejsu, a Blender przygotowanie modeli wyposażenia. Nie są wymagane do rozpoczęcia prac.
 
 „W pełni funkcjonalna” oznacza spełnienie poniższych kryteriów odbioru i udokumentowanie ograniczeń, nie deklarację zastąpienia pełnego CAD lub Visual Components ani certyfikację przemysłową.
@@ -58,7 +60,7 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 4 | Balansowanie i porównywanie wariantów | nierozpoczęte | Etapy 2–3 |
 | 5 | Edytor hali i spójny interfejs | w trakcie | Stabilny model danych; podstawowe poprawki UX od etapu 1 |
 | 6 | Biblioteka wyposażenia i 3D | nierozpoczęte | Etapy 3 i 5 |
-| 7 | Walidacja Eko i przygotowanie komercyjne | nierozpoczęte | Etapy 1–6; zbieranie danych od początku |
+| 7 | Walidacja różnych procesów i przygotowanie komercyjne | nierozpoczęte | Etapy 1–6; zbieranie danych od początku |
 
 ## Bieżący pakiet
 
@@ -301,8 +303,9 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 | 5.10 | Zapewnić wspólne zaznaczenie i dane 2D–3D, spójne skróty, nazwy narzędzi i podpowiedzi. | nierozpoczęte |
 | 5.11 | Dodać przełączanie prezentacji czasu między sekundami, minutami i godzinami dziesiętnymi w wynikach, osi czasu i właściwych polach czasu. Jednostka ma być zawsze widoczna, a zmiana widoku lub jednostki wejścia ma przeliczać wartość bez zmiany czasu zapisanego wewnętrznie w sekundach (np. 150 min = 2,5 h). | wdrożone |
 | 5.12 | Udostępnić gotowe, pobieralne szablony importu procesu i BOM co najmniej w XLSX, zgodne z bieżącym importerem. Opisać wymagane i opcjonalne kolumny, formaty, jednostki i identyfikatory; sprawdzić import wypełnionych szablonów oraz czytelne błędy przy brakach. Inne formaty są opcjonalne. | wdrożone |
+| 5.13 | Po wprowadzeniu lub imporcie poprawnego procesu automatycznie pokazać pierwszą propozycję layoutu opartą na grafie operacji i wstępnym bilansie, także w docelowym modelu stanowisk. Nie wymagać osobnego przycisku do utworzenia pierwszej propozycji. Uwzględniać BOM przy prezentacji przepływu materiałów, jeśli jest dostępny; jego brak nie blokuje szkicu rozmieszczenia stanowisk. Oznaczać domyślne wymiary i wyposażenie jako założenia wizualne, bez przypisywania im zdolności technologicznej. Przy braku wymiarów hali nie deklarować dopasowania do rzeczywistej przestrzeni. Ręczne pozycje chronić przed automatycznym nadpisaniem; ponowne generowanie wymaga jawnej akcji i ostrzeżenia. Odebrać na procesach niezależnych od Eko. | nierozpoczęte |
 
-**Odbiór etapu:** użytkownik samodzielnie odwzorowuje prostą halę i reorganizuje linię bez edycji plików. Grupy i powiązania pozostają spójne po przesuwaniu, kopiowaniu i cofaniu. Próba wykonana w docelowej przeglądarce jest opisana w raporcie.
+**Odbiór etapu:** po poprawnym imporcie procesu użytkownik widzi wstępną propozycję layoutu, a następnie samodzielnie odwzorowuje prostą halę i reorganizuje linię bez edycji plików. Grupy i powiązania pozostają spójne po przesuwaniu, kopiowaniu i cofaniu. Próba wykonana w docelowej przeglądarce jest opisana w raporcie.
 
 ## Etap 6 — Biblioteka wyposażenia i czytelne 3D
 
@@ -338,6 +341,10 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 
 Po ustabilizowaniu pakietu D punkty 3.10, 5.11 i 5.12 można wykonać jako małe, niezależne pakiety wcześniej niż resztę ich etapów, jeżeli nie zmienią modelu czasu ani kontraktu importu. Punkt 7.10 jest zaplanowany później, po ustaleniu docelowej zawartości raportu.
 
+## Po pierwszym wydaniu
+
+VSM (mapa strumienia wartości) należy do zakresu następnej wersji. Przed rozpoczęciem nadać mu osobne ID, ustalić wymagane dane i kryteria odbioru. Nie uzależniać wydania pierwszej użytecznej wersji od VSM ani funkcji wspólnego logowania i edycji online.
+
 ## Dane i decyzje do uzupełnienia
 
 Braki nie blokują stabilizacji. Nie należy zastępować ich domysłami przedstawianymi jako pomiary.
@@ -357,6 +364,7 @@ Każdy kolejny wpis powinien wskazywać konkretne ID. Nie usuwać historii przy 
 
 | Data | ID | Zmiana statusu | Rezultat / dowód / uwagi |
 | --- | --- | --- | --- |
+| 2026-10-05 | PLAN, 5.13 | Doprecyzowanie zakresu; dodano 5.13 jako nierozpoczęte | Ustalono samodzielny przepływ pierwszego wydania, automatyczną wstępną propozycję layoutu po danych procesu, pracę konsultanta na danych klienta bez współedycji online i VSM w kolejnej wersji. Bez zmian kodu i statusów dotychczasowych kroków. |
 | 2026-10-05 | PLAN, 7.11 | Doprecyzowanie celu; dodano 7.11 jako nierozpoczęte | Eko określono jako niepełny przykład testowy. Zapisano odbiór uniwersalności na niezależnych procesach oraz w pracy inżyniera i konsultanta Lean. Bez zmian kodu i statusów dotychczasowych kroków. |
 | 2026-09-29 | PLAN | Utworzenie rejestru | Zapisano uzgodniony plan w `PLAN_ROZWOJU.md`. Wszystkie kroki implementacyjne i odbiorowe pozostają nierozpoczęte. Nie zmieniano kodu ani nie uruchamiano ponownie testów aplikacji. |
 | 2026-09-29 | 1.1–1.3 | nierozpoczęte → w trakcie | Rozpoczęto pakiet A: zabezpieczenie wersji 0.4.0, ponowna weryfikacja bazowa i przegląd wspólnych operacji edycji. |
