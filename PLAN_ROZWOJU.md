@@ -60,6 +60,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
+2.4 — doprecyzowanie reguły (2026-10-05): przed każdym przebiegiem produkcyjnym użytkownik wskazuje stały skład zespołu. Harmonogram może przydzielać operacje tylko tym osobom, bez automatycznego dodawania lub zamiany pracowników w trakcie. Brak wystarczającej liczby wolnych osób powoduje oczekiwanie; po zwolnieniu pracownik może przejść na inne stanowisko. Dla pojedynczej operacji przydzielone osoby pozostają te same od pierwszego do ostatniego przedziału obecności. Kontrakt `MODEL_OPERATOROW_2_4.md`; status 2.4 pozostaje w trakcie.
+
 2.4a / 2.4.1 (2026-10-05): niezależny od aktywnej symulacji rejestr rezerwacji konkretnych pracowników po trwałych ID i jawnych przedziałach czasu. Odrzuca nieznane lub powtórzone osoby i nakładające się rezerwacje, pozwala na ponowne użycie od chwili zwolnienia. Użytkownik ustalił, że przy operacji te same osoby pozostaną zarezerwowane od pierwszego do ostatniego przedziału obecności, także między nimi; powiązanie reguły z operacją należy do 2.4.2. Backup 153 plików: `backup/v0.4.0_przed_2_4a_20261005` (153 zgodne SHA256, 0 rozbieżności). Testy 99/99 i build poprawne. Kontrakt `MODEL_OPERATOROW_2_4.md`, raport `WERYFIKACJA_OPERATOROW_2_4.md`. Punkt 2.4.1 wdrożony; 2.4 w trakcie.
 
 2.3c / 2.3.3 (2026-10-05): zbiorczy odbiór obsady na Eko v4/v5 i silnikach v4. Po jawnym wpisaniu dwóch założonych wariantów zapis i odczyt szkicu zachowały dokładne źródło, pozostałe dane operacji i aktywne projekty; pełne wyniki dotychczasowej symulacji są identyczne. Ponowiony Edge CDP potwierdził edytor, odmowę błędu, Cofnij/Ponów, usuwanie i odczyt po przeładowaniu. Testy 97/97 oraz build poprawne. Bez zmiany schematu, algorytmu lub ścieżki trwałości; nowa kopia strukturalna nie była wymagana. Raport `WERYFIKACJA_OBSADY_2_3.md`. Punkt 2.3 wdrożony w zakresie niekompletnego szkicu 6; etap 2 pozostaje w trakcie.
@@ -227,8 +229,8 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 2.3.3 | Odebrać spójność obsady, wariantów, migracji i niezmienność aktywnej symulacji na Eko i silnikach. | wdrożone |
 | 2.4 | Obsłużyć operatorów współdzielonych między stanowiskami, ich rezerwację i zwalnianie bez nakładania przydziałów w czasie. | w trakcie |
 | 2.4.1 | Zbudować niezależny rejestr rezerwacji konkretnych osób w jawnych przedziałach czasu, z ochroną trwałych ID, odmową kolizji i sprawdzonym zwalnianiem. | wdrożone |
-| 2.4.2 | Powiązać jawne wymagania operacji, profil obecności, wybrany wariant czasu oraz wskazane osoby lub pulę z regułą przydziału i oczekiwania na zasób. | nierozpoczęte |
-| 2.4.3 | Włączyć rezerwacje do nowej ścieżki harmonogramowania z jawnym oczekiwaniem i zwalnianiem, bez zmiany wyników aktywnych projektów 4/5. | nierozpoczęte |
+| 2.4.2 | Przed przebiegiem jawnie ustalić stały skład zespołu po ID; powiązać wymagania operacji, profil obecności i wybrany wariant czasu z przydziałem wyłącznie z tego składu. Nie dodawać ani nie zamieniać osób w trakcie przebiegu. | nierozpoczęte |
+| 2.4.3 | Włączyć rezerwacje do nowej ścieżki harmonogramowania z oczekiwaniem na osoby z ustalonego zespołu; przy operacji utrzymać te same osoby od pierwszego do ostatniego przedziału obecności i zwolnić je po nim. Zachować wyniki aktywnych projektów 4/5. | nierozpoczęte |
 | 2.4.4 | Odebrać brak podwójnego przydziału, zapis/odczyt, UI i scenariusze Eko po określeniu danych oraz reguł domenowych. | nierozpoczęte |
 | 2.5 | Uwzględnić kalendarz zasobów, zmiany i przerwy; jednoznacznie określić zachowanie rozpoczętej operacji na granicy przerwy. | nierozpoczęte |
 | 2.6 | Przypisywać operację do wielu dopuszczalnych stanowisk, z określoną regułą wyboru i wymaganym wyposażeniem. | nierozpoczęte |
