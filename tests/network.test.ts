@@ -20,6 +20,7 @@ import {editDomainTime} from '../src/core/domainTimeEditing';
 import {editDomainWorkerRun} from '../src/core/domainWorkerRunEditing';
 import {createWorkerReservationBook,reserveWorkerTeam,releaseWorkerTeam} from '../src/core/workerReservations';
 import {createWorkerRunPlan,type WorkerOperationSelection} from '../src/core/workerRunPlan';
+import {scheduleWorkerRun} from '../src/core/workerSchedule';
 import {DOMAIN_DRAFT_STORAGE_KEY,readDomainDraft,replaceDomainDraft,saveDomainDraft} from '../src/core/domainDraftStorage';
 import {parseStationProjectV5} from '../src/core/stationProject';
 import {runStationBalancing,moveStationOperation} from '../src/core/stationBalancing';
@@ -719,6 +720,86 @@ test('2.4c: wybór przebiegu zapisuje się bezpiecznie i chroni referencje oraz 
   const cleared=editDomainWorkerRun(selected,{kind:'clear-worker-run-selection'});
   assert.equal(cleared.workerRunSelection,undefined);
   assert.equal(parseDomainProjectV6(JSON.stringify(cleared)).workerRunSelection,undefined);
+});
+
+test('2.4d: pracownik jest zajęty także między obecnościami, a następne zadanie czeka bez doboru osoby',()=>{
+  const source=JSON.stringify(derive(parseProject(JSON.stringify({...base,
+    processSteps:[base.processSteps[0]],bom:base.bom.filter(item=>item.associatedProcessStepId==='1')}))).project);
+  let id=0;
+  const project=prepareDomainMigration(previewDomainMigrationFromV4(source,()=>`ST-schedule-${++id}`)).project;
+  project.stations=[{id:'ST-A',name:'A',operationIds:['1']}];
+  project.layoutObjects=[];
+  project.stationSettings={'ST-A':{operators:1,parallelStations:2}};
+  project.workers=[{id:'W-A',name:'A'}];
+  project.operations[0].staffing={requiredWorkers:1,timeVariants:[{workerCount:1,timeProfile:{
+    durationSeconds:120,durationBasis:'assumed',manualWork:[],machineRun:[],
+    operatorPresence:[{startSeconds:10,endSeconds:20,basis:'assumed'},
+      {startSeconds:70,endSeconds:80,basis:'assumed'}]}}]};
+  project.workerRunSelection={teamWorkerIds:['W-A'],operations:[{operationId:'1',workerCount:1,eligibleWorkerIds:['W-A']}]};
+  const before=JSON.stringify(project);
+  const result=scheduleWorkerRun(project,1,2);
+  assert.equal(JSON.stringify(project),before);
+  assert.deepEqual(result.runs.map(run=>run.startSeconds),[0,70]);
+  assert.deepEqual(result.runs.map(run=>run.waitSeconds),[0,69]);
+  assert.deepEqual(result.runs[1].waitCauses,['workers']);
+  assert.deepEqual(result.runs.map(run=>[run.reserveStartSeconds,run.reserveEndSeconds]),[[10,80],[80,150]]);
+  assert.deepEqual(result.runs.map(run=>run.copy),[1,2]);
+  assert.deepEqual(result.jobs.map(job=>job.finish),[120,190]);
+  assert.ok(result.reservations.reservations.every(item=>item.releasedAtSeconds===item.endSeconds));
+  const pair=structuredClone(project);
+  pair.workers.push({id:'W-B',name:'B'});
+  pair.operations[0].staffing!.requiredWorkers=2;
+  pair.operations[0].staffing!.timeVariants[0].workerCount=2;
+  pair.workerRunSelection={teamWorkerIds:['W-A','W-B'],operations:[{operationId:'1',workerCount:2,
+    eligibleWorkerIds:['W-A','W-B']}]};
+  const paired=scheduleWorkerRun(pair,1,2);
+  assert.deepEqual(paired.runs.map(run=>run.startSeconds),[0,70]);
+  assert.ok(paired.runs.every(run=>run.workerIds.join(',')==='W-A,W-B'));
+  const noCopies=structuredClone(project);
+  noCopies.stationSettings={};
+  assert.throws(()=>scheduleWorkerRun(noCopies,1,2),/jawnej liczby kopii/);
+  const noAssignment=structuredClone(project);
+  noAssignment.stations[0].operationIds=[];
+  assert.throws(()=>scheduleWorkerRun(noAssignment,1,2),/brak jawnego przypisania/);
+  const noTeam=structuredClone(project);
+  delete noTeam.workerRunSelection;
+  assert.throws(()=>scheduleWorkerRun(noTeam,1,2),/Brak zapisanego wyboru/);
+});
+
+test('2.4d: graf poprzedników, kopie stanowisk i stały skład nie dopuszczają podwójnego zajęcia',()=>{
+  const source=JSON.stringify(derive(parseProject(JSON.stringify({...base,
+    processSteps:base.processSteps.slice(0,2),
+    bom:base.bom.filter(item=>['1','1.1'].includes(item.associatedProcessStepId))}))).project);
+  let id=0;
+  const project=prepareDomainMigration(previewDomainMigrationFromV4(source,()=>`ST-schedule-graph-${++id}`)).project;
+  project.stations=[{id:'ST-A',name:'A',operationIds:['1']},{id:'ST-B',name:'B',operationIds:['1.1']}];
+  project.layoutObjects=[];
+  project.stationSettings={'ST-A':{operators:1,parallelStations:1},'ST-B':{operators:1,parallelStations:1}};
+  project.workers=[{id:'W-A',name:'A'},{id:'W-B',name:'B'}];
+  for(const operation of project.operations) operation.staffing={requiredWorkers:1,timeVariants:[{workerCount:1,timeProfile:{
+    durationSeconds:10,durationBasis:'assumed',manualWork:[],machineRun:[],
+    operatorPresence:[{startSeconds:0,endSeconds:10,basis:'assumed'}]}}]};
+  project.workerRunSelection={teamWorkerIds:['W-A','W-B'],operations:project.operations.map(operation=>({
+    operationId:operation.id,workerCount:1,eligibleWorkerIds:['W-A','W-B']}))};
+  const result=scheduleWorkerRun(project,1,2);
+  assert.deepEqual(result.runs.map(run=>[run.job,run.operationId,run.startSeconds]),
+    [[1,'1',0],[2,'1',10],[1,'1.1',10],[2,'1.1',20]]);
+  assert.deepEqual(result.runs.map(run=>run.waitSeconds),[0,9,0,0]);
+  for(const run of result.runs){
+    if(run.operationId==='1.1') assert.ok(run.startSeconds>=result.runs.find(item=>
+      item.job===run.job&&item.operationId==='1')!.endSeconds);
+    assert.ok(result.reservations.workerIds.includes(run.workerIds[0]));
+  }
+  for(let i=0;i<result.runs.length;i++)for(let j=i+1;j<result.runs.length;j++){
+    const a=result.runs[i],b=result.runs[j];
+    if(a.workerIds.some(id=>b.workerIds.includes(id))) assert.ok(
+      a.reserveEndSeconds<=b.reserveStartSeconds||b.reserveEndSeconds<=a.reserveStartSeconds);
+    if(a.stationId===b.stationId&&a.copy===b.copy) assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
+  }
+  const parallel=structuredClone(project);
+  parallel.operations[1].predecessorIds=[];
+  const conservative=scheduleWorkerRun(parallel,1,1);
+  assert.equal(conservative.runs[1].startSeconds,10);
 });
 
 test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{

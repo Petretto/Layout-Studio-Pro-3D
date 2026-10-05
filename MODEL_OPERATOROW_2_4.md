@@ -1,6 +1,6 @@
 # Współdzieleni operatorzy — punkt 2.4
 
-Status 2026-10-05: pakiety 2.4a / 2.4.1, 2.4b / 2.4.2.1 i 2.4c / 2.4.2.2 wdrożone. Rejestr, walidowany plan i edytor wyborów działają w odrębnym szkicu 6. Punkt 2.4 pozostaje w trakcie; skład i warianty nie sterują jeszcze aktywną symulacją.
+Status 2026-10-05: pakiety 2.4a / 2.4.1, 2.4b / 2.4.2.1, 2.4c / 2.4.2.2 i 2.4d / 2.4.3.1 wdrożone. Rejestr, plan, edytor wyborów i odrębny rdzeń harmonogramu używają szkicu 6. Punkt 2.4 pozostaje w trakcie; nowy harmonogram nie steruje jeszcze aktywną symulacją.
 
 ## Potwierdzona reguła procesu
 
@@ -31,3 +31,11 @@ W pakiecie 2.4b plan był wyłącznie obiektem w pamięci, bez UI i trwałego za
 Opcjonalne pole `workerRunSelection` w istniejącym projekcie schematu 6 przechowuje jedną kompletną konfigurację przebiegu: stałą listę ID zespołu oraz dla każdej operacji wybrany wariant liczebności i listę osób dopuszczonych. Brak pola w dawnym szkicu nadal oznacza brak wyboru. Parser odrzuca obce i powtórzone ID, brak operacji lub wariantu, za małą liczbę dopuszczonych osób oraz wariant bez jawnego okresu obecności. Gdy wybór jest zapisany, edycja nie może usunąć wskazanej osoby ani wariantu bez wcześniejszego wyczyszczenia wyboru. Nie powstają domyślne czasy, umiejętności ani przydziały.
 
 Edytor pokazuje osoby, warianty i dopuszczenie dla każdej operacji. Zapis następuje atomowo dopiero po walidacji kompletnej konfiguracji. Korzysta z odrębnego localStorage szkicu 6, dotychczasowego sprawdzania poprzedniej wartości i wspólnej historii Cofnij/Ponów. Usunięcie wyboru jest odwracalne w tej historii. Aktywne projekty 4/5 pozostają osobne, a ich oryginalny JSON w szkicu jest zachowany. Sam zapis wyboru nie uruchamia jeszcze harmonogramu ani rezerwacji; to zakres 2.4.3. Kopia przed zmianą: `backup/v0.4.0_przed_2_4c_20261005`; localStorage nie należy do kopii.
+
+## Pakiet 2.4d — odrębny rdzeń harmonogramu
+
+`scheduleWorkerRun` korzysta wyłącznie z zapisanego wyboru szkicu 6, jawnego odstępu przybywania sztuk oraz liczby sztuk. Wymaga przypisania każdej operacji do trwałego ID stanowiska i jawnego `stationSettings[stationId].parallelStations`; brak ustawienia nie oznacza rzeczywistej jednej kopii i blokuje przebieg. Nie korzysta z dawnej liczby `operators` ani starego czasu standardowego. Czas operacji i okno obecności pochodzą z wybranego wariantu.
+
+Harmonogram przetwarza przybycia, zakończenia operacji i zwolnienia rezerwacji jako zdarzenia. Gotowe operacje są rozpatrywane według czasu gotowości, numeru sztuki i kolejności topologicznej. Dla pierwszej możliwej operacji wybiera pierwszą wolną kopię stanowiska oraz pierwsze pasujące ID z zapisanej listy dopuszczonych osób. Operacja może rozpocząć się przed pierwszym przedziałem obecności, lecz przy starcie rezerwuje dokładnie te same osoby na całe przyszłe okno od pierwszej do ostatniej obecności. Brak wolnego zespołu w tym oknie powoduje oczekiwanie; wynik zapisuje czas i przyczyny (`workers`, `station`, `same-job`). Po ostatniej obecności rezerwacja zostaje zwolniona, nawet gdy praca maszyny kończy operację później. Przedziały i kopie nie mogą się nakładać.
+
+Do czasu zdefiniowania fizycznych reguł wspólnego korpusu i podzespołów w 2.8 rdzeń dopuszcza tylko jedną trwającą operację na jedną sztukę, także przy rozgałęzieniu grafu. To ostrożne ograniczenie może wydłużyć wynik względem rzeczywistej równoległej pracy nad odrębnymi podzespołami. Wynik jest **logicznym harmonogramem zasobów**, bez transportu, kalendarza, wyposażenia technologicznego, buforów ani stanu fizycznego wyrobu. Nie jest jeszcze uruchamiany z UI, nie zapisuje wyniku i nie zastępuje symulacji 4/5. Integracja i prezentacja należą do 2.4.3.2, a pełny odbiór do 2.4.4. Kopia przed modułem: `backup/v0.4.0_przed_2_4d_20261005`.

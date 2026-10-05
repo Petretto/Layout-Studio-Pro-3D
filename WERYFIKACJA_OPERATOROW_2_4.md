@@ -29,3 +29,11 @@ Test kodu potwierdził odczyt starszego szkicu bez `workerRunSelection`, zapis i
 Edge CDP na izolowanym porcie 5200 i osobnym profilu sprawdził formularz dla 16 operacji przykładu Eko v5 z syntetycznymi osobami i założonym profilem czasu. Jawny skład, wariant i osoby dopuszczone zostały zapisane. Cofnij/Ponów, usunięcie i przywrócenie, odrzucenie niepełnego wyboru, przeładowanie i odczyt formularza przeszły. Oryginalny JSON szkicu i aktywne projekty 4/5 pozostały bez zmian. Test: `tests/qa/verify_2_4c.mjs`; zrzut: `outputs/qa/verify_2_4c_run_selection.png`.
 
 Pakiet **2.4.2.2 wdrożony**. Punkt **2.4.2 w trakcie** do potwierdzenia faktycznego przydziału z tej listy w 2.4.3; cały **2.4 w trakcie**. Zapisany wybór nadal nie planuje czasów startu, nie czeka na wolne osoby i nie steruje aktywną symulacją. Przykładowe osoby i profile użyte w teście nie są pomiarami procesu Eko.
+
+## Pakiet 2.4d / 2.4.3.1 — 2026-10-05
+
+Przed nowym algorytmem wykonano kopię `backup/v0.4.0_przed_2_4d_20261005`: 161 plików, 161 zgodnych SHA256 z manifestem, 0 rozbieżności. Pominięto zależności, build, wcześniejsze kopie, `outputs` i Git; localStorage nie należy do kopii.
+
+Ręcznie sprawdzalny scenariusz dwóch sztuk, dwóch jawnych kopii stanowiska i jednej osoby: pierwsza operacja trwa 120 s, a ta sama osoba jest potrzebna w 10–20 s oraz 70–80 s. Przy odstępie przybycia 1 s drugi start nastąpił w 70 s, z oczekiwaniem 69 s; rezerwacje 10–80 s oraz 80–150 s się stykają, ale nie nakładają. Wynik oznacza `workers` jako przyczynę oczekiwania. Wariant dwuosobowy zarezerwował obie osoby przez całe okno. Drugi scenariusz potwierdził poprzedników, jedno zajęcie kopii, brak podwójnej rezerwacji oraz ostrożną pojedynczą operację na sztukę. Brak jawnej liczby kopii, przypisania stanowiska i składu odrzucono. Dane testowe są założone, nie pochodzą z pomiarów produkcyjnych.
+
+`npm.cmd run test -- --run`: **103/103**; `npm.cmd run build`: poprawny. Kod aktywnej symulacji 4/5, schemat zapisu i UI nie były zmieniane. Pakiety **2.4.2 oraz 2.4.3.1 wdrożone**; **2.4.3 i 2.4 w trakcie**. Integracja UI i próba Eko wymagają jawnych kopii stanowisk oraz określenia granicy równoległości podzespołów. Wyniku nie wolno traktować jako fizycznej symulacji wyrobu, transportu, kalendarza, buforów lub wyposażenia.
