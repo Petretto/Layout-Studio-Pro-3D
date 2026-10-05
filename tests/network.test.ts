@@ -17,6 +17,7 @@ import {editDomainPeople} from '../src/core/domainPeopleEditing';
 import {editDomainProduct} from '../src/core/domainProductEditing';
 import {editDomainEquipment} from '../src/core/domainEquipmentEditing';
 import {editDomainTime} from '../src/core/domainTimeEditing';
+import {editDomainWorkerRun} from '../src/core/domainWorkerRunEditing';
 import {createWorkerReservationBook,reserveWorkerTeam,releaseWorkerTeam} from '../src/core/workerReservations';
 import {createWorkerRunPlan,type WorkerOperationSelection} from '../src/core/workerRunPlan';
 import {DOMAIN_DRAFT_STORAGE_KEY,readDomainDraft,replaceDomainDraft,saveDomainDraft} from '../src/core/domainDraftStorage';
@@ -674,6 +675,50 @@ test('2.4b: plan przebiegu zamraża skład i jawny wariant oraz rezerwuje przerw
   const missingPresence=structuredClone(project);
   missingPresence.operations[0].staffing!.timeVariants[1].timeProfile.operatorPresence=[];
   assert.throws(()=>createWorkerRunPlan(missingPresence,['W-A','W-B'],selections),/brak jawnego okresu/);
+});
+
+test('2.4c: wybór przebiegu zapisuje się bezpiecznie i chroni referencje oraz stare szkice',()=>{
+  const original=JSON.stringify(derive(parseProject(JSON.stringify(base))).project);
+  let id=0;
+  const project=prepareDomainMigration(previewDomainMigrationFromV4(original,()=>`ST-run-ui-${++id}`)).project;
+  project.workers=[{id:'W-A',name:'A'},{id:'W-B',name:'B'}];
+  const profile:DomainTimeProfile={durationSeconds:90,durationBasis:'assumed',manualWork:[],machineRun:[],
+    operatorPresence:[{startSeconds:10,endSeconds:30,basis:'assumed'}]};
+  for(const operation of project.operations) operation.staffing={requiredWorkers:1,
+    timeVariants:[{workerCount:1,timeProfile:profile}]};
+  const storage=new DraftStorage();
+  const old=saveDomainDraft(storage,{originalJson:original,project},null);
+  assert.equal(readDomainDraft(storage).status,'valid');
+  assert.equal(parseDomainProjectV6(JSON.stringify(project)).workerRunSelection,undefined);
+  const selection={teamWorkerIds:['W-A','W-B'],operations:project.operations.map(operation=>({
+    operationId:operation.id,workerCount:1,eligibleWorkerIds:['W-A','W-B'],
+  }))};
+  const selected=editDomainWorkerRun(project,{kind:'set-worker-run-selection',selection});
+  assert.deepEqual(selected.workerRunSelection,selection);
+  assert.equal(JSON.stringify(project).includes('workerRunSelection'),false);
+  const written=saveDomainDraft(storage,{originalJson:original,project:selected},old.raw);
+  const reopened=readDomainDraft(storage);
+  assert.equal(reopened.status,'valid');
+  if(reopened.status!=='valid')throw new Error('Nie odczytano wyboru przebiegu.');
+  assert.deepEqual(reopened.saved.project.workerRunSelection,selection);
+  assert.equal(reopened.saved.originalJson,original);
+  assert.deepEqual(createWorkerRunPlan(reopened.saved.project,selection.teamWorkerIds,selection.operations).teamWorkerIds,
+    selection.teamWorkerIds);
+  assert.throws(()=>editDomainPeople(selected,{kind:'remove-worker',id:'W-A'}),/Skład/);
+  assert.throws(()=>editDomainTime(selected,{kind:'clear-staffing-variant',
+    operationId:project.operations[0].id,workerCount:1}),/wariantu/);
+  const invalid=structuredClone(selected);
+  invalid.workerRunSelection!.operations[0]={...invalid.workerRunSelection!.operations[0],eligibleWorkerIds:['W-C']};
+  assert.throws(()=>saveDomainDraft(storage,{originalJson:original,project:invalid},written.raw),/ustalonego składu/);
+  assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),written.raw);
+  assert.throws(()=>saveDomainDraft(storage,{originalJson:original,project},old.raw),/zmienił się/);
+  const undone=saveDomainDraft(storage,{originalJson:original,project},written.raw);
+  assert.equal((readDomainDraft(storage) as {saved:{project:typeof project}}).saved.project.workerRunSelection,undefined);
+  saveDomainDraft(storage,{originalJson:original,project:selected},undone.raw);
+  assert.deepEqual((readDomainDraft(storage) as {saved:{project:typeof project}}).saved.project.workerRunSelection,selection);
+  const cleared=editDomainWorkerRun(selected,{kind:'clear-worker-run-selection'});
+  assert.equal(cleared.workerRunSelection,undefined);
+  assert.equal(parseDomainProjectV6(JSON.stringify(cleared)).workerRunSelection,undefined);
 });
 
 test('2.1b: podgląd Eko v5 zachowuje ID i ujawnia brak danych domenowych',()=>{

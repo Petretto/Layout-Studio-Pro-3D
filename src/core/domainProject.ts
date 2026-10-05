@@ -4,6 +4,7 @@ import type {StationProjectV5} from './stationMigration';
 import type {DomainMigrationPreview} from './domainMigrationPreview';
 import {verifyDomainMigrationPreview} from './domainMigrationPreview';
 import {parseStationProjectV5} from './stationProject';
+import {validateWorkerRunSelection, type WorkerRunSelection} from './workerRunSelection';
 
 export type DomainTimeBasis = 'measured' | 'assumed';
 export interface DomainTimeInterval {startSeconds: number; endSeconds: number; basis: DomainTimeBasis}
@@ -42,6 +43,7 @@ export interface DomainProjectV6 extends Omit<StationProjectV5,
   equipment: DomainEquipment[];
   product: DomainProduct | null;
   subassemblies: DomainSubassembly[];
+  workerRunSelection?: WorkerRunSelection;
 }
 
 export interface PreparedDomainMigration {
@@ -221,6 +223,9 @@ export function parseDomainProjectV6(text: string): DomainProjectV6 {
         new Set(item.consumerOperationIds).size !== item.consumerOperationIds.length) {
       throw new Error(`Podzespół ${item.id}: nieznana lub powtórzona operacja zużywająca.`);
     }
+  }
+  if (has(raw, 'workerRunSelection')) {
+    validateWorkerRunSelection(raw as unknown as DomainProjectV6, raw.workerRunSelection);
   }
   return raw as unknown as DomainProjectV6;
 }

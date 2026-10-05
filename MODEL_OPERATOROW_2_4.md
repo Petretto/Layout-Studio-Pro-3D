@@ -1,6 +1,6 @@
 # Współdzieleni operatorzy — punkt 2.4
 
-Status 2026-10-05: pakiety 2.4a / 2.4.1 i 2.4b / 2.4.2.1 wdrożone jako niezależny rejestr i walidowany plan przebiegu. Punkt 2.4 pozostaje w trakcie; te moduły nie są jeszcze wejściem aktywnej symulacji ani edytora szkicu 6.
+Status 2026-10-05: pakiety 2.4a / 2.4.1, 2.4b / 2.4.2.1 i 2.4c / 2.4.2.2 wdrożone. Rejestr, walidowany plan i edytor wyborów działają w odrębnym szkicu 6. Punkt 2.4 pozostaje w trakcie; skład i warianty nie sterują jeszcze aktywną symulacją.
 
 ## Potwierdzona reguła procesu
 
@@ -24,4 +24,10 @@ To jest fundament do późniejszego powiązania z operacjami i harmonogramem. Ni
 
 Plan jest odrzucany, gdy brakuje osoby, operacji, wariantu, wymaganej obecności lub jawnej listy dopuszczonych osób. Z profilu wariantu wyznacza się czas operacji oraz jeden **okres rezerwacji od początku pierwszego do końca ostatniego przedziału obecności**; przerwy między przedziałami pozostają objęte rezerwacją tych samych osób. Wynik jest niemutowalną migawką danych wejściowych przebiegu. Nie modyfikuje szkicu, nie dodaje pracowników i nie wyprowadza ich z dawnej obsady stanowiska.
 
-Plan jest obecnie obiektem w pamięci, bez UI i trwałego zapisu wyborów. Wprowadzenie oraz bezpieczne zachowanie wyborów należy do 2.4.2.2, a planowanie startów i fizyczne rezerwacje do 2.4.3. Przed dodaniem modułu wykonano kopię `backup/v0.4.0_przed_2_4b_20261005`; localStorage nie należy do kopii.
+W pakiecie 2.4b plan był wyłącznie obiektem w pamięci, bez UI i trwałego zapisu wyborów. Te funkcje dodano w 2.4c; planowanie startów i fizyczne rezerwacje należą do 2.4.3. Przed dodaniem modułu wykonano kopię `backup/v0.4.0_przed_2_4b_20261005`; localStorage nie należy do kopii.
+
+## Pakiet 2.4c — wybór i trwały zapis w szkicu 6
+
+Opcjonalne pole `workerRunSelection` w istniejącym projekcie schematu 6 przechowuje jedną kompletną konfigurację przebiegu: stałą listę ID zespołu oraz dla każdej operacji wybrany wariant liczebności i listę osób dopuszczonych. Brak pola w dawnym szkicu nadal oznacza brak wyboru. Parser odrzuca obce i powtórzone ID, brak operacji lub wariantu, za małą liczbę dopuszczonych osób oraz wariant bez jawnego okresu obecności. Gdy wybór jest zapisany, edycja nie może usunąć wskazanej osoby ani wariantu bez wcześniejszego wyczyszczenia wyboru. Nie powstają domyślne czasy, umiejętności ani przydziały.
+
+Edytor pokazuje osoby, warianty i dopuszczenie dla każdej operacji. Zapis następuje atomowo dopiero po walidacji kompletnej konfiguracji. Korzysta z odrębnego localStorage szkicu 6, dotychczasowego sprawdzania poprzedniej wartości i wspólnej historii Cofnij/Ponów. Usunięcie wyboru jest odwracalne w tej historii. Aktywne projekty 4/5 pozostają osobne, a ich oryginalny JSON w szkicu jest zachowany. Sam zapis wyboru nie uruchamia jeszcze harmonogramu ani rezerwacji; to zakres 2.4.3. Kopia przed zmianą: `backup/v0.4.0_przed_2_4c_20261005`; localStorage nie należy do kopii.

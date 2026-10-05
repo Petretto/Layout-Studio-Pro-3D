@@ -19,3 +19,13 @@ Przed dodaniem modułu planu wykonano kopię `backup/v0.4.0_przed_2_4b_20261005`
 Test na szkicu migracji przykładu silników ze wskazanymi, syntetycznymi osobami i założonymi profilami potwierdził stałą listę ID, jawny wybór wariantu dla każdej operacji i okres rezerwacji 10–80 s obejmujący przerwę między przedziałami obecności 10–20 s i 70–80 s. Plan zachował odrębny czas wariantu i nie zmienił szkicu. Odrzucono osobę spoza składu, powtórzenie osoby, brak wyboru operacji, obcą operację, nieistniejący wariant, zbyt małą listę dopuszczonych osób oraz brak okresu obecności. Rejestr rezerwacji utworzony ze składu planu odmówił osoby z zewnątrz. `npm.cmd run test -- --run`: **100/100**; `npm.cmd run build`: poprawny.
 
 Pakiet **2.4.2.1 wdrożony**. Punkt **2.4.2 w trakcie** do UI i zapisu wyborów w 2.4.2.2; punkt **2.4 w trakcie** do harmonogramu i odbioru końcowego. Moduł nie zmienia schematu projektu ani dotychczasowej symulacji 4/5. Nie potwierdza jeszcze czasu oczekiwania na pracownika, przydziału konkretnej podgrupy do zadania lub trwałości wyborów.
+
+## Pakiet 2.4c / 2.4.2.2 — 2026-10-05
+
+Przed zmianą parsera i zapisu wykonano kopię `backup/v0.4.0_przed_2_4c_20261005`: 157 plików, 157 zgodnych SHA256 z manifestem i 0 rozbieżności. Pominięto zależności, build, wcześniejsze kopie, `outputs` i Git; localStorage przeglądarki nie należy do kopii.
+
+Test kodu potwierdził odczyt starszego szkicu bez `workerRunSelection`, zapis i odczyt kompletnych wyborów, odrzucenie obcego ID bez nadpisania, blokadę usunięcia używanej osoby lub wariantu, kontrolę konfliktu oraz przywrócenie wyboru przez ponowny zapis migawki. Źródłowy JSON pozostał identyczny. `npm.cmd run test -- --run`: **101/101**; `npm.cmd run build`: poprawny.
+
+Edge CDP na izolowanym porcie 5200 i osobnym profilu sprawdził formularz dla 16 operacji przykładu Eko v5 z syntetycznymi osobami i założonym profilem czasu. Jawny skład, wariant i osoby dopuszczone zostały zapisane. Cofnij/Ponów, usunięcie i przywrócenie, odrzucenie niepełnego wyboru, przeładowanie i odczyt formularza przeszły. Oryginalny JSON szkicu i aktywne projekty 4/5 pozostały bez zmian. Test: `tests/qa/verify_2_4c.mjs`; zrzut: `outputs/qa/verify_2_4c_run_selection.png`.
+
+Pakiet **2.4.2.2 wdrożony**. Punkt **2.4.2 w trakcie** do potwierdzenia faktycznego przydziału z tej listy w 2.4.3; cały **2.4 w trakcie**. Zapisany wybór nadal nie planuje czasów startu, nie czeka na wolne osoby i nie steruje aktywną symulacją. Przykładowe osoby i profile użyte w teście nie są pomiarami procesu Eko.
