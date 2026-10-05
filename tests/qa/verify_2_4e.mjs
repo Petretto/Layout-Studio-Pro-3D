@@ -88,12 +88,38 @@ try {
   const state = await evaluate(`(() => {const panel = document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"]');
     return {error: panel.querySelector('[role="alert"]')?.textContent,
       summary: panel.querySelector('[role="status"]')?.textContent,
-      rows: [...panel.querySelectorAll('tbody tr')].map(row => row.textContent)};})()`);
+      rows: [...panel.querySelectorAll('tbody tr')].map(row => [...row.querySelectorAll('td')].map(cell => cell.textContent))};})()`);
   if (state.error || !state.summary?.includes('2 szt.') || state.rows.length !== project.operations.length * 2 ||
-      !state.rows.some(row => row.includes('oczekiwanie na pracowników')) ||
-      state.rows.some(row => !row.includes('W-A'))) throw new Error(`Niepoprawny wynik UI: ${JSON.stringify(state)}`);
+      !state.rows.some(row => row[8].includes('oczekiwanie na pracowników')) ||
+      state.rows.some(row => row[3] !== 'W-A')) throw new Error(`Niepoprawny wynik UI: ${JSON.stringify(state)}`);
+  const reservations = state.rows.map(row => ({start: Number(row[5]) + 10, end: Number(row[5]) + 80}))
+    .sort((a, b) => a.start - b.start);
+  if (reservations.some((item, index) => index && item.start < reservations[index - 1].end)) {
+    throw new Error('Ta sama osoba ma nakładające się rezerwacje w wyniku UI.');
+  }
   const after = await evaluate(`JSON.stringify(${JSON.stringify(keys)}.map(key => localStorage.getItem(key)))`);
   if (before !== after) throw new Error('Podgląd zmienił zapis szkicu lub aktywnych projektów 4/5.');
+  await send('Page.reload'); await sleep(900);
+  await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(item => item.textContent.includes('Stanowiska v5')).click()`);
+  await sleep(300);
+  if (await evaluate(`!!document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"] [role="status"]')`)) {
+    throw new Error('Wynik podglądu został zapisany mimo deklarowanej nietrwałości.');
+  }
+  await field('Liczba sztuk szkicu 6', '2');
+  await field('Odstęp przybycia szkicu 6 [s]', '1');
+  await evaluate(`document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"] button').click()`);
+  await sleep(250);
+  const reopened = await evaluate(`(() => {const panel = document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"]');
+    return [...panel.querySelectorAll('tbody tr')].map(row => [...row.querySelectorAll('td')].map(cell => cell.textContent));})()`);
+  if (JSON.stringify(reopened) !== JSON.stringify(state.rows)) {
+    throw new Error(`Ponowny odczyt zmienił wynik: ${JSON.stringify({before: state.rows, after: reopened})}`);
+  }
+  const afterReload = await evaluate(`JSON.stringify(${JSON.stringify(keys)}.map(key => localStorage.getItem(key)))`);
+  const old = JSON.parse(before), current = JSON.parse(afterReload);
+  if (JSON.stringify(JSON.parse(old[0]).project) !== JSON.stringify(JSON.parse(current[0]).project) ||
+      old[1] !== current[1] || old[2] !== current[2]) {
+    throw new Error('Ponowny odczyt zmienił projekt 4 albo dokładny zapis 5/6.');
+  }
   await field('Odstęp przybycia szkicu 6 [s]', '');
   if (await evaluate(`!!document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"] [role="status"]')`)) {
     throw new Error('Stary wynik pozostał widoczny po zmianie wejścia.');
@@ -103,7 +129,7 @@ try {
   const refusal = await evaluate(`document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"] [role="alert"]')?.textContent`);
   if (!refusal?.includes('jawny odstęp przybycia')) throw new Error('Nie pokazano odmowy brakującego odstępu.');
   if (errors.length) throw new Error(`Błędy konsoli: ${errors.join('; ')}`);
-  console.log(`PASS: ${state.rows.length} wykonań, oczekiwanie na osobę, odrzucenie braku danych i izolacja v4/v5/v6.`);
+  console.log(`PASS: ${state.rows.length} wykonań, brak podwójnej rezerwacji, ponowny odczyt, odmowa braku danych i izolacja v4/v5/v6.`);
 } finally {
   if (ws) ws.close();
   browser.kill(); server.kill();

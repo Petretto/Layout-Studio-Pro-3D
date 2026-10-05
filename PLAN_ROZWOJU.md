@@ -65,6 +65,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
+2.4f / 2.4.4 (2026-10-05): zbiorczy odbiór logicznego przydziału w niekompletnym szkicu 6 — Edge CDP potwierdził brak nakładających się rezerwacji tej samej osoby w 32 wykonaniach, identyczny wynik po ponownym otwarciu szkicu, nietrwałość samego wyniku i odmowę brakującego odstępu wejścia. Testy rdzenia objęły także niezależne scenariusze silników, dwie osoby, graf poprzedników i odmowy błędnych danych. Dokładne zapisy szkicu 6 i warsztatu 5 oraz dane projektu 4 bez zmian; ponowne otwarcie odświeża tylko znacznik automatycznego zapisu 4. Punkty 2.4.4 i 2.4 wdrożone w zakresie szkicu 6. Produkcyjna walidacja Eko należy do 7.1/7.2, a fizyczna równoległość podzespołów do 2.8. Raport `WERYFIKACJA_OPERATOROW_2_4.md`.
+
 2.4e / 2.4.3.2 (2026-10-05): osobny podgląd harmonogramu szkicu 6 przyjmuje jawną partię i odstęp przybycia, pokazuje przydział osób/kopii, czas i przyczyny oczekiwania oraz odmawia brakujących danych. Wynik jest tylko w pamięci widoku i znika po zmianie wejścia lub szkicu. Edge CDP potwierdził 32 wykonania na przykładowym Eko z syntetyczną obsadą, oczekiwanie na osobę, odmowę braku odstępu i brak zmian zapisów 4/5/6. Testy 103/103 i build poprawne. Raport `WERYFIKACJA_OPERATOROW_2_4.md`. Punkty 2.4.3.2 i 2.4.3 wdrożone; 2.4 pozostaje w trakcie do odbioru 2.4.4.
 
 2.4d / 2.4.3.1 (2026-10-05): odrębny rdzeń zdarzeniowy szkicu 6 wyznacza przydział konkretnych osób z zamrożonego składu, zajmuje jawną kopię stanowiska, rezerwuje te same osoby od pierwszej do ostatniej obecności i raportuje czas oraz przyczyny oczekiwania. Brak jawnej liczby kopii albo przypisania operacji blokuje przebieg. Z ostrożności jedna sztuka ma jedną trwającą operację; równoległość podzespołów czeka na reguły fizyczne 2.8. Backup 161 plików: `backup/v0.4.0_przed_2_4d_20261005` (161 zgodnych SHA256, 0 rozbieżności). Testy 103/103 i build poprawne; raport `WERYFIKACJA_OPERATOROW_2_4.md`. Punkty 2.4.2 i 2.4.3.1 wdrożone; 2.4.3 i 2.4 w trakcie do integracji UI i odbioru.
@@ -240,7 +242,7 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 2.3.1 | Zdefiniować opcjonalne wymaganie minimalnej obsady i odrębne jawne profile czasu dla liczebności zespołu w szkicu 6, z walidacją i zgodnością dawnych szkiców. | wdrożone |
 | 2.3.2 | Umożliwić edycję obsady i wariantów czasu w UI szkicu, z zapisem, usuwaniem, Cofnij/Ponów i ponownym odczytem. | wdrożone |
 | 2.3.3 | Odebrać spójność obsady, wariantów, migracji i niezmienność aktywnej symulacji na Eko i silnikach. | wdrożone |
-| 2.4 | Obsłużyć operatorów współdzielonych między stanowiskami, ich rezerwację i zwalnianie bez nakładania przydziałów w czasie. | w trakcie |
+| 2.4 | Obsłużyć operatorów współdzielonych między stanowiskami, ich rezerwację i zwalnianie bez nakładania przydziałów w czasie. | wdrożone |
 | 2.4.1 | Zbudować niezależny rejestr rezerwacji konkretnych osób w jawnych przedziałach czasu, z ochroną trwałych ID, odmową kolizji i sprawdzonym zwalnianiem. | wdrożone |
 | 2.4.2 | Przed przebiegiem jawnie ustalić stały skład zespołu po ID; powiązać wymagania operacji, profil obecności i wybrany wariant czasu z przydziałem wyłącznie z tego składu. Nie dodawać ani nie zamieniać osób w trakcie przebiegu. | wdrożone |
 | 2.4.2.1 | Zbudować walidowany plan przebiegu ze stałą listą osób, jawnym wyborem wariantu i dopuszczonych osób dla każdej operacji; obliczyć okres wymaganej rezerwacji. | wdrożone |
@@ -248,7 +250,7 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 2.4.3 | Włączyć rezerwacje do nowej ścieżki harmonogramowania z oczekiwaniem na osoby z ustalonego zespołu; przy operacji utrzymać te same osoby od pierwszego do ostatniego przedziału obecności i zwolnić je po nim. Zachować wyniki aktywnych projektów 4/5. | wdrożone |
 | 2.4.3.1 | Zbudować odrębny rdzeń harmonogramu z jawnym składem, wariantami, kopiami stanowisk, kolejkami i rezerwacjami osób bez podwójnego zajęcia. | wdrożone |
 | 2.4.3.2 | Podłączyć nową ścieżkę do szkicu 6, pokazać oczekiwanie i przydział oraz odebrać scenariusze UI bez zmiany aktywnej symulacji 4/5. | wdrożone |
-| 2.4.4 | Odebrać brak podwójnego przydziału, zapis/odczyt, UI i scenariusze Eko po określeniu danych oraz reguł domenowych. | nierozpoczęte |
+| 2.4.4 | Odebrać brak podwójnego przydziału, zapis/odczyt, UI i odmowy błędnych danych na jawnych scenariuszach różnych procesów, w tym Eko z wyraźnie testowymi założeniami. Zgodność Eko z produkcją odbierać osobno w 7.1/7.2, a fizyczną równoległość w 2.8. | wdrożone |
 | 2.5 | Uwzględnić kalendarz zasobów, zmiany i przerwy; jednoznacznie określić zachowanie rozpoczętej operacji na granicy przerwy. | nierozpoczęte |
 | 2.6 | Przypisywać operację do wielu dopuszczalnych stanowisk, z określoną regułą wyboru i wymaganym wyposażeniem. | nierozpoczęte |
 | 2.7 | Rozróżnić przygotowanie podzespołu od montażu na wspólnym korpusie; śledzić miejsce i dostępność korpusu. | nierozpoczęte |
@@ -374,6 +376,8 @@ Każdy kolejny wpis powinien wskazywać konkretne ID. Nie usuwać historii przy 
 
 | Data | ID | Zmiana statusu | Rezultat / dowód / uwagi |
 | --- | --- | --- | --- |
+| 2026-10-05 | 2.4, 2.4.4 | w trakcie → wdrożone; w trakcie → wdrożone | Odbiór logicznego harmonogramu szkicu 6: 32 wykonania bez podwójnej rezerwacji, identyczne wyniki po ponownym otwarciu, odmowa braku danych i izolacja projektów 4/5. Testy rdzenia objęły także scenariusze silników i graf poprzedników. Rzeczywiste Eko pozostaje w 7.1/7.2, reguły fizyczne w 2.8; raport `WERYFIKACJA_OPERATOROW_2_4.md`. |
+| 2026-10-05 | 2.4.4 | nierozpoczęte → w trakcie | Rozpoczęto odbiór zbiorczy rezerwacji, odczytu, UI i izolacji aktywnych projektów. |
 | 2026-10-05 | 2.4.3, 2.4.3.2 | w trakcie → wdrożone; w trakcie → wdrożone | Odrębny podgląd szkicu 6, oczekiwanie i przydział; Edge CDP 32 wykonania na danych testowych, odmowa braku odstępu, izolacja zapisów 4/5/6. Testy 103/103, build. Punkt 2.4 pozostaje w trakcie do 2.4.4. |
 | 2026-10-05 | PLAN, 8.1, 8.2, 2.4.3.2 | Dodano 8.1 i 8.2 jako nierozpoczęte; 2.4.3.2 nierozpoczęte → w trakcie | VSM i A3 zapisano na kolejną wersję. Rozpoczęto integrację UI odrębnego harmonogramu szkicu 6; aktywne projekty 4/5 pozostają poza zakresem zmian. |
 | 2026-10-05 | PLAN, 5.13 | Doprecyzowanie zakresu; dodano 5.13 jako nierozpoczęte | Ustalono samodzielny przepływ pierwszego wydania, automatyczną wstępną propozycję layoutu po danych procesu, pracę konsultanta na danych klienta bez współedycji online i VSM w kolejnej wersji. Bez zmian kodu i statusów dotychczasowych kroków. |

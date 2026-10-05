@@ -1,6 +1,6 @@
 # Współdzieleni operatorzy — punkt 2.4
 
-Status 2026-10-05: pakiety 2.4a / 2.4.1, 2.4b / 2.4.2.1, 2.4c / 2.4.2.2 i 2.4d / 2.4.3.1 wdrożone. Rejestr, plan, edytor wyborów i odrębny rdzeń harmonogramu używają szkicu 6. Punkt 2.4 pozostaje w trakcie; nowy harmonogram nie steruje jeszcze aktywną symulacją.
+Status 2026-10-05: pakiety 2.4a–2.4f (2.4.1–2.4.4) wdrożone w zakresie logicznego harmonogramu niekompletnego szkicu 6. Rejestr, plan, edytor wyborów i odrębny podgląd harmonogramu używają szkicu 6; nowy harmonogram nie steruje aktywną symulacją. Produkcyjna walidacja Eko należy do 7.1/7.2, a fizyczna równoległość podzespołów do 2.8.
 
 ## Potwierdzona reguła procesu
 
@@ -38,4 +38,8 @@ Edytor pokazuje osoby, warianty i dopuszczenie dla każdej operacji. Zapis nast�
 
 Harmonogram przetwarza przybycia, zakończenia operacji i zwolnienia rezerwacji jako zdarzenia. Gotowe operacje są rozpatrywane według czasu gotowości, numeru sztuki i kolejności topologicznej. Dla pierwszej możliwej operacji wybiera pierwszą wolną kopię stanowiska oraz pierwsze pasujące ID z zapisanej listy dopuszczonych osób. Operacja może rozpocząć się przed pierwszym przedziałem obecności, lecz przy starcie rezerwuje dokładnie te same osoby na całe przyszłe okno od pierwszej do ostatniej obecności. Brak wolnego zespołu w tym oknie powoduje oczekiwanie; wynik zapisuje czas i przyczyny (`workers`, `station`, `same-job`). Po ostatniej obecności rezerwacja zostaje zwolniona, nawet gdy praca maszyny kończy operację później. Przedziały i kopie nie mogą się nakładać.
 
-Do czasu zdefiniowania fizycznych reguł wspólnego korpusu i podzespołów w 2.8 rdzeń dopuszcza tylko jedną trwającą operację na jedną sztukę, także przy rozgałęzieniu grafu. To ostrożne ograniczenie może wydłużyć wynik względem rzeczywistej równoległej pracy nad odrębnymi podzespołami. Wynik jest **logicznym harmonogramem zasobów**, bez transportu, kalendarza, wyposażenia technologicznego, buforów ani stanu fizycznego wyrobu. Nie jest jeszcze uruchamiany z UI, nie zapisuje wyniku i nie zastępuje symulacji 4/5. Integracja i prezentacja należą do 2.4.3.2, a pełny odbiór do 2.4.4. Kopia przed modułem: `backup/v0.4.0_przed_2_4d_20261005`.
+Do czasu zdefiniowania fizycznych reguł wspólnego korpusu i podzespołów w 2.8 rdzeń dopuszcza tylko jedną trwającą operację na jedną sztukę, także przy rozgałęzieniu grafu. To ostrożne ograniczenie może wydłużyć wynik względem rzeczywistej równoległej pracy nad odrębnymi podzespołami. Wynik jest **logicznym harmonogramem zasobów**, bez transportu, kalendarza, wyposażenia technologicznego, buforów ani stanu fizycznego wyrobu. Nie zapisuje wyniku i nie zastępuje symulacji 4/5. Podgląd UI dodano w 2.4.3.2, a pełny odbiór należy do 2.4.4. Kopia przed modułem: `backup/v0.4.0_przed_2_4d_20261005`.
+
+## Pakiet 2.4e — podgląd UI i granica odbioru 2.4.4
+
+Podgląd szkicu 6 oblicza harmonogram wyłącznie na żądanie. Wymaga jawnej partii i dodatniego odstępu przybycia, pokazuje konkretne osoby, kopie stanowisk oraz czas i przyczyny oczekiwania. Wynik nie jest utrwalany i znika po zmianie wejścia, szkicu lub przeładowaniu; ponowne obliczenie na tych samych danych daje ten sam harmonogram. Aktywne wyniki 4/5 nie są zastępowane. Test Eko używa syntetycznych osób, kopii i profili czasu, nie rzeczywistych pomiarów. Bez danych z 7.1 i reguł fizycznych 2.8 nie należy uznawać go za potwierdzony harmonogram produkcji Eko.
