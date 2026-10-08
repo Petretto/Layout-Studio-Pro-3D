@@ -1,0 +1,541 @@
+{
+  "notice": "TYLKO TEST: pełna założona obecność jednej osoby, brak przewozu, rama już na wejściu montażu. Nie jest to wydajność produkcyjna.",
+  "arrivalIntervalSeconds": 1,
+  "finishSeconds": 14150,
+  "runs": [
+    {
+      "job": 1,
+      "operationId": "OP10",
+      "stationId": "ST-9e2d4aa4-d871-4da2-b951-81a8f9d98819",
+      "copy": 1,
+      "workerIds": [
+        "TEST-W-OP10"
+      ],
+      "readySeconds": 0,
+      "startSeconds": 0,
+      "endSeconds": 3480,
+      "waitSeconds": 0,
+      "waitCauses": [],
+      "reserveStartSeconds": 0,
+      "reserveEndSeconds": 3480,
+      "workWindows": [
+        {
+          "startSeconds": 0,
+          "endSeconds": 3480
+        }
+      ],
+      "pauses": [],
+      "equipmentIds": []
+    },
+    {
+      "job": 1,
+      "operationId": "OP13",
+      "stationId": "ST-7695f064-0ad6-42cd-921c-0d8245474f55",
+      "copy": 1,
+      "workerIds": [
+        "TEST-W-OP13"
+      ],
+      "readySeconds": 0,
+      "startSeconds": 0,
+      "endSeconds": 2640,
+      "waitSeconds": 0,
+      "waitCauses": [],
+      "reserveStartSeconds": 0,
+      "reserveEndSeconds": 2640,
+      "workWindows": [
+        {
+          "startSeconds": 0,
+          "endSeconds": 2640
+        }
+      ],
+      "pauses": [],
+      "equipmentIds": []
+    },
+    {
+      "job": 1,
+      "operationId": "OP14",
+      "stationId": "ST-128d1254-8a4f-4fc3-952c-2fd36119cc7d",
+      "copy": 1,
+      "workerIds": [
+        "TEST-W-OP14"
+      ],
+      "readySeconds": 0,
+      "startSeconds": 0,
+      "endSeconds": 1320,
+      "waitSeconds": 0,
+      "waitCauses": [],
+      "reserveStartSeconds": 0,
+      "reserveEndSeconds": 1320,
+      "workWindows": [
+        {
+          "startSeconds": 0,
+          "endSeconds": 1320
+        }
+      ],
+      "pauses": [],
+      "equipmentIds": []
+    },
+    {
+      "job": 1,
+      "operationId": "OP15",
+      "stationId": "ST-4d85a89e-8390-466b-98f8-96202446b98e",
+      "copy": 1,
+      "workerIds": [
+        "TEST-W-OP15"
+      ],
+      "readySeconds": 0,
+      "startSeconds": 0,
+      "endSeconds": 2640,
+      "waitSeconds": 0,
+      "waitCauses": [],
+      "reserveStartSeconds": 0,
+      "reserveEndSeconds": 2640,
+      "workWindows": [
+        {
+          "startSeconds": 0,
+          "endSeconds": 2640
+        }
+      ],
+      "pauses": [],
+      "equipmentIds": []
+    },
+    {
+      "job": 1,
+      "operationId": "OP16",
+      "stationId": "ST-f3668500-0009-40fe-8b6d-83dab1a2f279",
+      "copy": 1,
+      "workerIds": [
+        "TEST-W-OP16"
+      ],
+      "readySeconds": 0,
+      "startSeconds": 0,
+      "endSeconds": 1920,
+      "waitSeconds": 0,
+      "waitCauses": [],
+      "reserveStartSeconds": 0,
+      "reserveEndSeconds": 1920,
+      "workWindows": [
+        {
+          "startSeconds": 0,
+          "endSeconds": 1920
+        }
+      ],
+      "pauses": [],
+      "equipmentIds": []
+    },
+    {
+      "job": 1,
+      "operationId": "OP17",
+      "stationId": "ST-3dbe334f-39ab-42d6-b50d-c2df18c6cab8",
+      "copy": 1,
+      "workerIds": [
+        "TEST-W-OP17"
+      ],
+      "readySeconds": 0,
+      "startSeconds": 0,
+      "endSeconds": 1680,
+      "waitSeconds": 0,
+      "waitCauses": [],
+      "reserveStartSeconds": 0,
+      "reserveEndSeconds": 1680,
+      "workWindows": [
+        {
+          "startSeconds": 0,
+          "endSeconds": 1680
+        }
+      ],
+      "pauses": [],
+      "equipmentIds": []
+    },
+    {
+      "job": 1,
+      "operationId": "OP18",
+      "stationId": "ST-79bfb2de-1fb5-4544-b1ee-ae9bdf60d3db",
+      "copy": 1,
+      "workerIds": [
+        "TEST-W-OP18"
+      ],
+      "readySeconds": 1680,
+      "startSeconds": 1680,
+      "endSeconds": 2880,
+      "waitSeconds": 0,
+      "waitCauses": [],
+      "reserveStartSeconds": 1680,
+      "reserveEndSeconds": 2880,
+      "workWindows": [
+        {
+          "startSeconds": 1680,
+          "endSeconds": 2880
+        }
+      ],
+      "pauses": [],
+      "equipmentIds": []
+    },
+    {
+      "job": 1,
+      "operationId": "OP11",
+      "stationId": "ST-4f27d837-789a-4ffa-beba-e777b7e2bf8c",
+      "copy": 1,
+      "workerIds": [
+        "TEST-W-OP11"
+      ],
+      "readySeconds": 3480,
+      "startSeconds": 3480,
+      "endSeconds": 4080,
+      "waitSeconds": 0,
+      "waitCauses": [],
+      "reserveStartSeconds": 3480,
+      "reserveEndSeconds": 4080,
+      "workWindows": [
+        {
+          "startSeconds": 3480,
+          "endSeconds": 4080
+        }
+      ],
+      "pauses": [],
+      "bodyId": "TEST-EKO-FRAME-1",
+      "stationReserveStartSeconds": 3480,
+      "equipmentIds": []
+    },
+    {
+      "job": 1,
+      "operationId": "OP12",
+      "stationId": "ST-4f27d837-789a-4ffa-beba-e777b7e2bf8c",
+      "copy": 1,
+      "workerIds": [
+        "TEST-W-OP12"
+      ],
+      "readySeconds": 4080,
+      "startSeconds": 4080,
+      "endSeconds": 7670,
+      "waitSeconds": 0,
+      "waitCauses": [],
+      "reserveStartSeconds": 4080,
+      "reserveEndSeconds": 7670,
+      "workWindows": [
+        {
+          "startSeconds": 4080,
+          "endSeconds": 7670
+        }
+      ],
+      "pauses": [],
+      "bodyId": "TEST-EKO-FRAME-1",
+      "stationReserveStartSeconds": 4080,
+      "equipmentIds": []
+    },
+    {
+      "job": 1,
+      "operationId": "OP22",
+      "stationId": "ST-4f27d837-789a-4ffa-beba-e777b7e2bf8c",
+      "copy": 1,
+      "workerIds": [
+        "TEST-W-OP22"
+      ],
+      "readySeconds": 7670,
+      "startSeconds": 7670,
+      "endSeconds": 8270,
+      "waitSeconds": 0,
+      "waitCauses": [],
+      "reserveStartSeconds": 7670,
+      "reserveEndSeconds": 8270,
+      "workWindows": [
+        {
+          "startSeconds": 7670,
+          "endSeconds": 8270
+        }
+      ],
+      "pauses": [],
+      "bodyId": "TEST-EKO-FRAME-1",
+      "stationReserveStartSeconds": 7670,
+      "equipmentIds": []
+    },
+    {
+      "job": 1,
+      "operationId": "OP23",
+      "stationId": "ST-4f27d837-789a-4ffa-beba-e777b7e2bf8c",
+      "copy": 1,
+      "workerIds": [
+        "TEST-W-OP22"
+      ],
+      "readySeconds": 7670,
+      "startSeconds": 8270,
+      "endSeconds": 8870,
+      "waitSeconds": 600,
+      "waitCauses": [
+        "workers"
+      ],
+      "reserveStartSeconds": 8270,
+      "reserveEndSeconds": 8870,
+      "workWindows": [
+        {
+          "startSeconds": 8270,
+          "endSeconds": 8870
+        }
+      ],
+      "pauses": [],
+      "bodyId": "TEST-EKO-FRAME-1",
+      "stationReserveStartSeconds": 7670,
+      "equipmentIds": []
+    },
+    {
+      "job": 1,
+      "operationId": "OP24",
+      "stationId": "ST-4f27d837-789a-4ffa-beba-e777b7e2bf8c",
+      "copy": 1,
+      "workerIds": [
+        "TEST-W-OP24"
+      ],
+      "readySeconds": 8870,
+      "startSeconds": 8870,
+      "endSeconds": 9350,
+      "waitSeconds": 0,
+      "waitCauses": [],
+      "reserveStartSeconds": 8870,
+      "reserveEndSeconds": 9350,
+      "workWindows": [
+        {
+          "startSeconds": 8870,
+          "endSeconds": 9350
+        }
+      ],
+      "pauses": [],
+      "bodyId": "TEST-EKO-FRAME-1",
+      "stationReserveStartSeconds": 8870,
+      "equipmentIds": []
+    },
+    {
+      "job": 1,
+      "operationId": "OP25",
+      "stationId": "ST-4f27d837-789a-4ffa-beba-e777b7e2bf8c",
+      "copy": 1,
+      "workerIds": [
+        "TEST-W-OP25"
+      ],
+      "readySeconds": 8870,
+      "startSeconds": 9350,
+      "endSeconds": 9830,
+      "waitSeconds": 480,
+      "waitCauses": [
+        "same-job"
+      ],
+      "reserveStartSeconds": 9350,
+      "reserveEndSeconds": 9830,
+      "workWindows": [
+        {
+          "startSeconds": 9350,
+          "endSeconds": 9830
+        }
+      ],
+      "pauses": [],
+      "bodyId": "TEST-EKO-FRAME-1",
+      "stationReserveStartSeconds": 9350,
+      "equipmentIds": []
+    },
+    {
+      "job": 1,
+      "operationId": "OP19",
+      "stationId": "ST-4f27d837-789a-4ffa-beba-e777b7e2bf8c",
+      "copy": 1,
+      "workerIds": [
+        "TEST-W-OP19"
+      ],
+      "readySeconds": 9830,
+      "startSeconds": 9830,
+      "endSeconds": 11630,
+      "waitSeconds": 0,
+      "waitCauses": [],
+      "reserveStartSeconds": 9830,
+      "reserveEndSeconds": 11630,
+      "workWindows": [
+        {
+          "startSeconds": 9830,
+          "endSeconds": 11630
+        }
+      ],
+      "pauses": [],
+      "bodyId": "TEST-EKO-FRAME-1",
+      "stationReserveStartSeconds": 9830,
+      "equipmentIds": []
+    },
+    {
+      "job": 1,
+      "operationId": "OP20",
+      "stationId": "ST-4f27d837-789a-4ffa-beba-e777b7e2bf8c",
+      "copy": 1,
+      "workerIds": [
+        "TEST-W-OP20"
+      ],
+      "readySeconds": 11630,
+      "startSeconds": 11630,
+      "endSeconds": 12830,
+      "waitSeconds": 0,
+      "waitCauses": [],
+      "reserveStartSeconds": 11630,
+      "reserveEndSeconds": 12830,
+      "workWindows": [
+        {
+          "startSeconds": 11630,
+          "endSeconds": 12830
+        }
+      ],
+      "pauses": [],
+      "bodyId": "TEST-EKO-FRAME-1",
+      "stationReserveStartSeconds": 11630,
+      "equipmentIds": []
+    },
+    {
+      "job": 1,
+      "operationId": "OP21",
+      "stationId": "ST-4f27d837-789a-4ffa-beba-e777b7e2bf8c",
+      "copy": 1,
+      "workerIds": [
+        "TEST-W-OP21"
+      ],
+      "readySeconds": 12830,
+      "startSeconds": 12830,
+      "endSeconds": 14150,
+      "waitSeconds": 0,
+      "waitCauses": [],
+      "reserveStartSeconds": 12830,
+      "reserveEndSeconds": 14150,
+      "workWindows": [
+        {
+          "startSeconds": 12830,
+          "endSeconds": 14150
+        }
+      ],
+      "pauses": [],
+      "bodyId": "TEST-EKO-FRAME-1",
+      "stationReserveStartSeconds": 12830,
+      "equipmentIds": []
+    }
+  ],
+  "bodyEvents": [
+    {
+      "kind": "reserve",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 3480,
+      "operationId": "OP11",
+      "endSeconds": 4080,
+      "basis": "assumed"
+    },
+    {
+      "kind": "release",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 4080,
+      "operationId": "OP11"
+    },
+    {
+      "kind": "reserve",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 4080,
+      "operationId": "OP12",
+      "endSeconds": 7670,
+      "basis": "assumed"
+    },
+    {
+      "kind": "release",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 7670,
+      "operationId": "OP12"
+    },
+    {
+      "kind": "reserve",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 7670,
+      "operationId": "OP22",
+      "endSeconds": 8270,
+      "basis": "assumed"
+    },
+    {
+      "kind": "release",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 8270,
+      "operationId": "OP22"
+    },
+    {
+      "kind": "reserve",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 8270,
+      "operationId": "OP23",
+      "endSeconds": 8870,
+      "basis": "assumed"
+    },
+    {
+      "kind": "release",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 8870,
+      "operationId": "OP23"
+    },
+    {
+      "kind": "reserve",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 8870,
+      "operationId": "OP24",
+      "endSeconds": 9350,
+      "basis": "assumed"
+    },
+    {
+      "kind": "release",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 9350,
+      "operationId": "OP24"
+    },
+    {
+      "kind": "reserve",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 9350,
+      "operationId": "OP25",
+      "endSeconds": 9830,
+      "basis": "assumed"
+    },
+    {
+      "kind": "release",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 9830,
+      "operationId": "OP25"
+    },
+    {
+      "kind": "reserve",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 9830,
+      "operationId": "OP19",
+      "endSeconds": 11630,
+      "basis": "assumed"
+    },
+    {
+      "kind": "release",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 11630,
+      "operationId": "OP19"
+    },
+    {
+      "kind": "reserve",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 11630,
+      "operationId": "OP20",
+      "endSeconds": 12830,
+      "basis": "assumed"
+    },
+    {
+      "kind": "release",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 12830,
+      "operationId": "OP20"
+    },
+    {
+      "kind": "reserve",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 12830,
+      "operationId": "OP21",
+      "endSeconds": 14150,
+      "basis": "assumed"
+    },
+    {
+      "kind": "release",
+      "bodyId": "TEST-EKO-FRAME-1",
+      "atSeconds": 14150,
+      "operationId": "OP21"
+    }
+  ]
+}

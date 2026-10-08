@@ -18,6 +18,13 @@ import {DomainEquipmentEditor} from './DomainEquipmentEditor';
 import {DomainTimeEditor} from './DomainTimeEditor';
 import {DomainWorkerRunEditor} from './DomainWorkerRunEditor';
 import {DomainWorkerSchedulePanel} from './DomainWorkerSchedulePanel';
+import {DomainCalendarEditor} from './DomainCalendarEditor';
+import {DomainRoutingEditor} from './DomainRoutingEditor';
+import {DomainBodyEditor} from './DomainBodyEditor';
+import {DomainConcurrencyEditor} from './DomainConcurrencyEditor';
+import {DomainMaterialEditor} from './DomainMaterialEditor';
+import {editDomainMaterialNetwork} from '../../core/domainMaterialEditing';
+import {editDomainPhysicalRole} from '../../core/domainPhysicalRoleEditing';
 
 const gapLabels: Record<DomainGap, string> = {
   'worker-identities': 'Tożsamość pracowników',
@@ -178,6 +185,39 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
       canUndo={past.length > 0} canRedo={future.length > 0} />}
     {draft.status === 'valid' && <DomainWorkerRunEditor key={`run-${draft.raw}`} project={draft.saved.project} onApply={applyWorkerRun}
+      onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
+      canUndo={past.length > 0} canRedo={future.length > 0} />}
+    {draft.status === 'valid' && <DomainCalendarEditor key={`calendar-${draft.raw}`} project={draft.saved.project}
+      onApply={calendars => applyDraftChange(project => {
+        const {resourceCalendars: _old, ...rest} = project;
+        return calendars === undefined ? rest : {...rest, resourceCalendars: calendars};
+      }, 'Zapisano zmianę kalendarzy w szkicu 6.')}
+      onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
+      canUndo={past.length > 0} canRedo={future.length > 0} />}
+    {draft.status === 'valid' && <DomainRoutingEditor key={`routing-${draft.raw}`} project={draft.saved.project}
+      onApply={routing => applyDraftChange(project => {
+        const {stationRouting: _old, ...rest} = project;
+        return routing === undefined ? rest : {...rest, stationRouting: routing};
+      }, 'Zapisano zmianę dopuszczeń i tras w szkicu 6.')}
+      onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
+      canUndo={past.length > 0} canRedo={future.length > 0} />}
+    {draft.status === 'valid' && <DomainMaterialEditor key={`material-${draft.raw}`} project={draft.saved.project}
+      onApply={network => applyDraftChange(project => editDomainMaterialNetwork(project,network), 'Zapisano zmianę sieci materiałowej.')}
+      onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
+      canUndo={past.length > 0} canRedo={future.length > 0} />}
+    {draft.status === 'valid' && <DomainBodyEditor key={`body-${draft.raw}`} project={draft.saved.project}
+      onRole={(id, role) => applyDraftChange(project => editDomainPhysicalRole(project, id, role), 'Zapisano rolę fizyczną operacji.')}
+      onInput={input => applyDraftChange(project => {
+        const {bodyRunInput: _old, ...rest} = project;
+        return input === undefined ? rest : {...rest, bodyRunInput: input};
+      }, 'Zapisano zmianę korpusów przebiegu.')}
+      onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
+      canUndo={past.length > 0} canRedo={future.length > 0} />}
+    {draft.status === 'valid' && <DomainConcurrencyEditor key={`concurrency-${draft.raw}`} project={draft.saved.project}
+      onApply={policy => applyDraftChange(project => {
+        const {physicalConcurrency: _old, ...rest} = project;
+        return policy === undefined ? rest : {...rest, physicalConcurrency: policy};
+      }, 'Zapisano zmianę grup równoległości.')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
       canUndo={past.length > 0} canRedo={future.length > 0} />}
     {draft.status === 'valid' && <DomainWorkerSchedulePanel key={`schedule-${draft.raw}`} project={draft.saved.project} />}

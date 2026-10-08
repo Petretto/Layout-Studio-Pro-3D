@@ -6,6 +6,10 @@ import {verifyDomainMigrationPreview} from './domainMigrationPreview';
 import {parseStationProjectV5} from './stationProject';
 import {validateWorkerRunSelection, type WorkerRunSelection} from './workerRunSelection';
 import {validateResourceCalendars, type ResourceCalendarsV6} from './resourceCalendar';
+import {validateStationRouting, type StationRoutingV6} from './stationRouting';
+import {validateBodyRunInput, type BodyRunInput} from './bodyRunInput';
+import {validatePhysicalConcurrency, type PhysicalConcurrency} from './physicalConcurrency';
+import {validateMaterialNetwork, type MaterialNetworkV6} from './materialNetwork';
 
 export type DomainTimeBasis = 'measured' | 'assumed';
 export interface DomainTimeInterval {startSeconds: number; endSeconds: number; basis: DomainTimeBasis}
@@ -21,9 +25,13 @@ export interface DomainOperationStaffing {
   requiredWorkers: number;
   timeVariants: DomainStaffingTimeVariant[];
 }
+export type DomainPhysicalRole =
+  | {kind: 'subassembly-preparation'; subassemblyIds: string[]}
+  | {kind: 'body-work'};
 export type DomainOperation = Omit<ProcessStep, 'assignedWorkstationId'> & {
   timeProfile?: DomainTimeProfile;
   staffing?: DomainOperationStaffing;
+  physicalRole?: DomainPhysicalRole;
 };
 export interface DomainWorker {id: string; name: string}
 export interface DomainWorkerPool {id: string; name: string; workerIds: string[]}
@@ -46,6 +54,10 @@ export interface DomainProjectV6 extends Omit<StationProjectV5,
   subassemblies: DomainSubassembly[];
   workerRunSelection?: WorkerRunSelection;
   resourceCalendars?: ResourceCalendarsV6;
+  stationRouting?: StationRoutingV6;
+  bodyRunInput?: BodyRunInput;
+  physicalConcurrency?: PhysicalConcurrency;
+  materialNetwork?: MaterialNetworkV6;
 }
 
 export interface PreparedDomainMigration {
@@ -229,20 +241,49 @@ export function parseDomainProjectV6(text: string): DomainProjectV6 {
       throw new Error(`Podzespół ${item.id}: nieznana lub powtórzona operacja zużywająca.`);
     }
   }
+  for (const operation of operations) if (has(operation, 'physicalRole')) {
+    const role = operation.physicalRole;
+    const label = `Operacja ${operation.id}: rola fizyczna`;
+    if (!record(role)) throw new Error(`${label}: wymagany obiekt roli.`);
+    if (role.kind === 'body-work') {
+      if (Object.keys(role).some(key => key !== 'kind')) throw new Error(`${label}: nieznane pola pracy na korpusie.`);
+      if (raw.product === null) throw new Error(`${label}: praca na korpusie wymaga definicji wyrobu.`);
+    } else if (role.kind === 'subassembly-preparation') {
+      if (Object.keys(role).some(key => !['kind', 'subassemblyIds'].includes(key)) ||
+          !Array.isArray(role.subassemblyIds) || !role.subassemblyIds.length || role.subassemblyIds.length > 500 ||
+          role.subassemblyIds.some(id => typeof id !== 'string') ||
+          new Set(role.subassemblyIds).size !== role.subassemblyIds.length) {
+        throw new Error(`${label}: wymagana niepusta lista unikalnych ID podzespołów.`);
+      }
+      for (const id of role.subassemblyIds) {
+        const assembly = subassemblies.find(item => item.id === id);
+        if (!assembly) throw new Error(`${label}: nieznany podzespół ${id}.`);
+        if (assembly.producerOperationId !== operation.id) {
+          throw new Error(`${label}: podzespół ${id} wymaga zgodnej jawnej operacji tworzącej.`);
+        }
+      }
+    } else throw new Error(`${label}: nieznany rodzaj roli.`);
+  }
   if (has(raw, 'workerRunSelection')) {
     validateWorkerRunSelection(raw as unknown as DomainProjectV6, raw.workerRunSelection);
   }
+  if (has(raw, 'stationRouting')) validateStationRouting(raw as unknown as DomainProjectV6, raw.stationRouting);
+  if (has(raw, 'bodyRunInput')) validateBodyRunInput(raw as unknown as DomainProjectV6, raw.bodyRunInput);
+  if (has(raw, 'physicalConcurrency')) validatePhysicalConcurrency(raw as unknown as DomainProjectV6, raw.physicalConcurrency);
+  if (has(raw, 'materialNetwork')) validateMaterialNetwork(raw as unknown as DomainProjectV6, raw.materialNetwork);
   return raw as unknown as DomainProjectV6;
 }
 
 /** Convert only a verified review artifact; leave the exact source outside the new project. */
 export function prepareDomainMigration(preview: DomainMigrationPreview): PreparedDomainMigration {
   const checked = verifyDomainMigrationPreview(preview);
-  const {schemaVersion: _version, processSteps, workstationSettings, stations, ...source} = checked.stationProject;
+  const {schemaVersion: _version, processSteps, workstationSettings, stations, stationRouting: _unsupportedRouting,
+    bodyRunInput: _unsupportedBodies, physicalConcurrency: _unsupportedConcurrency, materialNetwork: _unsupportedMaterialNetwork, ...source} =
+    checked.stationProject as StationProjectV5 & {stationRouting?: unknown; bodyRunInput?: unknown; physicalConcurrency?: unknown; materialNetwork?: unknown};
   const operations = processSteps.map(step => {
     const {assignedWorkstationId: _assignment, timeProfile: _unsupportedProfile,
-      staffing: _unsupportedStaffing, ...operation} =
-      step as ProcessStep & {timeProfile?: unknown; staffing?: unknown};
+      staffing: _unsupportedStaffing, physicalRole: _unsupportedRole, ...operation} =
+      step as ProcessStep & {timeProfile?: unknown; staffing?: unknown; physicalRole?: unknown};
     return operation;
   });
   const project: DomainProjectV6 = {...source, schemaVersion: 6, modelStatus: 'incomplete',

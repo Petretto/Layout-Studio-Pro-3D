@@ -1,7 +1,7 @@
 # Plan rozwoju i rejestr postępu aplikacji
 
 Data utworzenia: 2026-09-29  
-Ostatnia aktualizacja: 2026-10-05
+Ostatnia aktualizacja: 2026-10-08
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
 Przykładowy przypadek testowy: niepełny proces Eko; odbiór uniwersalności wymaga także niezależnych procesów.
 
@@ -40,6 +40,14 @@ Status etapu: „nierozpoczęte”, gdy żaden jego krok nie został rozpoczęty
 
 Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac. Nie uruchamia automatycznego monitorowania ani harmonogramu zadań.
 
+## Procent postępu
+
+Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
+
+Aktualnie po 3.2c: cały plan 22/67 = **32,8%**; pierwsze wydanie 22/65 = **33,8%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+
+Stan historyczny po 3.1c: cały plan 21/67 = **31,3%**. Pierwsze wydanie (etapy 1–7) 21/65 = **32,3%**. Etap 8 dotyczy kolejnej wersji. Obliczenia: `node scripts/plan_progress.mjs`; źródłem są tabele statusów tego pliku. Po 3.2a ukończony główny licznik pozostaje taki sam, bo 3.2 nie jest jeszcze odebrane.
+
 ## Punkt wyjścia
 
 W wersji 0.4.0 istnieją m.in. import/eksport procesu i BOM, poprzednicy i następnicy, diagram przepływu, RPW/LCR i ręczny balans, liczba operatorów i kopii stanowisk, layout grafowy, CAD 2D, edycja formularzowa 3D i deterministyczna symulacja grafowa.
@@ -64,6 +72,42 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+2.9b / 2.9.1–2.9.2, 2.9 (2026-10-08): wdrożone wyłącznie do testowania funkcjonalności — użytkownik zatwierdził 1A/2A i doprecyzował ramę dostarczaną z magazynu na rolotok. Trzy osobne warianty Eko: drzwi razem, kolejno, wspólna osoba; konkretne dane produkcyjne docelowo wpisuje użytkownik. 135/135 testów, build, UI wszystkich wariantów, historia/odczyt i ochrona dokładnego źródła oraz 4/5 poprawne. Backup `backup/v0.4.0_przed_2_9b_20261008`: 190 plików, 0 rozbieżności SHA256. Raport `WERYFIKACJA_EKO_2_9.md`, kontrakt `SCENARIUSZE_EKO_2_9.md`, osobne szkice i wyniki `outputs/scenarios/eko_2_9`. Bez zmiany kodu produkcyjnego/schematu. Dostawa i wciąganie ramy przed początkiem testu; brak deklaracji ich czasu. Rzeczywisty odbiór produkcyjny pozostaje w 7.1/7.2.
+
+2.9a / 2.9.1 (2026-10-08): częściowy etap — sprawdzono eksport Eko v5 (16 operacji, 60 BOM, 17 rekordów stanowisk), graf przykładu v4 i instrukcję. Matryca i braki w `SCENARIUSZE_EKO_2_9.md`; propozycje 1A/1B, 2A/2B następnie zatwierdzone w 2.9b. Bez zmiany danych źródłowych lub algorytmu.
+
+2.8d / 2.8.3, 2.8 (2026-10-07): wdrożone w uzgodnionym zakresie osobnego szkicu 6 — edytor jawnych grup, inspekcja całych zestawów i dopuszczeń, wspólna historia, walidowane usuwanie i zapis. 133/133 testów, build, trzy scenariusze UI (korpus, przygotowanie i pary bez trójki), regresja tras, Cofnij/Ponów i odczyt poprawne. Backup `backup/v0.4.0_przed_2_8d_20261007`: 188 plików, 0 rozbieżności SHA256. Raport `WERYFIKACJA_ROWNOLEGLOSCI_2_8.md`, instrukcja `Instrukcja/Korpus_v6.md`. Następne 2.9: rzeczywiste scenariusze Eko; dopuszczenia i dane produkcyjne wymagają jawnego opisu. Instancje/zużycie podzespołów, bufory i zasoby transportowe poza zakresem tego odbioru.
+
+2.8c / 2.8.2 (2026-10-07): wdrożone w uzgodnionym zakresie szkicu 6 — zatwierdzone pierwszeństwo tras gałęzi 1A, automatyczne przyszłe kopie, przeliczanie przy faktycznym przydziale, jedna lokalizacja i ochrona rezerwacji. 133/133 testów, build, UI gałęzi i regresja współdzielenia, historia oraz odczyt poprawne. Backup `backup/v0.4.0_przed_2_8c_20261007`: 188 plików, 0 rozbieżności SHA256. Raport `WERYFIKACJA_ROWNOLEGLOSCI_2_8.md`. Następny pakiet 2.8.3: edytor grup i zbiorczy odbiór; cały 2.8 pozostaje w trakcie.
+
+2.8b / 2.8.2 (2026-10-07): częściowy odbiór — jawne grupy, wiele rezerwacji korpusu i współdzielenie kopii do końca ostatniej czynności; osoby/wyposażenie wyłączne, transport czeka na wszystkie prace. 128/128 testów, build, UI i odczyt poprawne. Backup 188 plików, 0 rozbieżności SHA256. Ówczesna odmowa wielu kopii gałęzi została zastąpiona integracją w 2.8c.
+
+2.8a / 2.8.1 (2026-10-07): wdrożone — zatwierdzone 1A/2A, opcjonalne jawne grupy, walidacja referencji i całego równoczesnego zestawu bez łączenia grup. Zapis/odczyt i migracje źródeł 4/5 z ochroną oryginału; 124/124 testów, build poprawny. Backup `backup/v0.4.0_przed_2_8a_20261007`: 186 plików, 0 rozbieżności SHA256. Raport `WERYFIKACJA_ROWNOLEGLOSCI_2_8.md`. Cały 2.8 w trakcie; następne 2.8.2 — integracja rezerwacji korpusu, kopii i zasobów. Harmonogram z nowymi regułami jawnie odmawia wyniku do tej integracji.
+
+2.7e / 2.7.4 (2026-10-07): wdrożone — edytor ról, jawnych instancji i przypisań korpusów, czasów tras oraz inspekcja przebiegu. Opcjonalny zapis konfiguracji wejściowej w szkicu 6, wspólne Cofnij/Ponów i ochrona źródeł 4/5. 121/121 testów, build, Edge CDP przewozu i przygotowania podzespołu, ponowny odczyt i regresja 2.6e poprawne. Backup `backup/v0.4.0_przed_2_7e_20261007`: 182 pliki, 0 rozbieżności SHA256. Raport `WERYFIKACJA_KORPUSU_2_7.md`, instrukcja `Instrukcja/Korpus_v6.md`. 2.7 wdrożone w zakresie osobnego szkicu 6; instancje/zużycie podzespołów, bufory i zasoby transportowe nie są odebrane. Następny punkt: 2.8 — reguły fizycznej równoległości i wykluczania; 2.6 pozostaje w trakcie dla fizycznych gałęzi.
+
+2.7d / 2.7.3 (2026-10-07): wdrożone w zakresie rdzenia korpusu i jego przewozu — zatwierdzone 1A (jawny czas każdej skierowanej trasy) i 2A (cel zajęty od wyjazdu do końca operacji). Automatyczny wybór najwcześniejszego startu po dojeździe, krótsza droga przy remisie; wynik oddziela jazdę, oczekiwanie i pracę. 120/120 testów i build poprawny, zapis/ponowny odczyt tras oraz rejestr zdarzeń zgodne. Backup `backup/v0.4.0_przed_2_7d_20261007`: 182 pliki, 0 rozbieżności SHA256. Raport `WERYFIKACJA_KORPUSU_2_7.md`. Następne 2.7.4: edytor czasu tras, instancji i inspekcja UI. Cały 2.7 pozostaje w trakcie; zasoby transportowe i fizyczna równoległość nie są odebrane.
+
+2.7c / 2.7.3 (2026-10-07): w trakcie — odebrano integrację jawnych instancji i przypisań korpusu z odrębnym harmonogramem dla pracy w zadeklarowanym miejscu. Rezerwacja przez operację i pauzy, ID i zdarzenia w wyniku; przygotowanie podzespołów nie zajmuje korpusu. 117/117 testów i build poprawny. Backup `backup/v0.4.0_przed_2_7c_20261007`: 181 plików, 0 rozbieżności SHA256. Transport wymaga uzgodnienia źródła czasu i reguły zajęcia celu; propozycje w `MODEL_KORPUSU_2_7.md`. Zapis wejścia instancji i UI pozostają do 2.7.4; raport `WERYFIKACJA_KORPUSU_2_7.md`.
+
+2.7b / 2.7.2 (2026-10-07): wdrożone — opcjonalne jawne role przygotowania podzespołów i pracy na korpusie, walidacja powiązań i edycja rdzenia. Zapis/odczyt na źródłach 4/5, odmowy błędnych referencji i ochrona oryginału; starsze szkice bez zmian. 114/114 testów i build poprawny. Backup `backup/v0.4.0_przed_2_7b_20261007`: 180 plików, 0 rozbieżności SHA256. Raport `WERYFIKACJA_KORPUSU_2_7.md`. Cały 2.7 w trakcie; następne 2.7.3 — integracja instancji z harmonogramem. Do tego momentu harmonogram z rolami jawnie odmawia wyniku; UI pozostaje do 2.7.4.
+
+2.7a / 2.7.1 (odbiór 2026-10-07): wdrożone — niezależny rejestr fizycznych instancji korpusu, jawnych lokalizacji, zajęcia i przemieszczeń. Odmowa podwójnego zajęcia, przemieszczenia podczas pracy i cofania czasu; brak automatycznego tworzenia korpusów. 111/111 testów i build poprawny. Backup `backup/v0.4.0_przed_2_7a_20261006`: 177 plików, 0 rozbieżności SHA256. Raport `WERYFIKACJA_KORPUSU_2_7.md`. Cały 2.7 pozostaje w trakcie; następny pakiet 2.7.2: jawne role operacji i walidacja danych.
+
+2.6e / 2.6.1, 2.6.3–2.6.4 (2026-10-06): odebrano automatyczny wybór dalszej trasy między wieloma dopuszczonymi kopiami kolejnych operacji. Najwcześniejszy start ma pierwszeństwo; droga jest przeliczana przy kolejnym przydziale, wynik oddziela plan od wybranego przejścia. Kontrakt 2.6.1 wdrożony dla jednego ciągu operacji. Testy 109/109, build, UI wielu przyszłych kopii i regresja trzyoperacyjna poprawne. Backup `backup/v0.4.0_przed_2_6e_20261006`: 175 plików, 0 rozbieżności SHA256. Raport `WERYFIKACJA_STANOWISK_2_6.md`. 2.6 pozostaje w trakcie w zakresie fizycznych gałęzi, zależnych od 2.7/2.8; następny krok to model korpusu i podzespołów 2.7.
+
+2.6d / 2.6.4 (2026-10-06): wdrożony edytor dopuszczeń i ich kolejności, stałego wyposażenia konkretnej kopii oraz rzeczywistych długości skierowanych tras ze źródłem i potwierdzeniem. Edge CDP: pakowanie i obróbka/montaż — utworzenie od zera, zapis, edycja, walidacja, usuwanie, Cofnij/Ponów i ponowny odczyt; projekty 4/5 bez zmian. Testy 108/108, build poprawny. Backup `backup/v0.4.0_przed_2_6d_20261006`: 173 pliki, 0 rozbieżności SHA256. Raport `WERYFIKACJA_STANOWISK_2_6.md`. Punkt 2.6 w trakcie: do uzgodnienia cel porównania drogi przy wielu przyszłych stanowiskach/rozgałęzieniach w 2.6.1.
+
+2.6c / 2.6.3 (2026-10-06): wdrożone dopuszczenia kopii i stałe wyposażenie w odrębnym harmonogramie. Najwcześniejszy start ma pierwszeństwo; rzeczywista długość trasy rozstrzyga remis do jednoznacznej kopii następnej operacji. Brak trasy lub niejednoznaczny cel wymagany do porównania powoduje odmowę. Wynik UI pokazuje egzemplarze i trasę rozstrzygającą. Testy 108/108, build i Edge CDP poprawne; zapis/ponowny odczyt zachowuje wynik. Backup `backup/v0.4.0_przed_2_6c_20261006`: 172 pliki, 0 rozbieżności SHA256. Raport `WERYFIKACJA_STANOWISK_2_6.md`. 2.6 w trakcie; następne 2.6.4 i doprecyzowanie wielu przyszłych stanowisk/rozgałęzień.
+
+2.6b / 2.6.2 (2026-10-06): wdrożony opcjonalny kontrakt dopuszczeń kopii, stałego wyposażenia i potwierdzonych długości rzeczywistych tras ze źródłem. Zapis/odczyt Eko v5 i niezależnych silników v4; walidacja nieznanych ID, sprzecznych kopii/wyposażenia i błędnych tras. Backup `backup/v0.4.0_przed_2_6b_20261006`: 170 plików, 0 rozbieżności SHA256. Testy 106/106, build i regresja UI 2.5 poprawne. Raport `WERYFIKACJA_STANOWISK_2_6.md`. Punkt 2.6 w trakcie; następny pakiet 2.6.3. Harmonogram szkicu zawierającego nowe dopuszczenia jawnie odmawia wyniku do integracji, bez ignorowania ograniczeń.
+
+2.6a / 2.6.1 (2026-10-06): w trakcie — projekt kontraktu dopuszczalnych stanowisk i wymagań wyposażenia w `MODEL_STANOWISK_2_6.md`. Wybrano najwcześniejszy start z kryterium najkrótszej drogi do następnej operacji oraz stałe wyposażenie stanowiska/kopii. Potwierdzono pierwszeństwo najwcześniejszego startu; rzeczywista trasa rozstrzyga remis. Wybór wyposażenia: stałe egzemplarze konkretnej kopii.
+
+2.5c / 2.5.3 (2026-10-06): wdrożony edytor jawnych zmian i przerw osób/stanowisk z pochodzeniem oraz podgląd odcinków pracy, pauz i rezerwacji. Edge CDP na Eko i niezależnym syntetycznym pakowaniu potwierdził zapis, odmowę błędnych danych, Cofnij/Ponów, usunięcie, ponowny odczyt i izolację projektów 4/5. Backup `backup/v0.4.0_przed_2_5c_20261006`: 167 plików, 0 rozbieżności SHA256. Testy 105/105, build poprawny. Punkty 2.5.3 i 2.5 wdrożone w zakresie szkicu 6; raport `WERYFIKACJA_KALENDARZA_2_5.md`. Następny punkt: 2.6 — wymaga kontraktu wyboru dopuszczalnego stanowiska i wymaganego wyposażenia.
+
+2.5b / 2.5.2 (2026-10-06): kalendarzowy przebieg odrębnego harmonogramu szkicu 6 wymaga jawnych kalendarzy osób i stanowisk, pauzuje pracę poza wspólnym oknem i wznawia ją z tym samym zespołem oraz na tej samej kopii. Wynik rdzenia zawiera odcinki pracy, pauzy i oczekiwanie na kalendarz; częściowe dane lub zbyt krótki horyzont blokują ten przebieg. Szkic bez pola kalendarzy zachowuje jawnie oznaczony podgląd logiczny 2.4. Backup 167 plików: `backup/v0.4.0_przed_2_5b_20261006` (0 rozbieżności SHA256); testy 105/105 i build poprawne. Kontrakt `MODEL_KALENDARZA_2_5.md`, raport `WERYFIKACJA_KALENDARZA_2_5.md`. Punkt 2.5.2 wdrożony; 2.5 w trakcie do edytora, podglądu i odbioru UI w 2.5.3.
 
 2.5a / 2.5.1 (2026-10-05): opcjonalne kalendarze po ID osób i stanowisk w szkicu 6, walidacja zmian, przerw i pochodzenia czasu oraz wyznaczanie wspólnej dostępności bez domyślnych godzin. Starsze szkice pozostają czytelne. Backup 164 plików: `backup/v0.4.0_przed_2_5a_20261005` (164 zgodne SHA256, 0 rozbieżności). Testy 104/104 i build poprawne; zapis/odczyt na niezależnym przykładzie silników, odmowy błędnych danych i izolacja 4/5. Kontrakt `MODEL_KALENDARZA_2_5.md`, raport `WERYFIKACJA_KALENDARZA_2_5.md`. Punkt 2.5.1 wdrożony; 2.5 w trakcie do zastosowania pauzy i wznowienia z tym samym zespołem w 2.5.2 oraz UI w 2.5.3.
 
@@ -253,24 +297,51 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 2.4.3.1 | Zbudować odrębny rdzeń harmonogramu z jawnym składem, wariantami, kopiami stanowisk, kolejkami i rezerwacjami osób bez podwójnego zajęcia. | wdrożone |
 | 2.4.3.2 | Podłączyć nową ścieżkę do szkicu 6, pokazać oczekiwanie i przydział oraz odebrać scenariusze UI bez zmiany aktywnej symulacji 4/5. | wdrożone |
 | 2.4.4 | Odebrać brak podwójnego przydziału, zapis/odczyt, UI i odmowy błędnych danych na jawnych scenariuszach różnych procesów, w tym Eko z wyraźnie testowymi założeniami. Zgodność Eko z produkcją odbierać osobno w 7.1/7.2, a fizyczną równoległość w 2.8. | wdrożone |
-| 2.5 | Uwzględnić kalendarz zasobów, zmiany i przerwy; rozpoczętą operację zatrzymać na przerwę i wznowić z tym samym zespołem. | w trakcie |
+| 2.5 | Uwzględnić kalendarz zasobów, zmiany i przerwy; rozpoczętą operację zatrzymać na przerwę i wznowić z tym samym zespołem. | wdrożone |
 | 2.5.1 | Zdefiniować i walidować jawne kalendarze zmian i przerw osób oraz stanowisk w szkicu 6, zachowując odczyt starszych szkiców; wyznaczać dostępne okna bez domyślnych godzin. | wdrożone |
-| 2.5.2 | Włączyć kalendarze do odrębnego harmonogramu szkicu 6: pauza operacji na niedostępność, wznowienie z tym samym zespołem i kopią stanowiska, bez podwójnej rezerwacji i bez zmiany aktywnej symulacji 4/5. | nierozpoczęte |
-| 2.5.3 | Udostępnić edycję kalendarzy i czytelny podgląd pauz/oczekiwania w UI szkicu 6; odebrać zapis, ponowny odczyt, Cofnij/Ponów i scenariusze różnych procesów. | nierozpoczęte |
-| 2.6 | Przypisywać operację do wielu dopuszczalnych stanowisk, z określoną regułą wyboru i wymaganym wyposażeniem. | nierozpoczęte |
-| 2.7 | Rozróżnić przygotowanie podzespołu od montażu na wspólnym korpusie; śledzić miejsce i dostępność korpusu. | nierozpoczęte |
-| 2.8 | Wprowadzić reguły dopuszczalnej równoległości i wzajemnego wykluczania czynności na jednym wyrobie. | nierozpoczęte |
-| 2.9 | Przygotować scenariusze Eko: niezależne podmontaże, montaż drzwi razem lub kolejno, wspólna obsada i dostępność ramy. | nierozpoczęte |
+| 2.5.2 | Włączyć kalendarze do odrębnego harmonogramu szkicu 6: pauza operacji na niedostępność, wznowienie z tym samym zespołem i kopią stanowiska, bez podwójnej rezerwacji i bez zmiany aktywnej symulacji 4/5. | wdrożone |
+| 2.5.3 | Udostępnić edycję kalendarzy i czytelny podgląd pauz/oczekiwania w UI szkicu 6; odebrać zapis, ponowny odczyt, Cofnij/Ponów i scenariusze różnych procesów. | wdrożone |
+| 2.6 | Przypisywać operację do wielu dopuszczalnych stanowisk, z określoną regułą wyboru i wymaganym wyposażeniem. | wdrożone |
+| 2.6.1 | Uzgodnić kontrakt dopuszczeń, regułę wyboru stanowiska i sposób zajmowania wyposażenia, zachowując kompatybilność. | wdrożone |
+| 2.6.2 | Dodać opcjonalne dane i walidację dopuszczeń oraz wymagań; odebrać starszy odczyt i ochronę zapisu. | wdrożone |
+| 2.6.3 | Zastosować kontrakt w odrębnym harmonogramie z kalendarzami i ochroną przed podwójną rezerwacją; sprawdzić ręcznie policzone scenariusze. | wdrożone |
+| 2.6.4 | Dodać edytor i podgląd wybranego stanowiska/wyposażenia; odebrać historię, zapis/odczyt i różne procesy. | wdrożone |
+| 2.7 | Rozróżnić przygotowanie podzespołu od montażu na wspólnym korpusie; śledzić miejsce i dostępność korpusu. | wdrożone |
+| 2.7.1 | Zdefiniować niezależny rejestr fizycznych instancji korpusu z jawną lokalizacją, zajęciem i przemieszczeniem; bez wnioskowania z grafu i 3D. | wdrożone |
+| 2.7.2 | Dodać jawne role operacji: przygotowanie podzespołu lub praca na korpusie, powiązania i walidację odczytu/zapisu bez dopowiadania danych. | wdrożone |
+| 2.7.3 | Podłączyć lokalizację i dostępność korpusu do odrębnego harmonogramu, z odmową brakujących danych i ochroną tożsamości. | wdrożone |
+| 2.7.4 | Dodać edytor i inspekcję korpusu/podzespołów; odebrać UI, historię, zapis/odczyt i różne procesy. | wdrożone |
+| 2.8 | Wprowadzić reguły dopuszczalnej równoległości i wzajemnego wykluczania czynności na jednym wyrobie. | wdrożone |
+| 2.8.1 | Uzgodnić kontrakt jawnych dopuszczeń i domyślnych wykluczeń; dodać opcjonalne dane, walidację referencji i zgodność zapisu. | wdrożone |
+| 2.8.2 | Włączyć reguły do harmonogramu, rejestru korpusu i zajęcia kopii bez konfliktów lokalizacji/osób/wyposażenia; odebrać scenariusze i fizyczne trasy gałęzi w uzgodnionym zakresie. | wdrożone |
+| 2.8.3 | Dodać edytor i inspekcję przyczyn, odebrać UI, Cofnij/Ponów, zapis/odczyt oraz różne procesy i raport ograniczeń. | wdrożone |
+| 2.9 | Przygotować scenariusze Eko: niezależne podmontaże, montaż drzwi razem lub kolejno, wspólna obsada i dostępność ramy. | wdrożone |
+| 2.9.1 | Sprawdzić źródła i braki, przygotować matrycę scenariuszy oraz uzgodnić jawne deklaracje testowe lub dane rzeczywiste. | wdrożone |
+| 2.9.2 | Wykonać uzgodnione warianty Eko, odebrać wyniki, zasoby, lokalizację ramy, UI, historię i odczyt oraz raport ograniczeń. | wdrożone |
 
 **Odbiór etapu:** jedna osoba nie wykonuje dwóch czynności jednocześnie; jeden korpus nie znajduje się na dwóch odległych stanowiskach. Równoległe czynności przy jednym korpusie są możliwe tylko przy zgodnych regułach, miejscu i dostępnej obsadzie. Czasy założone są odróżnione od pomiarowych.
 
 ## Etap 3 — Symulacja powiązana z rzeczywistym layoutem
 
+3.1a / 3.1.1 (2026-10-08): wdrożone dla szkicu 6 — osobny Web Worker, postęp zakończonych wykonań, anulowanie przez terminate i ochrona przed spóźnionym wynikiem. 137/137 testów, build, UI anulowania 5000 wykonań/ponownego startu i regresje Eko/tras poprawne. Reakcja UI 7,0 ms w jednej próbie. Backup `backup/v0.4.0_przed_3_1a_20261008`: 193 pliki, 0 rozbieżności SHA256. Raport `WERYFIKACJA_TLA_3_1.md`. 3.1 w trakcie; następne 3.1.2 — aktywne obliczenia 4/5 i izolacja od animacji. Domknięto status 2.6 na podstawie odbiorów 2.7–2.9, bez nowej zmiany reguł tras.
+
+3.1b / 3.1.2 (2026-10-08): aktywna symulacja 4/5 oblicza w osobnym workerze, z postępem, anulowaniem i odrzuceniem wyniku poprzednich parametrów. Odtwarzanie/prędkość/reset nie uruchamiają obliczeń. 138/138 testów, build i UI obu wersji poprawne: Eko 3 sztuki/4050 s kończy odpowiednio 21170 s i 21770 s. UI anuluje zadanie 160000 wykonań i pozwala ponowić; dane zapisu bez zmian. Regresja tła szkicu 6 poprawna. Backup `backup/v0.4.0_przed_3_1b_20261008`: 197 plików, 0 rozbieżności SHA256. Raport `WERYFIKACJA_TLA_3_1.md`. 3.1 pozostaje w trakcie do zbiorczego odbioru 3.1.3.
+
+3.1c / 3.1.3 (2026-10-08): zbiorczy odbiór obu ścieżek zakończony; 3.1 wdrożone. 139/139 testów i build poprawne. Rozszerzone UI Edge 4/5/6 potwierdza zmianę wejścia podczas obliczeń, odmontowanie, błędne wejście, błąd konstrukcji i rzeczywisty błąd ładowania workera oraz odzyskanie. Szkic 6: zapis/Cofnij kończy stary worker, dane i źródło zachowane. Anulowanie i niezależność od animacji odebrane. Zmieniono wyłącznie testy i dokumentację; bez zmiany aplikacji/schematu. Raport ograniczeń `WERYFIKACJA_TLA_3_1.md`; koszt kopiowania wejścia i render dużych wyników pozostają do 3.9. Następne 3.2 — punkty materiałowe i edytowalne trasy.
+
 | ID | Krok / oczekiwany rezultat | Status |
 | --- | --- | --- |
-| 3.1 | Oddzielić obliczenia symulacji od animacji; uruchamiać obliczenia w tle, z postępem i możliwością anulowania. | nierozpoczęte |
-| 3.2 | Dodać punkty wejścia/wyjścia materiału i edytowalne trasy transportowe, z kontrolą jednostek i połączeń. | nierozpoczęte |
-| 3.3 | Wyznaczać czas transportu z długości trasy, prędkości, załadunku i rozładunku. | nierozpoczęte |
+| 3.1 | Oddzielić obliczenia symulacji od animacji; uruchamiać obliczenia w tle, z postępem i możliwością anulowania. | wdrożone |
+| 3.1.1 | Przenieść podgląd harmonogramu szkicu 6 do osobnego workera, dodać postęp/anulowanie i ochronę przed nieaktualnymi zdarzeniami, odebrać zgodność wyników i UI. | wdrożone |
+| 3.1.2 | Przenieść aktywne obliczenia 4/5 do tła bez zmiany wyników i oddzielić cykl obliczeń od animacji. | wdrożone |
+| 3.1.3 | Odebrać obie ścieżki: responsywność, postęp, anulowanie, zmiana wejścia i brak zależności wyniku od animacji; raport ograniczeń. | wdrożone |
+| 3.2 | Dodać punkty wejścia/wyjścia materiału i edytowalne trasy transportowe, z kontrolą jednostek i połączeń. | wdrożone |
+| 3.2.1 | Zinwentaryzować istniejące trasy, przygotować propozycję kontraktu punktów i połączeń oraz wskazać decyzję dotyczącą magazynu. | wdrożone |
+| 3.2.2 | Wdrożyć uzgodniony model punktów/tras, walidację referencji i kompatybilny zapis szkicu 6; zweryfikować ochronę źródeł i istniejących wyników. | wdrożone |
+| 3.2.3 | Dodać edycję punktów i połączeń, jednostki, wspólną historię i odbiór UI/zapisu; opisać zakres użycia w symulacji. | wdrożone |
+| 3.3 | Wyznaczać czas transportu z długości trasy, prędkości, załadunku i rozładunku. | w trakcie |
+| 3.3.1 | Dodać jawny model parametrów i wyliczenie czasu, walidację, kompatybilny zapis oraz integrację z rdzeniem przewozu i połączeniami materiałowymi. | wdrożone |
+| 3.3.2 | Dodać formularze czasu wpisanego/wyliczanego, jednostki i inspekcję składowych; odebrać historię, zapis/odczyt i wyniki dwóch procesów w UI. | nierozpoczęte |
 | 3.4 | Modelować dostępność transportu: operator, wózek lub przenośnik; odróżnić czas przejazdu od oczekiwania na zasób. | nierozpoczęte |
 | 3.5 | Wprowadzić bufory o ograniczonej pojemności oraz jednoznaczne reguły blokowania i zwalniania stanowiska. | nierozpoczęte |
 | 3.6 | Pokazywać stany pracy, oczekiwania na materiał/operatora, blokady wyjścia i transportu wraz z czasami ich trwania. | nierozpoczęte |
@@ -377,10 +448,14 @@ Braki nie blokują stabilizacji. Nie należy zastępować ich domysłami przedst
 
 ## Rejestr wykonanych prac i zmian statusów
 
+Aktualizacja 2026-10-08: **3.1** nierozpoczęte → w trakcie, **3.1.1** wdrożone w zakresie szkicu 6. Worker/protokół/postęp/anulowanie, 137/137 testów, build, rzeczywiste UI i regresje; backup 193 zgodny SHA256, raport `WERYFIKACJA_TLA_3_1.md`. **2.6** w trakcie → wdrożone: pozostały zakres gałęzi odebrany w 2.7–2.9; zbiorcze domknięcie w `WERYFIKACJA_STANOWISK_2_6.md`. Poprzednie wpisy pozostają historią.
+
 Każdy kolejny wpis powinien wskazywać konkretne ID. Nie usuwać historii przy zmianie statusu.
 
 | Data | ID | Zmiana statusu | Rezultat / dowód / uwagi |
 | --- | --- | --- | --- |
+| 2026-10-06 | 2.5.2 | w trakcie → wdrożone | Pauza i wznowienie z tym samym zespołem oraz kopią, jawne odcinki pracy i pauzy, odmowa częściowego kalendarza lub zbyt krótkiego horyzontu; starszy szkic zachowuje podgląd logiczny. Backup 167 plików, testy 105/105, build; `WERYFIKACJA_KALENDARZA_2_5.md`. UI pozostaje w 2.5.3. |
+| 2026-10-06 | 2.5.2 | nierozpoczęte → w trakcie | Rozpoczęto podłączenie jawnych kalendarzy do odrębnego harmonogramu szkicu 6. |
 | 2026-10-05 | 2.5.1 | w trakcie → wdrożone | Jawne kalendarze osób i stanowisk w szkicu 6, walidacja przedziałów i źródła, obliczenie wspólnej dostępności, zapis/odczyt i odmowy; backup 164 zgodne SHA256, 104/104 testy, build. Kontrakt `MODEL_KALENDARZA_2_5.md`, raport `WERYFIKACJA_KALENDARZA_2_5.md`. Punkt 2.5 pozostaje w trakcie. |
 | 2026-10-05 | 2.5, 2.5.1 | nierozpoczęte → w trakcie | Rozpoczęto kontrakt kalendarzy osób i stanowisk. Użytkownik wybrał pauzę rozpoczętej operacji z późniejszym wznowieniem przez ten sam zespół. Rozdzielono kontrakt, harmonogram i UI na 2.5.1–2.5.3. |
 | 2026-10-05 | 2.4, 2.4.4 | w trakcie → wdrożone; w trakcie → wdrożone | Odbiór logicznego harmonogramu szkicu 6: 32 wykonania bez podwójnej rezerwacji, identyczne wyniki po ponownym otwarciu, odmowa braku danych i izolacja projektów 4/5. Testy rdzenia objęły także scenariusze silników i graf poprzedników. Rzeczywiste Eko pozostaje w 7.1/7.2, reguły fizyczne w 2.8; raport `WERYFIKACJA_OPERATOROW_2_4.md`. |
@@ -420,6 +495,11 @@ Każdy kolejny wpis powinien wskazywać konkretne ID. Nie usuwać historii przy 
 | 2026-10-02 | 1.8 | kontynuacja — E5 | Znaczniki czterech eksportów v5 zachowane po zmianie karty; druk/PDF oznaczony jako wywołanie bez potwierdzenia zapisu. UI sprawdził edycję i Cofnij. Backup 103 plików, 69/69 testów, build poprawny; raport E. |
 | 2026-10-02 | 1.8 | w trakcie → wdrożone — E6 | Osobne statusy XLSX/CSV procesu i BOM, stałe szablony i migawka JSON wariantu. UI potwierdził selektywne unieważnienie, Cofnij, ponowny eksport i granicę sesji; fizyczne pliki sprawdzone. Backup 103 plików, 69/69 testów, build poprawny; raport E. |
 | 2026-10-02 | 1.7 | w trakcie → wdrożone | Całościowy odbiór zapisu, odzyskiwania, migracji starszych projektów i ochrony oryginału. Konsolidacja prac D5c–D5k. Zautomatyzowany odbiór UI CDP na porcie 5194 (`verify_1_7.mjs`) potwierdził: 1) odzyskiwanie uszkodzonego localStorage, 2) jawną migrację projektu bez wersji z pobraniem surowej kopii, 3) blokadę migracji przy osieroconych zasobach z zachowaniem oryginału i projektu docelowego, 4) ponowne otwarcie i pełny roundtrip. Backup 128 plików `backup/v0.4.0_przed_1_7_20261002_220500`, 75/75 testów i build poprawne; raport `WERYFIKACJA_MIGRACJA_ZAPIS_1_7.md`. |
+| 2026-10-08 | 3.3.1 | nierozpoczęte → w trakcie → wdrożone | Rdzeń czasu transportu: jawne parametry i źródła, brak cache, rozłączne tryby, harmonogram i odczyt przez sieć. 148/148 testów, build, UI workera/historii/odczytu. Backup 207 zgodnych plików. Raport `WERYFIKACJA_CZASU_TRANSPORTU_3_3.md`. 3.3 w trakcie; postęp 22/67 = 32,8%, pierwsze wydanie 22/65 = 33,8%. |
+| 2026-10-08 | 3.2.3, 3.2 | nierozpoczęte → w trakcie → wdrożone; w trakcie → wdrożone | Edytor punktów/połączeń, mm/m, potwierdzenia, historia/usuwanie, zapis/odczyt. Dwa niezależne odbiory Edge i zgodne harmonogramy, 144/144 testów i build. Backup 206 zgodnych plików. Raport `WERYFIKACJA_TRANSPORTU_3_2.md`. Postęp 22/67 = 32,8%; pierwsze wydanie 22/65 = 33,8%. |
+| 2026-10-08 | 3.2.2 | nierozpoczęte → w trakcie → wdrożone | Zatwierdzone 1A, opcjonalne punkty/połączenia i referencje do istniejących tras, jednostki mm/m, parser i kompatybilny zapis. 144/144 testów, build, UI historii/odczytu i regresji. Backup 203 zgodnych plików. Raport `WERYFIKACJA_TRANSPORTU_3_2.md`. Postęp głównych ID 21/67 = 31,3%; edytor pozostaje do 3.2.3. |
+| 2026-10-08 | 3.2, 3.2.1 | nierozpoczęte → w trakcie; pakiet dokumentacyjny wdrożony | Inwentaryzacja i propozycja kontraktu punktów/tras, decyzja o magazynie przed zmianą modelu. `MODEL_TRANSPORTU_3_2.md`; bez zmian aplikacji/schematu. Powtarzalny postęp głównych ID: 21/67 = 31,3%, pierwsze wydanie 21/65 = 32,3%. |
+| 2026-10-08 | 3.1, 3.1.3 | w trakcie / nierozpoczęte → wdrożone | Zbiorczy odbiór obu ścieżek workera: 139/139 testów, build, UI 4/5/6, zmiana wejścia, odmontowanie, zapis/Cofnij szkicu, błędy i odzyskanie. Wyniki i dane zachowane, animacja niezależna. Raport `WERYFIKACJA_TLA_3_1.md`; ograniczenia dużych danych pozostają do 3.9. |
 | 2026-10-02 | 3.10 | nierozpoczęte → wdrożone | Wybór mnożników odtwarzania symulacji 1×–5000×, zabezpieczenie granicy czasu w `stepSimulationTime`, inspekcja na pauzie i niezmienność wyników symulacji. Backup 103 plików `backup/v0.4.0_przed_3_10_20261002_211700`, odbiór UI na procesie Eko (21 170 s) w karcie symulacji oraz warsztacie v5, 70/70 testów i build poprawne; raport `WERYFIKACJA_SYMULACJA_3_10.md`. |
 | 2026-10-02 | 5.11 | nierozpoczęte → wdrożone | Przełączanie jednostek czasu s/min/h w całym UI (nagłówek, popyt, proces, bilans, symulacja, warianty). Komponent TimeField z automatycznym przeliczaniem, dynamiczne etykiety [s/min/h]. Zachowanie niezmiennika modelu czasu w sekundach potwierdzone testami jednostkowymi i zapisem localStorage. Backup 124 plików `backup/v0.4.0_przed_5_11_20261002_215000`, odbiór UI CDP na porcie 5195 (`outputs/qa/verify_5_11_time_units.png`), 75/75 testów i build poprawne; raport `WERYFIKACJA_JEDNOSTKI_CZASU_5_11.md`. |
 | 2026-10-02 | 5.12 | nierozpoczęte → wdrożone | Pobieralne szablony importu procesu i BOM w XLSX (arkusz Dane do natychmiastowego importu, arkusz Opis kolumn ze specyfikacją techniczną) oraz CSV. Wzorcowy proces wielogałęziowy (OP10 → OP20, OP25 → OP30), 5 komponentów ze wszystkimi pojemnikami (BoxKLT, Tray, Carton, Pallet), rozwijana specyfikacja w UI oraz precyzyjne zgłaszanie brakujących wymaganych kolumn przy zachowaniu atomowości. Backup 105 plików `backup/v0.4.0_przed_5_12_20261002_213500`, odbiór UI na porcie 5196, 73/73 testy i build poprawne; raport `WERYFIKACJA_SZABLONY_5_12.md`. |
@@ -441,6 +521,30 @@ Każdy kolejny wpis powinien wskazywać konkretne ID. Nie usuwać historii przy 
 | 2026-10-05 | 2.4.2.2 | w trakcie → wdrożone — 2.4c | Edytor stałego składu, wariantów i dopuszczonych osób w szkicu 6; bezpieczny opcjonalny zapis, stare szkice, odrzucenie błędu i wspólne Cofnij/Ponów. Edge CDP: 16 operacji, przeładowanie, usunięcie i izolacja v4/v5. Backup 157 plików zgodny SHA256, 101/101 testów i build; `WERYFIKACJA_OPERATOROW_2_4.md`. 2.4.2 w trakcie do faktycznego przydziału. |
 | 2026-10-05 | 2.4.2, 2.4.3.1 | w trakcie → wdrożone — 2.4d | Odrębny harmonogram wiąże wybór z konkretnymi osobami i kopiami stanowisk; testy dwóch sztuk, oczekiwania, całego okresu rezerwacji, zespołu dwuosobowego, poprzedników i odmowy brakujących danych. Jedna operacja na sztukę do reguł 2.8; bez UI i aktywacji. Backup 161 plików zgodny SHA256, 103/103 testy i build; `WERYFIKACJA_OPERATOROW_2_4.md`. 2.4.3 i 2.4 w trakcie. |
 | 2026-10-03 | 2.1, 2.1.1 | 2.1 nierozpoczęte → w trakcie; 2.1.1 wdrożone — 2.1a | Kontrakt nowego modelu i migracji w `MODEL_PROCESU_2_1.md`; potwierdzono fakty w pliku Eko, 76/76 testów. Brak zmiany kodu i schematów; parser, migracja i UI pozostają do wykonania. |
+
+| 2026-10-06 | 2.5.3, 2.5 | w trakcie → wdrożone | Edytor i podgląd pauz szkicu 6; UI Eko i syntetycznego pakowania: zapis, walidacja, historia, usuwanie, ponowny odczyt, izolacja 4/5. Backup 167 plików zgodny SHA256, 105/105 testów, build. |
+
+| 2026-10-06 | 2.6, 2.6.1 | nierozpoczęte → w trakcie | Projekt kontraktu w `MODEL_STANOWISK_2_6.md`; wymagane uzgodnienie wyboru stanowiska i zakresu wyposażenia. Bez zmian kodu i danych. |
+
+| 2026-10-06 | 2.6.2 | nierozpoczęte → w trakcie → wdrożone | Opcjonalne dopuszczenia kopii, stałe wyposażenie i jawne rzeczywiste długości tras; zapis/odczyt i ochrona przed błędem. Backup 170 zgodny SHA256, 106/106 testów, build i UI regresji 2.5. Harmonogram i edytor pozostają otwarte. |
+
+| 2026-10-06 | 2.6.3 | nierozpoczęte → w trakcie → wdrożone | Dopuszczenia i wyposażenie w harmonogramie, najwcześniejszy start i rzeczywista trasa do jednoznacznego następcy. Odmowa braku trasy/niejednoznacznego celu, 108/108 testów, build i UI; backup 172 zgodny SHA256. 2.6 w trakcie. |
+
+| 2026-10-06 | 2.6.4 | nierozpoczęte → w trakcie → wdrożone | Edytor, kolejność dopuszczeń, przypisania egzemplarzy i rzeczywiste długości tras. Odbiór dwóch syntetycznych procesów, historia, walidacja, odczyt, 108/108 testów, build, backup 173 zgodny SHA256. 2.6 nadal w trakcie do reguły wielu przyszłych celów. |
+
+| 2026-10-08 | 2.9, 2.9.1, 2.9.2 | w trakcie → wdrożone; w trakcie → wdrożone; nierozpoczęte → wdrożone — 2.9b | Zatwierdzone 1A tylko testy i 2A rama z magazynu na rolotok. Warianty razem/kolejno/wspólna osoba, 135/135 testów, build, trzy UI, historia/odczyt oraz ochrona źródła. Backup 190 zgodny SHA256; WERYFIKACJA_EKO_2_9.md. Bez zmian algorytmu/schematu, bez odbioru produkcyjnego. |
+| 2026-10-08 | 2.9, 2.9.1 | nierozpoczęte → w trakcie | Inwentaryzacja eksportu i demonstracji Eko, matryca i konkretna propozycja deklaracji w SCENARIUSZE_EKO_2_9.md. Do uzgodnienia zakres danych i dostępność ramy. Bez zmiany algorytmu/schematu i dopowiadania danych produkcyjnych. |
+| 2026-10-07 | 2.8.3, 2.8 | nierozpoczęte → wdrożone; w trakcie → wdrożone — 2.8d | Edytor grup, inspekcja całych zestawów, walidacja i wspólna historia. 133/133 testów, build, trzy syntetyczne scenariusze UI i regresja tras, odczyt oraz ochrona 4/5; backup 188 zgodny SHA256. Odbiór szkicu 6, rzeczywiste Eko w 2.9; raport WERYFIKACJA_ROWNOLEGLOSCI_2_8.md. |
+| 2026-10-07 | 2.8.2 | w trakcie → wdrożone — 2.8c | Zatwierdzone pierwszeństwo technologiczne 1A, automatyczne trasy wielu kopii gałęzi bez sumowania, rzeczywista droga korpusu, ponowny wybór przyszłego celu. 133/133 testów, build, UI gałęzi i regresja, historia/odczyt; backup 188 zgodny SHA256. Następne 2.8.3; raport WERYFIKACJA_ROWNOLEGLOSCI_2_8.md. |
+| 2026-10-07 | 2.8.2 | nierozpoczęte → w trakcie | Równoległe grupy na wspólnym korpusie i kopii, wyłączność osób/wyposażenia, przewóz dopiero po zwolnieniu wszystkich prac. 128/128 testów, build, UI i odczyt; backup 188 zgodny SHA256. Wielokrotne cele tras gałęzi pozostają do integracji; raport WERYFIKACJA_ROWNOLEGLOSCI_2_8.md. |
+| 2026-10-07 | 2.8.1 | w trakcie → wdrożone | Użytkownik zatwierdził 1A/2A. Jawne grupy bez łączenia, walidacja i zapis/odczyt z ochroną źródeł 4/5. 124/124 testów, build, backup 186 zgodny SHA256. Integracja w 2.8.2, UI w 2.8.3; WERYFIKACJA_ROWNOLEGLOSCI_2_8.md. |
+| 2026-10-07 | 2.8, 2.8.1 | nierozpoczęte → w trakcie | Propozycja kontraktu grup/par i współdzielenia korpusu/kopii, scenariusze oraz podział na trzy pakiety. Decyzje domenowe do uzgodnienia; nie zmieniono algorytmu ani schematu danych. MODEL_ROWNOLEGLOSCI_2_8.md. |
+| 2026-10-07 | 2.7.4, 2.7 | w trakcie → wdrożone | Edytor ról i korpusów, zapis początkowych instancji, czasy tras, inspekcja i wspólna historia. 121/121 testów, build, UI transport/przygotowanie, odczyt, regresja 2.6e; backup 182 zgodny SHA256. Zakres szkicu 6, instrukcja Korpus_v6; fizyczna równoległość w 2.8. |
+| 2026-10-07 | 2.7.3 | w trakcie → wdrożone (rdzeń) | Transport według zatwierdzonych 1A/2A, jawne czasy tras, cel zarezerwowany od wyjazdu do końca operacji, najwcześniejszy start po dojeździe i krótsza droga przy remisie. 120/120 testów, build, zapis/odczyt, backup 182 zgodny SHA256. UI w 2.7.4; zasoby ekip/pojazdów poza zakresem. |
+| 2026-10-07 | 2.7.3 | nierozpoczęte → w trakcie | Jawne instancje i przypisania, rezerwacja korpusu przez operację i pauzy w jego lokalizacji, wynik ze zdarzeniami. 117/117 testów, build, backup 181 zgodny SHA256. Transport wymaga kontraktu czasu i zajęcia celu; nie oznaczono całego punktu jako wdrożonego. |
+| 2026-10-07 | 2.7.2 | nierozpoczęte → w trakcie → wdrożone | Opcjonalne role fizyczne, walidacja referencji i edycja rdzenia; zapis/odczyt 4/5, ochrona źródła i starszych szkiców. 114/114 testów, build, backup 180 zgodny SHA256. Harmonogram jawnie odmawia ról do 2.7.3; UI w 2.7.4. |
+| 2026-10-07 | 2.7.1 | w trakcie → wdrożone | Izolowany rejestr tożsamości, lokalizacji, rezerwacji i przemieszczeń korpusu; jawne czasy i odmowy sprzecznych zdarzeń. 111/111 testów, build; backup 177 zgodny SHA256. Integracja, zapis i UI pozostają do 2.7.2–2.7.4. |
+| 2026-10-06 | 2.6.1, 2.6.3–2.6.4 | 2.6.1 w trakcie → wdrożone; rozszerzenie odbioru | Automatyczny wybór dalszej drogi dla wielu przyszłych kopii w jednym ciągu, priorytet najwcześniejszego startu, osobny plan i wybrane przejście. 109/109 testów, build i UI; backup 175 zgodny SHA256. Fizyczne gałęzie wymagają 2.7/2.8; 2.6 pozostaje w trakcie. |
 
 ### Szablon wpisu odbioru pakietu
 

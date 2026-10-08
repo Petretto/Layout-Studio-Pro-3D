@@ -15,6 +15,7 @@ import {previewDomainMigrationFromV4,previewDomainMigrationFromV5,verifyDomainMi
 import {parseDomainProjectV6,prepareDomainMigration,type DomainOperationStaffing,type DomainTimeProfile} from '../src/core/domainProject';
 import {editDomainPeople} from '../src/core/domainPeopleEditing';
 import {editDomainProduct} from '../src/core/domainProductEditing';
+import {editDomainPhysicalRole} from '../src/core/domainPhysicalRoleEditing';
 import {editDomainEquipment} from '../src/core/domainEquipmentEditing';
 import {editDomainTime} from '../src/core/domainTimeEditing';
 import {editDomainWorkerRun} from '../src/core/domainWorkerRunEditing';
@@ -22,6 +23,10 @@ import {createWorkerReservationBook,reserveWorkerTeam,releaseWorkerTeam} from '.
 import {createWorkerRunPlan,type WorkerOperationSelection} from '../src/core/workerRunPlan';
 import {scheduleWorkerRun} from '../src/core/workerSchedule';
 import {availableWindows,intersectWindows,sharedAvailability,validateResourceCalendars} from '../src/core/resourceCalendar';
+import {validateStationRouting,type StationRoutingV6} from '../src/core/stationRouting';
+import {createBodyBook,applyBodyEvent,bodyAvailableAt,bodyAllowsOperation,type BodyEvent} from '../src/core/bodyState';
+import type {BodyRunInput} from '../src/core/bodyRunInput';
+import {validatePhysicalConcurrency,matchingConcurrencyGroup,type PhysicalConcurrency} from '../src/core/physicalConcurrency';
 import {DOMAIN_DRAFT_STORAGE_KEY,readDomainDraft,replaceDomainDraft,saveDomainDraft} from '../src/core/domainDraftStorage';
 import {parseStationProjectV5} from '../src/core/stationProject';
 import {runStationBalancing,moveStationOperation} from '../src/core/stationBalancing';
@@ -32,6 +37,296 @@ import {addStationEquipment,updateStationEquipment,removeStationEquipment} from 
 import {readFileSync} from 'node:fs';
 import {encodeImport} from '../src/core/importArchive';
 import {makePortableArchive,readPortableArchive} from '../src/core/portableArchive';
+import {createEkoTestScenario,EKO_TEST_PREPARATIONS,type EkoTestVariant} from './fixtures/ekoDomainScenarios';
+import {executeScheduleRequest} from '../src/core/scheduleWorkerRequest';
+import {startScheduleTask,type ScheduleReply} from '../src/core/scheduleTask';
+import {executeNetworkRequest,type NetworkReply} from '../src/core/networkWorkerRequest';
+import {startBackgroundTask} from '../src/core/backgroundTask';
+import {validateMaterialNetwork,materialRouteData,distanceToMm,distanceFromMm,type MaterialNetworkV6} from '../src/core/materialNetwork';
+import {editDomainMaterialNetwork} from '../src/core/domainMaterialEditing';
+import {calculateTransportTime,resolveTransportTime,validateTransportCalculation,type TransportCalculation} from '../src/core/transportTime';
+
+function transportCalculationFixture():TransportCalculation{
+  return {speed:{value:1000,basis:'measured',source:'Test — prędkość'},loading:{value:2,basis:'measured',source:'Test — załadunek'},unloading:{value:3,basis:'assumed',source:'Test — rozładunek'}};
+}
+test('3.3a: czas załadunek + długość/prędkość + rozładunek jest przeliczany, bez cache i bez etykiety pomiaru wyniku',()=>{
+  const parameters=transportCalculationFixture(),before=JSON.stringify(parameters);
+  const result=calculateTransportTime(5000,parameters);
+  assert.equal(result.durationSeconds,10);assert.equal(result.basis,'assumed');
+  assert.deepEqual(result.breakdown,{loadingSeconds:2,travelSeconds:5,unloadingSeconds:3});
+  assert.equal(calculateTransportTime(10000,parameters).durationSeconds,15);
+  const measured=structuredClone(parameters);measured.unloading.basis='measured';assert.equal(calculateTransportTime(5000,measured).basis,'assumed');
+  assert.equal(JSON.stringify(parameters),before);
+  parameters.loading.value=0;parameters.unloading.value=0;
+  assert.equal(calculateTransportTime(5000,parameters).durationSeconds,5);assert.equal(resolveTransportTime({distanceMm:5000}),undefined);
+  assert.throws(()=>calculateTransportTime(0,parameters),/dodatni/);
+});
+
+test('3.3a: odmowy brakujących parametrów, sprzecznych trybów, błędnych jednostkowych wartości i przepełnienia',()=>{
+  for(const modify of [
+    (c:any)=>delete c.speed,(c:any)=>delete c.loading,(c:any)=>delete c.unloading,
+    (c:any)=>c.speed.value=0,(c:any)=>c.speed.value=-1,(c:any)=>c.speed.value=Infinity,
+    (c:any)=>c.loading.value=-1,(c:any)=>c.unloading.value=NaN,(c:any)=>c.loading.source='',
+    (c:any)=>c.speed.basis='calculated',(c:any)=>c.speed.extra=true,(c:any)=>c.extra=true]){
+    const c=structuredClone(transportCalculationFixture());modify(c);assert.throws(()=>validateTransportCalculation(c));
+  }
+  assert.throws(()=>calculateTransportTime(Number.MAX_VALUE,{...transportCalculationFixture(),speed:{value:Number.MIN_VALUE,basis:'assumed',source:'Test'}}));
+  assert.throws(()=>resolveTransportTime({distanceMm:1,transportTime:{durationSeconds:1,basis:'measured',source:'Test'},transportCalculation:transportCalculationFixture()}),/jednego trybu/);
+  assert.throws(()=>resolveTransportTime({distanceMm:1,transportCalculation:null as any}));
+});
+
+test('3.3a: wyliczony przewóz zachowuje rezerwacje i lokalizację, zgodny z równoważnym czasem wpisanym',()=>{
+  const project=movingBodyFixture();
+  const input=bodyInputFor(2),parameters=transportCalculationFixture();
+  const direct=structuredClone(project),route=project.stationRouting!.routes[0];
+  route.distanceMm=5000;delete route.transportTime;route.transportCalculation=parameters;
+  direct.stationRouting!.routes[0].distanceMm=5000;direct.stationRouting!.routes[0].transportTime={durationSeconds:10,basis:'assumed',source:'Ręczne wyliczenie testowe'};
+  const before=JSON.stringify({project,input}),result=scheduleWorkerRun(project,1,2,input),baseline=scheduleWorkerRun(direct,1,2,input);
+  const plain=structuredClone(result);plain.runs.forEach(run=>{if(run.transport)delete run.transport.breakdown;});
+  assert.deepEqual(plain,baseline);
+  const moved=result.runs.filter(run=>run.transport);assert.ok(moved.length);
+  moved.forEach(run=>{assert.equal(run.transport!.endSeconds-run.transport!.startSeconds,10);assert.equal(run.transport!.basis,'assumed');assert.deepEqual(run.transport!.breakdown,{loadingSeconds:2,travelSeconds:5,unloadingSeconds:3});});
+  let book=createBodyBook(project,input.bodies,0);for(const event of result.bodyEvents!)book=applyBodyEvent(book,event);assert.deepEqual(book,result.bodyBook);
+  for(let i=0;i<result.runs.length;i++)for(let j=i+1;j<result.runs.length;j++){
+    const a=result.runs[i],b=result.runs[j];
+    if(a.stationId===b.stationId&&a.copy===b.copy)assert.ok(a.endSeconds<=b.stationReserveStartSeconds!||b.endSeconds<=a.stationReserveStartSeconds!);
+    if(a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(a.reserveEndSeconds<=b.reserveStartSeconds||b.reserveEndSeconds<=a.reserveStartSeconds);
+  }
+  assert.equal(JSON.stringify({project,input}),before);
+  // Explicit input belongs to the request's saved project; worker parity is checked with that same input.
+  const savedInput={...project,bodyRunInput:input};const replies:ScheduleReply[]=[];executeScheduleRequest({project:savedInput,batch:2,arrivalIntervalSeconds:1},m=>replies.push(m));
+  const reply=replies.at(-1)!;assert.equal(reply.kind,'result');if(reply.kind==='result')assert.deepEqual(reply.result,result);
+});
+
+test('3.3a: oba rodzaje tras zapisują parametry, chronią poprzedni zapis i przeliczają odczyt po zmianie długości',()=>{
+  const {project,input}=branchingRouteFixture();project.bodyRunInput=input;
+  project.materialNetwork=materialNetworkFixture();
+  const route=project.stationRouting!.routes.find(route=>route.id==='ST-S-ST-X')!;delete route.transportTime;route.transportCalculation=transportCalculationFixture();
+  const external=project.materialNetwork.routes[0];if(external.kind!=='declared')throw new Error('Fixture');external.transportCalculation=transportCalculationFixture();
+  const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8'),storage=new DraftStorage();
+  const saved=saveDomainDraft(storage,{originalJson:original,project},null),read=readDomainDraft(storage);assert.equal(read.status,'valid');
+  if(read.status==='valid'){
+    assert.equal(read.saved.originalJson,original);assert.deepEqual(read.saved.project,project);
+    assert.ok(!('transportTime' in read.saved.project.stationRouting!.routes.find(route=>route.id==='ST-S-ST-X')!));
+    assert.deepEqual(scheduleWorkerRun(read.saved.project,1,1,read.saved.project.bodyRunInput),scheduleWorkerRun(project,1,1,input));
+  }
+  assert.equal(materialRouteData(project,'TRANSFER').transportTime!.durationSeconds,5.007);
+  route.distanceMm=5000;assert.equal(materialRouteData(project,'TRANSFER').transportTime!.durationSeconds,10);
+  assert.equal(materialRouteData(project,'DELIVERY').transportTime!.durationSeconds,6.25);
+  external.distanceMm=5000;assert.equal(materialRouteData(project,'DELIVERY').transportTime!.durationSeconds,10);
+  const invalid=structuredClone(project);
+  // Corrupt the route that actually has a calculation, irrespective of fixture ordering.
+  invalid.stationRouting!.routes.find(route=>route.transportCalculation)!.transportTime={durationSeconds:1,basis:'assumed',source:'Test'};
+  assert.throws(()=>saveDomainDraft(storage,{originalJson:original,project:invalid},saved.raw),/jednego trybu/);assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),saved.raw);
+});
+
+function materialNetworkFixture():MaterialNetworkV6{
+  return {points:[{id:'WAREHOUSE',name:'Magazyn — test',kind:'external',direction:'output'},
+    {id:'S-IN',name:'Wejście S',kind:'station',stationId:'ST-S',copy:1,direction:'input'},
+    {id:'S-OUT',name:'Wyjście S',kind:'station',stationId:'ST-S',copy:1,direction:'output'},
+    {id:'X-IN',name:'Wejście X',kind:'station',stationId:'ST-X',copy:1,direction:'input'}],
+    routes:[{id:'DELIVERY',kind:'declared',fromPointId:'WAREHOUSE',toPointId:'S-IN',distanceMm:1250,basis:'confirmed',source:'Wyłącznie test syntetyczny'},
+      {id:'TRANSFER',kind:'station-route',fromPointId:'S-OUT',toPointId:'X-IN',stationRouteId:'ST-S-ST-X'}]};
+}
+
+test('3.2b: punkty i połączenia mają jedną długość/czas; sieć 1A nie zmienia przebiegu korpusu',()=>{
+  const {project,input}=branchingRouteFixture(),before=JSON.stringify(project),network=materialNetworkFixture();
+  const revised=editDomainMaterialNetwork(project,network);
+  assert.deepEqual(validateMaterialNetwork(revised,revised.materialNetwork),network);
+  assert.deepEqual(scheduleWorkerRun(revised,1,1,input),scheduleWorkerRun(project,1,1,input));
+  assert.deepEqual(materialRouteData(revised,'DELIVERY'),{distanceMm:1250,basis:'confirmed',source:'Wyłącznie test syntetyczny'});
+  const route=revised.stationRouting!.routes.find(route=>route.id==='ST-S-ST-X')!;
+  route.distanceMm=900;route.transportTime!.durationSeconds=2;
+  const data=materialRouteData(revised,'TRANSFER');assert.equal(data.distanceMm,900);assert.equal(data.transportTime!.durationSeconds,2);
+  data.transportTime!.durationSeconds=99;assert.equal(route.transportTime!.durationSeconds,2);
+  const {materialNetwork:_network,...withoutNetwork}=revised;
+  assert.equal(JSON.stringify(project),before);assert.deepEqual(editDomainMaterialNetwork(revised,undefined),withoutNetwork);
+  assert.ok(!('materialNetwork' in editDomainMaterialNetwork(revised,undefined)));
+});
+
+test('3.2b: jednostki długości są jawne; konwersja nie przyjmuje braków ani przepełnienia',()=>{
+  assert.equal(distanceToMm(1.25,'m'),1250);assert.equal(distanceFromMm(1250,'m'),1.25);
+  assert.equal(distanceToMm(7,'mm'),7);assert.equal(distanceToMm(0,'m'),0);
+  for(const value of [-1,NaN,Infinity]){assert.throws(()=>distanceToMm(value,'m'));assert.throws(()=>distanceFromMm(value,'mm'));}
+  assert.throws(()=>distanceToMm(Number.MAX_VALUE,'m'));assert.throws(()=>distanceToMm(1,'cm' as any));
+  assert.throws(()=>distanceToMm('' as any,'mm'));
+});
+
+test('3.2b: odmowy błędnych punktów, kierunków, kopii, powtórzeń i sprzecznych danych tras',()=>{
+  const {project}=branchingRouteFixture();
+  const changes:Array<(network:any)=>void>=[
+    n=>n.points.push({...n.points[0]}),n=>n.points[0].id='',n=>n.points[0].name='',
+    n=>n.points[0].direction='sideways',n=>n.points[0].stationId='ST-S',n=>n.points[1].copy=2,
+    n=>n.points[1].stationId='missing',n=>n.points[1].copy=1.5,n=>n.points[1].extra=true,
+    n=>n.routes[0].fromPointId='missing',n=>n.routes[0].fromPointId='S-IN',n=>n.routes[0].toPointId='S-OUT',
+    n=>n.routes[0].toPointId='WAREHOUSE',n=>n.routes.push({...n.routes[0],id:'DUPLICATE'}),
+    n=>n.routes[0].distanceMm=-1,n=>n.routes[0].distanceMm=Infinity,n=>n.routes[0].basis='assumed',n=>n.routes[0].source='',
+    n=>n.routes[1].stationRouteId='missing',n=>n.routes[1].stationRouteId='ST-X-ST-S',n=>n.routes[1].distanceMm=2,
+    n=>n.routes[1].kind='declared',n=>n.routes[0].stationRouteId='ST-S-ST-X',
+    n=>n.routes[0].transportTime={durationSeconds:0,basis:'assumed',source:'Test'},
+    n=>n.routes[0].transportTime={durationSeconds:1,basis:'assumed',source:''},n=>n.routes[0].unknown=true,
+    n=>n.points.splice(0,1)
+  ];
+  for(const change of changes){const network=structuredClone(materialNetworkFixture());change(network);assert.throws(()=>validateMaterialNetwork(project,network));}
+  const revised=editDomainMaterialNetwork(project,materialNetworkFixture());
+  revised.stationRouting!.routes=revised.stationRouting!.routes.filter(route=>route.id!=='ST-S-ST-X');
+  assert.throws(()=>parseDomainProjectV6(JSON.stringify(revised)),/nieznana trasa/);
+  assert.throws(()=>validateMaterialNetwork(project,{points:[],routes:[],extra:true}));
+  assert.throws(()=>validateMaterialNetwork(project,null));
+});
+
+test('3.2b: zapis/odczyt i usuwanie sieci zachowują dokładne źródło 4/5, stare dane i poprzedni zapis przy błędzie',()=>{
+  for(const file of ['tests/qa/Eko_B_export_20260930_183858.json','tests/qa/Eko_D5_actual_export_v5.json']){
+    const original=readFileSync(file,'utf8');
+    const prepared=prepareDomainMigration(JSON.parse(original).schemaVersion===4?previewDomainMigrationFromV4(original):previewDomainMigrationFromV5(original));
+    assert.ok(!('materialNetwork' in prepared.project));
+    const storage=new DraftStorage();storage.values.set('layout-studio-v3','active4');storage.values.set('layout-studio-stations-v5','active5');
+    const first=saveDomainDraft(storage,prepared,null),station=prepared.project.stations[0];
+    const project=structuredClone(prepared.project);project.stationSettings[station.id]={...project.stationSettings[station.id],operators:1,parallelStations:1};
+    const network:MaterialNetworkV6={points:[{id:'STORE',kind:'external',name:'Test — magazyn',direction:'both'},
+      {id:'IN',kind:'station',name:'Test — wejście',direction:'input',stationId:station.id,copy:1}],
+      routes:[{id:'SUPPLY',kind:'declared',fromPointId:'STORE',toPointId:'IN',distanceMm:distanceToMm(2.5,'m'),basis:'confirmed',source:'Test',
+        transportTime:{durationSeconds:3,basis:'assumed',source:'Test'}}]};
+    const revised=editDomainMaterialNetwork(project,network),saved=saveDomainDraft(storage,{originalJson:original,project:revised},first.raw);
+    const reopened=readDomainDraft(storage);assert.equal(reopened.status,'valid');
+    if(reopened.status==='valid'){assert.deepEqual(reopened.saved.project.materialNetwork,network);assert.equal(reopened.saved.originalJson,original);assert.equal(reopened.raw,saved.raw);}
+    const invalid=structuredClone(revised);invalid.materialNetwork!.points=[];
+    assert.throws(()=>saveDomainDraft(storage,{originalJson:original,project:invalid},saved.raw));assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),saved.raw);
+    const cleared=editDomainMaterialNetwork(revised,undefined);saveDomainDraft(storage,{originalJson:original,project:cleared},saved.raw);
+    const read=readDomainDraft(storage);assert.equal(read.status,'valid');if(read.status==='valid')assert.ok(!('materialNetwork' in read.saved.project));
+    assert.equal(storage.getItem('layout-studio-v3'),'active4');assert.equal(storage.getItem('layout-studio-stations-v5'),'active5');assert.equal(readFileSync(file,'utf8'),original);
+  }
+});
+
+test('3.2b: migracja nie aktywuje niezweryfikowanych pól sieci w źródle 5',()=>{
+  const raw=JSON.parse(readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8'));
+  raw.materialNetwork={points:'unsupported',routes:[]};const original=JSON.stringify(raw);
+  const migrated=prepareDomainMigration(previewDomainMigrationFromV5(original));
+  assert.equal(migrated.originalJson,original);assert.ok(!('materialNetwork' in migrated.project));
+});
+
+test('3.1c: oba protokoły kończą zadanie po błędzie wykonania/klonowania i ignorują późny wynik',()=>{
+  for(const request of [{project:derive(parseProject(JSON.stringify(base))).project,interval:1,batch:1},
+    {project:concurrentBodyFixture(),arrivalIntervalSeconds:1,batch:1}]){
+    const received:unknown[]=[],callbacks={progress:(value:unknown)=>received.push(value),result:(value:unknown)=>received.push(value),error:(value:string)=>received.push(value)};
+    let stopped=0,prevented=0;
+    const port:any={onmessage:null,onerror:null,postMessage:()=>{},terminate:()=>stopped++};
+    const cancel=startBackgroundTask(request,callbacks,()=>port),late=port.onmessage;
+    port.onerror({message:'Błąd wykonania testowego',preventDefault:()=>prevented++});
+    assert.equal(stopped,1);assert.equal(prevented,1);assert.equal(port.onmessage,null);assert.equal(port.onerror,null);
+    late({data:{kind:'result',result:{stale:true}}});cancel();cancel();
+    assert.deepEqual(received,['Błąd wykonania testowego']);assert.equal(stopped,1);
+    const clonePort:any={onmessage:null,onerror:null,postMessage:()=>{throw new Error('Błąd klonowania testowego');},terminate:()=>stopped++};
+    startBackgroundTask(request,callbacks,()=>clonePort)();
+    assert.equal(stopped,2);assert.equal(clonePort.onmessage,null);assert.equal(clonePort.onerror,null);
+    assert.deepEqual(received,['Błąd wykonania testowego','Błąd klonowania testowego']);
+  }
+});
+
+test('3.1b: tło aktywnej symulacji 4/5 zachowuje pełny wynik, wejście i postęp',()=>{
+  const projects=[derive(parseProject(JSON.stringify(base))).project,
+    derive(parseProject(readFileSync('tests/qa/Eko_B_export_20260930_183858.json','utf8'))).project,
+    deriveStationProject(parseStationProjectV5(readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8'))).project];
+  for(const project of projects){
+    const before=JSON.stringify(project),messages:NetworkReply[]=[];
+    executeNetworkRequest({project,interval:4050,batch:3},message=>messages.push(structuredClone(message)));
+    const reply=messages.at(-1)!;assert.equal(reply.kind,'result');
+    if(reply.kind==='result')assert.deepEqual(reply.result,simulateNetwork(project,4050,3));
+    const progress=messages.filter(message=>message.kind==='progress').map(message=>message.progress);
+    assert.equal(progress[0].completed,0);assert.equal(progress.at(-1)!.completed,project.processSteps.length*3);
+    assert.ok(progress.length<=101);assert.ok(progress.every((value,index)=>value.total===project.processSteps.length*3&&(index===0||value.completed>progress[index-1].completed)));
+    assert.equal(JSON.stringify(project),before);
+  }
+  for(const [interval,batch] of [[0,3],[1,10001],[1,10000]]){
+    const messages:NetworkReply[]=[];
+    const project=structuredClone(projects[0]);
+    if(batch===10000)project.processSteps=Array.from({length:21},(_,i)=>({...project.processSteps[0],id:`LIMIT-${i}`,sequenceNumber:i+1,predecessorIds:[]}));
+    executeNetworkRequest({project,interval,batch},message=>messages.push(message));
+    assert.equal(messages.length,1);assert.equal(messages[0].kind,'error');
+  }
+});
+
+test('3.1a: protokół tła zachowuje pełne wyniki i monotoniczny postęp wszystkich wariantów Eko',()=>{
+  const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+  for(const variant of ['parallel','sequential','shared-worker'] as EkoTestVariant[]){
+    const {project}=createEkoTestScenario(original,variant),before=JSON.stringify(project),messages:ScheduleReply[]=[];
+    executeScheduleRequest({project,batch:1,arrivalIntervalSeconds:1},message=>messages.push(structuredClone(message)));
+    const result=messages.at(-1)!;assert.equal(result.kind,'result');
+    if(result.kind==='result')assert.deepEqual(result.result,scheduleWorkerRun(project,1,1,project.bodyRunInput));
+    const progress=messages.filter(message=>message.kind==='progress').map(message=>message.progress.completed);
+    assert.equal(progress[0],0);assert.equal(progress.at(-1),16);
+    assert.ok(progress.every((value,index)=>index===0||value>=progress[index-1]));
+    assert.equal(JSON.stringify(project),before);
+  }
+  const {project}=createEkoTestScenario(original,'parallel'),messages:ScheduleReply[]=[];
+  executeScheduleRequest({project,batch:1,arrivalIntervalSeconds:0},message=>messages.push(message));
+  assert.equal(messages.length,1);assert.equal(messages[0].kind,'error');
+});
+
+test('3.1a: anulowanie kończy worker i odrzuca spóźnione zdarzenia; nowy przebieg jest niezależny',()=>{
+  const project=concurrentBodyFixture(),request={project,batch:1,arrivalIntervalSeconds:1};
+  const ports:any[]=[];const received:string[]=[];
+  const factory=()=>{const port={onmessage:null,onerror:null,terminated:0,posted:[] as unknown[],
+    postMessage(value:unknown){this.posted.push(structuredClone(value));},terminate(){this.terminated++;}};ports.push(port);return port;};
+  const callbacks={progress:()=>received.push('progress'),result:()=>received.push('result'),error:()=>received.push('error')};
+  const cancel=startScheduleTask(request,callbacks,factory);const stale=ports[0].onmessage;
+  cancel();assert.equal(ports[0].terminated,1);assert.equal(ports[0].onmessage,null);
+  stale({data:{kind:'progress',progress:{completed:1,total:2}}});assert.deepEqual(received,[]);
+  const nextCancel=startScheduleTask(request,callbacks,factory);
+  ports[1].onmessage({data:{kind:'result',result:scheduleWorkerRun(project,1,1,bodyInputFor())}});
+  stale({data:{kind:'error',message:'old'}});assert.deepEqual(received,['result']);assert.equal(ports[1].terminated,1);
+  nextCancel();assert.equal(ports[0].posted.length,1);
+  startScheduleTask(request,callbacks,()=>{throw new Error('Brak workera');});assert.deepEqual(received,['result','error']);
+});
+
+test('2.9: trzy zatwierdzone warianty testowe Eko zachowują graf, czasy, źródło i inwarianty',()=>{
+  const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8'),source=JSON.parse(original);
+  for(const variant of ['parallel','sequential','shared-worker'] as EkoTestVariant[]){
+    const prepared=createEkoTestScenario(original,variant),project=prepared.project;
+    assert.equal(prepared.originalJson,original);assert.equal(project.bom.length,60);
+    for(const operation of project.operations){
+      const old=source.processSteps.find((step:ProcessStep)=>step.id===operation.id);
+      assert.deepEqual(operation.predecessorIds,old.predecessorIds);assert.equal(operation.standardTimeSeconds,old.standardTimeSeconds);
+      assert.equal(operation.staffing!.timeVariants[0].timeProfile.durationBasis,'assumed');
+    }
+    const before=JSON.stringify(project),result=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+    const run=(id:string)=>result.runs.find(run=>run.operationId===id)!;
+    assert.equal(result.runs.length,16);assert.equal(result.jobs[0].finish,variant==='parallel'?13550:14150);
+    assert.deepEqual([run('OP22').startSeconds,run('OP22').endSeconds],[7670,8270]);
+    assert.deepEqual([run('OP23').startSeconds,run('OP23').endSeconds],variant==='parallel'?[7670,8270]:[8270,8870]);
+    assert.ok(run('OP23').waitCauses.includes(variant==='shared-worker'?'workers':'same-job')||variant==='parallel');
+    assert.ok(['OP10','OP13','OP14','OP15','OP16','OP17'].every(id=>run(id).startSeconds===0));
+    assert.equal(run('OP18').startSeconds,1680);
+    assert.ok(EKO_TEST_PREPARATIONS.every(id=>run(id).bodyId===undefined));
+    for(const operation of project.operations)for(const predecessor of operation.predecessorIds)assert.ok(run(operation.id).startSeconds>=run(predecessor).endSeconds);
+    for(const a of result.reservations.reservations)for(const b of result.reservations.reservations){
+      if(a===b||!a.workerIds.some(id=>b.workerIds.includes(id)))continue;
+      assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
+    }
+    let book=createBodyBook(project,project.bodyRunInput!.bodies,0);
+    for(const event of result.bodyEvents!)book=applyBodyEvent(book,event);
+    assert.deepEqual(book,result.bodyBook);assert.ok(result.runs.every(run=>!run.transport));
+    assert.equal(JSON.stringify(project),before);
+    const store=new DraftStorage();store.setItem('layout-studio-v3','active4');store.setItem('layout-studio-stations-v5',original);
+    saveDomainDraft(store,prepared,null);const read=readDomainDraft(store);if(read.status!=='valid')throw new Error('Brak odczytu');
+    assert.equal(read.saved.originalJson,original);assert.deepEqual(scheduleWorkerRun(read.saved.project,1,1,read.saved.project.bodyRunInput),result);
+    assert.equal(store.getItem('layout-studio-v3'),'active4');assert.equal(store.getItem('layout-studio-stations-v5'),original);
+  }
+});
+
+test('2.9: jawna rama jest wejściem testu, a brak lub inne miejsce bez trasy blokuje wynik',()=>{
+  const original=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+  const {project}=createEkoTestScenario(original,'parallel');const initial=JSON.stringify(project);
+  assert.throws(()=>scheduleWorkerRun(project,1,1),/brak jawnych instancji/);
+  const different=structuredClone(project.bodyRunInput!);
+  different.bodies[0].location={kind:'station',stationId:project.stations.find(station=>station.operationIds.includes('OP10'))!.id,copy:1};
+  assert.throws(()=>scheduleWorkerRun(project,1,1,different),/brak jawnej trasy lub czasu/);
+  assert.equal(JSON.stringify(project),initial);
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+  assert.ok(result.bodyEvents!.every(event=>event.kind==='reserve'||event.kind==='release'));
+  assert.ok(result.bodyBook!.bodies.every(body=>body.status==='available'));
+  assert.deepEqual(result.bodyBook!.bodies[0].location,project.bodyRunInput!.bodies[0].location);
+});
 
 class DraftStorage {
   values = new Map<string,string>();
@@ -39,6 +334,893 @@ class DraftStorage {
   getItem(key:string){return this.values.get(key)??null;}
   setItem(key:string,value:string){if(this.failWrite)throw new Error('quota');this.values.set(key,value);}
 }
+
+function concurrentBodyFixture(){
+  const project=stationaryBodyFixture();
+  project.stationSettings['ST-A'].parallelStations=1;
+  project.operations[1].predecessorIds=[];
+  project.operations[1].staffing!.timeVariants[0].timeProfile.durationSeconds=20;
+  project.operations[1].staffing!.timeVariants[0].timeProfile.operatorPresence[0].endSeconds=20;
+  project.workerRunSelection!.operations.forEach((choice,index)=>choice.eligibleWorkerIds=[index?'W-B':'W-A']);
+  project.physicalConcurrency={groups:[{id:'TOGETHER',operationIds:project.operations.map(operation=>operation.id)}]};
+  return project;
+}
+function bodyInputFor(count=1):BodyRunInput{
+  return {bodies:Array.from({length:count},(_,i)=>({id:`BODY-${i+1}`,productId:'PRODUCT',location:{kind:'station',stationId:'ST-A',copy:1}})),
+    jobs:Array.from({length:count},(_,i)=>({job:i+1,bodyId:`BODY-${i+1}`}))};
+}
+
+function branchingRouteFixture(){
+  const project=concurrentBodyFixture();delete project.resourceCalendars;
+  project.equipment=[];
+  const template=project.operations[0];
+  project.operations=['ROOT','P','Q'].map((id,index)=>({...structuredClone(template),id,name:id,
+    sequenceNumber:index+1,predecessorIds:index?['ROOT']:[]}));
+  project.stations=['S','X','Y','P','Q'].map(id=>({id:`ST-${id}`,name:id,operationIds:[]}));
+  project.stationSettings=Object.fromEntries(project.stations.map(station=>[station.id,{operators:1,parallelStations:1}]));
+  project.workerRunSelection!.operations=project.operations.map(operation=>({operationId:operation.id,workerCount:1,eligibleWorkerIds:['W-A']}));
+  project.physicalConcurrency={groups:[{id:'PQ',operationIds:['P','Q']}]};
+  const candidate=(id:string)=>({stationId:`ST-${id}`,copy:1,requiredEquipmentIds:[]});
+  project.stationRouting={selectionRule:'earliest-start-then-shortest-route',equipmentPlacements:[],
+    operations:[{operationId:'ROOT',candidates:[candidate('Y'),candidate('X')]},
+      {operationId:'P',candidates:[candidate('P')]},{operationId:'Q',candidates:[candidate('Q')]}],
+    routes:project.stations.flatMap(from=>project.stations.filter(to=>from.id!==to.id).map(to=>({
+      id:`${from.id}-${to.id}`,from:{stationId:from.id,copy:1},to:{stationId:to.id,copy:1},
+      distanceMm:from.id==='ST-S'?7:from.id==='ST-X'?(to.id==='ST-P'?2:100):from.id==='ST-Y'?(to.id==='ST-P'?10:3):50,
+      basis:'confirmed' as const,source:'Wyłącznie syntetyczny przykład 1A',
+      transportTime:{durationSeconds:1,basis:'assumed' as const,source:'Syntetyczny czas'}})))};
+  const input=bodyInputFor();input.bodies[0].location={kind:'station',stationId:'ST-S',copy:1};
+  return {project,input};
+}
+
+test('2.8c: pierwszeństwo technologiczne gałęzi rozstrzyga dalszą drogę bez sumowania',()=>{
+  const {project,input}=branchingRouteFixture();const before=JSON.stringify({project,input});
+  const result=scheduleWorkerRun(project,1,1,input);
+  assert.deepEqual(result.runs.map(run=>[run.operationId,run.stationId,run.startSeconds,run.endSeconds]),
+    [['ROOT','ST-X',1,11],['P','ST-P',12,22],['Q','ST-Q',23,33]]);
+  assert.equal(result.runs[0].selectionDistanceMm,2);
+  assert.equal(result.runs[0].selectionRouteId,'ST-X-ST-P');
+  assert.equal(result.runs[2].transport!.routeId,'ST-P-ST-Q');
+  assert.equal(result.runs[2].arrivalRouteId,undefined); // No route inferred from iteration order.
+  let book=createBodyBook(project,input.bodies,0);
+  for(const event of result.bodyEvents!)book=applyBodyEvent(book,event);
+  assert.deepEqual(book,result.bodyBook);assert.equal(JSON.stringify({project,input}),before);
+  project.operations[1].sequenceNumber=3;project.operations[2].sequenceNumber=2;
+  assert.equal(scheduleWorkerRun(project,1,1,input).runs[0].stationId,'ST-Y');
+});
+
+test('2.8c: czas startu i rzeczywista droga przychodząca mają pierwszeństwo przed gałęziami',()=>{
+  const {project,input}=branchingRouteFixture();
+  const calendar={shifts:[{startSeconds:0,endSeconds:1000,basis:'assumed' as const}],breaks:[]};
+  project.resourceCalendars={workers:Object.fromEntries(project.workers.map(worker=>[worker.id,structuredClone(calendar)])),
+    stations:Object.fromEntries(project.stations.map(station=>[station.id,structuredClone(calendar)]))};
+  project.resourceCalendars.stations['ST-X'].shifts[0].startSeconds=50;
+  assert.equal(scheduleWorkerRun(project,1,1,input).runs[0].stationId,'ST-Y');
+  delete project.resourceCalendars;
+  project.stationRouting!.routes.find(route=>route.id==='ST-S-ST-Y')!.distanceMm=1;
+  assert.equal(scheduleWorkerRun(project,1,1,input).runs[0].stationId,'ST-Y');
+  project.stationRouting!.routes=project.stationRouting!.routes.filter(route=>route.id!=='ST-X-ST-P');
+  assert.throws(()=>scheduleWorkerRun(project,1,1,input),/Brak rzeczywistej trasy/);
+});
+
+test('2.8c: przyszłe kopie są automatyczne, wspólna praca zachowuje jedną lokalizację i odtwarzalny zapis',()=>{
+  const {project,input}=branchingRouteFixture();
+  for(const operation of project.stationRouting!.operations.slice(1))operation.candidates=structuredClone(project.stationRouting!.operations[0].candidates);
+  project.workerRunSelection!.operations[2].eligibleWorkerIds=['W-B'];
+  const result=scheduleWorkerRun(project,1,1,input);
+  assert.deepEqual(result.runs.map(run=>[run.stationId,run.startSeconds,run.endSeconds]),
+    [['ST-Y',1,11],['ST-Y',11,21],['ST-Y',11,21]]);
+  assert.equal(result.runs[0].selectionRouteId,undefined); // Zero means staying on the same physical copy.
+  assert.equal(result.runs[1].transport,undefined);assert.equal(result.runs[2].transport,undefined);
+  project.bodyRunInput=input;
+  const store=new DraftStorage(),originalJson=JSON.stringify(derive(parseProject(JSON.stringify(base))).project);
+  saveDomainDraft(store,{originalJson,project},null);const read=readDomainDraft(store);
+  if(read.status!=='valid')throw new Error('Brak odczytu');
+  assert.deepEqual(scheduleWorkerRun(read.saved.project,1,1,read.saved.project.bodyRunInput),result);
+  const second=bodyInputFor(2);second.bodies.forEach(body=>body.location={kind:'station',stationId:'ST-S',copy:1});
+  const batch=scheduleWorkerRun(project,1,2,second);
+  for(const run of batch.runs)for(const other of batch.runs){
+    if(run.job===other.job||run.stationId!==other.stationId||run.copy!==other.copy)continue;
+    assert.ok(run.endSeconds<=other.stationReserveStartSeconds!||other.endSeconds<=run.stationReserveStartSeconds!);
+  }
+});
+
+test('2.8c: remis pierwszej gałęzi sprawdza drugą, a późniejszy przydział nie zamraża planowanego celu',()=>{
+  const {project,input}=branchingRouteFixture();
+  project.stationRouting!.operations[0].candidates.reverse();
+  project.stationRouting!.routes.find(route=>route.id==='ST-X-ST-P')!.distanceMm=10;
+  assert.equal(scheduleWorkerRun(project,1,1,input).runs[0].stationId,'ST-Y');
+  project.stationRouting!.routes.find(route=>route.id==='ST-X-ST-P')!.distanceMm=2;
+  project.stationRouting!.operations[1].candidates.push({stationId:'ST-Q',copy:1,requiredEquipmentIds:[]});
+  const calendar={shifts:[{startSeconds:0,endSeconds:1000,basis:'assumed' as const}],breaks:[]};
+  project.resourceCalendars={workers:Object.fromEntries(project.workers.map(worker=>[worker.id,structuredClone(calendar)])),
+    stations:Object.fromEntries(project.stations.map(station=>[station.id,structuredClone(calendar)]))};
+  project.resourceCalendars.stations['ST-P'].shifts[0].startSeconds=50;
+  const result=scheduleWorkerRun(project,1,1,input);
+  assert.equal(result.runs[0].selectionRouteId,'ST-X-ST-P');
+  assert.equal(result.runs[1].stationId,'ST-Q');assert.equal(result.runs[1].startSeconds,12);
+  assert.equal(result.runs[1].transport!.routeId,'ST-X-ST-Q');
+  project.stationRouting!.routes.find(route=>route.id==='ST-S-ST-X')!.transportTime=undefined;
+  assert.throws(()=>scheduleWorkerRun(project,1,1,input),/brak jawnej trasy lub czasu/);
+});
+
+test('2.8c: przygotowanie między pracami nie wyznacza drogi korpusu; złączenie czeka na obie gałęzie',()=>{
+  const {project,input}=branchingRouteFixture(),template=project.operations[0];
+  project.operations.push({...structuredClone(template),id:'PREP',name:'Przygotowanie',sequenceNumber:2,
+    predecessorIds:['ROOT'],physicalRole:{kind:'subassembly-preparation',subassemblyIds:['PART']}},
+    {...structuredClone(template),id:'JOIN',name:'Złączenie',sequenceNumber:5,predecessorIds:['P','Q']});
+  project.operations[1].predecessorIds=['PREP'];project.operations[2].predecessorIds=['PREP'];
+  project.operations[1].sequenceNumber=3;project.operations[2].sequenceNumber=4;
+  project.subassemblies=[{id:'PART',name:'Testowy podzespół',producerOperationId:'PREP',consumerOperationIds:['P','Q']}];
+  for(const id of ['PREP','JOIN']){
+    project.workerRunSelection!.operations.push({operationId:id,workerCount:1,eligibleWorkerIds:['W-A']});
+    project.stationRouting!.operations.push({operationId:id,candidates:[{stationId:id==='PREP'?'ST-S':'ST-Q',copy:1,requiredEquipmentIds:[]}]});
+  }
+  const result=scheduleWorkerRun(project,1,1,input);
+  assert.equal(result.runs[0].stationId,'ST-X');assert.equal(result.runs[0].selectionRouteId,'ST-X-ST-P');
+  const prep=result.runs.find(run=>run.operationId==='PREP')!;
+  assert.equal(prep.bodyId,undefined);assert.equal(prep.transport,undefined);
+  const join=result.runs.find(run=>run.operationId==='JOIN')!;
+  assert.ok(join.startSeconds>=Math.max(...result.runs.filter(run=>['P','Q'].includes(run.operationId)).map(run=>run.endSeconds)));
+  assert.equal(join.stationId,'ST-Q');assert.equal(join.transport,undefined);
+});
+
+test('2.8b: wspólny korpus i kopia pozostają zajęte do ostatniej operacji; inne sztuki czekają',()=>{
+  const project=concurrentBodyFixture(),input=bodyInputFor(2);
+  const before=JSON.stringify({project,input});
+  const result=scheduleWorkerRun(project,1,2,input);
+  assert.deepEqual(result.runs.map(run=>[run.job,run.operationId,run.startSeconds,run.endSeconds]),[
+    [1,project.operations[0].id,0,10],[1,project.operations[1].id,0,20],
+    [2,project.operations[0].id,20,30],[2,project.operations[1].id,20,40]]);
+  let book=createBodyBook(project,input.bodies,0);
+  for(const event of result.bodyEvents!){
+    book=applyBodyEvent(book,event);
+    if(event.kind==='release'&&event.bodyId==='BODY-1'&&event.atSeconds===10){
+      const body=book.bodies.find(body=>body.id==='BODY-1')!;assert.equal(body.status,'reserved');
+      assert.equal(bodyAvailableAt(book,'BODY-1',{stationId:'ST-A',copy:1}),false);
+      assert.throws(()=>applyBodyEvent(book,{kind:'start-transfer',bodyId:'BODY-1',atSeconds:10,to:{stationId:'ST-C',copy:1},endSeconds:12,basis:'assumed'}),/zajętego/);
+    }
+  }
+  assert.deepEqual(book,result.bodyBook);assert.ok(book.bodies.every(body=>body.status==='available'));
+  assert.equal(JSON.stringify({project,input}),before);
+  const sequential=structuredClone(project);delete sequential.physicalConcurrency;
+  assert.deepEqual(scheduleWorkerRun(sequential,1,1,bodyInputFor()).runs.map(run=>[run.startSeconds,run.endSeconds]),[[0,10],[10,30]]);
+  project.operations[1].predecessorIds=[project.operations[0].id];
+  assert.deepEqual(scheduleWorkerRun(project,1,1,bodyInputFor()).runs.map(run=>[run.startSeconds,run.endSeconds]),[[0,10],[10,30]]);
+});
+
+test('2.8b: grupa nie znosi wyłączności osób i wyposażenia ani pauz kalendarza',()=>{
+  const project=concurrentBodyFixture();
+  project.resourceCalendars!.stations['ST-A'].breaks=[{startSeconds:5,endSeconds:10,basis:'assumed'}];
+  const paused=scheduleWorkerRun(project,1,1,bodyInputFor());
+  assert.deepEqual(paused.runs.map(run=>[run.startSeconds,run.endSeconds]),[[0,15],[0,25]]);
+  assert.deepEqual(paused.runs.map(run=>run.pauses),[[{startSeconds:5,endSeconds:10}],[{startSeconds:5,endSeconds:10}]]);
+  const oneWorker=structuredClone(project);oneWorker.workerRunSelection!.operations.forEach(choice=>choice.eligibleWorkerIds=['W-A']);
+  const exclusive=scheduleWorkerRun(oneWorker,1,1,bodyInputFor());
+  assert.deepEqual(exclusive.runs.map(run=>[run.startSeconds,run.endSeconds]),[[0,15],[15,35]]);
+  assert.ok(exclusive.runs[1].waitCauses.includes('workers'));
+  delete project.resourceCalendars;
+  const ids=project.operations.map(operation=>operation.id);
+  project.equipment=[{id:'EQ',name:'Jawny egzemplarz testowy',stationId:'ST-A',capableOperationIds:ids}];
+  project.stationRouting={selectionRule:'earliest-start-then-shortest-route',equipmentPlacements:[{equipmentId:'EQ',stationId:'ST-A',copy:1}],
+    operations:ids.map(operationId=>({operationId,candidates:[{stationId:'ST-A',copy:1,requiredEquipmentIds:['EQ']}]})),routes:[]};
+  const equipped=scheduleWorkerRun(project,1,1,bodyInputFor());
+  assert.deepEqual(equipped.runs.map(run=>[run.startSeconds,run.endSeconds]),[[0,10],[10,30]]);
+  assert.ok(equipped.runs[1].waitCauses.includes('equipment'));
+  project.equipment.push({id:'EQ2',name:'Drugi egzemplarz testowy',stationId:'ST-A',capableOperationIds:ids});
+  project.stationRouting.equipmentPlacements.push({equipmentId:'EQ2',stationId:'ST-A',copy:1});
+  project.stationRouting.operations[1].candidates[0].requiredEquipmentIds=['EQ2'];
+  assert.deepEqual(scheduleWorkerRun(project,1,1,bodyInputFor()).runs.map(run=>[run.startSeconds,run.endSeconds]),[[0,10],[0,20]]);
+});
+
+test('2.8b: dołączenie trzeciej operacji wymaga jednej grupy i jednej lokalizacji',()=>{
+  const project=concurrentBodyFixture();
+  const [a,b]=project.operations.map(operation=>operation.id),c='THIRD';
+  project.operations.push({...structuredClone(project.operations[0]),id:c,name:'Trzecia',predecessorIds:[]});
+  project.stations[0].operationIds.push(c);project.workers.push({id:'W-C',name:'Trzecia osoba'});
+  project.workerRunSelection!.teamWorkerIds.push('W-C');
+  project.workerRunSelection!.operations.push({operationId:c,workerCount:1,eligibleWorkerIds:['W-C']});
+  project.resourceCalendars!.workers['W-C']=structuredClone(project.resourceCalendars!.workers['W-A']);
+  project.physicalConcurrency={groups:[{id:'AB',operationIds:[a,b]},{id:'BC',operationIds:[b,c]}]};
+  const result=scheduleWorkerRun(project,1,1,bodyInputFor());
+  assert.deepEqual(result.runs.map(run=>[run.operationId,run.startSeconds,run.endSeconds]),[[a,0,10],[b,0,20],[c,10,20]]);
+  let book=createBodyBook(project,bodyInputFor().bodies,0);
+  book=applyBodyEvent(book,{kind:'reserve',bodyId:'BODY-1',atSeconds:0,operationId:a,endSeconds:10,basis:'assumed'});
+  book=applyBodyEvent(book,{kind:'reserve',bodyId:'BODY-1',atSeconds:0,operationId:b,endSeconds:20,basis:'assumed'});
+  assert.equal(bodyAllowsOperation(book,'BODY-1',c,{stationId:'ST-A',copy:1}),false);
+  assert.equal(bodyAllowsOperation(book,'BODY-1',b,{stationId:'ST-C',copy:1}),false);
+  assert.throws(()=>applyBodyEvent(book,{kind:'reserve',bodyId:'BODY-1',atSeconds:1,operationId:c,endSeconds:11,basis:'assumed'}),/całej grupy/);
+  const store=new DraftStorage(),originalJson=JSON.stringify(derive(parseProject(JSON.stringify(base))).project);
+  project.bodyRunInput=bodyInputFor();saveDomainDraft(store,{originalJson,project},null);
+  const read=readDomainDraft(store);if(read.status!=='valid')throw new Error('Brak odczytu.');
+  assert.deepEqual(scheduleWorkerRun(read.saved.project,1,1,read.saved.project.bodyRunInput),result);
+});
+
+test('2.8b: przygotowanie w innym miejscu może działać równolegle, transport czeka na wszystkie prace korpusu',()=>{
+  const mixed=stationChoiceFixture();mixed.product={id:'PRODUCT',name:'Wyrób testowy'};
+  mixed.operations[1].predecessorIds=[];
+  mixed.subassemblies=[{id:'PART',name:'Przygotowanie testowe',producerOperationId:mixed.operations[0].id,consumerOperationIds:[mixed.operations[1].id]}];
+  mixed.operations[0].physicalRole={kind:'subassembly-preparation',subassemblyIds:['PART']};mixed.operations[1].physicalRole={kind:'body-work'};
+  mixed.workerRunSelection!.operations.forEach((choice,index)=>choice.eligibleWorkerIds=[index?'W-B':'W-A']);
+  mixed.physicalConcurrency={groups:[{id:'MIXED',operationIds:mixed.operations.map(operation=>operation.id)}]};
+  mixed.stationRouting!.operations[0].candidates=[mixed.stationRouting!.operations[0].candidates[0]];
+  const input=bodyInputFor();input.bodies[0].location={kind:'station',stationId:'ST-C',copy:1};
+  const result=scheduleWorkerRun(mixed,1,1,input);
+  assert.deepEqual(result.runs.map(run=>[run.stationId,run.startSeconds,run.endSeconds]),[['ST-A',0,10],['ST-C',0,10]]);
+  assert.equal(result.runs[0].bodyId,undefined);assert.equal(result.bodyEvents!.length,2);
+  const multiple=structuredClone(mixed);multiple.stationRouting!.operations[0].candidates.push({stationId:'ST-B',copy:1,requiredEquipmentIds:[]});
+  assert.deepEqual(scheduleWorkerRun(multiple,1,1,input).runs.map(run=>[run.stationId,run.startSeconds,run.endSeconds]),[['ST-A',0,10],['ST-C',0,10]]);
+
+  const project=concurrentBodyFixture(),[a,b]=project.operations.map(operation=>operation.id),c='TRANSFER-NEXT';
+  project.operations.push({...structuredClone(project.operations[0]),id:c,name:'Po przewozie',predecessorIds:[a]});
+  project.stations[2].operationIds=[c];
+  project.workerRunSelection!.operations.push({operationId:c,workerCount:1,eligibleWorkerIds:['W-A']});
+  project.physicalConcurrency!.groups.push({id:'B-C',operationIds:[b,c]});
+  project.stationRouting={selectionRule:'earliest-start-then-shortest-route',equipmentPlacements:[],
+    operations:project.operations.map(operation=>({operationId:operation.id,candidates:[{stationId:operation.id===c?'ST-C':'ST-A',copy:1,requiredEquipmentIds:[]}]})),
+    routes:[{id:'MOVE',from:{stationId:'ST-A',copy:1},to:{stationId:'ST-C',copy:1},distanceMm:1000,basis:'confirmed',source:'Test',
+      transportTime:{durationSeconds:2,basis:'assumed',source:'Jawny test'}}]};
+  const moved=scheduleWorkerRun(project,1,1,bodyInputFor());
+  assert.deepEqual(moved.runs.map(run=>[run.startSeconds,run.endSeconds]),[[0,10],[0,20],[22,32]]);
+  assert.deepEqual(moved.runs[2].transport,{routeId:'MOVE',startSeconds:20,endSeconds:22,basis:'assumed'});
+  assert.ok(moved.runs[2].waitCauses.includes('body'));
+  assert.equal(moved.runs[2].stationReserveStartSeconds,20);
+});
+
+test('2.8a: równoczesny zestaw wymaga jednej jawnej grupy, bez zgody przez przechodniość',()=>{
+  const project=stationaryBodyFixture();
+  const [a,b]=project.operations.map(operation=>operation.id),c='OP-THIRD';
+  project.operations.push({...structuredClone(project.operations[1]),id:c,name:'Trzecia operacja testowa',predecessorIds:[]});
+  project.stations[0].operationIds.push(c);
+  project.workerRunSelection!.operations.push({...project.workerRunSelection!.operations[1],operationId:c});
+  const policy:PhysicalConcurrency={groups:[{id:'G-AB',operationIds:[a,b]},{id:'G-BC',operationIds:[b,c]}]};
+  assert.deepEqual(validatePhysicalConcurrency(project,policy),policy);
+  assert.equal(matchingConcurrencyGroup(policy,[a,b]),'G-AB');
+  assert.equal(matchingConcurrencyGroup(policy,[b,a]),'G-AB');
+  assert.equal(matchingConcurrencyGroup(policy,[b,c]),'G-BC');
+  assert.equal(matchingConcurrencyGroup(policy,[a,c]),undefined);
+  assert.equal(matchingConcurrencyGroup(policy,[a,b,c]),undefined);
+  assert.equal(matchingConcurrencyGroup(policy,[a,a]),undefined);
+  assert.equal(matchingConcurrencyGroup(policy,[a,'UNKNOWN']),undefined);
+  assert.equal(matchingConcurrencyGroup(undefined,[a,b]),undefined);
+  const all={groups:[{id:'G-ABC',operationIds:[a,b,c]}]};
+  assert.equal(matchingConcurrencyGroup(all,[a,c]),'G-ABC');
+  assert.equal(matchingConcurrencyGroup(all,[a,b,c]),'G-ABC');
+  assert.equal(matchingConcurrencyGroup(policy,[]),undefined);
+  assert.equal(matchingConcurrencyGroup(policy,[a]),undefined);
+  // Declared permission does not remove a technological predecessor.
+  const withRules=parseDomainProjectV6(JSON.stringify({...project,physicalConcurrency:policy}));
+  assert.deepEqual(withRules.operations[1].predecessorIds,project.operations[1].predecessorIds);
+});
+
+test('2.8a: zapis/odczyt grup na źródłach 4/5 chroni oryginały, starsze szkice i migrację',()=>{
+  for(const version of [4,5] as const){
+    const source=version===4?derive(parseProject(JSON.stringify(base))).project:
+      JSON.parse(readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8'));
+    const originalJson=JSON.stringify(source);let i=0;
+    const prepared=prepareDomainMigration(version===4?previewDomainMigrationFromV4(originalJson,()=>`ST-concurrent-${++i}`):previewDomainMigrationFromV5(originalJson));
+    const project=prepared.project;
+    assert.equal(project.physicalConcurrency,undefined);
+    const storage=new DraftStorage();storage.values.set('layout-studio-v3','active4');storage.values.set('layout-studio-stations-v5','active5');
+    const old=saveDomainDraft(storage,{originalJson,project},null);
+    assert.equal(readDomainDraft(storage).status,'valid');
+    project.product={id:'PRODUCT',name:'Jawny wyrób testowy'};
+    project.operations.forEach(operation=>operation.physicalRole={kind:'body-work'});
+    project.physicalConcurrency={groups:[{id:'G',operationIds:project.operations.slice(0,2).map(operation=>operation.id)}]};
+    const written=saveDomainDraft(storage,{originalJson,project},old.raw);
+    const read=readDomainDraft(storage);if(read.status!=='valid')throw new Error('Brak odczytu.');
+    assert.deepEqual(read.saved.project.physicalConcurrency,project.physicalConcurrency);
+    assert.equal(read.saved.originalJson,originalJson);
+    assert.equal(storage.getItem('layout-studio-v3'),'active4');assert.equal(storage.getItem('layout-studio-stations-v5'),'active5');
+    assert.throws(()=>scheduleWorkerRun(read.saved.project,1,1),/brak jawnych instancji/);
+    const invalid=structuredClone(project);invalid.physicalConcurrency!.groups[0].operationIds[0]='UNKNOWN';
+    assert.throws(()=>saveDomainDraft(storage,{originalJson,project:invalid},written.raw),/znane operacje/);
+    assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),written.raw);
+    const damaged=JSON.parse(written.raw);damaged.project=invalid;const rawDamaged=JSON.stringify(damaged);
+    storage.setItem(DOMAIN_DRAFT_STORAGE_KEY,rawDamaged);assert.equal(readDomainDraft(storage).status,'corrupt');
+    assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),rawDamaged);
+    (source as typeof source & {physicalConcurrency:unknown}).physicalConcurrency=project.physicalConcurrency;
+    const contaminated=JSON.stringify(source);i=0;
+    const migrated=prepareDomainMigration(version===4?previewDomainMigrationFromV4(contaminated,()=>`ST-strip-concurrent-${++i}`):previewDomainMigrationFromV5(contaminated));
+    assert.equal(migrated.project.physicalConcurrency,undefined);assert.equal(migrated.originalJson,contaminated);
+  }
+});
+
+test('2.8a: walidacja grup odrzuca obce ID, powtórzenia i niepełne role bez mutacji',()=>{
+  const project=stationaryBodyFixture(),[a,b]=project.operations.map(operation=>operation.id);
+  const before=JSON.stringify(project);
+  const bad:unknown[]=[null,[],{}, {groups:null},{groups:[null]}, {groups:[{id:'',operationIds:[a,b]}]},
+    {groups:[{id:'G',operationIds:[a]}]}, {groups:[{id:'G',operationIds:[a,a]}]},
+    {groups:[{id:'G',operationIds:[a,'UNKNOWN']}]},
+    {groups:[{id:'G',operationIds:[a,b]},{id:'G',operationIds:[a,b]}]},
+    {groups:[{id:'G',operationIds:[a,b]},{id:'OTHER',operationIds:[b,a]}]},
+    {groups:[{id:'G',operationIds:[a,b],allowTransport:true}]},
+    {groups:[],default:'allow'}, {groups:Array.from({length:501},(_,i)=>({id:String(i),operationIds:[a,b]}))}];
+  for(const value of bad)assert.throws(()=>parseDomainProjectV6(JSON.stringify({...project,physicalConcurrency:value})),/Równoległość/);
+  assert.deepEqual(validatePhysicalConcurrency(project,{groups:[]}),{groups:[]});
+  const withRules={...project,physicalConcurrency:{groups:[{id:'G',operationIds:[a,b]}]}};
+  assert.throws(()=>editDomainPhysicalRole(withRules,a,null),/jawne role/);
+  const partial=structuredClone(withRules);delete partial.operations[1].physicalRole;
+  assert.throws(()=>parseDomainProjectV6(JSON.stringify(partial)),/jawne role/);
+  assert.equal(JSON.stringify(project),before);
+});
+
+function stationaryBodyFixture(){
+  const project=stationChoiceFixture();
+  project.product={id:'PRODUCT',name:'Jawny wyrób testowy'};
+  project.operations.forEach(operation=>operation.physicalRole={kind:'body-work'});
+  project.stations[0].operationIds=project.operations.map(operation=>operation.id);
+  project.stations[2].operationIds=[];
+  project.stationSettings['ST-A'].parallelStations=2;
+  delete project.stationRouting;
+  return project;
+}
+
+function movingBodyFixture(){
+  const project=stationChoiceFixture();
+  project.product={id:'PRODUCT',name:'Test transportu'};
+  project.operations.forEach(operation=>operation.physicalRole={kind:'body-work'});
+  project.stationRouting!.operations[0].candidates=[project.stationRouting!.operations[0].candidates[0]];
+  project.stationRouting!.routes.find(route=>route.id==='R-A')!.transportTime={durationSeconds:2,basis:'assumed',source:'Jawny scenariusz testowy'};
+  return project;
+}
+
+test('2.7d: transport ma jawny czas, cel zarezerwowany przed przewozem, korpus nie teleportuje',()=>{
+  const project=movingBodyFixture();
+  const input:BodyRunInput={bodies:[1,2].map(i=>({id:`BODY-${i}`,productId:'PRODUCT',
+    location:{kind:'station',stationId:'ST-A',copy:1}})),jobs:[{job:1,bodyId:'BODY-1'},{job:2,bodyId:'BODY-2'}]};
+  const before=JSON.stringify({project,input});
+  const result=scheduleWorkerRun(project,1,2,input);
+  const work=result.runs.filter(run=>run.operationId===project.operations[1].id);
+  assert.deepEqual(work.map(run=>[run.stationReserveStartSeconds,run.startSeconds,run.endSeconds,run.waitSeconds]),
+    [[10,12,22,0],[22,24,34,2]]);
+  assert.deepEqual(work[0].transport,{routeId:'R-A',startSeconds:10,endSeconds:12,basis:'assumed'});
+  let book=createBodyBook(project,input.bodies,0);
+  for(const event of result.bodyEvents!){
+    book=applyBodyEvent(book,event);
+    if(event.kind==='start-transfer'){
+      const body=book.bodies.find(body=>body.id===event.bodyId)!;
+      assert.equal(body.status,'moving');assert.deepEqual(body.location,{kind:'unknown'});
+      assert.equal(bodyAvailableAt(book,event.bodyId,{stationId:'ST-A',copy:1}),false);
+      assert.equal(bodyAvailableAt(book,event.bodyId,{stationId:'ST-C',copy:1}),false);
+    }
+  }
+  assert.deepEqual(book,result.bodyBook);
+  for(let i=0;i<result.runs.length;i++)for(let j=i+1;j<result.runs.length;j++){
+    const a=result.runs[i],b=result.runs[j];
+    if(a.stationId===b.stationId&&a.copy===b.copy)
+      assert.ok(a.endSeconds<=b.stationReserveStartSeconds!||b.endSeconds<=a.stationReserveStartSeconds!);
+    if(a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(a.reserveEndSeconds<=b.reserveStartSeconds||b.reserveEndSeconds<=a.reserveStartSeconds);
+  }
+  assert.equal(JSON.stringify({project,input}),before);
+  const storage=new DraftStorage();
+  const written=saveDomainDraft(storage,{originalJson:JSON.stringify(derive(parseProject(JSON.stringify(base))).project),project},null);
+  const reopened=readDomainDraft(storage);if(reopened.status!=='valid')throw new Error('Brak odczytu.');
+  assert.deepEqual(scheduleWorkerRun(reopened.saved.project,1,2,input),result);
+  const invalid=structuredClone(project);invalid.stationRouting!.routes[0].transportTime!.durationSeconds=0;
+  assert.throws(()=>saveDomainDraft(storage,{originalJson:written.saved.originalJson,project:invalid},written.raw),/Czas transportu/);
+  assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),written.raw);
+});
+
+test('2.7e: zapis jawnego wejścia przebiegu waliduje referencje i zachowuje źródło oraz konfigurację po wykonaniu',()=>{
+  const project=movingBodyFixture();
+  project.bodyRunInput={bodies:[{id:'BODY',productId:'PRODUCT',location:{kind:'station',stationId:'ST-A',copy:1}}],jobs:[{job:1,bodyId:'BODY'}]};
+  const originalJson=JSON.stringify(derive(parseProject(JSON.stringify(base))).project);
+  const storage=new DraftStorage(),written=saveDomainDraft(storage,{originalJson,project},null);
+  const reopened=readDomainDraft(storage);if(reopened.status!=='valid')throw new Error('Brak odczytu.');
+  assert.deepEqual(reopened.saved.project.bodyRunInput,project.bodyRunInput);
+  const result=scheduleWorkerRun(reopened.saved.project,1,1,reopened.saved.project.bodyRunInput);
+  assert.equal(result.bodyBook!.bodies[0].location.kind,'station');
+  assert.deepEqual(reopened.saved.project.bodyRunInput.bodies[0].location,{kind:'station',stationId:'ST-A',copy:1});
+  assert.equal(reopened.saved.originalJson,originalJson);
+  const failures=[(p:typeof project)=>{p.bodyRunInput!.jobs[0].bodyId='UNKNOWN';},
+    (p:typeof project)=>{p.bodyRunInput!.bodies[0].location={kind:'station',stationId:'ST-A',copy:999};},
+    (p:typeof project)=>{p.bodyRunInput!.bodies[0].productId='UNKNOWN';},
+    (p:typeof project)=>{delete p.operations[0].physicalRole;},
+    (p:typeof project)=>{(p.bodyRunInput as unknown as {state:string}).state='moving';}];
+  for(const change of failures){
+    const bad=structuredClone(project);change(bad);
+    assert.throws(()=>saveDomainDraft(storage,{originalJson,project:bad},written.raw));
+    assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),written.raw);
+  }
+  const damaged=JSON.parse(written.raw);damaged.project.bodyRunInput.jobs[0].bodyId='UNKNOWN';
+  const corrupt=JSON.stringify(damaged);storage.setItem(DOMAIN_DRAFT_STORAGE_KEY,corrupt);
+  assert.equal(readDomainDraft(storage).status,'corrupt');assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),corrupt);
+  for(const version of [4,5] as const){
+    const raw=version===4?derive(parseProject(JSON.stringify(base))).project:JSON.parse(readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8'));
+    (raw as typeof raw & {bodyRunInput:unknown}).bodyRunInput=project.bodyRunInput;
+    const source=JSON.stringify(raw);let i=0;
+    const migrated=prepareDomainMigration(version===4?previewDomainMigrationFromV4(source,()=>`ST-body-${++i}`):previewDomainMigrationFromV5(source));
+    assert.equal(migrated.project.bodyRunInput,undefined);assert.equal(migrated.originalJson,source);
+  }
+});
+
+test('2.7d: najwcześniejszy start z dojazdem wygrywa, remis rozstrzyga rzeczywista droga',()=>{
+  const project=movingBodyFixture();
+  project.stations.push({id:'ST-D',name:'D',operationIds:[]});
+  project.stationSettings['ST-D']={operators:1,parallelStations:1};
+  project.resourceCalendars!.stations['ST-D']=structuredClone(project.resourceCalendars!.stations['ST-C']);
+  project.stationRouting!.operations[1].candidates.push({stationId:'ST-D',copy:1,requiredEquipmentIds:[]});
+  project.stationRouting!.routes.push({id:'R-A-D',from:{stationId:'ST-A',copy:1},to:{stationId:'ST-D',copy:1},
+    distanceMm:1000,basis:'confirmed',source:'Test',transportTime:{durationSeconds:10,basis:'measured',source:'Test, bez danych produkcji'}});
+  const input:BodyRunInput={bodies:[{id:'BODY',productId:'PRODUCT',location:{kind:'station',stationId:'ST-A',copy:1}}],jobs:[{job:1,bodyId:'BODY'}]};
+  const earliest=scheduleWorkerRun(project,1,1,input);
+  assert.equal(earliest.runs[1].stationId,'ST-C');assert.equal(earliest.runs[1].startSeconds,12);
+  project.stationRouting!.routes.find(route=>route.id==='R-A-D')!.transportTime!.durationSeconds=2;
+  const tied=scheduleWorkerRun(project,1,1,input);
+  assert.equal(tied.runs[1].stationId,'ST-D');assert.equal(tied.runs[1].startSeconds,12);
+  assert.equal(tied.runs[1].transport!.basis,'measured');
+  const transfers=tied.bodyEvents!.filter(event=>event.kind==='start-transfer');assert.equal(transfers[0].basis,'confirmed');
+  project.resourceCalendars!.stations['ST-D'].shifts[0].startSeconds=50;
+  assert.equal(scheduleWorkerRun(project,1,1,input).runs[1].stationId,'ST-C');
+});
+
+test('2.7d: dojazd przed zmianą blokuje cel przez oczekiwanie i pauzę, brak czasu odmawia',()=>{
+  const project=movingBodyFixture();
+  project.resourceCalendars!.stations['ST-C'].shifts[0].startSeconds=50;
+  project.resourceCalendars!.stations['ST-C'].breaks=[{startSeconds:55,endSeconds:60,basis:'assumed'}];
+  const input:BodyRunInput={bodies:[{id:'BODY',productId:'PRODUCT',location:{kind:'station',stationId:'ST-A',copy:1}}],jobs:[{job:1,bodyId:'BODY'}]};
+  const result=scheduleWorkerRun(project,1,1,input),run=result.runs[1];
+  assert.deepEqual([run.stationReserveStartSeconds,run.transport!.endSeconds,run.startSeconds,run.endSeconds,run.waitSeconds],[10,12,50,65,38]);
+  assert.deepEqual(run.pauses,[{startSeconds:55,endSeconds:60}]);
+  assert.deepEqual(run.waitCauses,['calendar']);
+  assert.deepEqual(result.bodyEvents!.map(event=>[event.kind,event.atSeconds]),
+    [['reserve',0],['release',10],['start-transfer',10],['finish-transfer',12],['reserve',50],['release',65]]);
+  delete project.stationRouting!.routes.find(route=>route.id==='R-A')!.transportTime;
+  assert.throws(()=>scheduleWorkerRun(project,1,1,input),/brak jawnej trasy lub czasu/);
+  for(const timing of [null,{durationSeconds:0,basis:'assumed',source:'Test'},
+    {durationSeconds:1,basis:'unknown',source:'Test'},{durationSeconds:1,basis:'measured',source:''},
+    {durationSeconds:1,basis:'measured',source:'Test',speed:1}]){
+    project.stationRouting!.routes[0].transportTime=timing as never;
+    assert.throws(()=>parseDomainProjectV6(JSON.stringify(project)),/Czas transportu/);
+  }
+});
+
+test('2.7c: harmonogram zajmuje jawny korpus przez operację i pauzę, zachowuje tożsamość i miejsce',()=>{
+  const project=stationaryBodyFixture();
+  project.resourceCalendars!.stations['ST-A'].breaks=[{startSeconds:5,endSeconds:10,basis:'assumed'}];
+  const input:BodyRunInput={bodies:[1,2].map(copy=>({id:`BODY-${copy}`,productId:'PRODUCT',
+    location:{kind:'station',stationId:'ST-A',copy}})),jobs:[{job:1,bodyId:'BODY-1'},{job:2,bodyId:'BODY-2'}]};
+  const before=JSON.stringify({project,input});
+  const result=scheduleWorkerRun(project,1,2,input);
+  assert.deepEqual(result.runs.map(run=>[run.job,run.copy,run.bodyId,run.startSeconds,run.endSeconds]),
+    [[1,1,'BODY-1',0,15],[2,2,'BODY-2',1,16],[1,1,'BODY-1',15,25],[2,2,'BODY-2',16,26]]);
+  assert.deepEqual(result.runs[0].pauses,[{startSeconds:5,endSeconds:10}]);
+  assert.deepEqual(result.bodyEvents!.filter(event=>event.kind==='reserve').map(event=>
+    [event.bodyId,event.atSeconds,event.endSeconds,event.basis]),
+    [['BODY-1',0,15,'assumed'],['BODY-2',1,16,'assumed'],['BODY-1',15,25,'assumed'],['BODY-2',16,26,'assumed']]);
+  assert.ok(result.bodyBook!.bodies.every(body=>body.status==='available'&&body.location.kind==='station'));
+  assert.deepEqual(result.bodyBook!.bodies.map(body=>body.location),input.bodies.map(body=>body.location));
+  // Replay actual events against the independent ledger, including the pause midpoint.
+  let replay=createBodyBook(project,input.bodies,0);
+  for(const event of result.bodyEvents!){
+    replay=applyBodyEvent(replay,event);
+    if(event.kind==='reserve')assert.equal(bodyAvailableAt(replay,event.bodyId,
+      {stationId:'ST-A',copy:event.bodyId==='BODY-1'?1:2}),false);
+  }
+  assert.deepEqual(replay,result.bodyBook);
+  for(let i=0;i<result.runs.length;i++)for(let j=i+1;j<result.runs.length;j++){
+    const a=result.runs[i],b=result.runs[j];
+    if(a.bodyId===b.bodyId||a.stationId===b.stationId&&a.copy===b.copy)
+      assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
+    if(a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(a.reserveEndSeconds<=b.reserveStartSeconds||b.reserveEndSeconds<=a.reserveStartSeconds);
+  }
+  assert.equal(JSON.stringify({project,input}),before);
+  const storage=new DraftStorage();
+  saveDomainDraft(storage,{originalJson:JSON.stringify(derive(parseProject(JSON.stringify(base))).project),project},null);
+  const reopened=readDomainDraft(storage);if(reopened.status!=='valid')throw new Error('Brak odczytu.');
+  assert.deepEqual(scheduleWorkerRun(reopened.saved.project,1,2,input),result);
+  assert.equal('bodies' in reopened.saved.project,false);
+});
+
+test('2.7c: przygotowanie podzespołu nie przenosi ani nie zajmuje korpusu',()=>{
+  const project=stationChoiceFixture();
+  project.product={id:'PRODUCT',name:'Wyrób testowy'};
+  project.subassemblies=[{id:'PART',name:'Część testowa',producerOperationId:project.operations[0].id,
+    consumerOperationIds:[project.operations[1].id]}];
+  project.operations[0].physicalRole={kind:'subassembly-preparation',subassemblyIds:['PART']};
+  project.operations[1].physicalRole={kind:'body-work'};
+  const input:BodyRunInput={bodies:[{id:'BODY',productId:'PRODUCT',location:{kind:'station',stationId:'ST-C',copy:1}}],
+    jobs:[{job:1,bodyId:'BODY'}]};
+  const result=scheduleWorkerRun(project,1,1,input);
+  assert.equal(result.runs[0].stationId,'ST-B');
+  assert.equal(result.runs[0].bodyId,undefined);
+  assert.equal(result.runs[1].bodyId,'BODY');
+  assert.deepEqual(result.bodyEvents,[{kind:'reserve',bodyId:'BODY',atSeconds:10,operationId:project.operations[1].id,endSeconds:20,basis:'assumed'},
+    {kind:'release',bodyId:'BODY',atSeconds:20,operationId:project.operations[1].id}]);
+  assert.deepEqual(result.bodyBook!.bodies[0].location,input.bodies[0].location);
+  const preparationOnly=structuredClone(project);
+  preparationOnly.product=null;
+  preparationOnly.subassemblies.push({id:'PART2',name:'Część druga',producerOperationId:project.operations[1].id,consumerOperationIds:[]});
+  preparationOnly.operations[1].physicalRole={kind:'subassembly-preparation',subassemblyIds:['PART2']};
+  const noBody=scheduleWorkerRun(preparationOnly,1,1);
+  assert.equal(noBody.bodyBook,undefined);assert.ok(noBody.runs.every(run=>run.bodyId===undefined));
+});
+
+test('2.7c: brakujące dane, podwójne przypisanie i wymagane przemieszczenie blokują przebieg bez mutacji',()=>{
+  const project=stationaryBodyFixture();
+  const input:BodyRunInput={bodies:[{id:'BODY',productId:'PRODUCT',location:{kind:'station',stationId:'ST-A',copy:1}}],
+    jobs:[{job:1,bodyId:'BODY'}]};
+  const before=JSON.stringify({project,input});
+  assert.throws(()=>scheduleWorkerRun(project,1,1),/brak jawnych instancji/);
+  const partial=structuredClone(project);delete partial.operations[1].physicalRole;
+  assert.throws(()=>scheduleWorkerRun(partial,1,1,input),/ról wszystkich/);
+  assert.throws(()=>scheduleWorkerRun(project,1,2,{...input,jobs:[{job:1,bodyId:'BODY'},{job:2,bodyId:'BODY'}]}),/powtórnie przypisana/);
+  assert.throws(()=>scheduleWorkerRun(project,1,1,{...input,jobs:[{job:2,bodyId:'BODY'}]}),/sztuka przebiegu/);
+  assert.throws(()=>scheduleWorkerRun(project,1,1,{...input,jobs:[{job:1,bodyId:'UNKNOWN'}]}),/nieznana/);
+  assert.throws(()=>scheduleWorkerRun(project,1,1,{...input,bodies:[{...input.bodies[0],location:{kind:'unknown'}}]}),/lokalizacji początkowej/);
+  assert.throws(()=>scheduleWorkerRun(project,1,1,{...input,bodies:[input.bodies[0],{...input.bodies[0],id:'EXTRA'}]}),/nieprzypisane/);
+  const move=structuredClone(project);move.stations[0].operationIds=[move.operations[0].id];move.stations[2].operationIds=[move.operations[1].id];
+  assert.throws(()=>scheduleWorkerRun(move,1,1,input),/wymagane przemieszczenie/);
+  const legacy=stationChoiceFixture();assert.throws(()=>scheduleWorkerRun(legacy,1,1,input),/jawnych ról/);
+  assert.equal(JSON.stringify({project,input}),before);
+});
+
+test('2.7b: role fizyczne zachowują zapis, źródło 4/5 i brak ról w starszych szkicach',()=>{
+  for(const version of [4,5] as const){
+    const original=version===4?JSON.stringify(derive(parseProject(JSON.stringify(base))).project):
+      readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+    let id=0;
+    const prepared=prepareDomainMigration(version===4?previewDomainMigrationFromV4(original,()=>`ST-role-${++id}`):previewDomainMigrationFromV5(original));
+    let project=prepared.project;
+    assert.ok(project.operations.every(operation=>operation.physicalRole===undefined));
+    const storage=new DraftStorage();
+    storage.values.set('layout-studio-v3','active4');storage.values.set('layout-studio-stations-v5','active5');
+    const old=saveDomainDraft(storage,{originalJson:original,project},null);
+    assert.equal(readDomainDraft(storage).status,'valid');
+    const prep=project.operations[0].id,body=project.operations[1].id;
+    project=editDomainProduct(project,{kind:'set-product',id:'PRODUCT',name:'Jawny test'});
+    project=editDomainProduct(project,{kind:'add-subassembly',id:'PART',name:'Podzespół testowy',producerOperationId:prep,consumerOperationIds:[body]});
+    project=editDomainPhysicalRole(project,prep,{kind:'subassembly-preparation',subassemblyIds:['PART']});
+    project=editDomainPhysicalRole(project,body,{kind:'body-work'});
+    const written=saveDomainDraft(storage,{originalJson:original,project},old.raw);
+    const reopened=readDomainDraft(storage);
+    assert.equal(reopened.status,'valid');
+    if(reopened.status!=='valid')throw new Error('Brak odczytu.');
+    assert.deepEqual(reopened.saved.project,project);
+    assert.equal(reopened.saved.originalJson,original);
+    assert.equal(storage.getItem('layout-studio-v3'),'active4');
+    assert.equal(storage.getItem('layout-studio-stations-v5'),'active5');
+    assert.throws(()=>scheduleWorkerRun(reopened.saved.project,1,1),/2.7.3/);
+    const invalid=structuredClone(project);invalid.subassemblies=[];
+    assert.throws(()=>saveDomainDraft(storage,{originalJson:original,project:invalid},written.raw),/nieznany podzespół/);
+    assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),written.raw);
+    const damaged=JSON.parse(written.raw);damaged.project=invalid;
+    const rawDamaged=JSON.stringify(damaged);storage.setItem(DOMAIN_DRAFT_STORAGE_KEY,rawDamaged);
+    const failed=readDomainDraft(storage);assert.equal(failed.status,'corrupt');
+    assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),rawDamaged);
+    if(failed.status==='corrupt')assert.equal(failed.raw,rawDamaged);
+  }
+});
+
+test('2.7b: walidacja ról i edycja chronią powiązania bez wnioskowania fizyki',()=>{
+  let project=stationChoiceFixture();
+  const prep=project.operations[0].id,body=project.operations[1].id;
+  project=editDomainProduct(project,{kind:'add-subassembly',id:'PART',name:'Część',producerOperationId:prep,consumerOperationIds:[body]});
+  project=editDomainProduct(project,{kind:'add-subassembly',id:'PART2',name:'Część druga',producerOperationId:prep,consumerOperationIds:[]});
+  const initial=JSON.stringify(project);
+  // Links alone never assign roles or require a body/product for preparation.
+  assert.ok(project.operations.every(operation=>operation.physicalRole===undefined));
+  const typed=editDomainPhysicalRole(project,prep,{kind:'subassembly-preparation',subassemblyIds:['PART','PART2']});
+  assert.equal(JSON.stringify(project),initial);
+  assert.deepEqual(typed.subassemblies,project.subassemblies);
+  assert.throws(()=>editDomainPhysicalRole(typed,body,{kind:'body-work'}),/definicji wyrobu/);
+  assert.throws(()=>editDomainProduct(typed,{kind:'remove-subassembly',id:'PART'}),/nieznany podzespół/);
+  assert.throws(()=>editDomainProduct(typed,{kind:'edit-subassembly',id:'PART',name:'Część',producerOperationId:body,consumerOperationIds:[]}),/zgodnej jawnej/);
+  const badRoles:unknown[]=[null,[],{},'body-work',{kind:'other'},{kind:'body-work',subassemblyIds:[]},
+    {kind:'subassembly-preparation'},{kind:'subassembly-preparation',subassemblyIds:[]},
+    {kind:'subassembly-preparation',subassemblyIds:['PART','PART']},
+    {kind:'subassembly-preparation',subassemblyIds:[1]},
+    {kind:'subassembly-preparation',subassemblyIds:['UNKNOWN']},
+    {kind:'subassembly-preparation',subassemblyIds:['PART'],quantity:1}];
+  for(const role of badRoles){
+    const changed=structuredClone(typed);changed.operations[0].physicalRole=role as never;
+    assert.throws(()=>parseDomainProjectV6(JSON.stringify(changed)),/rola fizyczna/);
+  }
+  assert.throws(()=>editDomainPhysicalRole(typed,body,{kind:'subassembly-preparation',subassemblyIds:['PART']}),/zgodnej jawnej/);
+  assert.throws(()=>editDomainPhysicalRole(typed,'UNKNOWN',null),/nieznana operacja/);
+  const unlinked=structuredClone(typed);delete unlinked.subassemblies[0].producerOperationId;
+  assert.throws(()=>parseDomainProjectV6(JSON.stringify(unlinked)),/zgodnej jawnej/);
+  const removed=editDomainPhysicalRole(typed,prep,null);
+  assert.equal(removed.operations[0].physicalRole,undefined);
+  assert.deepEqual(removed,project);
+  let withBody=editDomainProduct(typed,{kind:'set-product',id:'PRODUCT',name:'Wyrób'});
+  withBody=editDomainPhysicalRole(withBody,body,{kind:'body-work'});
+  assert.throws(()=>editDomainProduct(withBody,{kind:'clear-product'}),/definicji wyrobu/);
+  const cleared=editDomainProduct(editDomainPhysicalRole(withBody,body,null),{kind:'clear-product'});
+  assert.equal(cleared.product,null);
+  assert.equal(withBody.product!.id,'PRODUCT');
+});
+
+test('2.7b: migracja nie przyjmuje nieobsługiwanej roli fizycznej ze źródła 4/5',()=>{
+  for(const version of [4,5] as const){
+    const raw=version===4?derive(parseProject(JSON.stringify(base))).project:
+      JSON.parse(readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8'));
+    (raw.processSteps[0] as typeof raw.processSteps[0] & {physicalRole:unknown}).physicalRole={kind:'body-work'};
+    const original=JSON.stringify(raw);let id=0;
+    const prepared=prepareDomainMigration(version===4?previewDomainMigrationFromV4(original,()=>`ST-strip-${++id}`):previewDomainMigrationFromV5(original));
+    assert.equal(prepared.originalJson,original);
+    assert.ok(prepared.project.operations.every(operation=>operation.physicalRole===undefined));
+    assert.equal(prepared.project.product,null);
+  }
+});
+
+test('2.7a: fizyczny korpus ma jedno miejsce, nie jest dostępny podczas operacji i przemieszczenia',()=>{
+  const project=stationChoiceFixture();project.product={id:'PRODUCT',name:'Jawny wyrób testowy'};
+  const source=JSON.stringify(project);
+  const location={stationId:'ST-A',copy:1};
+  const declarations=[{id:'BODY-1',productId:'PRODUCT',location:{kind:'station' as const,...location}},
+    {id:'BODY-2',productId:'PRODUCT',location:{kind:'unknown' as const}}];
+  let book=createBodyBook(project,declarations,0);
+  assert.equal(bodyAvailableAt(book,'BODY-1',location),true);
+  assert.equal(bodyAvailableAt(book,'BODY-2',location),false);
+  assert.equal(book.bodies[1].status,'unlocated');
+  const original=JSON.stringify(book);
+  const reserve:BodyEvent={kind:'reserve',bodyId:'BODY-1',atSeconds:5,operationId:project.operations[0].id,endSeconds:35,basis:'assumed'};
+  const reserved=applyBodyEvent(book,reserve);
+  assert.equal(JSON.stringify(book),original);
+  book=reserved;
+  assert.equal(bodyAvailableAt(book,'BODY-1',location),false);
+  assert.throws(()=>applyBodyEvent(book,{...reserve,atSeconds:10}),/nie jest dostępny/);
+  assert.throws(()=>applyBodyEvent(book,{kind:'start-transfer',bodyId:'BODY-1',atSeconds:10,to:{stationId:'ST-C',copy:1},endSeconds:20,basis:'assumed'}),/zajętego/);
+  assert.throws(()=>applyBodyEvent(book,{kind:'release',bodyId:'BODY-1',atSeconds:34,operationId:project.operations[0].id}),/przed końcem/);
+  assert.throws(()=>applyBodyEvent(book,{kind:'release',bodyId:'BODY-1',atSeconds:35,operationId:project.operations[1].id}),/inną operację/);
+  book=applyBodyEvent(book,{kind:'release',bodyId:'BODY-1',atSeconds:35,operationId:project.operations[0].id});
+  assert.equal(bodyAvailableAt(book,'BODY-1',location),true);
+  book=applyBodyEvent(book,{kind:'start-transfer',bodyId:'BODY-1',atSeconds:35,to:{stationId:'ST-C',copy:1},endSeconds:45,basis:'assumed'});
+  assert.equal(book.bodies[0].status,'moving');assert.deepEqual(book.bodies[0].location,{kind:'unknown'});
+  assert.equal(bodyAvailableAt(book,'BODY-1',location),false);
+  assert.equal(bodyAvailableAt(book,'BODY-1',{stationId:'ST-C',copy:1}),false);
+  assert.throws(()=>applyBodyEvent(book,{...reserve,atSeconds:36,endSeconds:46}),/nie jest dostępny/);
+  assert.throws(()=>applyBodyEvent(book,{kind:'finish-transfer',bodyId:'BODY-1',atSeconds:44}),/nie zakończył/);
+  const moving=JSON.stringify(book);
+  assert.throws(()=>applyBodyEvent(book,{kind:'locate',bodyId:'BODY-1',atSeconds:45,location}),/tylko nieznaną/);
+  assert.equal(JSON.stringify(book),moving);
+  book=applyBodyEvent(book,{kind:'finish-transfer',bodyId:'BODY-1',atSeconds:45});
+  assert.deepEqual(book.bodies[0].location,{kind:'station',stationId:'ST-C',copy:1});
+  assert.equal(bodyAvailableAt(book,'BODY-1',{stationId:'ST-C',copy:1}),true);
+  assert.equal(bodyAvailableAt(book,'BODY-1',location),false);
+  book=applyBodyEvent(book,{kind:'locate',bodyId:'BODY-2',atSeconds:10,location:{stationId:'ST-B',copy:1}});
+  assert.equal(bodyAvailableAt(book,'BODY-2',{stationId:'ST-B',copy:1}),true);
+  assert.equal(JSON.stringify(project),source);
+  assert.deepEqual(declarations[0].location,{kind:'station',...location});
+});
+
+test('2.7a: odmowy nieznanych instancji, referencji i czasu zachowują stan',()=>{
+  const project=stationChoiceFixture();project.product={id:'PRODUCT',name:'Wyrób'};
+  const declaration={id:'BODY',productId:'PRODUCT',location:{kind:'station' as const,stationId:'ST-A',copy:1}};
+  assert.throws(()=>createBodyBook({...project,product:null},[declaration],0),/definicji wyrobu/);
+  assert.throws(()=>createBodyBook(project,[declaration,declaration],0),/powtórzone ID/);
+  assert.throws(()=>createBodyBook(project,[{...declaration,productId:'UNKNOWN'}],0),/nieznany wyrób/);
+  assert.throws(()=>createBodyBook(project,[{...declaration,location:{kind:'station',stationId:'ST-A',copy:2}}],0),/nieznana kopia/);
+  const book=createBodyBook(project,[declaration],0),raw=JSON.stringify(book);
+  const reserve:BodyEvent={kind:'reserve',bodyId:'BODY',atSeconds:0,operationId:project.operations[0].id,endSeconds:10,basis:'confirmed'};
+  assert.throws(()=>applyBodyEvent(book,{...reserve,bodyId:'UNKNOWN'}),/Nieznana instancja/);
+  assert.throws(()=>applyBodyEvent(book,{...reserve,operationId:'UNKNOWN'}),/nieznana operacja/);
+  assert.throws(()=>applyBodyEvent(book,{...reserve,endSeconds:0}),/dodatniego/);
+  assert.throws(()=>applyBodyEvent(book,{...reserve,endSeconds:Infinity}),/czasu/);
+  assert.throws(()=>applyBodyEvent(book,{...reserve,atSeconds:-1}),/czasu/);
+  assert.throws(()=>applyBodyEvent(book,{...reserve,basis:'missing' as never}),/pochodzenia/);
+  assert.throws(()=>applyBodyEvent(book,{kind:'locate',bodyId:'BODY',atSeconds:0,location:{stationId:'ST-C',copy:1}}),/tylko nieznaną/);
+  const reserved=applyBodyEvent(book,reserve);
+  const released=applyBodyEvent(reserved,{kind:'release',bodyId:'BODY',atSeconds:10,operationId:project.operations[0].id});
+  assert.throws(()=>applyBodyEvent(released,{...reserve,atSeconds:5,endSeconds:15}),/cofa czas/);
+  assert.throws(()=>applyBodyEvent(released,{kind:'start-transfer',bodyId:'BODY',atSeconds:10,to:{stationId:'ST-A',copy:1},endSeconds:20,basis:'confirmed'}),/innej kopii/);
+  assert.equal(JSON.stringify(book),raw);
+  assert.equal(createBodyBook(project,[],0).bodies.length,0);
+});
+
+test('2.6b: jawne kopie, stałe wyposażenie i potwierdzone trasy zachowują zapis szkicu i źródło',()=>{
+  for(const version of [4,5] as const){
+    const original=version===4?JSON.stringify(derive(parseProject(JSON.stringify(base))).project):
+      readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8');
+    let id=0;
+    const prepared=prepareDomainMigration(version===4?previewDomainMigrationFromV4(original,()=>`ST-route-${++id}`):previewDomainMigrationFromV5(original));
+    const project=prepared.project;
+    assert.equal(project.stationRouting,undefined);
+    const first=project.stations[0],second=project.stations[1];
+    const operationId=first.operationIds[0];
+    project.stationSettings[first.id]={operators:1,parallelStations:2};
+    project.stationSettings[second.id]={operators:1,parallelStations:1};
+    project.equipment=[{id:'EQ-1',name:'Przyrząd testowy',stationId:first.id,capableOperationIds:[operationId]}];
+    const routing:StationRoutingV6={selectionRule:'earliest-start-then-shortest-route',
+      equipmentPlacements:[{equipmentId:'EQ-1',stationId:first.id,copy:1}],
+      operations:[{operationId,candidates:[{stationId:first.id,copy:1,requiredEquipmentIds:['EQ-1']},
+        {stationId:second.id,copy:1,requiredEquipmentIds:[]}]}],
+      routes:[{id:'R-1',from:{stationId:first.id,copy:1},to:{stationId:second.id,copy:1},
+        distanceMm:12345,basis:'confirmed',source:'Syntetyczne dane testu, bez deklaracji pomiaru produkcji'}]};
+    project.stationRouting=routing;
+    assert.deepEqual(validateStationRouting(project,routing),routing);
+    const storage=new DraftStorage();
+    storage.values.set('layout-studio-v3','active4');storage.values.set('layout-studio-stations-v5','active5');
+    const written=saveDomainDraft(storage,{originalJson:original,project},null);
+    const reopened=readDomainDraft(storage);
+    assert.equal(reopened.status,'valid');
+    if(reopened.status!=='valid')throw new Error('Nie odczytano szkicu.');
+    assert.deepEqual(reopened.saved.project.stationRouting,routing);
+    assert.equal(reopened.saved.originalJson,original);
+    assert.throws(()=>scheduleWorkerRun(project,1,1),/Brak zapisanego wyboru/);
+    const invalid=(change:(value:StationRoutingV6)=>void,pattern:RegExp)=>{
+      const changed=structuredClone(project);change(changed.stationRouting!);
+      assert.throws(()=>saveDomainDraft(storage,{originalJson:original,project:changed},written.raw),pattern);
+      assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),written.raw);
+    };
+    invalid(r=>r.equipmentPlacements.push({...r.equipmentPlacements[0],copy:2}),/więcej niż raz/);
+    invalid(r=>r.operations[0].candidates[0].copy=2,/nie należy/);
+    invalid(r=>r.operations[0].candidates[0].copy=3,/kopii/);
+    invalid(r=>r.operations[0].candidates[0].stationId='ST-unknown',/nieznane stanowisko/);
+    invalid(r=>r.operations[0].candidates[0].requiredEquipmentIds.push('EQ-1'),/powtórzone/);
+    invalid(r=>r.operations[0].candidates[0].requiredEquipmentIds=['missing'],/Nieznane/);
+    invalid(r=>r.operations.push(r.operations[0]),/powtórzona operacja/);
+    invalid(r=>r.routes.push(r.routes[0]),/ID trasy/);
+    invalid(r=>r.routes.push({...r.routes[0],id:'R-2'}),/Powtórzona skierowana/);
+    invalid(r=>r.routes[0].distanceMm=-1,/rzeczywistej długości/);
+    invalid(r=>r.routes[0].distanceMm=Infinity,/rzeczywistej długości/);
+    invalid(r=>r.routes[0].distanceMm=0,/rzeczywistej długości/);
+    invalid(r=>r.routes[0].source='',/źródła/);
+    invalid(r=>(r.routes[0] as unknown as {basis:string}).basis='assumed',/potwierdzenia/);
+    const noCapabilities=structuredClone(project);delete noCapabilities.equipment[0].capableOperationIds;
+    assert.throws(()=>parseDomainProjectV6(JSON.stringify(noCapabilities)),/możliwości/);
+    const movedEquipment=structuredClone(project);movedEquipment.equipment[0].stationId=second.id;
+    assert.throws(()=>parseDomainProjectV6(JSON.stringify(movedEquipment)),/zgodne jawne stanowisko/);
+    const reducedCopies=structuredClone(project);reducedCopies.stationSettings[first.id].parallelStations=0;
+    assert.throws(()=>parseDomainProjectV6(JSON.stringify(reducedCopies)));
+    assert.equal(storage.getItem('layout-studio-v3'),'active4');assert.equal(storage.getItem('layout-studio-stations-v5'),'active5');
+    const old=structuredClone(project);delete old.stationRouting;
+    assert.equal(parseDomainProjectV6(JSON.stringify(old)).stationRouting,undefined);
+    assert.throws(()=>saveDomainDraft(storage,{originalJson:original,project},'stale'),/zmieniony|konflikt|zmienił/i);
+    assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),written.raw);
+  }
+});
+
+function stationChoiceFixture(){
+  const source=JSON.stringify(derive(parseProject(JSON.stringify({...base,processSteps:
+    base.processSteps.slice(0,2).map((step,index)=>({...step,predecessorIds:index?[base.processSteps[0].id]:[]})),bom:[]}))).project);
+  let id=0;
+  const project=prepareDomainMigration(previewDomainMigrationFromV4(source,()=>`ST-choice-${++id}`)).project;
+  const [a,b]=project.operations;
+  project.layoutObjects=[];
+  project.stations=[{id:'ST-A',name:'A',operationIds:[a.id]},
+    {id:'ST-B',name:'B',operationIds:[]},{id:'ST-C',name:'C',operationIds:[b.id]}];
+  project.stationSettings=Object.fromEntries(project.stations.map(station=>[station.id,{operators:1,parallelStations:1}]));
+  project.workers=[{id:'W-A',name:'A'},{id:'W-B',name:'B'}];
+  project.operations.forEach(operation=>operation.staffing={requiredWorkers:1,timeVariants:[{workerCount:1,timeProfile:{
+    durationSeconds:10,durationBasis:'assumed',manualWork:[],machineRun:[],
+    operatorPresence:[{startSeconds:0,endSeconds:10,basis:'assumed'}]}}]});
+  project.workerRunSelection={teamWorkerIds:['W-A','W-B'],operations:project.operations.map(operation=>
+    ({operationId:operation.id,workerCount:1,eligibleWorkerIds:['W-A','W-B']}))};
+  const calendar={shifts:[{startSeconds:0,endSeconds:1000,basis:'assumed' as const}],breaks:[]};
+  project.resourceCalendars={workers:{'W-A':structuredClone(calendar),'W-B':structuredClone(calendar)},
+    stations:Object.fromEntries(project.stations.map(station=>[station.id,structuredClone(calendar)]))};
+  project.equipment=['A','B'].map(letter=>({id:`EQ-${letter}`,name:letter,stationId:`ST-${letter}`,capableOperationIds:[a.id]}));
+  project.stationRouting={selectionRule:'earliest-start-then-shortest-route',
+    equipmentPlacements:['A','B'].map(letter=>({equipmentId:`EQ-${letter}`,stationId:`ST-${letter}`,copy:1})),
+    operations:[{operationId:a.id,candidates:['A','B'].map(letter=>({stationId:`ST-${letter}`,copy:1,requiredEquipmentIds:[`EQ-${letter}`]}))},
+      {operationId:b.id,candidates:[{stationId:'ST-C',copy:1,requiredEquipmentIds:[]}]}],
+    routes:['A','B'].map(letter=>({id:`R-${letter}`,from:{stationId:`ST-${letter}`,copy:1},to:{stationId:'ST-C',copy:1},
+      distanceMm:letter==='A'?9000:3000,basis:'confirmed',source:'Syntetyczny scenariusz testowy'}))};
+  return project;
+}
+
+test('2.6c: najwcześniejszy start ma pierwszeństwo, rzeczywista trasa rozstrzyga remis',()=>{
+  const project=stationChoiceFixture();
+  const before=JSON.stringify(project);
+  const near=scheduleWorkerRun(project,1,1);
+  assert.deepEqual(near.runs.map(run=>[run.stationId,run.startSeconds,run.endSeconds]),[['ST-B',0,10],['ST-C',10,20]]);
+  assert.deepEqual(near.runs[0].equipmentIds,['EQ-B']);
+  assert.equal(near.runs[0].selectionRouteId,'R-B');assert.equal(near.runs[0].selectionDistanceMm,3000);
+  assert.equal(JSON.stringify(project),before);
+  const slowFinish=structuredClone(project);
+  slowFinish.resourceCalendars!.stations['ST-B'].breaks=[{startSeconds:1,endSeconds:100,basis:'assumed'}];
+  const slow=scheduleWorkerRun(slowFinish,1,1);
+  assert.equal(slow.runs[0].stationId,'ST-B');assert.equal(slow.runs[0].endSeconds,109);
+  const later=structuredClone(project);
+  later.resourceCalendars!.stations['ST-B'].shifts[0].startSeconds=50;
+  assert.equal(scheduleWorkerRun(later,1,1).runs[0].stationId,'ST-A');
+  const equal=structuredClone(project);equal.stationRouting!.routes[1].distanceMm=9000;
+  assert.equal(scheduleWorkerRun(equal,1,1).runs[0].stationId,'ST-A');
+  equal.stationRouting!.operations[0].candidates.reverse();
+  assert.equal(scheduleWorkerRun(equal,1,1).runs[0].stationId,'ST-B');
+  const missing=structuredClone(project);missing.stationRouting!.routes=[];
+  assert.throws(()=>scheduleWorkerRun(missing,1,1),/brak rzeczywistej trasy/i);
+  // Automatic downstream planning requires declared lengths for every admissible transition.
+  missing.resourceCalendars!.stations['ST-B'].shifts[0].startSeconds=50;
+  assert.throws(()=>scheduleWorkerRun(missing,1,1),/brak rzeczywistej trasy/i);
+  const partial=structuredClone(project);partial.stationRouting!.operations.pop();
+  assert.throws(()=>scheduleWorkerRun(partial,1,1),/brak jawnych dopuszczeń/);
+  const ambiguous=structuredClone(project);
+  ambiguous.stationRouting!.operations[1].candidates.push({stationId:'ST-A',copy:1,requiredEquipmentIds:[]});
+  assert.throws(()=>scheduleWorkerRun(ambiguous,1,1),/brak rzeczywistej trasy/i);
+  const reversed=structuredClone(project);
+  reversed.stationRouting!.routes.forEach(route=>{const from=route.from;route.from=route.to;route.to=from;});
+  assert.throws(()=>scheduleWorkerRun(reversed,1,1),/brak rzeczywistej trasy/i);
+  const branch=structuredClone(project);
+  const extra={...structuredClone(branch.operations[1]),id:'THIRD'};
+  branch.operations.push(extra);branch.stations[2].operationIds.push(extra.id);
+  branch.workerRunSelection!.operations.push({...branch.workerRunSelection!.operations[1],operationId:extra.id});
+  branch.stationRouting!.operations.push({operationId:extra.id,candidates:[{stationId:'ST-C',copy:1,requiredEquipmentIds:[]}]});
+  assert.throws(()=>scheduleWorkerRun(branch,1,1),/niejednoznaczny następny proces/i);
+});
+
+test('2.6e: automatyczna dalsza trasa wybiera spośród wielu przyszłych kopii i zmienia ją dla wcześniejszego startu',()=>{
+  const project=stationChoiceFixture();
+  project.stations.push({id:'ST-D',name:'D',operationIds:[]});
+  project.stationSettings['ST-D']={operators:1,parallelStations:1};
+  project.resourceCalendars!.stations['ST-D']=structuredClone(project.resourceCalendars!.stations['ST-C']);
+  project.stationRouting!.operations[1].candidates.push({stationId:'ST-D',copy:1,requiredEquipmentIds:[]});
+  project.stationRouting!.routes.push(...['A','B'].map(letter=>({id:`R-${letter}-D`,
+    from:{stationId:`ST-${letter}`,copy:1},to:{stationId:'ST-D',copy:1},
+    distanceMm:letter==='A'?2000:8000,basis:'confirmed' as const,source:'Syntetyczny scenariusz testowy'})));
+  const before=JSON.stringify(project);
+  const direct=scheduleWorkerRun(project,1,1);
+  assert.deepEqual(direct.runs.map(run=>run.stationId),['ST-A','ST-D']);
+  assert.equal(direct.runs[0].selectionRouteId,'R-A-D');
+  assert.equal(direct.runs[1].arrivalRouteId,'R-A-D');
+  assert.equal(direct.runs[1].arrivalDistanceMm,2000);
+  assert.equal(JSON.stringify(project),before);
+  const delayed=structuredClone(project);
+  delayed.resourceCalendars!.stations['ST-D'].shifts[0].startSeconds=50;
+  const rerouted=scheduleWorkerRun(delayed,1,1);
+  assert.deepEqual(rerouted.runs.map(run=>[run.stationId,run.startSeconds]),[['ST-A',0],['ST-C',10]]);
+  assert.equal(rerouted.runs[0].selectionRouteId,'R-A-D');
+  assert.equal(rerouted.runs[1].arrivalRouteId,'R-A');
+  assert.equal(rerouted.runs[1].arrivalDistanceMm,9000);
+  const storage=new DraftStorage();
+  saveDomainDraft(storage,{originalJson:JSON.stringify(derive(parseProject(JSON.stringify(base))).project),project},null);
+  const reopened=readDomainDraft(storage);
+  if(reopened.status!=='valid')throw new Error('Nie odczytano tras.');
+  assert.deepEqual(scheduleWorkerRun(reopened.saved.project,1,1),direct);
+  const concurrent=scheduleWorkerRun(project,1,4);
+  for(let i=0;i<concurrent.runs.length;i++)for(let j=i+1;j<concurrent.runs.length;j++){
+    const a=concurrent.runs[i],b=concurrent.runs[j];
+    if(a.stationId===b.stationId&&a.copy===b.copy||a.equipmentIds?.some(id=>b.equipmentIds?.includes(id)))
+      assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
+    if(a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(a.reserveEndSeconds<=b.reserveStartSeconds||b.reserveEndSeconds<=a.reserveStartSeconds);
+  }
+  const chain=structuredClone(project);
+  const last={...structuredClone(chain.operations[1]),id:'FINAL',predecessorIds:[chain.operations[1].id]};
+  chain.operations.push(last);chain.stations.push({id:'ST-E',name:'E',operationIds:['FINAL']});
+  chain.stationSettings['ST-E']={operators:1,parallelStations:1};
+  chain.resourceCalendars!.stations['ST-E']=structuredClone(chain.resourceCalendars!.stations['ST-C']);
+  chain.workerRunSelection!.operations.push({...chain.workerRunSelection!.operations[1],operationId:'FINAL'});
+  chain.stationRouting!.operations.push({operationId:'FINAL',candidates:[{stationId:'ST-E',copy:1,requiredEquipmentIds:[]}]});
+  chain.stationRouting!.routes.find(route=>route.id==='R-A-D')!.distanceMm=9000;
+  chain.stationRouting!.routes.find(route=>route.id==='R-B-D')!.distanceMm=3000;
+  chain.stationRouting!.routes.push(...['C','D'].map(letter=>({id:`R-${letter}-E`,from:{stationId:`ST-${letter}`,copy:1},to:{stationId:'ST-E',copy:1},
+    distanceMm:letter==='C'?10000:1000,basis:'confirmed' as const,source:'Syntetyczny scenariusz testowy'})));
+  const full=scheduleWorkerRun(chain,1,1);
+  assert.deepEqual(full.runs.map(run=>run.stationId),['ST-B','ST-D','ST-E']);
+  assert.deepEqual(full.runs.map(run=>run.arrivalRouteId),[undefined,'R-B-D','R-D-E']);
+});
+
+test('2.6c: stałe wyposażenie i kopie pozostają zajęte przez pauzę bez podwójnej rezerwacji',()=>{
+  const project=stationChoiceFixture();
+  ['ST-A','ST-B'].forEach(id=>project.resourceCalendars!.stations[id].breaks=[{startSeconds:5,endSeconds:15,basis:'assumed'}]);
+  const result=scheduleWorkerRun(project,1,4);
+  assert.deepEqual(result.runs.slice(0,2).map(run=>[run.stationId,run.startSeconds,run.endSeconds]),
+    [['ST-B',0,20],['ST-A',1,21]]);
+  assert.deepEqual(result.runs[0].pauses,[{startSeconds:5,endSeconds:15}]);
+  for(let i=0;i<result.runs.length;i++)for(let j=i+1;j<result.runs.length;j++){
+    const a=result.runs[i],b=result.runs[j];
+    if(a.stationId===b.stationId&&a.copy===b.copy || a.equipmentIds?.some(id=>b.equipmentIds?.includes(id))) {
+      assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
+    }
+    if(a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(
+      a.reserveEndSeconds<=b.reserveStartSeconds||b.reserveEndSeconds<=a.reserveStartSeconds);
+  }
+  assert.deepEqual(scheduleWorkerRun(project,1,4),result);
+  const storage=new DraftStorage();
+  const originalJson=JSON.stringify(derive(parseProject(JSON.stringify(base))).project);
+  const saved=saveDomainDraft(storage,{originalJson,project},null);
+  const reopened=readDomainDraft(storage);
+  if(reopened.status!=='valid')throw new Error('Nie odczytano dopuszczeń.');
+  assert.deepEqual(scheduleWorkerRun(reopened.saved.project,1,4),result);
+  assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),saved.raw);
+  const invalid=structuredClone(project);invalid.stationRouting!.operations[0].candidates[1].requiredEquipmentIds=['EQ-A'];
+  assert.throws(()=>scheduleWorkerRun(invalid,1,1),/nie należy/);
+  const noCalendar=structuredClone(project);delete noCalendar.resourceCalendars!.stations['ST-B'];
+  assert.throws(()=>scheduleWorkerRun(noCalendar,1,1),/brak jawnego kalendarza/);
+});
 
 test('2.1d: szkic v6 zapisuje się osobno, otwiera ponownie i zachowuje dokładne źródło v4/v5',()=>{
   for(const version of [4,5] as const){
@@ -737,8 +1919,11 @@ test('2.4d: pracownik jest zajęty także między obecnościami, a następne zad
     operatorPresence:[{startSeconds:10,endSeconds:20,basis:'assumed'},
       {startSeconds:70,endSeconds:80,basis:'assumed'}]}}]};
   project.workerRunSelection={teamWorkerIds:['W-A'],operations:[{operationId:'1',workerCount:1,eligibleWorkerIds:['W-A']}]};
+  const allDay={shifts:[{startSeconds:0,endSeconds:1000,basis:'assumed' as const}],breaks:[]};
+  project.resourceCalendars={workers:{'W-A':allDay},stations:{'ST-A':allDay}};
   const before=JSON.stringify(project);
   const result=scheduleWorkerRun(project,1,2);
+  assert.equal(result.mode,'calendar');
   assert.equal(JSON.stringify(project),before);
   assert.deepEqual(result.runs.map(run=>run.startSeconds),[0,70]);
   assert.deepEqual(result.runs.map(run=>run.waitSeconds),[0,69]);
@@ -749,6 +1934,7 @@ test('2.4d: pracownik jest zajęty także między obecnościami, a następne zad
   assert.ok(result.reservations.reservations.every(item=>item.releasedAtSeconds===item.endSeconds));
   const pair=structuredClone(project);
   pair.workers.push({id:'W-B',name:'B'});
+  pair.resourceCalendars!.workers['W-B']=allDay;
   pair.operations[0].staffing!.requiredWorkers=2;
   pair.operations[0].staffing!.timeVariants[0].workerCount=2;
   pair.workerRunSelection={teamWorkerIds:['W-A','W-B'],operations:[{operationId:'1',workerCount:2,
@@ -782,6 +1968,9 @@ test('2.4d: graf poprzedników, kopie stanowisk i stały skład nie dopuszczają
     operatorPresence:[{startSeconds:0,endSeconds:10,basis:'assumed'}]}}]};
   project.workerRunSelection={teamWorkerIds:['W-A','W-B'],operations:project.operations.map(operation=>({
     operationId:operation.id,workerCount:1,eligibleWorkerIds:['W-A','W-B']}))};
+  const allDay={shifts:[{startSeconds:0,endSeconds:1000,basis:'assumed' as const}],breaks:[]};
+  project.resourceCalendars={workers:{'W-A':allDay,'W-B':allDay},
+    stations:{'ST-A':allDay,'ST-B':allDay}};
   const result=scheduleWorkerRun(project,1,2);
   assert.deepEqual(result.runs.map(run=>[run.job,run.operationId,run.startSeconds]),
     [[1,'1',0],[2,'1',10],[1,'1.1',10],[2,'1.1',20]]);
@@ -801,6 +1990,89 @@ test('2.4d: graf poprzedników, kopie stanowisk i stały skład nie dopuszczają
   parallel.operations[1].predecessorIds=[];
   const conservative=scheduleWorkerRun(parallel,1,1);
   assert.equal(conservative.runs[1].startSeconds,10);
+});
+
+test('2.5b: pauza zachowuje zespół i kopię, a czas pracy postępuje tylko we wspólnych oknach',()=>{
+  const source=JSON.stringify(derive(parseProject(JSON.stringify({...base,
+    processSteps:[base.processSteps[0]],bom:base.bom.filter(item=>item.associatedProcessStepId==='1')}))).project);
+  let id=0;
+  const project=prepareDomainMigration(previewDomainMigrationFromV4(source,()=>`ST-pause-${++id}`)).project;
+  project.stations=[{id:'ST-A',name:'A',operationIds:['1']}];
+  project.layoutObjects=[];
+  project.stationSettings={'ST-A':{operators:1,parallelStations:2}};
+  project.workers=[{id:'W-A',name:'A'}];
+  project.operations[0].staffing={requiredWorkers:1,timeVariants:[{workerCount:1,timeProfile:{
+    durationSeconds:100,durationBasis:'assumed',manualWork:[],machineRun:[],
+    operatorPresence:[{startSeconds:0,endSeconds:100,basis:'assumed'}]}}]};
+  project.workerRunSelection={teamWorkerIds:['W-A'],operations:[{operationId:'1',workerCount:1,
+    eligibleWorkerIds:['W-A']}]};
+  project.resourceCalendars={workers:{'W-A':{shifts:[{startSeconds:0,endSeconds:400,basis:'assumed'}],
+    breaks:[{startSeconds:40,endSeconds:60,basis:'assumed'}]}},
+    stations:{'ST-A':{shifts:[{startSeconds:0,endSeconds:400,basis:'assumed'}],
+      breaks:[{startSeconds:50,endSeconds:70,basis:'assumed'}]}}};
+  const before=JSON.stringify(project);
+  const result=scheduleWorkerRun(project,1,2);
+  assert.equal(JSON.stringify(project),before);
+  assert.deepEqual(result.runs.map(run=>[run.startSeconds,run.endSeconds]),[[0,130],[130,230]]);
+  assert.deepEqual(result.runs[0].workWindows,[{startSeconds:0,endSeconds:40},
+    {startSeconds:70,endSeconds:130}]);
+  assert.deepEqual(result.runs[0].pauses,[{startSeconds:40,endSeconds:70}]);
+  assert.deepEqual(result.runs.map(run=>[run.reserveStartSeconds,run.reserveEndSeconds]),
+    [[0,130],[130,230]]);
+  assert.deepEqual(result.runs.map(run=>run.workerIds),[['W-A'],['W-A']]);
+  assert.deepEqual(result.runs.map(run=>run.copy),[1,1]);
+  assert.deepEqual(result.runs[1].waitCauses,['workers']);
+  assert.deepEqual(result.jobs.map(job=>job.finish),[130,230]);
+  const delayed=structuredClone(project);
+  delayed.resourceCalendars!.workers['W-A'].shifts=[{startSeconds:10,endSeconds:400,basis:'assumed'}];
+  delayed.resourceCalendars!.stations['ST-A'].shifts=[{startSeconds:10,endSeconds:400,basis:'assumed'}];
+  const delayedRun=scheduleWorkerRun(delayed,1,1).runs[0];
+  assert.equal(delayedRun.startSeconds,10);
+  assert.deepEqual(delayedRun.waitCauses,['calendar']);
+  assert.deepEqual(delayedRun.workWindows,[{startSeconds:10,endSeconds:40},
+    {startSeconds:70,endSeconds:140}]);
+  const paired=structuredClone(project);
+  paired.workers.push({id:'W-B',name:'B'});
+  paired.resourceCalendars!.workers['W-B']={shifts:[{startSeconds:0,endSeconds:400,basis:'assumed'}],
+    breaks:[{startSeconds:45,endSeconds:65,basis:'assumed'}]};
+  paired.operations[0].staffing!.requiredWorkers=2;
+  paired.operations[0].staffing!.timeVariants[0].workerCount=2;
+  paired.operations[0].staffing!.timeVariants[0].timeProfile.operatorPresence=[
+    {startSeconds:10,endSeconds:20,basis:'assumed'},
+    {startSeconds:70,endSeconds:80,basis:'assumed'}];
+  paired.workerRunSelection={teamWorkerIds:['W-A','W-B'],operations:[{operationId:'1',workerCount:2,
+    eligibleWorkerIds:['W-A','W-B']}]};
+  const pairedRun=scheduleWorkerRun(paired,1,1).runs[0];
+  assert.deepEqual(pairedRun.workerIds,['W-A','W-B']);
+  assert.deepEqual(pairedRun.workWindows,[{startSeconds:0,endSeconds:40},
+    {startSeconds:70,endSeconds:130}]);
+  assert.deepEqual([pairedRun.reserveStartSeconds,pairedRun.reserveEndSeconds],[10,110]);
+  assert.deepEqual(pairedRun.pauses,[{startSeconds:40,endSeconds:70}]);
+  const parallel=structuredClone(project);
+  parallel.workers.push({id:'W-B',name:'B'});
+  parallel.resourceCalendars!.workers['W-B']=structuredClone(parallel.resourceCalendars!.workers['W-A']);
+  parallel.workerRunSelection={teamWorkerIds:['W-A','W-B'],operations:[{operationId:'1',workerCount:1,
+    eligibleWorkerIds:['W-A','W-B']}]};
+  const parallelRuns=scheduleWorkerRun(parallel,1,2).runs;
+  assert.deepEqual(parallelRuns.map(run=>[run.startSeconds,run.copy,run.workerIds]),
+    [[0,1,['W-A']],[1,2,['W-B']]]);
+  assert.ok(parallelRuns[0].pauses[0].startSeconds<parallelRuns[1].endSeconds);
+  const missing=structuredClone(project);
+  delete missing.resourceCalendars;
+  const logical=scheduleWorkerRun(missing,1,1);
+  assert.equal(logical.mode,'logical');
+  assert.equal(logical.runs[0].endSeconds,100);
+  assert.deepEqual(logical.runs[0].pauses,[]);
+  const noWorker=structuredClone(project);
+  noWorker.resourceCalendars!.workers={};
+  assert.throws(()=>scheduleWorkerRun(noWorker,1,1),/Pracownik W-A: brak jawnego kalendarza/);
+  const noStation=structuredClone(project);
+  noStation.resourceCalendars!.stations={};
+  assert.throws(()=>scheduleWorkerRun(noStation,1,1),/Stanowisko ST-A: brak jawnego kalendarza/);
+  const tooShort=structuredClone(project);
+  tooShort.resourceCalendars!.workers['W-A'].shifts=[{startSeconds:0,endSeconds:50,basis:'assumed'}];
+  tooShort.resourceCalendars!.workers['W-A'].breaks=[];
+  assert.throws(()=>scheduleWorkerRun(tooShort,1,1),/nie zakończył wszystkich operacji/);
 });
 
 test('2.5a: jawne zmiany i przerwy zasobów zachowują starszy szkic oraz odrębny zapis',()=>{

@@ -2,11 +2,13 @@ import {ProjectData} from '../models/types';
 import {topologicalSort} from '../validation';
 import {Job} from './simulation';
 export interface OperationRun {job:number;stepId:string;stationId:string;copy:number;ready:number;start:number;end:number}
-export function simulateNetwork(p:ProjectData,interval:number,batch:number){
+export interface NetworkResult {jobs:Job[];runs:OperationRun[];stepIds:string[]}
+export function simulateNetwork(p:ProjectData,interval:number,batch:number,onProgress?:(completed:number,total:number)=>void):NetworkResult{
   if(!Number.isFinite(interval)||interval<=0||!Number.isInteger(batch)||batch<1||batch>10000)throw new Error('Partia: 1–10000; odstęp musi być dodatni.');
   const steps=topologicalSort(p.processSteps),stations=p.balancing?.workstations??[];
   if(!steps.length||!stations.length)throw new Error('Brak procesu lub bilansu.');
   if(steps.length*batch>200000)throw new Error('Limit symulacji: 200000 wykonań operacji. Zmniejsz partię.');
+  let completed=0;onProgress?.(0,steps.length*batch);
   const owners=steps.map(s=>stations.findIndex(w=>w.assignedStepIds.includes(s.id)));
   if(owners.some(i=>i<0))throw new Error('Operacja bez stanowiska.');
   const durations=steps.map((s,i)=>s.standardTimeSeconds*stations[owners[i]].cycleTimeSeconds/(stations[owners[i]].baseCycleSeconds??stations[owners[i]].cycleTimeSeconds));
@@ -29,6 +31,7 @@ export function simulateNetwork(p:ProjectData,interval:number,batch:number){
       if(event.step<0)steps.forEach((s,i)=>{if(!s.predecessorIds.length)enqueue(event.job,i,now);});
       else{
         free[owners[event.step]][event.copy]=true;
+        onProgress?.(++completed,steps.length*batch);
         for(const next of successors[event.step])if(--remaining[event.job][next]===0)enqueue(event.job,next,now);
       }
     }
