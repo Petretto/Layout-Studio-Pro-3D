@@ -1,0 +1,11 @@
+node_modules
+backup
+outputs
+tests
+Instrukcja
+dist
+build
+.git
+.codex
+.env
+.env.*
