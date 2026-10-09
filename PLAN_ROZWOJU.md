@@ -77,6 +77,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
+3.4h / część 3.4.3 (2026-10-09): zakończony zakres — atomowy przewóz zadeklarowanym zestawem wielu wózków z miejsca odbioru; wspólne kalendarze, położenia i osobne powroty. Backup `backup/v0.4.0_przed_3_4h_20261009` (256 plików, SHA256 bez rozbieżności). 169/169 testów, build/typecheck i Edge workera/inspekcji/zapisu/odczytu PASS. Całe 3.4.3 w trakcie: transport podzespołów oraz dojazdy zestawu wielu wózków pozostają do integracji; formularz kontraktu do 3.4.4. Postęp 34,3% / 35,4%.
+
 3.4g / część 3.4.3 (2026-10-09): zakończony zakres — jawna obsada dojazdu w zapisie, dojazdy i zadeklarowane powroty w kolejce zdarzeń oraz inspekcja ruchów w UI. Backup `backup/v0.4.0_przed_3_4g_20261009` (256 plików, SHA256 bez rozbieżności). 166/166 testów, build/typecheck i Edge (dojazd/powrót, worker, zapis/odczyt) PASS. Cały 3.4.3 pozostaje w trakcie: transport podzespołów i wiele wózków w jednym zestawie nie są obsługiwane; formularz kontraktu pozostaje w 3.4.4. Postęp 23/67 = 34,3%, pierwsze wydanie 23/65 = 35,4%.
 
 3.4f / część 3.4.3 (2026-10-09): ukończono integrację przewozów bez dojazdu z kolejką zdarzeń: jawne zestawy osób/przenośników i do jednego wózka, atomowy przydział, wyłączność, zdarzenia przyjazdu i inspekcja osób/urządzeń. 162/162 testy, build, Edge rzeczywistego workera/odczytu, odmowy powrotów oraz regresji dawnych tras. Backup `backup/v0.4.0_przed_3_4f_20261009`: 255 plików, 0 rozbieżności SHA256. Raport `WERYFIKACJA_ZASOBOW_TRANSPORTU_3_4.md`. Cały 3.4.3 w trakcie; następny zakres: obsada dojazdów, fizyczne dojazdy i powroty w kolejce zdarzeń. Nieobsłużone reguły jawnie odmawiają wyniku. Postęp 34,3% / 35,4%.
@@ -606,3 +608,5 @@ Odbiór 2026-09-30 — 1.2, 1.2.2, 1.3, 1.3.1: **w trakcie → wdrożone**. Zamk
 - [Instrukcja Eko 0.4](Instrukcja/Eko_v0.4.md)
 
 Ten dokument jest głównym rejestrem przyszłych prac. Historyczne raporty pozostają zapisem stanu wcześniejszych wersji i nie zastępują aktualizacji statusów tutaj.
+
+| 2026-10-09 | 3.4.3 | kontynuacja — 3.4h | Atomowy zestaw wielu wózków przy miejscu odbioru, wspólne kalendarze, osobne powroty; 169/169 testów, build i Edge. Backup 256 zgodnych SHA256. Całość nadal w trakcie; raport 3.4. Postęp 34,3% / 35,4%. |

@@ -146,6 +146,13 @@ if(process.argv.includes('--cart-run')){
     routes:[{stationRouteId:r.id,source:'Jawny test montażu',alternatives:[{workerIds:['W'],equipmentIds:['QA-CART']}]}]};
   p.bodyRunInput={bodies:[{id:'UI-BODY',productId:p.product.id,location:{kind:'station',...r.from}}],jobs:[{job:1,bodyId:'UI-BODY'}]};
 }
+if(process.argv.includes('--multi-cart')){
+  const p=draft.project,t=p.assemblyTransport;
+  p.equipment.push({id:'QA-CART-2',name:'Drugi wózek testowy'});
+  t.carts.push({...structuredClone(t.carts[0]),equipmentId:'QA-CART-2'});
+  t.routes[0].alternatives[0].equipmentIds.push('QA-CART-2');
+  t.emptyRoutes.push({...structuredClone(t.emptyRoutes[0]),id:'EMPTY-RETURN-2',equipmentId:'QA-CART-2'});
+}
 const userData=mkdtempSync(join(tmpdir(),'layout-body-qa-'));
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(PORT)},stdio:'ignore'});
 const browser=spawn('C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',[
@@ -185,14 +192,15 @@ try{
       const inspection=await evaluate(`document.querySelector('[aria-label="Inspekcja ruchów transportu montażu"]').textContent`);
       if(process.argv.includes('--approach')&&(!inspection.includes('Dojazd bez ładunku')||!inspection.includes('10–15')))throw new Error('Brak dojazdu w UI');
       if(process.argv.includes('--return')&&(!inspection.includes('Powrót bez ładunku')||!inspection.includes('22–27')||!inspection.includes('QA-CART: ST-A / 1')))throw new Error('Brak powrotu w UI');
+      if(process.argv.includes('--multi-cart')&&(!inspection.includes('QA-CART, QA-CART-2')||!inspection.includes('QA-CART-2: ST-A / 1')||!inspection.includes('27–32')))throw new Error('Brak atomowego zestawu i osobnych powrotów w UI');
       await evaluate(`const p=document.querySelector('[aria-label="Inspekcja ruchów transportu montażu"]');p.open=true;p.scrollIntoView({block:'center'})`);
     }else await evaluate(`document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"]').scrollIntoView()`);
     mkdirSync('outputs/qa',{recursive:true});const screenshot=await send('Page.captureScreenshot',{format:'png'});
-    writeFileSync(process.argv.includes('--cart-run')?`outputs/qa/verify_3_4g_${process.argv.includes('--return')?'return':'approach'}.png`:'outputs/qa/verify_3_4f_transport.png',Buffer.from(screenshot.data,'base64'));
+    writeFileSync(process.argv.includes('--multi-cart')?'outputs/qa/verify_3_4h_multi_cart.png':process.argv.includes('--cart-run')?`outputs/qa/verify_3_4g_${process.argv.includes('--return')?'return':'approach'}.png`:'outputs/qa/verify_3_4f_transport.png',Buffer.from(screenshot.data,'base64'));
     await open();if(JSON.stringify(await saved())!==expected||await calculate()!==result)throw new Error('Odczyt zmienia wejście lub wynik');
     if(legacy!==await evaluate(`localStorage.getItem('layout-studio-stations-v5')`)||legacy4!==await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`))throw new Error('Zmiana 4/5');
     if((JSON.parse(await raw())).originalJson!==originalJson||errors.length)throw new Error('Zmiana źródła lub wyjątki');
-    console.log(`PASS ${process.argv.includes('--cart-run')?'3.4g':'3.4f'}: rzeczywisty worker transportu montażu, wynik, odczyt i izolacja danych 4/5.`);
+    console.log(`PASS ${process.argv.includes('--multi-cart')?'3.4h':process.argv.includes('--cart-run')?'3.4g':'3.4f'}: rzeczywisty worker transportu montażu, wynik, odczyt i izolacja danych 4/5.`);
   }else if(process.argv.includes('--transport-contract')){
     const expected=JSON.stringify(await saved());
     await field('Odstęp przybycia szkicu 6 [s]',1);await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');

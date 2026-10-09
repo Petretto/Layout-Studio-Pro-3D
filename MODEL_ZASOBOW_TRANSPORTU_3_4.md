@@ -118,3 +118,10 @@ Ten zakres rozszerza opis 3.4f. Pusta trasa ma opcjonalny workerAssignment z jaw
 Wózek poza miejscem odbioru wykonuje zadeklarowaną skierowaną trasę dojazdu. Dojazd zajmuje urządzenie i osoby, lecz nie przenosi korpusu ani nie rezerwuje celu operacji. Po przyjeździe przewóz jest ponownie wyznaczany na aktualnych rejestrach. Polityka return-to-initial uruchamia osobny pusty ruch po rozładunku, z własną trasą i obsadą; przyszłe rezerwacje montażu przesuwają powrót. Wózek jest zablokowany także podczas oczekiwania na zadeklarowany powrót. Brak trasy lub obsady powoduje jawną odmowę.
 
 Wynik transportMovements i inspekcja UI pokazują dojazd, przewóz, powrót oraz końcowe położenie urządzenia. Koniec produkcji może poprzedzać koniec powrotu. Nadal nie obsługujemy fizycznego transportu podzespołów ani wielu wózków w jednym zestawie. Edytor kontraktu pozostaje w 3.4.4. Magazynierzy i częstotliwość dostaw nie są częścią tych rezerwacji.
+
+
+## Zestaw wielu wózków 3.4h — 2026-10-09
+
+Harmonogram wykonuje teraz jawnie zadeklarowany zestaw wielu wózków, jeśli wszystkie egzemplarze znajdują się przy miejscu odbioru. Każdy wózek musi być wolny i mieć wspólne ciągłe okno z pozostałymi urządzeniami i osobami. Wszystkie ruszają w tym samym przedziale istniejącej trasy; liczba wózków nie skraca ani nie wydłuża zadeklarowanego czasu. Korpus ma jeden ruch i jedną lokalizację. Przydział jest publikowany wyłącznie w całości, a niewykonalna alternatywa nie przejmuje części zestawu.
+
+Po przyjeździe każdy wózek wykonuje własną zadeklarowaną politykę: pozostaje albo wraca po własnej skierowanej trasie z jawną obsadą. Rezerwacje powrotów uwzględniają wcześniej przydzielony montaż oraz inne powroty. Kolejność przy równym czasie zachowuje kolejność urządzeń w zapisanym zestawie i kolejkę zdarzeń. Zestaw wymagający dojazdu któregokolwiek wózka nadal daje jawną odmowę; nie wprowadzono niejawnej kolejności dojazdów. Schemat i dane zapisane bez zmian. Fizyczny transport podzespołów oraz edytor 3.4.4 pozostają do realizacji.

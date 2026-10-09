@@ -248,3 +248,6 @@ Aktualizacja 3.4f (2026-10-09): harmonogram szkicu 6 wykonuje transport korpusu 
 
 
 Aktualizacja 3.4g (2026-10-09): harmonogram szkicu 6 wykonuje jawne dojazdy i zadeklarowane powroty wózków z osobną obsadą, wspólną z montażem. UI pokazuje osobne ruchy i końcowe położenie wózka. Brak trasy/obsady daje odmowę. 166/166 testów, build i Edge (worker, inspekcja, odczyt) PASS. Transport podzespołów i wiele wózków w zestawie pozostają do integracji; formularz do 3.4.4. Czas pracy magazynierów nie jest liczony. Postęp 34,3% / 35,4%.
+
+
+Aktualizacja 3.4h (2026-10-09): harmonogram wykonuje atomowy przewóz zadeklarowanym zestawem kilku wózków znajdujących się przy miejscu odbioru. Uwzględnia wspólne kalendarze, osobne położenia i osobne powroty; niewykonalny zestaw nie rezerwuje części urządzeń. 169/169 testów, build i Edge (worker, inspekcja, odczyt) PASS. Dojazdy wielu wózków i fizyczny transport podzespołów pozostają do integracji; edytor do 3.4.4. Postęp 34,3% / 35,4%.

@@ -36,14 +36,14 @@ export function previewAssemblyDispatch(project: DomainProjectV6, routeId: strin
   const duration = resolveTransportTime(route)!.durationSeconds;
   let best: AssemblyDispatch | undefined;
   const failures: string[] = [];
-  for(const alternative of rule.alternatives) {
+  alternatives: for(const alternative of rule.alternatives) {
     try {
       const cartIds = alternative.equipmentIds.filter(id => rules.carts.some(c => c.equipmentId === id));
-      if(cartIds.length > 1) throw new Error('3.4.3: wspólny przewóz wieloma wózkami oczekuje na integrację.');
-      if(cartIds.length) {
-        const cart = carts.carts.find(c => c.equipmentId === cartIds[0])!;
+      for(const cartId of cartIds) {
+        const cart = carts.carts.find(c => c.equipmentId === cartId)!;
         if(cart.movement || lockedCarts.has(cart.equipmentId)) throw new Error('3.4.3: wózek oczekuje na zakończenie aktywnego ruchu lub powrotu.');
         if(cart.location && (cart.location.stationId !== route.from.stationId || cart.location.copy !== route.from.copy)) {
+          if(cartIds.length > 1) throw new Error('3.4.3: zestaw wielu wózków wymaga wszystkich egzemplarzy przy miejscu odbioru; wspólne dojazdy oczekują na integrację.');
           const emptyRoute = rules.emptyRoutes.find(r => r.equipmentId === cart.equipmentId &&
             r.from.stationId === cart.location!.stationId && r.from.copy === cart.location!.copy &&
             r.to.stationId === route.from.stationId && r.to.copy === route.from.copy);
@@ -55,7 +55,7 @@ export function previewAssemblyDispatch(project: DomainProjectV6, routeId: strin
             Math.max(earliest,prefix.endSeconds),reservationId);
           const candidate = {...loaded,prefix};
           if(!best || candidate.startSeconds < best.startSeconds) best = candidate;
-          continue;
+          continue alternatives;
         }
       }
       let windows = [{startSeconds: earliest, endSeconds: Number.MAX_VALUE}];
@@ -83,13 +83,13 @@ export function previewAssemblyDispatch(project: DomainProjectV6, routeId: strin
           probe = Math.max(...[...people, ...equipment].map(r => r.endSeconds));continue;
         }
         let nextCarts = carts;
-        if(cartIds.length) {
-          const cart = carts.carts.find(c => c.equipmentId === cartIds[0])!;
+        for(const cartId of cartIds) {
+          const cart = nextCarts.carts.find(c => c.equipmentId === cartId)!;
           if(cart.movement) throw new Error('3.4.3: wózek oczekuje na zakończenie aktywnego ruchu.');
           if(!cart.location || cart.location.stationId !== route.from.stationId || cart.location.copy !== route.from.copy) {
             throw new Error('3.4.3: wózek wymaga jawnego dojazdu; nie wolno teleportować urządzenia.');
           }
-          nextCarts = startCartMovement(project, carts, {...route, equipmentId: cartIds[0]}, 'loaded', start);
+          nextCarts = startCartMovement(project, nextCarts, {...route, equipmentId: cartId}, 'loaded', start);
         }
         const nextWorkers = alternative.workerIds.length ? reserveWorkerTeam(workers, {reservationId,
           workerIds: alternative.workerIds, startSeconds: start, endSeconds: end}) : workers;

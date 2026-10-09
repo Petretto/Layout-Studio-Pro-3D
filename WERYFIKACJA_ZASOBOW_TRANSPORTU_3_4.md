@@ -52,3 +52,12 @@ Backup `backup/v0.4.0_przed_3_4g_20261009`: 256 plików, niezależna kontrola SH
 Edge CDP `verify_2_7e.mjs --cart-run --approach` (5225/9365) oraz `--cart-run --return` (5226/9366): PASS. Rzeczywisty worker, osobne ruchy w inspekcji UI, końcowe miejsca korpusu/wózka, odświeżenie i zapis/odczyt z zachowaniem dokładnego źródła oraz aktywnych 4/5; brak nieobsłużonych wyjątków JS. Zrzuty `outputs/qa/verify_3_4g_approach.png` i `outputs/qa/verify_3_4g_return.png` sprawdzone wizualnie.
 
 Zakres 3.4g zakończony; całe 3.4.3 pozostaje w trakcie (transport podzespołów i wiele wózków w zestawie). Formularz kontraktu pozostaje w 3.4.4. Postęp 23/67 = 34,3%, pierwsze wydanie 23/65 = 35,4%. Git push nie stanowi dowodu wdrożenia Vercel.
+
+
+## 3.4h / zestaw wielu wózków — 2026-10-09
+
+Backup `backup/v0.4.0_przed_3_4h_20261009`: 256 plików, niezależna kontrola SHA256 — 0 rozbieżności. 169/169 testów PASS; build/typecheck PASS. Trzy nowe testy syntetyczne: przerwa drugiego wózka przesuwa cały przewóz na 15–17 s; niewykonalny zestaw nie rezerwuje żadnego urządzenia i może przegrać z jawną alternatywą; wspólny przewóz 10–12 s i powroty 22–27 oraz 27–32 s z tą samą osobą bez nakładania rezerwacji. Jeden ruch korpusu, faktyczne położenia obu wózków, niezmienność projektu i zgodność workera z wywołaniem synchronicznym. Brak wspólnego okna i wózek poza początkiem trasy dają jawną odmowę.
+
+Edge CDP `verify_2_7e.mjs --cart-run --return --multi-cart` (5227/9367): PASS — rzeczywisty worker, oba urządzenia w przewozie, dwa osobne powroty, końcowe lokalizacje, identyczny wynik po ponownym odczycie, zachowanie aktywnych 4/5 i dokładnego originalJson, brak nieobsłużonych wyjątków JS. Zrzut `outputs/qa/verify_3_4h_multi_cart.png` sprawdzony wizualnie. Schemat i formularze nie zmienione; odbiór edycji/historii nowego kontraktu pozostaje w 3.4.4.
+
+Zakres 3.4h zakończony. Całe 3.4.3 w trakcie: transport podzespołów oraz dojazd zestawu wielu wózków pozostają do integracji. Praca magazynierów nie jest liczona. Postęp 23/67 = 34,3%, pierwsze wydanie 23/65 = 35,4%. Wdrożenie Vercel nie zostało zweryfikowane.
