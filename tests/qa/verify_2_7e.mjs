@@ -153,6 +153,7 @@ if(process.argv.includes('--multi-cart')){
   t.routes[0].alternatives[0].equipmentIds.push('QA-CART-2');
   t.emptyRoutes.push({...structuredClone(t.emptyRoutes[0]),id:'EMPTY-RETURN-2',equipmentId:'QA-CART-2'});
 }
+if(process.argv.includes('--editor-new'))delete draft.project.assemblyTransport;
 const userData=mkdtempSync(join(tmpdir(),'layout-body-qa-'));
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(PORT)},stdio:'ignore'});
 const browser=spawn('C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',[
@@ -179,6 +180,39 @@ try{
   await evaluate(`localStorage.setItem('layout-studio-stations-v5',JSON.stringify({project:JSON.parse(${JSON.stringify(originalJson)}),originalJson:'',at:'2026-10-07T12:00:00Z'}));localStorage.setItem('layout-studio-domain-v6-draft-v1',${JSON.stringify(JSON.stringify(draft))})`);
   const open=async()=>{await send('Page.reload');await sleep(800);await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(b=>b.textContent.includes('Stanowiska v5')).click()`);await sleep(150);};
   await open();await sleep(1500);const legacy=await evaluate(`localStorage.getItem('layout-studio-stations-v5')`),legacy4=await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`);
+  if(process.argv.includes('--transport-editor')){
+    const panel='Transport montażu szkicu 6';
+    if(process.argv.includes('--editor-new')){
+      await click('Dodaj wymaganie trasy',panel);await field('Transport 1 trasa',draft.project.stationRouting.routes[0].id);
+      await field('Transport 1 źródło','Jawna reguła nowego kontraktu');await click('Dodaj zestaw do trasy 1',panel);
+      await check('Transport 1 zestaw 1 osoba W');await check('Transport 1 zestaw 1 bez urządzeń');
+      await click('Zapisz wymagania transportu',panel);
+      if(!(await saved()).assemblyTransport?.routes[0]?.alternatives[0]?.workerIds.includes('W'))throw new Error('Nie utworzono nowego kontraktu');
+    }
+    const before=JSON.stringify(await saved());
+    const clickChoice=async label=>{await check(label);};
+    await field('Transport 1 źródło','');await click('Zapisz wymagania transportu',panel);
+    if(JSON.stringify(await saved())!==before||!await evaluate(`document.querySelector('[aria-label="Transport montażu szkicu 6"] [role="alert"]')?.textContent`))throw new Error('Błędne źródło zmieniło zapis');
+    await field('Transport 1 źródło','Jawne źródło odbioru UI');
+    await click('Dodaj zestaw do trasy 1',panel);
+    await click('Zapisz wymagania transportu',panel);
+    if(JSON.stringify(await saved())!==before)throw new Error('Niepotwierdzona obsada zmieniła zapis');
+    await clickChoice('Transport 1 zestaw 2 bez osób');await clickChoice('Transport 1 zestaw 2 bez urządzeń');
+    await click('Zapisz wymagania transportu',panel);
+    const edited=JSON.stringify(await saved());if(edited===before)throw new Error('Brak zapisu zestawu');
+    await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==before)throw new Error('Cofnij nie przywrócił projektu');
+    await click('Ponów dane szkicu',panel);if(JSON.stringify(await saved())!==edited)throw new Error('Ponów nie przywrócił projektu');
+    await field('Transport 1 źródło','Niezapisana zmiana');await click('Odrzuć zmiany transportu',panel);
+    if(await evaluate(`document.querySelector('[aria-label="Transport 1 źródło"]').value`)!=='Jawne źródło odbioru UI')throw new Error('Odrzucenie nie odświeżyło formularza');
+    await click('Usuń zestaw 1/2',panel);await click('Zapisz wymagania transportu',panel);
+    if((await saved()).assemblyTransport.routes[0].alternatives.length!==1)throw new Error('Usunięcie zestawu nie działa');
+    await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==edited)throw new Error('Historia usunięcia nie działa');
+    await evaluate(`document.querySelector('[aria-label="Transport montażu szkicu 6"]').scrollIntoView()`);
+    mkdirSync('outputs/qa',{recursive:true});const shot=await send('Page.captureScreenshot',{format:'png'});
+    writeFileSync(`outputs/qa/verify_3_4i_${process.argv.includes('--editor-new')?'new':process.argv.includes('--cart-run')?'cart':'branches'}.png`,Buffer.from(shot.data,'base64'));
+    await open();if(JSON.stringify(await saved())!==edited)throw new Error('Odczyt zmienił wymagania');
+    console.log('PASS 3.4i: edycja zestawu, odmowy, Cofnij/Ponów, odrzucenie, usuwanie i odczyt.');
+  }
   if(process.argv.includes('--transport-run')||process.argv.includes('--cart-run')){
     const expected=JSON.stringify(await saved());
     const calculate=async()=>{
@@ -196,7 +230,7 @@ try{
       await evaluate(`const p=document.querySelector('[aria-label="Inspekcja ruchów transportu montażu"]');p.open=true;p.scrollIntoView({block:'center'})`);
     }else await evaluate(`document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"]').scrollIntoView()`);
     mkdirSync('outputs/qa',{recursive:true});const screenshot=await send('Page.captureScreenshot',{format:'png'});
-    writeFileSync(process.argv.includes('--multi-cart')?'outputs/qa/verify_3_4h_multi_cart.png':process.argv.includes('--cart-run')?`outputs/qa/verify_3_4g_${process.argv.includes('--return')?'return':'approach'}.png`:'outputs/qa/verify_3_4f_transport.png',Buffer.from(screenshot.data,'base64'));
+    writeFileSync(process.argv.includes('--transport-editor')?`outputs/qa/verify_3_4i_worker_${process.argv.includes('--editor-new')?'new':process.argv.includes('--cart-run')?'cart':'branches'}.png`:process.argv.includes('--multi-cart')?'outputs/qa/verify_3_4h_multi_cart.png':process.argv.includes('--cart-run')?`outputs/qa/verify_3_4g_${process.argv.includes('--return')?'return':'approach'}.png`:'outputs/qa/verify_3_4f_transport.png',Buffer.from(screenshot.data,'base64'));
     await open();if(JSON.stringify(await saved())!==expected||await calculate()!==result)throw new Error('Odczyt zmienia wejście lub wynik');
     if(legacy!==await evaluate(`localStorage.getItem('layout-studio-stations-v5')`)||legacy4!==await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`))throw new Error('Zmiana 4/5');
     if((JSON.parse(await raw())).originalJson!==originalJson||errors.length)throw new Error('Zmiana źródła lub wyjątki');

@@ -125,3 +125,12 @@ Wynik transportMovements i inspekcja UI pokazują dojazd, przewóz, powrót oraz
 Harmonogram wykonuje teraz jawnie zadeklarowany zestaw wielu wózków, jeśli wszystkie egzemplarze znajdują się przy miejscu odbioru. Każdy wózek musi być wolny i mieć wspólne ciągłe okno z pozostałymi urządzeniami i osobami. Wszystkie ruszają w tym samym przedziale istniejącej trasy; liczba wózków nie skraca ani nie wydłuża zadeklarowanego czasu. Korpus ma jeden ruch i jedną lokalizację. Przydział jest publikowany wyłącznie w całości, a niewykonalna alternatywa nie przejmuje części zestawu.
 
 Po przyjeździe każdy wózek wykonuje własną zadeklarowaną politykę: pozostaje albo wraca po własnej skierowanej trasie z jawną obsadą. Rezerwacje powrotów uwzględniają wcześniej przydzielony montaż oraz inne powroty. Kolejność przy równym czasie zachowuje kolejność urządzeń w zapisanym zestawie i kolejkę zdarzeń. Zestaw wymagający dojazdu któregokolwiek wózka nadal daje jawną odmowę; nie wprowadzono niejawnej kolejności dojazdów. Schemat i dane zapisane bez zmian. Fizyczny transport podzespołów oraz edytor 3.4.4 pozostają do realizacji.
+
+
+## Edytor wymagań tras 3.4i / część 3.4.4 — 2026-10-09
+
+W panelu Stanowiska v5, dla osobnego szkicu 6, formularz wymagań transportu wybiera istniejące trasy, źródła reguł oraz alternatywne zestawy osób montażowych i urządzeń już zadeklarowanych w kontrakcie. Nowy kontrakt można rozpocząć od jawnego transportu bez urządzenia. Nowe puste listy osób/urządzeń i usunięcie ostatniego zaznaczenia wymagają potwierdzenia odpowiedniego braku; odczyt istniejącego jawnego braku zachowuje tę decyzję. Walidator kontraktu blokuje niekompletne źródła, obce/powtórzone ID i zestawy.
+
+Formularz zachowuje deklaracje wózków, przenośników i pustych tras. Zapis przechodzi przez editDomainAssemblyTransport i wspólny zapis/historię szkicu; Cofnij/Ponów odświeża formularz. Odrzuć zmiany przywraca zapisane dane. Schemat i migracja bez zmian. Wymagania używanych tras muszą być kompletne przed obliczeniem; usunięcie wymagania nie oznacza automatycznie transportu bez zasobów.
+
+Instrukcja: dodaj wymaganie, wybierz trasę i podaj źródło, dodaj zestaw, zaznacz osoby i urządzenia albo jawne braki, następnie zapisz wymagania. Kolejność zestawów jest kolejnością rozstrzygania remisów. Wszystkie używane trasy wymagają własnych reguł. Deklaracje urządzeń, ich kalendarzy, początkowych lokalizacji, polityk oraz pustych tras pozostają do następnego zakresu edytora 3.4.4.

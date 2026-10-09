@@ -61,3 +61,14 @@ Backup `backup/v0.4.0_przed_3_4h_20261009`: 256 plików, niezależna kontrola SH
 Edge CDP `verify_2_7e.mjs --cart-run --return --multi-cart` (5227/9367): PASS — rzeczywisty worker, oba urządzenia w przewozie, dwa osobne powroty, końcowe lokalizacje, identyczny wynik po ponownym odczycie, zachowanie aktywnych 4/5 i dokładnego originalJson, brak nieobsłużonych wyjątków JS. Zrzut `outputs/qa/verify_3_4h_multi_cart.png` sprawdzony wizualnie. Schemat i formularze nie zmienione; odbiór edycji/historii nowego kontraktu pozostaje w 3.4.4.
 
 Zakres 3.4h zakończony. Całe 3.4.3 w trakcie: transport podzespołów oraz dojazd zestawu wielu wózków pozostają do integracji. Praca magazynierów nie jest liczona. Postęp 23/67 = 34,3%, pierwsze wydanie 23/65 = 35,4%. Wdrożenie Vercel nie zostało zweryfikowane.
+
+
+## 3.4i / edytor wymagań tras — 2026-10-09
+
+Backup `backup/v0.4.0_przed_3_4i_20261009`: 256 plików, niezależna kontrola SHA256 — 0 rozbieżności. 169/169 testów regresji PASS; build/typecheck PASS. Dodano DomainTransportEditor.tsx i podłączono istniejący editDomainAssemblyTransport do wspólnego zapisu/historii DomainDraftPanel. Schemat, migracja i algorytm harmonogramu bez zmian.
+
+Edge CDP verify_2_7e.mjs: `--cart-run --return --transport-editor` (5228/9368), `--branches --calculated --transport-run --transport-editor` (5229/9369), `--cart-run --transport-editor --editor-new` (5230/9370): PASS. W pierwszym procesie zachowano istniejący wózek/politykę i wykonano jego powrót; drugi proces ma gałęzie montażowe; trzeci tworzy nowy kontrakt i regułę trasy przez formularz. Testy obejmują źródło reguły, wybór trasy i osoby, dodanie zestawu, jawne braki, odmowę błędnego źródła i niepotwierdzonego pustego zestawu bez zmiany zapisu, Cofnij/Ponów, odrzucenie niezapisanej zmiany, usunięcie zestawu i odtworzenie go, odświeżenie/ponowny odczyt z identycznym wynikiem rzeczywistego workera. Aktywne 4/5 i dokładny originalJson zachowane, brak nieobsłużonych wyjątków JS. Dane syntetyczne.
+
+Pierwsza weryfikacja wykryła kasowanie potwierdzeń pozostałych pustych zestawów przy usuwaniu jednego wpisu. Poprawiono przenumerowanie stanu potwierdzeń; wszystkie trzy scenariusze ponownie poprawne. Zrzuty `outputs/qa/verify_3_4i_{cart,branches,new}.png` sprawdzone wizualnie, osobne zrzuty wyników `verify_3_4i_worker_{cart,branches,new}.png`.
+
+Pakiet 3.4i zakończony; całe 3.4.4 w trakcie. Nie ma jeszcze formularzy deklaracji urządzeń, ich kalendarzy, lokalizacji, polityk i pustych tras. Ograniczenia wykonania podzespołów i dojazdów wielu wózków z 3.4.3 zachowane. Postęp 23/67 = 34,3%, pierwsze wydanie 23/65 = 35,4%. Git push nie potwierdza wdrożenia Vercel.

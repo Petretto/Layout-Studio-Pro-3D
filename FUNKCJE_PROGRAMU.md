@@ -251,3 +251,6 @@ Aktualizacja 3.4g (2026-10-09): harmonogram szkicu 6 wykonuje jawne dojazdy i za
 
 
 Aktualizacja 3.4h (2026-10-09): harmonogram wykonuje atomowy przewóz zadeklarowanym zestawem kilku wózków znajdujących się przy miejscu odbioru. Uwzględnia wspólne kalendarze, osobne położenia i osobne powroty; niewykonalny zestaw nie rezerwuje części urządzeń. 169/169 testów, build i Edge (worker, inspekcja, odczyt) PASS. Dojazdy wielu wózków i fizyczny transport podzespołów pozostają do integracji; edytor do 3.4.4. Postęp 34,3% / 35,4%.
+
+
+Aktualizacja 3.4i (2026-10-09): szkic 6 ma formularz wymagań transportu istniejących tras, źródeł i alternatywnych zestawów osób montażowych/zadeklarowanych urządzeń. Brak osoby lub urządzenia wymaga jawnej decyzji. Dodawanie/usuwanie zestawów, wspólne Cofnij/Ponów, odrzucenie zmian i zapis/odczyt odebrane na procesie sekwencyjnym i gałęziach. Można utworzyć nowy kontrakt z transportem bez urządzenia. Deklaracje urządzeń i pustych tras są zachowane, ich formularze pozostają do następnego zakresu. 169/169 testów, build i Edge poprawne. Całe 3.4.4 w trakcie; postęp 34,3% / 35,4%.
