@@ -1,6 +1,24 @@
 # Zasoby transportowe — propozycja 3.4a / 3.4.1
 
-Data: 2026-10-09. Status: propozycja do przeglądu użytkownika. Nie jest aktywnym kontraktem zapisu ani zmianą harmonogramu.
+Data: 2026-10-09. Status: 1B wybrano dla transportu międzyoperacyjnego na montażu, z doprecyzowaniem zakresu poniżej. Nie jest aktywnym kontraktem zapisu ani zmianą harmonogramu.
+
+## Obowiązujący zakres po doprecyzowaniu użytkownika
+
+Użytkownik wyjaśnił: „Czasu operatorów magazynu nie liczymy, jedynie bierzemy pod uwagę co ile dostarczany musi być materiał by zachować płynność produkcji”. To doprecyzowanie ma pierwszeństwo przed wcześniejszymi propozycjami i pytaniami.
+
+- **3.4 — transport międzyoperacyjny montażu:** przemieszczenie korpusu, wyrobu lub podzespołu między operacjami. Uwzględniamy czas i dostępność jawnie wskazanych zasobów tego transportu. Osoba montażowa wykonująca przemieszczenie ma tę samą tożsamość i rezerwacje co podczas pracy montażowej. Nie każda trasa wymaga wózka; mechanizm i wymagania podaje użytkownik dla procesu.
+- **Zaopatrzenie materiałowe:** dostawa do montażu jest zdarzeniem uzupełnienia zapasu. Nie wprowadzamy operatorów magazynu do zespołu montażowego, czasu ich pracy, kalendarzy, obciążenia, lokalizacji ani rezerwacji. Trasy magazynowe nie służą do obliczania pracy magazynierów.
+- **Częstotliwość dostaw:** sprawdzamy, jak często trzeba uzupełniać materiał przy podanym zużyciu, zapasie i ilości dostawy, aby uniknąć braku materiału. Połączenie ze stanami zapasu i ograniczeniami pojemności należy do 3.5, a prezentacja oczekiwania na materiał do 3.6. Nie zakładamy, że częstotliwość wynika z czasu przejazdu wózka.
+- Wybór 1B dotyczy rzeczywiście używanych urządzeń transportu międzyoperacyjnego. Nie jest poleceniem modelowania floty magazynowej ani automatycznego wymagania wózka dla każdego przemieszczenia.
+- Pytania o powrót do bazy i dojścia operatorów magazynu nie blokują realizacji montażu. Nie wybieramy za użytkownika żadnej takiej reguły. Dla konkretnego ruchomego zasobu montażowego dojazd bez ładunku lub powrót musi wynikać z jego jawnych danych; brak danych pozostaje brakiem danych.
+
+### Dane i dowody dla częstotliwości uzupełnienia
+
+Potrzebne są jawne referencje materiału i miejsca pobrania, jednostka ilości, początkowy zapas, zużycie na wykonanie, ilość jednej dostawy oraz jej terminy lub odstęp i pierwsza dostawa. Trzeba również określić moment pobrania materiału przez operację, pojemność jeśli ma ograniczać zapas oraz źródło/pochodzenie danych. BOM nie określa automatycznie zapasu początkowego, ilości dostawy ani chwili zużycia.
+
+Weryfikacja ma opierać się na przebiegu montażu i zdarzeniach zużycia/uzupełnienia, także przy nierównym poborze i pracy równoległej. Średnie zużycie może być pomocniczym wskaźnikiem, lecz nie dowodem braku przestojów. Nie wyznaczamy liczby minut bez zadeklarowanego zapasu i ilości dostawy. Kolejność zdarzeń dostawy i pobrania przy tym samym czasie będzie jawną regułą kontraktu zapasów, nie przypadkiem kolejności w tablicy.
+
+Odbiór wymaga pokazania niedoboru i oczekiwania przy zbyt rzadkiej dostawie oraz braku niedoboru przy wystarczających terminach i ilościach; w żadnym scenariuszu nie rezerwuje się operatora magazynu. Brak wymaganych danych musi być wyjaśniony zamiast przyjmowania nieograniczonego materiału.
 
 ## Stan zastany
 
@@ -58,4 +76,4 @@ Użytkownik wybrał 1B. Rejestr `transportState.ts` jest niezależnym, nietrwał
 
 Początek ruchu wymaga aktualnej lokalizacji zgodnej z początkiem skierowanej trasy, dodatniej długości ze źródłem i potwierdzeniem oraz jawnego czasu zgodnego z 3.3. Ruch `empty`/`loaded` ma start i koniec; w czasie ruchu urządzenie nie znajduje się na żadnym końcu. Przyjazd ma dokładny czas i ustawia cel. Ewentualny powrót wymaga kolejnego jawnego ruchu — sam rejestr nie określa polityki automatycznego powrotu. Wyłączne rezerwacje osób, przydziały do korpusów i wybór tras pozostają do integracji.
 
-Przed integracją zadano pytania: czy wózek po rozładunku pozostaje w celu czy zawsze wraca do bazy; czy fizyczne dojścia osób wchodzą do tego etapu. Wybór 1B nie rozstrzyga tych dwóch reguł. Nie zapisano ich domyślnie w projekcie. Status 3.4.2: w trakcie.
+Historycznie przed integracją zadano pytania o powrót wózka i zakres dojść osób. Późniejsze doprecyzowanie użytkownika zawęziło zakres do montażu i wyłączyło pracę magazynierów (sekcja na początku dokumentu). Nie zapisano domyślnych reguł powrotu ani dojść w projekcie. Status 3.4.2: w trakcie.

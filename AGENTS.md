@@ -98,3 +98,9 @@ Do not invoke every skill for every task.
 - GitHub repository: https://github.com/Petretto/Layout-Studio-Pro-3D.
 - After each completed task/package report plan progress using `node scripts/plan_progress.mjs` (whole plan and first release).
 - Commit and push completed, verified scoped work to GitHub. Preserve unrelated local changes. Do not equate a Git push with verified Vercel deployment; record deployment evidence separately when available.
+
+## Transport scope — user clarification 2026-10-09
+- PLAN 3.4 covers inter-operation transport on the assembly line; do not infer a warehouse fleet from the choice of physical cart motion (1B).
+- Do not count warehouse operators' work time, workload, calendars, or resource reservations.
+- Warehouse replenishment is material availability: use explicit stock, consumption, delivery quantity and timing/frequency to determine whether production remains supplied (3.5/3.6).
+- Do not infer initial stock, replenishment quantities, consumption-event timing or delivery intervals from BOM or transport duration.

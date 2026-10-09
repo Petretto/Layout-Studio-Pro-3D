@@ -11,3 +11,7 @@ Dodano `src/core/transportState.ts`: nietrwały rejestr wykonawczy fizycznych w�
 Zakres nie obejmuje parsera/zapisu projektu, rezerwacji osób, przenośników, integracji z harmonogramem/workera lub UI. Brak zmian schematu i potrzeby migracji na tym etapie. Testy UI i ponownego otwarcia nie są dowodem tego pakietu, ponieważ nowy moduł nie jest jeszcze podłączony do aplikacji. Główny 3.4 i 3.4.2 pozostają w trakcie.
 
 Oczekujące decyzje: pozostawanie wózka w celu / powrót do bazy i zakres fizycznych dojść osób. Bez odpowiedzi nie wprowadzamy tych reguł do obliczeń ani trwałego kontraktu. Postęp głównych ID: 23/67 = **34,3%**, pierwsze wydanie 23/65 = **35,4%**.
+
+## Doprecyzowanie 3.4c — 2026-10-09
+
+Użytkownik wyjaśnił, że chodzi o transport międzyoperacyjny montażu. Czas pracy i rezerwacje operatorów magazynu nie należą do modelu; zaopatrzenie ma uwzględniać częstotliwość dostaw zapewniającą ciągłość produkcji. Zaktualizowano kontrakt, główne opisy 3.4/3.5 i AGENTS.md; zachowano wcześniejsze wpisy jako historię. Do oceny częstotliwości potrzebne są jawne dane zapasu, zużycia i ilości/terminów uzupełnienia. Moduł transportState pozostaje niezależny i niepodłączony. Nie zmieniono kodu, zapisu ani wyników aplikacji; ponowne testy UI/build nie są potrzebne dla tej korekty dokumentacji. Sprawdzono diff i licznik planu. Postęp 23/67 = 34,3%, pierwsze wydanie 23/65 = 35,4%.

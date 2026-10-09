@@ -77,7 +77,9 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
-3.4b / 3.4.2 (2026-10-09): częściowy pakiet — użytkownik zatwierdził 1B. Dodano niezależny wykonawczy rejestr fizycznego ruchu wózków: jawne miejsca i czasy, jeden stan, wyłączność egzemplarza, kalendarze i odmowy. 151/151 testów i build poprawne. Backup `backup/v0.4.0_przed_3_4b_20261009`: 250 plików, 0 rozbieżności SHA256. Raport `WERYFIKACJA_ZASOBOW_TRANSPORTU_3_4.md`. Schemat, zapis, harmonogram i UI bez nowych reguł; 3.4.2 pozostaje w trakcie. Powrót wózka i zakres ruchu osób wymagają odpowiedzi na pytania przed integracją. Postęp 34,3% / 35,4%.
+3.4c (2026-10-09): doprecyzowano zakres — 3.4 dotyczy transportu międzyoperacyjnego montażu; nie liczymy czasu/rezerwacji operatorów magazynu. Zaopatrzenie opisujemy przez zapas, zużycie, ilość i częstotliwość dostaw w 3.5 oraz oczekiwanie na materiał w 3.6. Kontrakt `MODEL_ZASOBOW_TRANSPORTU_3_4.md` zaktualizowany. Rejestr wózków pozostaje niepodłączony; nie wprowadza magazynowej floty ani pracy magazynierów. 3.4.2 w trakcie; postęp 34,3% / 35,4%.
+
+3.4b / 3.4.2 (2026-10-09): częściowy pakiet — użytkownik zatwierdził 1B. Dodano niezależny wykonawczy rejestr fizycznego ruchu wózków: jawne miejsca i czasy, jeden stan, wyłączność egzemplarza, kalendarze i odmowy. 151/151 testów i build poprawne. Backup `backup/v0.4.0_przed_3_4b_20261009`: 250 plików, 0 rozbieżności SHA256. Raport `WERYFIKACJA_ZASOBOW_TRANSPORTU_3_4.md`. Schemat, zapis, harmonogram i UI bez nowych reguł; 3.4.2 pozostaje w trakcie. Historyczne pytania o powrót i dojścia następnie zawężono doprecyzowaniem 3.4c; nie blokują one prac nad zaopatrzeniem bez modelu pracy magazynierów. Postęp 34,3% / 35,4%.
 
 3.4a / 3.4.1 (2026-10-09): zakończono pakiet dokumentacyjny — stan zastany, wspólna tożsamość osób, atomowe rezerwacje, kryteria i warianty dostępności/fizycznego ruchu. Kontrakt `MODEL_ZASOBOW_TRANSPORTU_3_4.md`. Decyzja 1A/1B do przeglądu użytkownika; brak zmian schematu i harmonogramu. 3.4 w trakcie. Postęp 23/67 = 34,3%, pierwsze wydanie 23/65 = 35,4%.
 
@@ -352,12 +354,12 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 3.3 | Wyznaczać czas transportu z długości trasy, prędkości, załadunku i rozładunku. | wdrożone |
 | 3.3.1 | Dodać jawny model parametrów i wyliczenie czasu, walidację, kompatybilny zapis oraz integrację z rdzeniem przewozu i połączeniami materiałowymi. | wdrożone |
 | 3.3.2 | Dodać formularze czasu wpisanego/wyliczanego, jednostki i inspekcję składowych; odebrać historię, zapis/odczyt i wyniki dwóch procesów w UI. | wdrożone |
-| 3.4 | Modelować dostępność transportu: operator, wózek lub przenośnik; odróżnić czas przejazdu od oczekiwania na zasób. | w trakcie |
+| 3.4 | Modelować dostępność transportu międzyoperacyjnego na montażu: operator montażowy, wózek lub przenośnik; odróżnić czas przemieszczenia od oczekiwania na zasób. Nie modelować czasu pracy operatorów magazynu. | w trakcie |
 | 3.4.1 | Zinwentaryzować aktualne rezerwacje, przygotować propozycję kontraktu zasobów, warianty domenowe i kryteria odbioru. | wdrożone |
 | 3.4.2 | Po decyzji wdrożyć kontrakt zapisu, referencje zasobów i kalendarze z ochroną starych szkiców. | w trakcie |
 | 3.4.3 | Zintegrować atomowe rezerwacje transportu ze wspólnymi osobami, oczekiwaniem i wynikiem workera. | nierozpoczęte |
 | 3.4.4 | Dodać edytor i inspekcję; odebrać historię, zapis/odczyt i dwa niezależne procesy w UI. | nierozpoczęte |
-| 3.5 | Wprowadzić bufory o ograniczonej pojemności oraz jednoznaczne reguły blokowania i zwalniania stanowiska. | nierozpoczęte |
+| 3.5 | Wprowadzić bufory o ograniczonej pojemności oraz jednoznaczne reguły blokowania i zwalniania stanowiska. Dla zaopatrzenia montażu uwzględniać zapas, zużycie, ilość i częstotliwość dostaw materiału potrzebną do płynnej produkcji, bez czasu/rezerwacji operatorów magazynu. | nierozpoczęte |
 | 3.6 | Pokazywać stany pracy, oczekiwania na materiał/operatora, blokady wyjścia i transportu wraz z czasami ich trwania. | nierozpoczęte |
 | 3.7 | Wykrywać zatrzymanie lub zakleszczenie procesu i przedstawiać jego przyczynę zamiast pozornego zakończenia symulacji. | nierozpoczęte |
 | 3.8 | Dodać wykres Gantta operacji, stanowisk i pracowników oraz przejście z wyniku do odpowiedniego obiektu. | nierozpoczęte |
@@ -509,6 +511,7 @@ Każdy kolejny wpis powinien wskazywać konkretne ID. Nie usuwać historii przy 
 | 2026-10-02 | 1.8 | kontynuacja — E5 | Znaczniki czterech eksportów v5 zachowane po zmianie karty; druk/PDF oznaczony jako wywołanie bez potwierdzenia zapisu. UI sprawdził edycję i Cofnij. Backup 103 plików, 69/69 testów, build poprawny; raport E. |
 | 2026-10-02 | 1.8 | w trakcie → wdrożone — E6 | Osobne statusy XLSX/CSV procesu i BOM, stałe szablony i migawka JSON wariantu. UI potwierdził selektywne unieważnienie, Cofnij, ponowny eksport i granicę sesji; fizyczne pliki sprawdzone. Backup 103 plików, 69/69 testów, build poprawny; raport E. |
 | 2026-10-02 | 1.7 | w trakcie → wdrożone | Całościowy odbiór zapisu, odzyskiwania, migracji starszych projektów i ochrony oryginału. Konsolidacja prac D5c–D5k. Zautomatyzowany odbiór UI CDP na porcie 5194 (`verify_1_7.mjs`) potwierdził: 1) odzyskiwanie uszkodzonego localStorage, 2) jawną migrację projektu bez wersji z pobraniem surowej kopii, 3) blokadę migracji przy osieroconych zasobach z zachowaniem oryginału i projektu docelowego, 4) ponowne otwarcie i pełny roundtrip. Backup 128 plików `backup/v0.4.0_przed_1_7_20261002_220500`, 75/75 testów i build poprawne; raport `WERYFIKACJA_MIGRACJA_ZAPIS_1_7.md`. |
+| 2026-10-09 | 3.4, 3.5, 3.6 | doprecyzowanie zakresu, bez zamknięcia ID | Transport międzyoperacyjny dotyczy montażu; magazynierzy bez czasu i rezerwacji. Dostawy jako uzupełnianie materiału, częstotliwość zależna od jawnego zapasu/zużycia/ilości; kontrakt 3.4. Postęp 34,3% / 35,4%. |
 | 2026-10-09 | 3.4.2 | nierozpoczęte → w trakcie | Zatwierdzone 1B; niezależny rejestr wykonawczy ruchu wózka, 151/151 testów, build, backup 250 zgodnych SHA256. Zapis i integracja oczekują na doprecyzowanie powrotów/dojść osób. Raport WERYFIKACJA_ZASOBOW_TRANSPORTU_3_4.md. Postęp 34,3% / 35,4%. |
 | 2026-10-09 | 3.4, 3.4.1 | nierozpoczęte → w trakcie; pakiet dokumentacyjny wdrożony | Propozycja zasobów transportowych, wspólne osoby i rezerwacje, warianty 1A/1B do decyzji; MODEL_ZASOBOW_TRANSPORTU_3_4.md. Bez zmian symulacji/schematu. Postęp 34,3% / 35,4%. |
 | 2026-10-09 | 3.3.2, 3.3 | w trakcie → wdrożone | Formularze, jednostki i składowe; 148/148 testów, build, dwa procesy w Edge, historia i odczyt; raport 3.3. Postęp 23/67 = 34,3%, pierwsze wydanie 23/65 = 35,4%. |
