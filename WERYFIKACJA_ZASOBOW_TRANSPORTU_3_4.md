@@ -43,3 +43,12 @@ Backup `backup/v0.4.0_przed_3_4f_20261009`: 255 plików, niezależna kontrola SH
 Edge `verify_2_7e.mjs --branches --calculated --transport-run` (5222/9362): PASS — worker rzeczywiście wykonuje transport, UI pokazuje przydział W i końcowe miejsce korpusu, zapis/odczyt zachowuje wynik i dokładne źródło oraz 4/5, brak nieobsłużonych wyjątków JS. Zrzut `outputs/qa/verify_3_4f_transport.png`. `--transport-contract` (5223/9363): PASS — jawna odmowa nieobsłużonego powrotu bez pozornego wyniku. Regresja `--branches --material --calculated` (5224/9364): PASS — stary harmonogram, historia i odczyt zachowane. Testy są syntetyczne.
 
 Status całego 3.4.3: w trakcie. Ograniczenia: fizyczny transport podzespołów, dojazdy/powroty w kolejce i wiele wózków w jednym zestawie nie są jeszcze wykonywane. Formularz kontraktu pozostaje w 3.4.4. Praca magazynierów i dostawy zapasu nie zostały włączone do tego harmonogramu. Postęp 23/67 = 34,3%, pierwsze wydanie 23/65 = 35,4%.
+
+
+## 3.4g / dojazdy i powroty w 3.4.3 — 2026-10-09
+
+Backup `backup/v0.4.0_przed_3_4g_20261009`: 256 plików, niezależna kontrola SHA256 — 0 rozbieżności. 166/166 testów PASS; build/typecheck PASS. Cztery nowe testy obejmują dojazd 10–15 s, przewóz 15–17 s i brak przejęcia korpusu/celu podczas dojazdu; powrót 22–27 s odłożony przez montaż tej samej osoby; dwa korpusy bez nakładania ruchów i rezerwacji; zapis/odczyt jawnej obsady, nieznane ID i odmowę wykonania starszej trasy bez obsady. Dane syntetyczne, projekt wejściowy zachowany.
+
+Edge CDP `verify_2_7e.mjs --cart-run --approach` (5225/9365) oraz `--cart-run --return` (5226/9366): PASS. Rzeczywisty worker, osobne ruchy w inspekcji UI, końcowe miejsca korpusu/wózka, odświeżenie i zapis/odczyt z zachowaniem dokładnego źródła oraz aktywnych 4/5; brak nieobsłużonych wyjątków JS. Zrzuty `outputs/qa/verify_3_4g_approach.png` i `outputs/qa/verify_3_4g_return.png` sprawdzone wizualnie.
+
+Zakres 3.4g zakończony; całe 3.4.3 pozostaje w trakcie (transport podzespołów i wiele wózków w zestawie). Formularz kontraktu pozostaje w 3.4.4. Postęp 23/67 = 34,3%, pierwsze wydanie 23/65 = 35,4%. Git push nie stanowi dowodu wdrożenia Vercel.

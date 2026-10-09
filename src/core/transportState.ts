@@ -15,6 +15,7 @@ export interface CartMotionRoute extends TransportTimedRoute {
   to: StationCopyRef;
   source: string;
   basis: 'confirmed';
+  workerAssignment?: {workerIds: string[]; source: string};
 }
 export interface CartMovement {
   kind: 'empty' | 'loaded';

@@ -1,5 +1,5 @@
-import {previewAssemblyDispatch,type AssemblyDispatch,type TransportDeviceReservation} from './assemblyDispatch';
-import {createCartBook,finishCartMovement,type CartBook} from './transportState';
+import {previewAssemblyDispatch,previewEmptyDispatch,type AssemblyDispatch,type TransportDeviceReservation} from './assemblyDispatch';
+import {createCartBook,finishCartMovement,startCartMovement,type CartBook,type CartMotionRoute} from './transportState';
 import {parseDomainProjectV6, type DomainProjectV6} from './domainProject';
 import {topologicalSort} from './validation';
 import {createWorkerRunPlan} from './workerRunPlan';
@@ -39,6 +39,8 @@ export interface WorkerScheduleRun {
   transport?: {workerIds?: readonly string[]; equipmentIds?: readonly string[]; routeId: string; startSeconds: number; endSeconds: number; basis: 'measured' | 'assumed'; breakdown?:TransportBreakdown};
 }
 
+export interface AssemblyTransportMovement {kind:'loaded'|'empty';purpose:'transfer'|'approach'|'return';routeId:string;workerIds:readonly string[];equipmentIds:readonly string[];startSeconds:number;endSeconds:number}
+
 export interface WorkerScheduleResult {
   mode: 'logical' | 'calendar';
   jobs: readonly Job[];
@@ -49,6 +51,7 @@ export interface WorkerScheduleResult {
   bodyEvents?: readonly BodyEvent[];
   transportReservations?: readonly TransportDeviceReservation[];
   cartBook?: CartBook;
+  transportMovements?: readonly AssemblyTransportMovement[];
 }
 
 type EventInput =
@@ -56,7 +59,8 @@ type EventInput =
   | {kind: 'completion'; at: number; job: number; step: number; stationId: string; copy: number}
   | {kind: 'release'; at: number; reservationId: string}
   | {kind: 'transport-end'; at: number; bodyId: string}
-  | {kind: 'cart-end'; at: number; equipmentId: string}
+  | {kind: 'cart-end'; at: number; equipmentId: string; returnToInitial?: boolean}
+  | {kind: 'cart-start'; at: number; route: CartMotionRoute}
   | {kind: 'body-start'; at: number; bodyId: string; operationId: string; end: number; basis: 'confirmed' | 'assumed'}
   | {kind: 'wake'; at: number};
 type Event = EventInput & {order: number};
@@ -135,9 +139,10 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
     throw new Error('Partia: 1–10000; jawny odstęp przybycia musi być dodatni.');
   }
   const checked = parseDomainProjectV6(JSON.stringify(project));
-  if(checked.assemblyTransport?.carts.some(c => c.afterUnload === 'return-to-initial')) throw new Error('3.4.3: jawne powroty wózków oczekują na integrację; harmonogram nie może ich pominąć.');
   let cartBook = createCartBook(checked, (checked.assemblyTransport?.carts ?? []).map(({afterUnload,source,...cart}) => cart));
   let transportDevices: readonly TransportDeviceReservation[] = [];
+  const cartLocks = new Map<string,number>();
+  const transportMovements: AssemblyTransportMovement[] = [];
   const bodyRun = prepareBodyRun(checked, batch, bodyInput);
   if(checked.assemblyTransport && !bodyRun) throw new Error('3.4.3: transport zasobowy wymaga fizycznego przebiegu korpusu; transport podzespołów oczekuje na integrację.');
   let bodyBook = bodyRun?.book;
@@ -251,8 +256,28 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
           ready: now, causes: new Set()}); });
       } else if (event.kind === 'release') {
         book = releaseWorkerTeam(book, event.reservationId, now);
+      } else if (event.kind === 'cart-start') {
+        cartBook = startCartMovement(checked,cartBook,event.route,'empty',now);
       } else if (event.kind === 'cart-end') {
         cartBook = finishCartMovement(cartBook,event.equipmentId,now);
+        cartLocks.delete(event.equipmentId);
+        if(event.returnToInitial) {
+          const declaration = checked.assemblyTransport!.carts.find(c => c.equipmentId === event.equipmentId)!;
+          const current = cartBook.carts.find(c => c.equipmentId === event.equipmentId)!.location!;
+          if(!sameCopy(current,declaration.initialLocation)) {
+            const route = checked.assemblyTransport!.emptyRoutes.find(r => r.equipmentId === event.equipmentId &&
+              sameCopy(r.from,current) && sameCopy(r.to,declaration.initialLocation));
+            if(!route) throw new Error('3.4.3: zadeklarowany powrót wózka wymaga skierowanej trasy do lokalizacji początkowej.');
+            const dispatch = previewEmptyDispatch(checked,route.id,cartBook,book,transportDevices,now,`return:${event.equipmentId}:${now}`);
+            book = dispatch.workers;transportDevices = dispatch.devices;cartLocks.set(event.equipmentId,dispatch.endSeconds);
+            if(dispatch.startSeconds === now) cartBook = dispatch.carts;
+            else events.push({kind:'cart-start',at:dispatch.startSeconds,route});
+            events.push({kind:'cart-end',at:dispatch.endSeconds,equipmentId:event.equipmentId});
+            if(dispatch.workerIds.length) events.push({kind:'release',at:dispatch.endSeconds,reservationId:dispatch.reservationId});
+            transportMovements.push({kind:'empty',purpose:'return',routeId:route.id,workerIds:dispatch.workerIds,
+              equipmentIds:dispatch.equipmentIds,startSeconds:dispatch.startSeconds,endSeconds:dispatch.endSeconds});
+          }
+        }
       } else if (event.kind === 'transport-end') {
         recordBody({kind: 'finish-transfer', bodyId: event.bodyId, atSeconds: now});
       } else if (event.kind === 'body-start') {
@@ -325,8 +350,9 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
           if(transportRoute && checked.assemblyTransport) {
             const busy = cartBook.carts.filter(c => c.movement);
             if(busy.length) {busy.forEach(c => wakeAt(c.movement!.endSeconds,now));}
+            cartLocks.forEach(end => wakeAt(end,now));
             try {
-              dispatch = previewAssemblyDispatch(checked,transportRoute.id,cartBook,book,transportDevices,departure,`transport:${task.job+1}:${step.id}`);
+              dispatch = previewAssemblyDispatch(checked,transportRoute.id,cartBook,book,transportDevices,departure,`transport:${task.job+1}:${step.id}`,now,new Set(cartLocks.keys()));
             } catch(failure) {
               transportFailures.push((failure as Error).message);task.causes.add('transport');continue;
             }
@@ -434,13 +460,24 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
           selectedRoute = routePlan?.forward(step.id, chosen.candidate)?.route ?? branchPlan?.forward(step.id, chosen.candidate)[0]?.route;
         }
         if (!chosen) {
-          if(transportFailures.length && !cartBook.carts.some(c => c.movement)) throw new Error(transportFailures.join(' '));
+          if(transportFailures.length && !cartLocks.size && !cartBook.carts.some(c => c.movement)) throw new Error(transportFailures.join(' '));
           if (bodyWait) task.causes.add('body');
           if (equipmentWait) task.causes.add('equipment');
           if (stationWait && !hasFreeCopy) task.causes.add('station');
           if (calendarWait) task.causes.add('calendar');
           if (workerWait) task.causes.add('workers');
           continue;
+        }
+        if(chosen.dispatch?.prefix) {
+          const prefix = chosen.dispatch.prefix;
+          task.causes.add('transport');prefix.waitCauses.forEach(cause => task.causes.add(cause));
+          if(prefix.startSeconds > now) {wakeAt(prefix.startSeconds,now);continue;}
+          book = prefix.workers;cartBook = prefix.carts;transportDevices = prefix.devices;
+          for(const id of prefix.equipmentIds) {cartLocks.set(id,prefix.endSeconds);events.push({kind:'cart-end',at:prefix.endSeconds,equipmentId:id});}
+          if(prefix.workerIds.length) events.push({kind:'release',at:prefix.endSeconds,reservationId:prefix.reservationId});
+          transportMovements.push({kind:'empty',purpose:'approach',routeId:prefix.routeId,workerIds:prefix.workerIds,
+            equipmentIds:prefix.equipmentIds,startSeconds:prefix.startSeconds,endSeconds:prefix.endSeconds});
+          started = true;break;
         }
         const {workerIds, projected, reserveStart, reserveEnd} = chosen;
         if (chosen.departure > now) {
@@ -458,9 +495,11 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
         if(chosen.dispatch) {
           book = chosen.dispatch.workers;cartBook = chosen.dispatch.carts;transportDevices = chosen.dispatch.devices;
           chosen.dispatch.waitCauses.forEach(cause => task.causes.add(cause));
+          transportMovements.push({kind:'loaded',purpose:'transfer',routeId:chosen.dispatch.routeId,workerIds:chosen.dispatch.workerIds,
+            equipmentIds:chosen.dispatch.equipmentIds,startSeconds:chosen.dispatch.startSeconds,endSeconds:chosen.dispatch.endSeconds});
           if(chosen.dispatch.workerIds.length) events.push({kind:'release',at:chosen.dispatch.endSeconds,reservationId:chosen.dispatch.reservationId});
           for(const id of chosen.dispatch.equipmentIds) if(cartBook.carts.some(c => c.equipmentId === id)) {
-            events.push({kind:'cart-end',at:chosen.dispatch.endSeconds,equipmentId:id});
+            events.push({kind:'cart-end',at:chosen.dispatch.endSeconds,equipmentId:id,returnToInitial:checked.assemblyTransport!.carts.find(c => c.equipmentId === id)!.afterUnload === 'return-to-initial'});
           }
         }
         if (bodyId) {
@@ -525,5 +564,5 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
   jobs.forEach(job => { job.finish = Math.max(...job.ends); });
   if (jobs.some(job => !Number.isFinite(job.finish))) throw new Error('Proces nie został ukończony.');
   return {mode: calendars ? 'calendar' : 'logical', jobs, runs, reservations: book,
-    operationIds: steps.map(step => step.id), ...(bodyBook ? {bodyBook, bodyEvents} : {}), ...(checked.assemblyTransport ? {transportReservations:transportDevices,cartBook} : {})};
+    operationIds: steps.map(step => step.id), ...(bodyBook ? {bodyBook, bodyEvents} : {}), ...(checked.assemblyTransport ? {transportReservations:transportDevices,cartBook,transportMovements} : {})};
 }

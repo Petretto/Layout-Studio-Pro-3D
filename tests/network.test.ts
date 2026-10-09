@@ -2861,14 +2861,14 @@ test('3.4d: przenośnik dopuszcza tylko zgodną skierowaną trasę, bez automaty
   transport.conveyors[0].from=route.to;transport.conveyors[0].to=route.from;
   assert.throws(()=>validateAssemblyTransport(project,transport),/inne końce/);
 });
-test('3.4f: nieobsłużone powroty powodują jawną odmowę harmonogramu/workera, dawny wynik pozostaje identyczny',()=>{
+test('3.4g: brak trasy powrotu powoduje jawną odmowę harmonogramu/workera, dawny wynik pozostaje identyczny',()=>{
   const {project,transport}=assemblyTransportFixture();
   const input:BodyRunInput={bodies:[{id:'BODY',productId:'PRODUCT',location:{kind:'station',stationId:'ST-A',copy:1}}],jobs:[{job:1,bodyId:'BODY'}]};
   const baseline=scheduleWorkerRun(project,1,1,input);transport.carts[0].afterUnload='return-to-initial';const edited=editDomainAssemblyTransport(project,transport);
   assert.throws(()=>scheduleWorkerRun(edited,1,1,input),/3.4.3/);
   const replies:unknown[]=[];edited.bodyRunInput=input;
   executeScheduleRequest({project:edited,arrivalIntervalSeconds:1,batch:1},reply=>replies.push(reply));
-  assert.equal((replies[0] as {kind:string}).kind,'error');assert.match((replies[0] as {message:string}).message,/3.4.3/);
+  const failure=replies.find(r=>(r as {kind:string}).kind==='error') as {message:string};assert.ok(failure);assert.match(failure.message,/3.4.3/);assert.ok(!replies.some(r=>(r as {kind:string}).kind==='result'));
   assert.deepEqual(scheduleWorkerRun(editDomainAssemblyTransport(edited,undefined),1,1,input),baseline);
 });
 
@@ -2971,4 +2971,52 @@ test('3.4f: jawny brak urządzenia obsługuje kolejne korpusy, brak wymagania i 
   project.assemblyTransport!.routes=[];assert.throws(()=>scheduleWorkerRun(project,1,2,input),/jawnego zestawu/);
   const other=assemblyMovementFixture().project;other.assemblyTransport!.carts[0].initialLocation={stationId:'ST-C',copy:1};
   assert.throws(()=>scheduleWorkerRun(other,1,1,assemblyScheduleInput()),/dojazdu/);
+});
+
+function addReturnRoute(project:ReturnType<typeof assemblyMovementFixture>['project']){
+  const route=project.stationRouting!.routes.find(r=>r.id==='R-A')!,worker=project.workers[0].id;
+  project.assemblyTransport!.emptyRoutes=[{...project.assemblyTransport!.emptyRoutes[0],id:'EMPTY-C-A',from:route.to,to:route.from,
+    workerAssignment:{workerIds:[worker],source:'Jawny test przydziału dojazdu'}}];
+}
+test('3.4g: dojazd bez ładunku nie rezerwuje celu ani korpusu przed wyjazdem z wyrobem',()=>{
+  const {project}=assemblyMovementFixture();addReturnRoute(project);
+  project.assemblyTransport!.carts[0].initialLocation={stationId:'ST-C',copy:1};
+  const result=scheduleWorkerRun(project,1,1,assemblyScheduleInput()),run=result.runs.find(r=>r.transport)!;
+  assert.deepEqual(result.transportMovements!.map(m=>[m.purpose,m.startSeconds,m.endSeconds]),[['approach',10,15],['transfer',15,17]]);
+  assert.deepEqual([run.stationReserveStartSeconds,run.transport!.startSeconds,run.transport!.endSeconds,run.startSeconds,run.waitSeconds],[15,15,17,17,5]);
+  assert.ok(run.waitCauses.includes('transport'));assert.deepEqual(result.cartBook!.carts[0].location,{stationId:'ST-C',copy:1});
+  const transfer=result.bodyEvents!.find(e=>e.kind==='start-transfer')!;assert.equal(transfer.atSeconds,15);
+});
+test('3.4g: powrót ma odrębne osoby/rezerwacje i czeka na montaż, bez przedłużania przewozu korpusu',()=>{
+  const {project}=assemblyMovementFixture();addReturnRoute(project);project.assemblyTransport!.carts[0].afterUnload='return-to-initial';
+  const before=JSON.stringify(project),result=scheduleWorkerRun(project,1,1,assemblyScheduleInput());
+  assert.deepEqual(result.transportMovements!.map(m=>[m.purpose,m.startSeconds,m.endSeconds]),[['transfer',10,12],['return',22,27]]);
+  assert.deepEqual(result.cartBook!.carts[0].location,{stationId:'ST-A',copy:1});assert.equal(result.cartBook!.carts[0].movement,null);
+  assert.equal(result.jobs[0].finish,22);assert.equal(result.bodyBook!.bodies[0].location.kind,'station');
+  assert.equal(JSON.stringify(project),before);
+  const reservations=result.reservations.reservations;
+  for(let i=0;i<reservations.length;i++)for(let j=i+1;j<reservations.length;j++){
+    const a=reservations[i],b=reservations[j];if(a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
+  }
+});
+test('3.4g: kolejne korpusy nie przejmują wózka podczas oczekiwania na jego powrót',()=>{
+  const {project}=assemblyMovementFixture();addReturnRoute(project);project.assemblyTransport!.carts[0].afterUnload='return-to-initial';
+  const input:BodyRunInput={bodies:[1,2].map(i=>({id:`B-${i}`,productId:'PRODUCT',location:{kind:'station',stationId:'ST-A',copy:1}})),jobs:[1,2].map(job=>({job,bodyId:`B-${job}`}))};
+  const result=scheduleWorkerRun(project,1,2,input),movements=result.transportMovements!;
+  assert.equal(result.runs.length,4);assert.equal(movements.filter(m=>m.purpose==='return').length,2);
+  for(let i=1;i<movements.length;i++)assert.ok(movements[i-1].endSeconds<=movements[i].startSeconds);
+  assert.deepEqual(result.cartBook!.carts[0].location,{stationId:'ST-A',copy:1});
+});
+test('3.4g: obsada dojazdu zapisuje się, chroni źródło i nie jest domyślnie dziedziczona',()=>{
+  const {project}=assemblyMovementFixture();addReturnRoute(project);
+  const parsed=parseDomainProjectV6(JSON.stringify(project));assert.deepEqual(parsed.assemblyTransport,project.assemblyTransport);
+  const storage=new DraftStorage(),originalJson=JSON.stringify(derive(parseProject(JSON.stringify(base))).project);
+  saveDomainDraft(storage,{project,originalJson},null);const reopened=readDomainDraft(storage);assert.equal(reopened.status,'valid');
+  if(reopened.status==='valid')assert.deepEqual(reopened.saved.project.assemblyTransport,project.assemblyTransport);
+  project.assemblyTransport!.carts[0].initialLocation={stationId:'ST-C',copy:1};
+  delete project.assemblyTransport!.emptyRoutes[0].workerAssignment;
+  assert.throws(()=>scheduleWorkerRun(project,1,1,assemblyScheduleInput()),/jawnej obsady/);
+  project.assemblyTransport!.emptyRoutes[0].workerAssignment={workerIds:['UNKNOWN'],source:'Test'};
+  assert.throws(()=>parseDomainProjectV6(JSON.stringify(project)),/osoby dojazdu/);
+  assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),reopened.status==='valid'?reopened.raw:undefined);
 });

@@ -2,7 +2,8 @@ import type {DomainProjectV6} from './domainProject';
 import {availableWindows, intersectWindows} from './resourceCalendar';
 import {resolveTransportTime} from './transportTime';
 import {reserveWorkerTeam, type WorkerReservationBook} from './workerReservations';
-import {startCartMovement, type CartBook} from './transportState';
+import {startCartMovement, finishCartMovement, type CartBook} from './transportState';
+import {reserveAssemblyMovement} from './assemblyMovement';
 
 export interface TransportDeviceReservation {
   reservationId: string; equipmentIds: readonly string[]; startSeconds: number; endSeconds: number;
@@ -11,12 +12,24 @@ export interface AssemblyDispatch {
   reservationId: string; routeId: string; workerIds: readonly string[]; equipmentIds: readonly string[];
   startSeconds: number; endSeconds: number; waitCauses: readonly ('workers' | 'calendar' | 'transport')[];
   workers: WorkerReservationBook; carts: CartBook; devices: readonly TransportDeviceReservation[];
+  prefix?: AssemblyDispatch;
+}
+
+export function previewEmptyDispatch(project: DomainProjectV6, routeId: string, carts: CartBook,
+  workers: WorkerReservationBook, devices: readonly TransportDeviceReservation[], earliest: number,
+  reservationId: string): AssemblyDispatch {
+  const route = project.assemblyTransport!.emptyRoutes.find(r => r.id === routeId);
+  if(!route?.workerAssignment) throw new Error(`3.4.3: dojazd ${routeId} wymaga jawnej obsady ze źródłem, także dla braku osób.`);
+  const movement = reserveAssemblyMovement(project,carts,workers,{kind:'empty',emptyRouteId:routeId,
+    workerIds:route.workerAssignment.workerIds,assignmentSource:route.workerAssignment.source,reservationId,earliestSeconds:earliest});
+  return {...movement, equipmentIds:[movement.equipmentId], devices:[...devices,{reservationId,
+    equipmentIds:[movement.equipmentId],startSeconds:movement.startSeconds,endSeconds:movement.endSeconds}]};
 }
 
 /** Candidate planning is immutable. Only the selected candidate may publish these ledgers. */
 export function previewAssemblyDispatch(project: DomainProjectV6, routeId: string, carts: CartBook,
   workers: WorkerReservationBook, devices: readonly TransportDeviceReservation[], earliest: number,
-  reservationId: string): AssemblyDispatch {
+  reservationId: string, emptyEarliest = earliest, lockedCarts: ReadonlySet<string> = new Set()): AssemblyDispatch {
   const rules = project.assemblyTransport!, rule = rules.routes.find(r => r.stationRouteId === routeId);
   const route = project.stationRouting?.routes.find(r => r.id === routeId);
   if(!rule || !route) throw new Error(`3.4.3: trasa ${routeId} wymaga jawnego zestawu transportu montażu.`);
@@ -27,6 +40,24 @@ export function previewAssemblyDispatch(project: DomainProjectV6, routeId: strin
     try {
       const cartIds = alternative.equipmentIds.filter(id => rules.carts.some(c => c.equipmentId === id));
       if(cartIds.length > 1) throw new Error('3.4.3: wspólny przewóz wieloma wózkami oczekuje na integrację.');
+      if(cartIds.length) {
+        const cart = carts.carts.find(c => c.equipmentId === cartIds[0])!;
+        if(cart.movement || lockedCarts.has(cart.equipmentId)) throw new Error('3.4.3: wózek oczekuje na zakończenie aktywnego ruchu lub powrotu.');
+        if(cart.location && (cart.location.stationId !== route.from.stationId || cart.location.copy !== route.from.copy)) {
+          const emptyRoute = rules.emptyRoutes.find(r => r.equipmentId === cart.equipmentId &&
+            r.from.stationId === cart.location!.stationId && r.from.copy === cart.location!.copy &&
+            r.to.stationId === route.from.stationId && r.to.copy === route.from.copy);
+          if(!emptyRoute) throw new Error('3.4.3: wózek wymaga jawnego dojazdu; nie wolno teleportować urządzenia.');
+          const prefix = previewEmptyDispatch(project,emptyRoute.id,carts,workers,devices,emptyEarliest,`${reservationId}:approach:${emptyEarliest}`);
+          const arrived = finishCartMovement(prefix.carts,cart.equipmentId,prefix.endSeconds);
+          const oneAlternative = {...project,assemblyTransport:{...rules,routes:rules.routes.map(r => r === rule ? {...r,alternatives:[alternative]} : r)}};
+          const loaded = previewAssemblyDispatch(oneAlternative,routeId,arrived,prefix.workers,prefix.devices,
+            Math.max(earliest,prefix.endSeconds),reservationId);
+          const candidate = {...loaded,prefix};
+          if(!best || candidate.startSeconds < best.startSeconds) best = candidate;
+          continue;
+        }
+      }
       let windows = [{startSeconds: earliest, endSeconds: Number.MAX_VALUE}];
       for(const id of alternative.workerIds) {
         const calendar = project.resourceCalendars?.workers[id];

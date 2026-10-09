@@ -79,18 +79,27 @@ export function validateAssemblyTransport(project: DomainProjectV6, value: unkno
   });
   const cartIds = new Set(carts.map(c => c.equipmentId)), emptyIds = new Set<string>(), pairs = new Set<string>();
   const emptyRoutes = list(raw.emptyRoutes).map(value => {
-    const r = object(value, ['id', 'equipmentId', 'from', 'to', 'distanceMm', 'basis', 'source', 'transportTime', 'transportCalculation'], 'dojazd');
+    const r = object(value, ['id', 'equipmentId', 'from', 'to', 'distanceMm', 'basis', 'source', 'transportTime', 'transportCalculation', 'workerAssignment'], 'dojazd');
     const equipmentId = text(r.equipmentId), id = text(r.id), from = ref(r.from), to = ref(r.to);
     if(!cartIds.has(equipmentId) || emptyIds.has(id)) throw new Error('Transport montażu: nieznany wózek lub powtórzone ID dojazdu.');
     const pair = JSON.stringify([equipmentId, key(from), key(to)]);
     if(pairs.has(pair) || key(from) === key(to)) throw new Error('Transport montażu: powtórzony lub nieruchomy dojazd.');
     // Reuse the complete route/timing validator without inferring a loaded-route duration.
-    const {equipmentId: _equipment, ...timedRoute} = r;
+    const {equipmentId: _equipment, workerAssignment: _assignment, ...timedRoute} = r;
     const validated = validateStationRouting(project, {selectionRule: 'earliest-start-then-shortest-route',
       equipmentPlacements: [], operations: [], routes: [timedRoute]}).routes[0];
     if(!resolveTransportTime(validated)) throw new Error('Transport montażu: dojazd wymaga jawnego czasu.');
     emptyIds.add(id);pairs.add(pair);
-    return {...validated, equipmentId};
+    let workerAssignment: CartMotionRoute['workerAssignment'];
+    if(Object.prototype.hasOwnProperty.call(r,'workerAssignment')) {
+      const a = object(r.workerAssignment,['workerIds','source'],'obsada dojazdu');
+      const workerIds = list(a.workerIds).map(text);
+      if(new Set(workerIds).size !== workerIds.length || workerIds.some(id => !project.workers.some(w => w.id === id))) {
+        throw new Error('Transport montażu: nieznane lub powtórzone osoby dojazdu.');
+      }
+      workerAssignment = {workerIds,source:text(a.source)};
+    }
+    return {...validated, equipmentId, ...(workerAssignment ? {workerAssignment} : {})};
   });
   const workerIds = new Set(project.workers.map(w => w.id)), routeIds = new Set<string>();
   const uniqueIds = (value: unknown, known: Set<string>) => {

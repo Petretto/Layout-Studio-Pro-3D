@@ -109,3 +109,12 @@ Dopuszczone są jawne zestawy osób, przenośników oraz najwyżej jednego wózk
 Wynik dodaje transport.workerIds/equipmentIds, transportReservations oraz cartBook. UI pokazuje przydzielone osoby/urządzenia i przyczynę oczekiwania transport. Starszy kontrakt bez assemblyTransport zachowuje dotychczasowy kształt i wyniki.
 
 Nie obsługujemy jeszcze fizycznego transportu podzespołów, dojazdu wózka do innego miejsca odbioru, zestawu wielu wózków i polityki return-to-initial. Nieobsłużone powroty oraz brak wymaganego dojazdu wywołują odmowę, nie teleportację lub ich pominięcie. API rezerwacji pojedynczego dojazdu z 3.4e pozostaje rdzeniem do następnej integracji; zapis jego jawnej obsady wymaga następnego zakresu. Cały 3.4.3 pozostaje w trakcie.
+
+
+## Dojazdy i powroty 3.4g — 2026-10-09
+
+Ten zakres rozszerza opis 3.4f. Pusta trasa ma opcjonalny workerAssignment z jawną listą workerIds i źródłem; starszy zapis bez tego pola jest odczytywany, lecz wykonanie takiej trasy odmawia do czasu uzupełnienia obsady. Obsada nie jest dziedziczona z przewozu.
+
+Wózek poza miejscem odbioru wykonuje zadeklarowaną skierowaną trasę dojazdu. Dojazd zajmuje urządzenie i osoby, lecz nie przenosi korpusu ani nie rezerwuje celu operacji. Po przyjeździe przewóz jest ponownie wyznaczany na aktualnych rejestrach. Polityka return-to-initial uruchamia osobny pusty ruch po rozładunku, z własną trasą i obsadą; przyszłe rezerwacje montażu przesuwają powrót. Wózek jest zablokowany także podczas oczekiwania na zadeklarowany powrót. Brak trasy lub obsady powoduje jawną odmowę.
+
+Wynik transportMovements i inspekcja UI pokazują dojazd, przewóz, powrót oraz końcowe położenie urządzenia. Koniec produkcji może poprzedzać koniec powrotu. Nadal nie obsługujemy fizycznego transportu podzespołów ani wielu wózków w jednym zestawie. Edytor kontraktu pozostaje w 3.4.4. Magazynierzy i częstotliwość dostaw nie są częścią tych rezerwacji.

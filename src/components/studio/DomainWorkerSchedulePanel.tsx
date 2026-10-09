@@ -69,7 +69,7 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
   const concurrentPeriods = simultaneousPeriods(runs);
   return <div className="panel" aria-label="Harmonogram zespołu szkicu 6">
     <h3>Harmonogram zespołu — szkic 6</h3>
-    <p className="muted">Podgląd wymaga zapisanego składu i wyborów operacji. Praca na korpusie wymaga ról wszystkich operacji oraz jawnych instancji i przypisań. Równoległość wymaga zapisanej grupy obejmującej wszystkie trwające czynności; wspólny korpus zachowuje jedną lokalizację. Przewóz wykorzystuje wpisany czas trasy i zajmuje cel od wyjazdu do końca pracy. {project.assemblyTransport ? 'Przewóz uwzględnia zapisane zasoby montażu; dojazdy i powroty wózków oczekują na integrację. Bufory pozostają poza zakresem.' : 'Brak kontraktu zasobów transportu — przewóz nie uwzględnia dostępności osób ani urządzeń transportowych. Bufory pozostają poza zakresem.'}</p>
+    <p className="muted">Podgląd wymaga zapisanego składu i wyborów operacji. Praca na korpusie wymaga ról wszystkich operacji oraz jawnych instancji i przypisań. Równoległość wymaga zapisanej grupy obejmującej wszystkie trwające czynności; wspólny korpus zachowuje jedną lokalizację. Przewóz wykorzystuje wpisany czas trasy i zajmuje cel od wyjazdu do końca pracy. {project.assemblyTransport ? 'Przewóz uwzględnia zapisane zasoby montażu; dojazdy i zadeklarowane powroty są osobnymi ruchami. Bufory pozostają poza zakresem.' : 'Brak kontraktu zasobów transportu — przewóz nie uwzględnia dostępności osób ani urządzeń transportowych. Bufory pozostają poza zakresem.'}</p>
     {!project.workerRunSelection && <p className="notice">Najpierw zapisz stały skład i wybory dla wszystkich operacji.</p>}
     <div className="form-grid">
       <label className="field">Liczba sztuk w podglądzie<input aria-label="Liczba sztuk szkicu 6"
@@ -118,6 +118,17 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
           </tr>)}</tbody></table></div>}
         {concurrentPeriods.length > 100 && <p>Pokazano pierwsze 100 z {concurrentPeriods.length} przedziałów.</p>}
       </details>
+      {result.transportMovements && <details aria-label="Inspekcja ruchów transportu montażu"><summary>Ruchy transportu montażu ({result.transportMovements.length})</summary>
+        <p>Dojazd i powrót przemieszczają urządzenie bez korpusu. Przydziały osób są wspólne z montażem. Koniec produkcji i koniec powrotu urządzenia mogą mieć różne czasy.</p>
+        <div className="table-wrap"><table><thead><tr><th>Ruch</th><th>Trasa</th><th>Przedział [s]</th><th>Osoby</th><th>Urządzenia</th></tr></thead>
+          <tbody>{result.transportMovements.slice(0,100).map((movement,index)=><tr key={index}>
+            <td>{movement.purpose==='approach'?'Dojazd bez ładunku':movement.purpose==='return'?'Powrót bez ładunku':'Przewóz korpusu'}</td>
+            <td>{movement.routeId}</td><td>{movement.startSeconds}–{movement.endSeconds}</td>
+            <td>{movement.workerIds.join(', ')||'jawnie bez osób'}</td><td>{movement.equipmentIds.join(', ')||'jawnie bez urządzeń'}</td>
+          </tr>)}</tbody></table></div>
+        {result.transportMovements.length>100&&<p>Pokazano pierwsze 100 ruchów.</p>}
+        <p>Końcowe położenie wózków: {result.cartBook?.carts.map(c=>`${c.equipmentId}: ${c.location?`${c.location.stationId} / ${c.location.copy}`:'w ruchu'}`).join('; ')||'brak zadeklarowanych wózków'}.</p>
+      </details>}
       {result.bodyBook && <div aria-label="Inspekcja korpusów przebiegu">
         <h4>Końcowe położenie korpusów</h4>
         <ul>{result.bodyBook.bodies.map(body => <li key={body.id}>{body.id} · {body.productId} · {body.status === 'available' ? 'dostępny' : body.status} · {body.location.kind === 'station' ? `${body.location.stationId} / ${body.location.copy}` : 'lokalizacja nieznana'}</li>)}</ul>

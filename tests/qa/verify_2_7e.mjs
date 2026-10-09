@@ -128,6 +128,24 @@ if(process.argv.includes('--transport-run')){
   p.resourceCalendars={workers:Object.fromEntries(p.workers.map(w=>[w.id,calendar])),stations:Object.fromEntries(p.stations.map(s=>[s.id,calendar]))};
   p.bodyRunInput={bodies:[{id:'UI-BODY',productId:p.product.id,location:{kind:'station',stationId:'ST-S',copy:1}}],jobs:[{job:1,bodyId:'UI-BODY'}]};
 }
+if(process.argv.includes('--transport-contract')){
+  const p=draft.project,r=p.stationRouting.routes[0];
+  p.bodyRunInput={bodies:[{id:'UI-BODY',productId:p.product.id,location:{kind:'station',...r.from}}],jobs:[{job:1,bodyId:'UI-BODY'}]};
+}
+if(process.argv.includes('--cart-run')){
+  const p=draft.project,r=p.stationRouting.routes[0];
+  p.operations.forEach(o=>o.physicalRole={kind:'body-work'});
+  r.transportTime={durationSeconds:2,basis:'assumed',source:'Jawny test przewozu'};
+  const calendar={shifts:[{startSeconds:0,endSeconds:1000,basis:'assumed'}],breaks:[]};
+  p.equipment.push({id:'QA-CART',name:'Wózek międzyoperacyjny testowy'});
+  p.resourceCalendars={workers:Object.fromEntries(p.workers.map(w=>[w.id,calendar])),stations:Object.fromEntries(p.stations.map(s=>[s.id,calendar]))};
+  p.assemblyTransport={scope:'assembly-only',carts:[{equipmentId:'QA-CART',initialLocation:process.argv.includes('--approach')?r.to:r.from,
+    calendar,afterUnload:process.argv.includes('--return')?'return-to-initial':'stay-at-destination',source:'Jawny test reguły'}],conveyors:[],
+    emptyRoutes:[{id:'EMPTY-RETURN',equipmentId:'QA-CART',from:r.to,to:r.from,distanceMm:5000,basis:'confirmed',source:'Jawny test dojazdu',
+      transportTime:{durationSeconds:5,basis:'assumed',source:'Jawny test czasu'},workerAssignment:{workerIds:['W'],source:'Jawny test obsady'}}],
+    routes:[{stationRouteId:r.id,source:'Jawny test montażu',alternatives:[{workerIds:['W'],equipmentIds:['QA-CART']}]}]};
+  p.bodyRunInput={bodies:[{id:'UI-BODY',productId:p.product.id,location:{kind:'station',...r.from}}],jobs:[{job:1,bodyId:'UI-BODY'}]};
+}
 const userData=mkdtempSync(join(tmpdir(),'layout-body-qa-'));
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(PORT)},stdio:'ignore'});
 const browser=spawn('C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',[
@@ -154,7 +172,7 @@ try{
   await evaluate(`localStorage.setItem('layout-studio-stations-v5',JSON.stringify({project:JSON.parse(${JSON.stringify(originalJson)}),originalJson:'',at:'2026-10-07T12:00:00Z'}));localStorage.setItem('layout-studio-domain-v6-draft-v1',${JSON.stringify(JSON.stringify(draft))})`);
   const open=async()=>{await send('Page.reload');await sleep(800);await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(b=>b.textContent.includes('Stanowiska v5')).click()`);await sleep(150);};
   await open();await sleep(1500);const legacy=await evaluate(`localStorage.getItem('layout-studio-stations-v5')`),legacy4=await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`);
-  if(process.argv.includes('--transport-run')){
+  if(process.argv.includes('--transport-run')||process.argv.includes('--cart-run')){
     const expected=JSON.stringify(await saved());
     const calculate=async()=>{
       await field('Odstęp przybycia szkicu 6 [s]',1);await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');
@@ -162,14 +180,19 @@ try{
       return evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]').textContent`);
     };
     const result=await calculate();
-    if(!result.includes('ST-Q / 1')||!result.includes('założony')||!result.includes('Osoby transportu: W'))throw new Error('Brak rzeczywistego wyniku transportu');
-    await evaluate(`document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"]').scrollIntoView()`);
+    if(!result.includes(process.argv.includes('--cart-run')?'ST-C / 1':'ST-Q / 1')||!result.includes('założony')||!result.includes('Osoby transportu: W'))throw new Error('Brak rzeczywistego wyniku transportu');
+    if(process.argv.includes('--cart-run')) {
+      const inspection=await evaluate(`document.querySelector('[aria-label="Inspekcja ruchów transportu montażu"]').textContent`);
+      if(process.argv.includes('--approach')&&(!inspection.includes('Dojazd bez ładunku')||!inspection.includes('10–15')))throw new Error('Brak dojazdu w UI');
+      if(process.argv.includes('--return')&&(!inspection.includes('Powrót bez ładunku')||!inspection.includes('22–27')||!inspection.includes('QA-CART: ST-A / 1')))throw new Error('Brak powrotu w UI');
+      await evaluate(`const p=document.querySelector('[aria-label="Inspekcja ruchów transportu montażu"]');p.open=true;p.scrollIntoView({block:'center'})`);
+    }else await evaluate(`document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"]').scrollIntoView()`);
     mkdirSync('outputs/qa',{recursive:true});const screenshot=await send('Page.captureScreenshot',{format:'png'});
-    writeFileSync('outputs/qa/verify_3_4f_transport.png',Buffer.from(screenshot.data,'base64'));
+    writeFileSync(process.argv.includes('--cart-run')?`outputs/qa/verify_3_4g_${process.argv.includes('--return')?'return':'approach'}.png`:'outputs/qa/verify_3_4f_transport.png',Buffer.from(screenshot.data,'base64'));
     await open();if(JSON.stringify(await saved())!==expected||await calculate()!==result)throw new Error('Odczyt zmienia wejście lub wynik');
     if(legacy!==await evaluate(`localStorage.getItem('layout-studio-stations-v5')`)||legacy4!==await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`))throw new Error('Zmiana 4/5');
     if((JSON.parse(await raw())).originalJson!==originalJson||errors.length)throw new Error('Zmiana źródła lub wyjątki');
-    console.log('PASS 3.4f: rzeczywisty worker transportu montażu, wynik, odczyt i izolacja danych 4/5.');
+    console.log(`PASS ${process.argv.includes('--cart-run')?'3.4g':'3.4f'}: rzeczywisty worker transportu montażu, wynik, odczyt i izolacja danych 4/5.`);
   }else if(process.argv.includes('--transport-contract')){
     const expected=JSON.stringify(await saved());
     await field('Odstęp przybycia szkicu 6 [s]',1);await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');
