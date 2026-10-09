@@ -137,7 +137,7 @@ try{
   await send('Page.navigate',{url:`http://127.0.0.1:${PORT}/`});await sleep(800);
   await evaluate(`localStorage.setItem('layout-studio-stations-v5',JSON.stringify({project:JSON.parse(${JSON.stringify(originalJson)}),originalJson:'',at:'2026-10-07T12:00:00Z'}));localStorage.setItem('layout-studio-domain-v6-draft-v1',${JSON.stringify(JSON.stringify(draft))})`);
   const open=async()=>{await send('Page.reload');await sleep(800);await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(b=>b.textContent.includes('Stanowiska v5')).click()`);await sleep(150);};
-  await open();if(eko)await sleep(1500);const legacy=await evaluate(`localStorage.getItem('layout-studio-stations-v5')`),legacy4=await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`);
+  await open();await sleep(1500);const legacy=await evaluate(`localStorage.getItem('layout-studio-stations-v5')`),legacy4=await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`);
   if(materialEditor){
     const panel='Sieć materiałowa szkicu 6',firstStation=branches?'ST-S':'ST-A',secondStation=branches?'ST-X':'ST-C';
     const calculate=async()=>{await field('Odstęp przybycia szkicu 6 [s]',1);await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');
@@ -325,7 +325,7 @@ try{
   await field('Odstęp przybycia szkicu 6 [s]',1);await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');
   if(!preparation&&!concurrent&&!branches){
     if(!await evaluate(`document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"]').textContent.includes('brak jawnej trasy lub czasu')`))throw new Error('Brak odmowy czasu.');
-    await check('Trasa 1 ma czas transportu');await field('Trasa 1 czas transportu [s]',2);await field('Trasa 1 pochodzenie czasu','measured');await field('Trasa 1 źródło czasu','Syntetyczny test UI');await check('Trasa 1 potwierdzona');
+    await field('Trasa 1 tryb czasu','direct');await field('Trasa 1 Czas transportu',2);await field('Trasa 1 Czas transportu pochodzenie','measured');await field('Trasa 1 Czas transportu źródło','Syntetyczny test UI');
     await click('Zapisz dopuszczenia i trasy','Dopuszczenia i trasy szkicu 6');
     const withTime=await saved();if(withTime.stationRouting.routes[0].transportTime.durationSeconds!==2)throw new Error('Brak czasu.');
     await click('Cofnij dane szkicu');if((await saved()).stationRouting.routes[0].transportTime)throw new Error('Cofnij czasu.');
@@ -364,6 +364,60 @@ try{
     console.log('PASS 3.3a: rzeczywisty worker, wyliczone czasy tras, zgodny harmonogram i zachowanie parametrów przez zapis/historię/odczyt.');
   }
   console.log(`PASS ${groups?'2.8d grupy '+(three?'trójka':preparation?'przygotowanie':'korpus'):branches?'2.8c trasy gałęzi':concurrent?'2.8b równoległość':preparation?'2.7e przygotowanie':'2.7e transport'}: role, jawne instancje, wynik, inspekcja, historia, odczyt i izolacja 4/5.`);
+  }
+  if(process.argv.includes('--timing-editor')){
+    const panel='Dopuszczenia i trasy szkicu 6',label='Trasa 1';
+    const before=await raw(),distance=(await saved()).stationRouting.routes[0].distanceMm;
+    await field(`${label} tryb czasu`,'calculated');
+    await click('Zapisz dopuszczenia i trasy',panel);
+    if(await raw()!==before)throw new Error('Niepełne parametry nadpisały zapis');
+    await field(`${label} jednostka prędkości`,'m/min');
+    await field(`${label} Prędkość`,60);
+    await field(`${label} jednostka czasu`,'min');
+    for(const [name,value] of [['Załadunek',2/60],['Rozładunek',3/60]])await field(`${label} ${name}`,value);
+    for(const name of ['Prędkość','Załadunek','Rozładunek']){
+      await field(`${label} ${name} pochodzenie`,'measured');
+      await field(`${label} ${name} źródło`,'Jawny test UI 3.3b');
+    }
+    await click('Zapisz dopuszczenia i trasy',panel);
+    const calc=(await saved()).stationRouting.routes[0].transportCalculation;
+    if(calc.speed.value!==1000||calc.loading.value!==2||calc.unloading.value!==3)throw new Error('Błędne jednostki '+JSON.stringify(calc));
+    const summary=await evaluate(`document.querySelector('[aria-label="Trasa 1 wynik czasu"]').textContent`);
+    if(!summary.includes(`Czas: ${5+distance/1000} s (założony)`)||!summary.includes('Załadunek: 2 s')||!summary.includes('rozładunek: 3 s'))throw new Error('Błędne składowe '+summary);
+    await field(`${label} jednostka prędkości`,'m/s');await field(`${label} jednostka czasu`,'s');
+    await click('Zapisz dopuszczenia i trasy',panel);
+    if(JSON.stringify((await saved()).stationRouting.routes[0].transportCalculation)!==JSON.stringify(calc))throw new Error('Przełączenie jednostek zmienia dane');
+    await field(`${label} tryb czasu`,'direct');await field(`${label} Czas transportu`,10);await field(`${label} Czas transportu źródło`,'Test UI wpisanego czasu');
+    await click('Zapisz dopuszczenia i trasy',panel);
+    let route=(await saved()).stationRouting.routes[0];
+    if(route.transportCalculation||route.transportTime.durationSeconds!==10)throw new Error('Sprzeczne tryby');
+    await click('Cofnij dane szkicu',panel);
+    if(JSON.stringify((await saved()).stationRouting.routes[0].transportCalculation)!==JSON.stringify(calc))throw new Error('Cofnij czasu');
+    await click('Ponów dane szkicu',panel);if((await saved()).stationRouting.routes[0].transportTime.durationSeconds!==10)throw new Error('Ponów czasu');
+    await click('Cofnij dane szkicu',panel);
+    if(material){
+      await field('Połączenie 1 tryb czasu','calculated');
+      for(const [name,value] of [['Prędkość',1000],['Załadunek',2],['Rozładunek',3]]){
+        await field(`Połączenie 1 ${name}`,value);await field(`Połączenie 1 ${name} źródło`,'Test definicji zewnętrznej');
+      }
+      await click('Zapisz sieć materiałową','Sieć materiałowa szkicu 6');
+      if(!(await saved()).materialNetwork.routes[0].transportCalculation)throw new Error('Brak zapisu zewnętrznego');
+    }
+    const calculate=async()=>{
+      await field('Odstęp przybycia szkicu 6 [s]',1);
+      await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');
+      for(let i=0;i<100;i++){if(await evaluate(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`))break;await sleep(50);}
+      return evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]').textContent`);
+    };
+    const result=await calculate(),complete=JSON.stringify(await saved());
+    await evaluate(`document.querySelector('[aria-label="Trasa 1 wynik czasu"]').scrollIntoView({block:'center'})`);
+    const timingShot=await send('Page.captureScreenshot',{format:'png'});
+    writeFileSync(`outputs/qa/verify_3_3b_${eko?'eko':preparation?'preparation':'branches'}.png`,Buffer.from(timingShot.data,'base64'));
+    await open();if(JSON.stringify(await saved())!==complete)throw new Error('Odczyt parametrów');
+    if(await calculate()!==result)throw new Error('Inny wynik czasu po odczycie');
+    if(legacy!==await evaluate(`localStorage.getItem('layout-studio-stations-v5')`)||legacy4!==await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`))throw new Error('Zmieniono 4/5');
+    if((JSON.parse(await raw())).originalJson!==originalJson||errors.length)throw new Error('Źródło/wyjątki '+errors.join('; '));
+    console.log('PASS 3.3b '+(eko?'Eko':'niezależne gałęzie')+': tryby, odmowa, jednostki, składowe, historia, worker i odczyt.');
   }
 }finally{
   ws?.close();browser.kill();server.kill();

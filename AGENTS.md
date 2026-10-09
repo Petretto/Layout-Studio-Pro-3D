@@ -92,3 +92,9 @@ Use only matching repository skills:
 - `layout-release`
 
 Do not invoke every skill for every task.
+
+## Delivery and progress — user instruction 2026-10-09
+- Current hosted application: https://layout-studio-pro-3d.vercel.app/ (Vercel).
+- GitHub repository: https://github.com/Petretto/Layout-Studio-Pro-3D.
+- After each completed task/package report plan progress using `node scripts/plan_progress.mjs` (whole plan and first release).
+- Commit and push completed, verified scoped work to GitHub. Preserve unrelated local changes. Do not equate a Git push with verified Vercel deployment; record deployment evidence separately when available.

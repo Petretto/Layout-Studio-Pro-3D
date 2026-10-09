@@ -17,3 +17,15 @@ Build/typecheck: PASS. Edge CDP `verify_2_7e.mjs --branches --material --calcula
 Ograniczenia: brak domyślnych danych produkcyjnych, brak zasobów transportowych i nowych faz zdarzeń; cały przedział przewozu zawiera obsługę i jazdę. Nie włączono dostawy z magazynu do przebiegu ani nowych reguł do aktywnej symulacji 4/5. UI wpisywania parametrów, jednostek prędkości/czasu i inspekcji składowych pozostaje do 3.3.2. W obecnym edytorze nie należy próbować dodawać wpisanego czasu do trasy z zapisanym wyliczeniem: parser odrzuci sprzeczne tryby; wybór trybu zostanie udostępniony w 3.3.2.
 
 Status 3.3.1: wdrożone w zakresie rdzenia i zapisu. 3.3: w trakcie. Postęp głównych ID: cały plan **22/67 = 32,8%**, pierwsze wydanie **22/65 = 33,8%**. Następny pakiet: 3.3.2 — formularze i zbiorczy odbiór UI.
+
+## 3.3b / 3.3.2 — 2026-10-09
+
+Backup `backup/v0.4.0_przed_3_3b_20261009`: 248 plików, niezależna kontrola SHA256: 0 rozbieżności.
+
+`TransportTimingEditor.tsx` podłączono do tras stanowisk i zewnętrznych. Wybór brak/wpisany/wyliczany usuwa poprzedni tryb; nowe parametry są puste, bez domyślnych danych produkcyjnych. Jednostki mm/s, m/s, m/min i s/min są prezentacją; zapis używa mm/s i sekund. Każdy parametr wymaga źródła i pochodzenia. Podgląd sumy i składowych korzysta z resolvera rdzenia.
+
+148/148 testów PASS, końcowy build/typecheck PASS. Edge CDP `verify_2_7e.mjs --branches --material --calculated --timing-editor` (5218/9358) i `--preparation --timing-editor` (5219/9359): PASS. Odmowa niepełnych parametrów bez nadpisania, 60 m/min = 1000 mm/s, min/s, rozłączne tryby, założona etykieta wyniku przy zmierzonych parametrach, składowe, Cofnij/Ponów, zapis/odczyt i zgodny wynik workera po odświeżeniu. Zewnętrzne parametry zapisane niezależnie; aktywne 4/5 i dokładne źródło zachowane. Brak nieobsłużonych wyjątków JS. Zrzuty: `outputs/qa/verify_3_3b_branches.png`, `outputs/qa/verify_3_3b_preparation.png`; wizualna kontrola formularza poprawna.
+
+Poprawki z odbioru: oczekiwanie na zakończenie inicjalizacji przed migawką 4/5; konwersja m/min mnoży przed dzieleniem, aby uniknąć artefaktu 1000.0000000000001; test odczytu jawnie wpisuje odstęp przybycia zgodnie z kontraktem panelu. Eko parallel przeszedł regresję; nie zawiera tras między kopiami, więc odbiór formularza wykonano na dwóch innych procesach. Nie zmieniono schematu ani algorytmu harmonogramu.
+
+Ograniczenia 3.3a pozostają: brak zasobów transportowych, osobnych zdarzeń faz, dostaw zewnętrznych w przebiegu i nowych reguł w aktywnej symulacji 4/5. Status 3.3.2 i 3.3: wdrożone. Postęp 23/67 = **34,3%**, pierwsze wydanie 23/65 = **35,4%**. Następny pakiet 3.4: kontrakt zasobów transportowych.

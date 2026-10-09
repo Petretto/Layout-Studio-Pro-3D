@@ -1,3 +1,4 @@
+import {TransportTimingEditor} from './TransportTimingEditor';
 import {useState} from 'react';
 import type {DomainProjectV6} from '../../core/domainProject';
 import {validateMaterialNetwork,distanceToMm,distanceFromMm,materialRouteData,
@@ -88,7 +89,10 @@ export function DomainMaterialEditor({project,onApply,onUndo,onRedo,canUndo,canR
       </div>
       {route.kind==='declared'?<><label className="toolbar"><input type="checkbox" aria-label={`${label} potwierdzenie`} checked={confirmed[index]??false}
         onChange={e=>setConfirmed(confirmed.map((value,i)=>i===index?e.target.checked:value))}/>Potwierdzam długość i źródło tej trasy.</label>
-        {route.transportTime&&<p>Wpisany czas: {route.transportTime.durationSeconds} s ({route.transportTime.basis==='measured'?'zmierzony':'założony'}), źródło: {route.transportTime.source}.</p>}
+        <TransportTimingEditor label={label} route={route} onChange={timing => {
+          const {transportTime, transportCalculation, ...base} = route;
+          change({...network, routes: network.routes.map((item, i) => i === index ? {...base, ...timing} : item)});
+        }}/>
         <p className="muted">Definicja sieci; połączenie zewnętrzne nie uruchamia przewozu w harmonogramie.</p></>:
         <p aria-label={`${label} dane trasy`}>{linkedData?`Długość: ${linkedData.distanceMm} mm · źródło: ${linkedData.source}${linkedData.transportTime?` · czas: ${linkedData.transportTime.durationSeconds} s`:''}`:
           'Wybierz zgodną trasę i jej punkty końcowe, aby odczytać długość i czas.'} Dane tej drogi zmienisz w edytorze dopuszczeń i tras.</p>}

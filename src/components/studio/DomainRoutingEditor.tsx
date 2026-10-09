@@ -1,3 +1,4 @@
+import {TransportTimingEditor} from './TransportTimingEditor';
 import {useState} from 'react';
 import {parseDomainProjectV6, type DomainProjectV6} from '../../core/domainProject';
 import type {StationRoutingV6, StationCopyRef, DeclaredTransportRoute} from '../../core/stationRouting';
@@ -87,15 +88,10 @@ export function DomainRoutingEditor({project, onApply, onUndo, onRedo, canUndo, 
             onChange={event => changeRoute(index, {distanceMm: event.target.value === '' ? NaN : Number(event.target.value)})} /></label>
           <label className="field">Źródło długości<input aria-label={`Trasa ${index + 1} źródło`} value={route.source} onChange={event => changeRoute(index, {source: event.target.value})} /></label>
         </div>
-        <label className="toolbar"><input type="checkbox" aria-label={`Trasa ${index + 1} ma czas transportu`} checked={!!route.transportTime} onChange={event => changeRoute(index, {
-          transportTime: event.target.checked ? {durationSeconds: NaN, basis: 'assumed', source: ''} : undefined,
-        })} />Podaj czas transportu korpusu</label>
-        {route.transportTime && <div className="form-grid">
-          <label className="field">Czas transportu [s]<input type="number" min="0" step="any" aria-label={`Trasa ${index + 1} czas transportu [s]`} value={Number.isNaN(route.transportTime.durationSeconds) ? '' : route.transportTime.durationSeconds}
-            onChange={event => changeRoute(index, {transportTime: {...route.transportTime!, durationSeconds: event.target.value === '' ? NaN : Number(event.target.value)}})} /></label>
-          <label className="field">Pochodzenie czasu<select aria-label={`Trasa ${index + 1} pochodzenie czasu`} value={route.transportTime.basis} onChange={event => changeRoute(index, {transportTime: {...route.transportTime!, basis: event.target.value as 'measured' | 'assumed'}})}><option value="assumed">Założony</option><option value="measured">Zmierzony</option></select></label>
-          <label className="field">Źródło czasu<input aria-label={`Trasa ${index + 1} źródło czasu`} value={route.transportTime.source} onChange={event => changeRoute(index, {transportTime: {...route.transportTime!, source: event.target.value}})} /></label>
-        </div>}
+        <TransportTimingEditor label={`Trasa ${index + 1}`} route={route} onChange={timing => {
+          const {transportTime, transportCalculation, ...base} = route;
+          update({...routing, routes: routing.routes.map((item, i) => i === index ? {...base, ...timing} : item)});
+        }}/>
         <label className="toolbar"><input type="checkbox" aria-label={`Trasa ${index + 1} potwierdzona`} checked={confirmed[index]}
           onChange={event => {setConfirmed(confirmed.map((value, i) => i === index ? event.target.checked : value)); setDirty(true); setError('');}} />Potwierdzam długość rzeczywistej trasy według wskazanego źródła.</label>
         <button onClick={() => {update({...routing, routes: routing.routes.filter((_, i) => i !== index)}); setConfirmed(confirmed.filter((_, i) => i !== index));}}>Usuń trasę {index + 1}</button>
