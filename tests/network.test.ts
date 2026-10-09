@@ -1,3 +1,4 @@
+import {createCartBook,startCartMovement,finishCartMovement,type CartMotionRoute} from '../src/core/transportState';
 import {strict as assert} from 'node:assert';
 import {test} from 'node:test';
 import {DEFAULT_MOTOR_PROJECT as base} from '../src/core/models/defaultProjects';
@@ -2751,4 +2752,54 @@ test('kopie zachowują unikalne ID i brak kolizji we wszystkich generatorach',()
   assert.equal(next.layoutObjects.filter(o=>o.type.includes('Table')).length,8);
   assert.deepEqual(layoutWarnings(next),[],targetLayoutType);
  }
+});
+
+function cartMotionFixture(){
+  const project=movingBodyFixture();
+  project.equipment.push({id:'CART',name:'Wózek testowy — dane syntetyczne'});
+  const calendar={shifts:[{startSeconds:0,endSeconds:100,basis:'assumed' as const}],breaks:[]};
+  const declarations=[{equipmentId:'CART',initialLocation:{stationId:'ST-A',copy:1},calendar}];
+  const route:CartMotionRoute={id:'EMPTY-A-C',equipmentId:'CART',from:{stationId:'ST-A',copy:1},to:{stationId:'ST-C',copy:1},
+    distanceMm:5000,basis:'confirmed',source:'Jawny test dojazdu',transportTime:{durationSeconds:5,basis:'assumed',source:'Jawny test czasu'}};
+  return {project,declarations,route};
+}
+test('3.4b: fizyczny dojazd i przewóz wózka zachowują jedno położenie, jawne czasy i niemutowalność',()=>{
+  const {project,declarations,route}=cartMotionFixture(),before=JSON.stringify({project,declarations,route});
+  const initial=createCartBook(project,declarations),moving=startCartMovement(project,initial,route,'empty',0);
+  assert.deepEqual(initial.carts[0].location,route.from);assert.equal(moving.carts[0].location,null);
+  assert.equal(moving.carts[0].movement!.kind,'empty');assert.equal(moving.carts[0].movement!.endSeconds,5);
+  const arrived=finishCartMovement(moving,'CART',5);assert.deepEqual(arrived.carts[0].location,route.to);
+  const reverse={...route,id:'LOADED-C-A',from:route.to,to:route.from,transportCalculation:transportCalculationFixture()};
+  delete (reverse as Partial<CartMotionRoute>).transportTime;
+  const loaded=startCartMovement(project,arrived,reverse,'loaded',5);assert.equal(loaded.carts[0].movement!.endSeconds,15);
+  assert.deepEqual(finishCartMovement(loaded,'CART',15).carts[0].location,route.from);
+  assert.equal(JSON.stringify({project,declarations,route}),before);
+});
+test('3.4b: brak teleportacji, podwójnego zajęcia, cofania czasu i domyślnego dojazdu',()=>{
+  const {project,declarations,route}=cartMotionFixture(),book=createCartBook(project,declarations);
+  const moving=startCartMovement(project,book,route,'empty',0);
+  assert.throws(()=>startCartMovement(project,moving,route,'loaded',1),/zajęty/);
+  assert.throws(()=>finishCartMovement(moving,'CART',4),/zgodnego końca/);
+  assert.throws(()=>finishCartMovement(moving,'CART',6),/zgodnego końca/);
+  const arrived=finishCartMovement(moving,'CART',5);
+  assert.throws(()=>startCartMovement(project,arrived,route,'empty',5),/aktualnej lokalizacji/);
+  assert.throws(()=>startCartMovement(project,arrived,{...route,from:route.to,to:route.from},'empty',4),/cofanie czasu/);
+  const missing={...route};delete missing.transportTime;
+  assert.throws(()=>startCartMovement(project,book,missing,'empty',0),/brak jawnego czasu/);
+  assert.throws(()=>startCartMovement(project,book,{...route,source:''},'empty',0),/źródła/);
+  assert.throws(()=>startCartMovement(project,book,{...route,to:{stationId:'ST-C',copy:2}},'empty',0),/lokalizacja/);
+  assert.throws(()=>createCartBook(project,[...declarations,...declarations]),/powtórzony/);
+  project.equipment.find(e=>e.id==='CART')!.stationId='ST-A';
+  assert.throws(()=>createCartBook(project,declarations),/równocześnie/);
+});
+test('3.4b: wózek wymaga jawnego kalendarza i nie przejeżdża przez przerwę',()=>{
+  const {project,declarations,route}=cartMotionFixture();
+  declarations[0].calendar.breaks=[{startSeconds:3,endSeconds:10,basis:'assumed'}] as typeof declarations[0]['calendar']['breaks'];
+  const book=createCartBook(project,declarations);
+  assert.throws(()=>startCartMovement(project,book,route,'empty',0),/ciągłym oknie/);
+  const moving=startCartMovement(project,book,route,'empty',10);assert.equal(moving.carts[0].movement!.endSeconds,15);
+  const invalid=structuredClone(declarations);invalid[0].calendar.shifts[0].endSeconds=0;
+  assert.throws(()=>createCartBook(project,invalid),/przedziały/);
+  const noCalendar=structuredClone(declarations);delete (noCalendar[0] as {calendar?:unknown}).calendar;
+  assert.throws(()=>createCartBook(project,noCalendar),/zmiany i przerwy/);
 });

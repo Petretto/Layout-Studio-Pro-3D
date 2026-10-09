@@ -51,3 +51,11 @@ Zgodnie z `AGENTS.md`, Execution and checkpoint policy: „Stop for user review 
 - Dla 1B dodatkowo: ręczna trasa bez ładunku, brak teleportacji, odmowa brakujących dojazdów, jeden stan lokalizacji urządzenia i wyłączność wszystkich jego ruchów.
 
 Nie wpisano żadnych rzeczywistych prędkości, czasów, liczby transportowców ani urządzeń. Te dane podaje użytkownik dla własnego procesu.
+
+## Zatwierdzenie 1B i rdzeń wykonawczy — 2026-10-09
+
+Użytkownik wybrał 1B. Rejestr `transportState.ts` jest niezależnym, nietrwałym modelem wykonawczym wózków, jeszcze poza harmonogramem i parserem projektu. Tożsamość egzemplarza pochodzi z istniejącego `equipmentId`; egzemplarz nie może równocześnie być wyposażeniem operacji/stałej kopii. Deklaracja wymaga początkowej kopii i jawnego kalendarza. Miejsca są kopiami stanowisk, bez domyślnych magazynów ani współrzędnych 3D.
+
+Początek ruchu wymaga aktualnej lokalizacji zgodnej z początkiem skierowanej trasy, dodatniej długości ze źródłem i potwierdzeniem oraz jawnego czasu zgodnego z 3.3. Ruch `empty`/`loaded` ma start i koniec; w czasie ruchu urządzenie nie znajduje się na żadnym końcu. Przyjazd ma dokładny czas i ustawia cel. Ewentualny powrót wymaga kolejnego jawnego ruchu — sam rejestr nie określa polityki automatycznego powrotu. Wyłączne rezerwacje osób, przydziały do korpusów i wybór tras pozostają do integracji.
+
+Przed integracją zadano pytania: czy wózek po rozładunku pozostaje w celu czy zawsze wraca do bazy; czy fizyczne dojścia osób wchodzą do tego etapu. Wybór 1B nie rozstrzyga tych dwóch reguł. Nie zapisano ich domyślnie w projekcie. Status 3.4.2: w trakcie.
