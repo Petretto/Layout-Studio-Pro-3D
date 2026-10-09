@@ -25,3 +25,11 @@ Backup `backup/v0.4.0_przed_3_4d_20261009`: 252 pliki, niezależna kontrola SHA2
 Edge CDP `verify_2_7e.mjs --branches --calculated --transport-contract` (5220/9360): PASS — nowy zapis jest odczytywany, worker zgłasza 3.4.3 bez pozornego wyniku, odświeżenie zachowuje kontrakt i źródło, aktywne 4/5 bez zmian, brak nieobsłużonych wyjątków JS. Regresja `--branches --material --calculated` (5221/9361): PASS — stare trasy, harmonogram, historia i odczyt zachowane.
 
 Status 3.4.2: wdrożone dla parsera, referencji i zapisu. Ograniczenia: brak edytora nowego kontraktu (3.4.4), brak wykonania jego reguł i rezerwacji (3.4.3); obecność nowego pola jawnie odmawia harmonogramu, zamiast je ignorować. Dostawy i częstotliwość uzupełnienia materiału pozostają w 3.5/3.6, bez czasu pracy magazynierów. Cały 3.4 pozostaje w trakcie. Postęp 23/67 = 34,3%, pierwsze wydanie 23/65 = 35,4%.
+
+## 3.4e / pierwszy zakres 3.4.3 — 2026-10-09
+
+Backup `backup/v0.4.0_przed_3_4e_20261009`: 254 pliki, niezależna kontrola SHA256 — 0 rozbieżności. Dodano assemblyMovement.ts, bez zmian schematu lub aktywnej kolejki harmonogramu.
+
+159/159 testów PASS, build/typecheck PASS. Cztery nowe testy sprawdzają wspólne ID osoby montażowej, konflikt z montażem 0–10 s i przewóz 10–12 s (10 s oczekiwania, nadal 2 s przewozu), przyszłą rezerwację 1–8 s oraz przerwę 1–8 s przesuwające ruch na 8–10 s. Sekwencja jawnego dojazdu 0–5 s i przewozu 5–7 s zachowuje położenie i rezerwacje bez teleportacji. Nie ma niejawnego powrotu. Testy obejmują brak wspólnego okna, kalendarza lub źródła obsady dojazdu oraz błąd ID rezerwacji bez publikowania połowy przydziału. Zakończenie z aktualnymi książkami zachowuje kolejną rezerwację montażu 12–15 s. Wszystkie dane są syntetyczne.
+
+Ograniczenia: rdzeń obsługuje jawnie wybraną alternatywę jednego wózka i pojedynczy odcinek. Nie wykonuje automatycznego wyboru zestawów, przenośników, powrotów afterUnload ani kolejki zdarzeń korpusu. Żądanie dojazdu ma jawny przydział osób ze źródłem; nie wprowadzono domyślnej obsady ani magazynierów. Integracja zapisu obsady dojazdu, harmonogramu/workera i UI pozostaje do kolejnych zakresów. Guard obecnego harmonogramu nadal działa. UI i zapis nie zostały zmienione; odbiór UI tego rdzenia nie jest deklarowany. Status całego 3.4.3: w trakcie. Postęp 23/67 = 34,3%, pierwsze wydanie 23/65 = 35,4%.

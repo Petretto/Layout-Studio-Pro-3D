@@ -1,3 +1,4 @@
+import {reserveAssemblyMovement,finishAssemblyMovement} from '../src/core/assemblyMovement';
 import {editDomainAssemblyTransport} from '../src/core/domainTransportEditing';
 import {validateAssemblyTransport,type AssemblyTransport} from '../src/core/assemblyTransport';
 import {createCartBook,startCartMovement,finishCartMovement,type CartMotionRoute} from '../src/core/transportState';
@@ -2869,4 +2870,63 @@ test('3.4d: nowe wymagania powodują jawną odmowę harmonogramu/workera, dawny 
   executeScheduleRequest({project:edited,arrivalIntervalSeconds:1,batch:1},reply=>replies.push(reply));
   assert.equal((replies[0] as {kind:string}).kind,'error');assert.match((replies[0] as {message:string}).message,/3.4.3/);
   assert.deepEqual(scheduleWorkerRun(editDomainAssemblyTransport(edited,undefined),1,1,input),baseline);
+});
+
+function assemblyMovementFixture(){
+  const {project,transport}=assemblyTransportFixture();project.assemblyTransport=transport;
+  const workerId=project.workers[0].id;
+  project.resourceCalendars!.workers[workerId]={shifts:[{startSeconds:0,endSeconds:100,basis:'assumed'}],breaks:[]};
+  const carts=createCartBook(project,transport.carts.map(({afterUnload,source,...cart})=>cart));
+  const workers=createWorkerReservationBook(project.workers.map(w=>w.id));
+  return {project,carts,workers,workerId};
+}
+test('3.4e: przewóz czeka na osobę montażową bez wydłużenia jazdy, atomowo rezerwuje wózek i wspólne ID',()=>{
+  const {project,carts,workers,workerId}=assemblyMovementFixture();
+  const busy=reserveWorkerTeam(workers,{reservationId:'ASSEMBLY',workerIds:[workerId],startSeconds:0,endSeconds:10});
+  const before=JSON.stringify({project,carts,busy});
+  const move=reserveAssemblyMovement(project,carts,busy,{kind:'loaded',stationRouteId:'R-A',alternativeIndex:0,reservationId:'TRANSFER',earliestSeconds:0});
+  assert.deepEqual([move.startSeconds,move.endSeconds,move.waitSeconds],[10,12,10]);assert.deepEqual(move.waitCauses,['workers']);
+  assert.equal(move.carts.carts[0].location,null);assert.equal(move.workers.reservations.length,2);
+  assert.throws(()=>reserveWorkerTeam(move.workers,{reservationId:'OVERLAP',workerIds:[workerId],startSeconds:11,endSeconds:13}),/nakładającą/);
+  const next=reserveWorkerTeam(move.workers,{reservationId:'NEXT',workerIds:[workerId],startSeconds:12,endSeconds:15});
+  const finished=finishAssemblyMovement(move,move.carts,next,12);
+  assert.equal(finished.workers.reservations.length,3);assert.equal(finished.workers.reservations[1].releasedAtSeconds,12);
+  assert.equal(finished.carts.carts[0].location!.stationId,'ST-C');
+  assert.equal(JSON.stringify({project,carts,busy}),before);
+});
+test('3.4e: przyszła rezerwacja montażu i przerwa nie są ignorowane przez transport',()=>{
+  const {project,carts,workers,workerId}=assemblyMovementFixture();
+  const busy=reserveWorkerTeam(workers,{reservationId:'FUTURE',workerIds:[workerId],startSeconds:1,endSeconds:8});
+  const move=reserveAssemblyMovement(project,carts,busy,{kind:'loaded',stationRouteId:'R-A',alternativeIndex:0,reservationId:'MOVE',earliestSeconds:0});
+  assert.deepEqual([move.startSeconds,move.endSeconds],[8,10]);
+  project.resourceCalendars!.workers[workerId].breaks=[{startSeconds:1,endSeconds:8,basis:'assumed'}];
+  const paused=reserveAssemblyMovement(project,carts,workers,{kind:'loaded',stationRouteId:'R-A',alternativeIndex:0,reservationId:'PAUSE',earliestSeconds:0});
+  assert.deepEqual([paused.startSeconds,paused.endSeconds],[8,10]);assert.deepEqual(paused.waitCauses,['calendar']);
+  project.resourceCalendars!.workers[workerId].shifts[0].endSeconds=1;project.resourceCalendars!.workers[workerId].breaks=[];
+  assert.throws(()=>reserveAssemblyMovement(project,carts,workers,{kind:'loaded',stationRouteId:'R-A',alternativeIndex:0,reservationId:'NO-WINDOW',earliestSeconds:0}),/wspólnego okna/);
+});
+test('3.4e: dojazd ma własną jawną obsadę i czas, bez teleportacji i automatycznych powrotów',()=>{
+  const {project,carts,workers,workerId}=assemblyMovementFixture();
+  const route=project.stationRouting!.routes.find(r=>r.id==='R-A')!;
+  carts.carts[0].location={...route.to};
+  const request={kind:'loaded' as const,stationRouteId:'R-A',alternativeIndex:0,reservationId:'LOAD',earliestSeconds:0};
+  assert.throws(()=>reserveAssemblyMovement(project,carts,workers,request),/dojazdu/);
+  project.assemblyTransport!.emptyRoutes=[{...project.assemblyTransport!.emptyRoutes[0],id:'RETURN',from:route.to,to:route.from}];
+  const empty=reserveAssemblyMovement(project,carts,workers,{kind:'empty',emptyRouteId:'RETURN',workerIds:[workerId],assignmentSource:'Jawny test obsady dojazdu',reservationId:'EMPTY',earliestSeconds:0});
+  assert.deepEqual([empty.startSeconds,empty.endSeconds],[0,5]);
+  const arrived=finishAssemblyMovement(empty,empty.carts,empty.workers,5);
+  const loaded=reserveAssemblyMovement(project,arrived.carts,arrived.workers,{...request,earliestSeconds:5});
+  assert.deepEqual([loaded.startSeconds,loaded.endSeconds],[5,7]);
+  const completed=finishAssemblyMovement(loaded,loaded.carts,loaded.workers,7);
+  assert.deepEqual(completed.carts.carts[0].location,route.to);assert.equal(completed.carts.carts[0].movement,null);
+  assert.equal(completed.workers.reservations.length,2);
+});
+test('3.4e: błąd przydziału nie publikuje połowy rezerwacji i nie dopowiada obsady',()=>{
+  const {project,carts,workers,workerId}=assemblyMovementFixture();
+  const request={kind:'loaded' as const,stationRouteId:'R-A',alternativeIndex:0,reservationId:'SAME',earliestSeconds:0};
+  const previous=reserveWorkerTeam(workers,{reservationId:'SAME',workerIds:[workerId],startSeconds:20,endSeconds:21});
+  const before=JSON.stringify({carts,previous});assert.throws(()=>reserveAssemblyMovement(project,carts,previous,request),/nowego/);
+  assert.equal(JSON.stringify({carts,previous}),before);
+  delete project.resourceCalendars!.workers[workerId];assert.throws(()=>reserveAssemblyMovement(project,carts,workers,request),/jawnego kalendarza/);
+  assert.throws(()=>reserveAssemblyMovement(project,carts,workers,{kind:'empty',emptyRouteId:'EMPTY-A-C',workerIds:[workerId],assignmentSource:'',reservationId:'EMPTY',earliestSeconds:0}),/źródła/);
 });
