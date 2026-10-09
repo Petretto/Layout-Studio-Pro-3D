@@ -77,6 +77,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
+3.4a / 3.4.1 (2026-10-09): zakończono pakiet dokumentacyjny — stan zastany, wspólna tożsamość osób, atomowe rezerwacje, kryteria i warianty dostępności/fizycznego ruchu. Kontrakt `MODEL_ZASOBOW_TRANSPORTU_3_4.md`. Decyzja 1A/1B do przeglądu użytkownika; brak zmian schematu i harmonogramu. 3.4 w trakcie. Postęp 23/67 = 34,3%, pierwsze wydanie 23/65 = 35,4%.
+
 3.3b / 3.3.2, 3.3 (2026-10-09): wdrożone — formularze czasu wpisanego/wyliczanego, jednostki mm/s, m/s, m/min i s/min, źródła i składowe. 148/148 testów, build, dwa procesy w Edge: gałęzie i podmontaż/montaż, historia i odczyt; regresja Eko. Backup `backup/v0.4.0_przed_3_3b_20261009`: 248 plików, 0 rozbieżności SHA256. Raport `WERYFIKACJA_CZASU_TRANSPORTU_3_3.md`. Postęp 34,3% / 35,4%. Następny pakiet 3.4 — kontrakt zasobów transportowych przed integracją.
 
 2.9b / 2.9.1–2.9.2, 2.9 (2026-10-08): wdrożone wyłącznie do testowania funkcjonalności — użytkownik zatwierdził 1A/2A i doprecyzował ramę dostarczaną z magazynu na rolotok. Trzy osobne warianty Eko: drzwi razem, kolejno, wspólna osoba; konkretne dane produkcyjne docelowo wpisuje użytkownik. 135/135 testów, build, UI wszystkich wariantów, historia/odczyt i ochrona dokładnego źródła oraz 4/5 poprawne. Backup `backup/v0.4.0_przed_2_9b_20261008`: 190 plików, 0 rozbieżności SHA256. Raport `WERYFIKACJA_EKO_2_9.md`, kontrakt `SCENARIUSZE_EKO_2_9.md`, osobne szkice i wyniki `outputs/scenarios/eko_2_9`. Bez zmiany kodu produkcyjnego/schematu. Dostawa i wciąganie ramy przed początkiem testu; brak deklaracji ich czasu. Rzeczywisty odbiór produkcyjny pozostaje w 7.1/7.2.
@@ -348,7 +350,11 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 3.3 | Wyznaczać czas transportu z długości trasy, prędkości, załadunku i rozładunku. | wdrożone |
 | 3.3.1 | Dodać jawny model parametrów i wyliczenie czasu, walidację, kompatybilny zapis oraz integrację z rdzeniem przewozu i połączeniami materiałowymi. | wdrożone |
 | 3.3.2 | Dodać formularze czasu wpisanego/wyliczanego, jednostki i inspekcję składowych; odebrać historię, zapis/odczyt i wyniki dwóch procesów w UI. | wdrożone |
-| 3.4 | Modelować dostępność transportu: operator, wózek lub przenośnik; odróżnić czas przejazdu od oczekiwania na zasób. | nierozpoczęte |
+| 3.4 | Modelować dostępność transportu: operator, wózek lub przenośnik; odróżnić czas przejazdu od oczekiwania na zasób. | w trakcie |
+| 3.4.1 | Zinwentaryzować aktualne rezerwacje, przygotować propozycję kontraktu zasobów, warianty domenowe i kryteria odbioru. | wdrożone |
+| 3.4.2 | Po decyzji wdrożyć kontrakt zapisu, referencje zasobów i kalendarze z ochroną starych szkiców. | nierozpoczęte |
+| 3.4.3 | Zintegrować atomowe rezerwacje transportu ze wspólnymi osobami, oczekiwaniem i wynikiem workera. | nierozpoczęte |
+| 3.4.4 | Dodać edytor i inspekcję; odebrać historię, zapis/odczyt i dwa niezależne procesy w UI. | nierozpoczęte |
 | 3.5 | Wprowadzić bufory o ograniczonej pojemności oraz jednoznaczne reguły blokowania i zwalniania stanowiska. | nierozpoczęte |
 | 3.6 | Pokazywać stany pracy, oczekiwania na materiał/operatora, blokady wyjścia i transportu wraz z czasami ich trwania. | nierozpoczęte |
 | 3.7 | Wykrywać zatrzymanie lub zakleszczenie procesu i przedstawiać jego przyczynę zamiast pozornego zakończenia symulacji. | nierozpoczęte |
@@ -501,6 +507,7 @@ Każdy kolejny wpis powinien wskazywać konkretne ID. Nie usuwać historii przy 
 | 2026-10-02 | 1.8 | kontynuacja — E5 | Znaczniki czterech eksportów v5 zachowane po zmianie karty; druk/PDF oznaczony jako wywołanie bez potwierdzenia zapisu. UI sprawdził edycję i Cofnij. Backup 103 plików, 69/69 testów, build poprawny; raport E. |
 | 2026-10-02 | 1.8 | w trakcie → wdrożone — E6 | Osobne statusy XLSX/CSV procesu i BOM, stałe szablony i migawka JSON wariantu. UI potwierdził selektywne unieważnienie, Cofnij, ponowny eksport i granicę sesji; fizyczne pliki sprawdzone. Backup 103 plików, 69/69 testów, build poprawny; raport E. |
 | 2026-10-02 | 1.7 | w trakcie → wdrożone | Całościowy odbiór zapisu, odzyskiwania, migracji starszych projektów i ochrony oryginału. Konsolidacja prac D5c–D5k. Zautomatyzowany odbiór UI CDP na porcie 5194 (`verify_1_7.mjs`) potwierdził: 1) odzyskiwanie uszkodzonego localStorage, 2) jawną migrację projektu bez wersji z pobraniem surowej kopii, 3) blokadę migracji przy osieroconych zasobach z zachowaniem oryginału i projektu docelowego, 4) ponowne otwarcie i pełny roundtrip. Backup 128 plików `backup/v0.4.0_przed_1_7_20261002_220500`, 75/75 testów i build poprawne; raport `WERYFIKACJA_MIGRACJA_ZAPIS_1_7.md`. |
+| 2026-10-09 | 3.4, 3.4.1 | nierozpoczęte → w trakcie; pakiet dokumentacyjny wdrożony | Propozycja zasobów transportowych, wspólne osoby i rezerwacje, warianty 1A/1B do decyzji; MODEL_ZASOBOW_TRANSPORTU_3_4.md. Bez zmian symulacji/schematu. Postęp 34,3% / 35,4%. |
 | 2026-10-09 | 3.3.2, 3.3 | w trakcie → wdrożone | Formularze, jednostki i składowe; 148/148 testów, build, dwa procesy w Edge, historia i odczyt; raport 3.3. Postęp 23/67 = 34,3%, pierwsze wydanie 23/65 = 35,4%. |
 | 2026-10-08 | 3.3.1 | nierozpoczęte → w trakcie → wdrożone | Rdzeń czasu transportu: jawne parametry i źródła, brak cache, rozłączne tryby, harmonogram i odczyt przez sieć. 148/148 testów, build, UI workera/historii/odczytu. Backup 207 zgodnych plików. Raport `WERYFIKACJA_CZASU_TRANSPORTU_3_3.md`. 3.3 w trakcie; postęp 22/67 = 32,8%, pierwsze wydanie 22/65 = 33,8%. |
 | 2026-10-08 | 3.2.3, 3.2 | nierozpoczęte → w trakcie → wdrożone; w trakcie → wdrożone | Edytor punktów/połączeń, mm/m, potwierdzenia, historia/usuwanie, zapis/odczyt. Dwa niezależne odbiory Edge i zgodne harmonogramy, 144/144 testów i build. Backup 206 zgodnych plików. Raport `WERYFIKACJA_TRANSPORTU_3_2.md`. Postęp 22/67 = 32,8%; pierwsze wydanie 22/65 = 33,8%. |
