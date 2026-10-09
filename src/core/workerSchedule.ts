@@ -130,6 +130,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
     throw new Error('Partia: 1–10000; jawny odstęp przybycia musi być dodatni.');
   }
   const checked = parseDomainProjectV6(JSON.stringify(project));
+  if(checked.assemblyTransport) throw new Error('3.4.3: zapisane wymagania transportu montażu oczekują na integrację rezerwacji i fizycznego ruchu; harmonogram nie może ich pominąć.');
   const bodyRun = prepareBodyRun(checked, batch, bodyInput);
   let bodyBook = bodyRun?.book;
   const bodyEvents: BodyEvent[] = [];

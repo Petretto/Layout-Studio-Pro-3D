@@ -77,3 +77,17 @@ Użytkownik wybrał 1B. Rejestr `transportState.ts` jest niezależnym, nietrwał
 Początek ruchu wymaga aktualnej lokalizacji zgodnej z początkiem skierowanej trasy, dodatniej długości ze źródłem i potwierdzeniem oraz jawnego czasu zgodnego z 3.3. Ruch `empty`/`loaded` ma start i koniec; w czasie ruchu urządzenie nie znajduje się na żadnym końcu. Przyjazd ma dokładny czas i ustawia cel. Ewentualny powrót wymaga kolejnego jawnego ruchu — sam rejestr nie określa polityki automatycznego powrotu. Wyłączne rezerwacje osób, przydziały do korpusów i wybór tras pozostają do integracji.
 
 Historycznie przed integracją zadano pytania o powrót wózka i zakres dojść osób. Późniejsze doprecyzowanie użytkownika zawęziło zakres do montażu i wyłączyło pracę magazynierów (sekcja na początku dokumentu). Nie zapisano domyślnych reguł powrotu ani dojść w projekcie. Status 3.4.2: w trakcie.
+
+## Kontrakt zapisu 3.4d / 3.4.2 — 2026-10-09
+
+Opcjonalne pole `assemblyTransport` w szkicu 6: scope zawsze `assembly-only`; jawne listy carts, conveyors, emptyRoutes i routes. Brak pola zachowuje dotychczasowe zachowanie. Listy mają maksymalnie 500 wpisów; częściowe definicje są dozwolone, lecz nieznane pola/referencje i sprzeczne wymagania nie są dozwolone.
+
+Cart: equipmentId istniejącego egzemplarza, initialLocation stationId/copy, calendar zmian i przerw, afterUnload `stay-at-destination` albo `return-to-initial` oraz źródło reguły. Obie polityki są wyborem użytkownika w danych, żadna nie jest domyślna. Egzemplarz wózka nie może być równocześnie wyposażeniem operacji lub stałej kopii. Conveyor: equipmentId, jawne from/to kopie i calendar; wymaganie trasy musi odpowiadać jego skierowanym końcom, bez automatycznej osoby.
+
+EmptyRoute: id, equipmentId zadeklarowanego wózka, from/to kopie, distanceMm > 0, basis confirmed, source oraz dokładnie jeden jawny tryb czasu z 3.3. Nie kopiuje czasu przewozu z ładunkiem. Para equipmentId/from/to i ID muszą być unikalne; brak trasy zwrotnej niczego nie tworzy. Wszystkie końce dotyczą montażu, nie magazynu.
+
+Route requirement: istniejące stationRouteId z czasem, source i niepusta lista alternatives. Każda alternatywa ma obowiązkowe listy workerIds i equipmentIds z istniejącymi, niepowtórzonymi ID. Puste listy są jawnym brakiem wymagań; nie powstają z brakujących pól. Powtórzony zestaw zasobów jest odrzucany także przy innej kolejności ID. Osoby odnoszą się do wspólnego rejestru montażu, bez tworzenia personelu magazynu. Kolejność alternatyw jest przechowywana.
+
+Parser projektu sprawdza całość także przy usuwaniu osób, urządzeń i tras. `editDomainAssemblyTransport` zastępuje/usuwa pole przez ponowną walidację bez mutacji. Zapis pozostaje addytywny w szkicu 6; migracja źródeł 4/5 nie aktywuje niezweryfikowanego assemblyTransport z importu i zachowuje dokładne originalJson. Nie zmieniono numeru schematu; obsługa dotyczy bieżącego wydania, nie gwarantuje działania nowych pól w starszym kodzie aplikacji.
+
+Do czasu 3.4.3 każda obecność tego kontraktu powoduje jawną odmowę harmonogramu, także w workerze. To zapis do przygotowania integracji, nie działający model dostępności. Nie wdrożono jeszcze wyłączności osób transportujących, wyboru zestawów, ruchów wynikających z afterUnload ani uzupełniania materiału. UI edycji pozostaje w 3.4.4. Status 3.4.2: wdrożone w zakresie kontraktu/parsera/zapisu; cały 3.4 w trakcie.

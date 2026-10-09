@@ -112,6 +112,14 @@ if(calculated){
       loading:{value:0.25,basis:'assumed',source:'Test 3.3a'},unloading:{value:0.25,basis:'assumed',source:'Test 3.3a'}};
   }
 }
+if(process.argv.includes('--transport-contract')){
+  const p=draft.project,r=p.stationRouting.routes[0];
+  p.equipment.push({id:'QA-CART',name:'Jawny wózek testowy'});
+  p.assemblyTransport={scope:'assembly-only',carts:[{equipmentId:'QA-CART',initialLocation:r.from,
+    calendar:{shifts:[{startSeconds:0,endSeconds:1000,basis:'assumed'}],breaks:[]},
+    afterUnload:'stay-at-destination',source:'Jawny test kontraktu'}],conveyors:[],emptyRoutes:[],
+    routes:[{stationRouteId:r.id,source:'Jawny test montażu',alternatives:[{workerIds:[p.workers[0].id],equipmentIds:['QA-CART']}]}]};
+}
 const userData=mkdtempSync(join(tmpdir(),'layout-body-qa-'));
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(PORT)},stdio:'ignore'});
 const browser=spawn('C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',[
@@ -138,7 +146,17 @@ try{
   await evaluate(`localStorage.setItem('layout-studio-stations-v5',JSON.stringify({project:JSON.parse(${JSON.stringify(originalJson)}),originalJson:'',at:'2026-10-07T12:00:00Z'}));localStorage.setItem('layout-studio-domain-v6-draft-v1',${JSON.stringify(JSON.stringify(draft))})`);
   const open=async()=>{await send('Page.reload');await sleep(800);await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(b=>b.textContent.includes('Stanowiska v5')).click()`);await sleep(150);};
   await open();await sleep(1500);const legacy=await evaluate(`localStorage.getItem('layout-studio-stations-v5')`),legacy4=await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`);
-  if(materialEditor){
+  if(process.argv.includes('--transport-contract')){
+    const expected=JSON.stringify(await saved());
+    await field('Odstęp przybycia szkicu 6 [s]',1);await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');
+    for(let i=0;i<100;i++){if(await evaluate(`!!document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"] [role="alert"]')`))break;await sleep(50);}
+    const failure=await evaluate(`document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"]').textContent`);
+    if(!failure.includes('3.4.3')||await evaluate(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`))throw new Error('Nowe wymagania pominięte w UI');
+    await open();if(JSON.stringify(await saved())!==expected)throw new Error('Odczyt zmienił kontrakt');
+    if(legacy!==await evaluate(`localStorage.getItem('layout-studio-stations-v5')`)||legacy4!==await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`))throw new Error('Zmiana 4/5');
+    if((JSON.parse(await raw())).originalJson!==originalJson||errors.length)throw new Error('Zmiana źródła lub wyjątki');
+    console.log('PASS 3.4d: UI odczytuje nowy kontrakt, worker jawnie odmawia wyniku, oryginał i 4/5 zachowane.');
+  }else if(materialEditor){
     const panel='Sieć materiałowa szkicu 6',firstStation=branches?'ST-S':'ST-A',secondStation=branches?'ST-X':'ST-C';
     const calculate=async()=>{await field('Odstęp przybycia szkicu 6 [s]',1);await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');
       for(let i=0;i<100;i++){if(await evaluate(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`))break;await sleep(50);}

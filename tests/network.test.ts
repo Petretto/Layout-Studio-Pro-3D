@@ -1,3 +1,5 @@
+import {editDomainAssemblyTransport} from '../src/core/domainTransportEditing';
+import {validateAssemblyTransport,type AssemblyTransport} from '../src/core/assemblyTransport';
 import {createCartBook,startCartMovement,finishCartMovement,type CartMotionRoute} from '../src/core/transportState';
 import {strict as assert} from 'node:assert';
 import {test} from 'node:test';
@@ -2802,4 +2804,69 @@ test('3.4b: wózek wymaga jawnego kalendarza i nie przejeżdża przez przerwę',
   assert.throws(()=>createCartBook(project,invalid),/przedziały/);
   const noCalendar=structuredClone(declarations);delete (noCalendar[0] as {calendar?:unknown}).calendar;
   assert.throws(()=>createCartBook(project,noCalendar),/zmiany i przerwy/);
+});
+
+function assemblyTransportFixture(){
+  const {project,declarations,route}=cartMotionFixture();
+  const transport:AssemblyTransport={scope:'assembly-only',
+    carts:declarations.map(cart=>({...cart,afterUnload:'stay-at-destination',source:'Jawna reguła testowa'})),conveyors:[],
+    emptyRoutes:[route],routes:[{stationRouteId:'R-A',source:'Transport międzyoperacyjny testowy',
+      alternatives:[{workerIds:[project.workers[0].id],equipmentIds:['CART']}]}]};
+  return {project,transport};
+}
+test('3.4d: kontrakt montażu i fizycznego dojazdu zapisuje jawne referencje i chroni źródła 4/5',()=>{
+  const {project,transport}=assemblyTransportFixture(),before=JSON.stringify(project);
+  const edited=editDomainAssemblyTransport(project,transport);assert.equal(JSON.stringify(project),before);
+  assert.deepEqual(parseDomainProjectV6(JSON.stringify(edited)).assemblyTransport,transport);
+  for(const originalJson of [JSON.stringify(derive(parseProject(JSON.stringify(base))).project),readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8')]){
+    const storage=new DraftStorage(),initial=saveDomainDraft(storage,{project,originalJson},null);
+    const saved=saveDomainDraft(storage,{project:edited,originalJson},initial.raw);
+    const reopened=readDomainDraft(storage);assert.equal(reopened.status,'valid');
+    if(reopened.status==='valid'){assert.equal(reopened.saved.originalJson,originalJson);assert.deepEqual(reopened.saved.project.assemblyTransport,transport);}
+    const invalid=structuredClone(edited);invalid.assemblyTransport!.emptyRoutes[0].to.copy=999;
+    assert.throws(()=>saveDomainDraft(storage,{project:invalid,originalJson},saved.raw),/lokalizacja/);
+    assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),saved.raw);
+  }
+  const removed=editDomainAssemblyTransport(edited,undefined);assert.equal(removed.assemblyTransport,undefined);
+  assert.deepEqual(removed,project);
+});
+test('3.4d: parser odmawia osieroconych zasobów, braków czasu/polityki i sprzecznych urządzeń',()=>{
+  const {project,transport}=assemblyTransportFixture();
+  const invalid=(change:(t:AssemblyTransport)=>void,pattern:RegExp)=>{const copy=structuredClone(transport);change(copy);assert.throws(()=>validateAssemblyTransport(project,copy),pattern);};
+  invalid(t=>t.carts[0].afterUnload='' as never,/reguły/);
+  invalid(t=>t.carts[0].source='',/źródło/);
+  invalid(t=>t.carts.push(structuredClone(t.carts[0])),/powtórzony/);
+  invalid(t=>t.emptyRoutes[0].equipmentId='UNKNOWN',/nieznany/);
+  invalid(t=>delete t.emptyRoutes[0].transportTime,/jawnego czasu/);
+  invalid(t=>t.emptyRoutes.push(structuredClone(t.emptyRoutes[0])),/powtórzone/);
+  invalid(t=>t.routes[0].stationRouteId='UNKNOWN',/nieznana/);
+  invalid(t=>t.routes[0].alternatives[0].workerIds=['WAREHOUSE-UNKNOWN'],/nieznane/);
+  invalid(t=>t.routes[0].alternatives[0].equipmentIds=['UNKNOWN'],/nieznane/);
+  invalid(t=>t.routes[0].alternatives.push(structuredClone(t.routes[0].alternatives[0])),/powtórzony/);
+  invalid(t=>t.routes[0].alternatives=[],/jawny zestaw/);
+  const edited=editDomainAssemblyTransport(project,transport);
+  edited.equipment=edited.equipment.filter(e=>e.id!=='CART');assert.throws(()=>parseDomainProjectV6(JSON.stringify(edited)),/nieznany/);
+  const noRoute=editDomainAssemblyTransport(project,transport);noRoute.stationRouting!.routes=[];
+  assert.throws(()=>parseDomainProjectV6(JSON.stringify(noRoute)),/nieznana/);
+  const fixed=structuredClone(project);fixed.equipment.find(e=>e.id==='CART')!.stationId='ST-A';
+  assert.throws(()=>validateAssemblyTransport(fixed,transport),/równocześnie/);
+});
+test('3.4d: przenośnik dopuszcza tylko zgodną skierowaną trasę, bez automatycznej osoby',()=>{
+  const {project,transport}=assemblyTransportFixture();project.equipment.push({id:'BELT',name:'Przenośnik testowy'});
+  const route=project.stationRouting!.routes.find(r=>r.id==='R-A')!;
+  transport.conveyors=[{equipmentId:'BELT',from:route.from,to:route.to,calendar:transport.carts[0].calendar}];
+  transport.routes[0].alternatives=[{workerIds:[],equipmentIds:['BELT']}];
+  assert.deepEqual(validateAssemblyTransport(project,transport),transport);
+  transport.conveyors[0].from=route.to;transport.conveyors[0].to=route.from;
+  assert.throws(()=>validateAssemblyTransport(project,transport),/inne końce/);
+});
+test('3.4d: nowe wymagania powodują jawną odmowę harmonogramu/workera, dawny wynik pozostaje identyczny',()=>{
+  const {project,transport}=assemblyTransportFixture();
+  const input:BodyRunInput={bodies:[{id:'BODY',productId:'PRODUCT',location:{kind:'station',stationId:'ST-A',copy:1}}],jobs:[{job:1,bodyId:'BODY'}]};
+  const baseline=scheduleWorkerRun(project,1,1,input),edited=editDomainAssemblyTransport(project,transport);
+  assert.throws(()=>scheduleWorkerRun(edited,1,1,input),/3.4.3/);
+  const replies:unknown[]=[];edited.bodyRunInput=input;
+  executeScheduleRequest({project:edited,arrivalIntervalSeconds:1,batch:1},reply=>replies.push(reply));
+  assert.equal((replies[0] as {kind:string}).kind,'error');assert.match((replies[0] as {message:string}).message,/3.4.3/);
+  assert.deepEqual(scheduleWorkerRun(editDomainAssemblyTransport(edited,undefined),1,1,input),baseline);
 });
