@@ -112,13 +112,21 @@ if(calculated){
       loading:{value:0.25,basis:'assumed',source:'Test 3.3a'},unloading:{value:0.25,basis:'assumed',source:'Test 3.3a'}};
   }
 }
-if(process.argv.includes('--transport-contract')){
+if(process.argv.includes('--transport-contract')||process.argv.includes('--transport-run')){
   const p=draft.project,r=p.stationRouting.routes[0];
   p.equipment.push({id:'QA-CART',name:'Jawny wózek testowy'});
   p.assemblyTransport={scope:'assembly-only',carts:[{equipmentId:'QA-CART',initialLocation:r.from,
     calendar:{shifts:[{startSeconds:0,endSeconds:1000,basis:'assumed'}],breaks:[]},
-    afterUnload:'stay-at-destination',source:'Jawny test kontraktu'}],conveyors:[],emptyRoutes:[],
+    afterUnload:process.argv.includes('--transport-run')?'stay-at-destination':'return-to-initial',source:'Jawny test kontraktu'}],conveyors:[],emptyRoutes:[],
     routes:[{stationRouteId:r.id,source:'Jawny test montażu',alternatives:[{workerIds:[p.workers[0].id],equipmentIds:['QA-CART']}]}]};
+}
+if(process.argv.includes('--transport-run')){
+  const p=draft.project;
+  p.assemblyTransport={scope:'assembly-only',carts:[],conveyors:[],emptyRoutes:[],
+    routes:p.stationRouting.routes.map(r=>({stationRouteId:r.id,source:'Jawny transport montażu testowego',alternatives:[{workerIds:['W'],equipmentIds:[]}]}))};
+  const calendar={shifts:[{startSeconds:0,endSeconds:1000,basis:'assumed'}],breaks:[]};
+  p.resourceCalendars={workers:Object.fromEntries(p.workers.map(w=>[w.id,calendar])),stations:Object.fromEntries(p.stations.map(s=>[s.id,calendar]))};
+  p.bodyRunInput={bodies:[{id:'UI-BODY',productId:p.product.id,location:{kind:'station',stationId:'ST-S',copy:1}}],jobs:[{job:1,bodyId:'UI-BODY'}]};
 }
 const userData=mkdtempSync(join(tmpdir(),'layout-body-qa-'));
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(PORT)},stdio:'ignore'});
@@ -146,7 +154,23 @@ try{
   await evaluate(`localStorage.setItem('layout-studio-stations-v5',JSON.stringify({project:JSON.parse(${JSON.stringify(originalJson)}),originalJson:'',at:'2026-10-07T12:00:00Z'}));localStorage.setItem('layout-studio-domain-v6-draft-v1',${JSON.stringify(JSON.stringify(draft))})`);
   const open=async()=>{await send('Page.reload');await sleep(800);await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(b=>b.textContent.includes('Stanowiska v5')).click()`);await sleep(150);};
   await open();await sleep(1500);const legacy=await evaluate(`localStorage.getItem('layout-studio-stations-v5')`),legacy4=await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`);
-  if(process.argv.includes('--transport-contract')){
+  if(process.argv.includes('--transport-run')){
+    const expected=JSON.stringify(await saved());
+    const calculate=async()=>{
+      await field('Odstęp przybycia szkicu 6 [s]',1);await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');
+      for(let i=0;i<100;i++){if(await evaluate(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`))break;await sleep(50);}
+      return evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]').textContent`);
+    };
+    const result=await calculate();
+    if(!result.includes('ST-Q / 1')||!result.includes('założony')||!result.includes('Osoby transportu: W'))throw new Error('Brak rzeczywistego wyniku transportu');
+    await evaluate(`document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"]').scrollIntoView()`);
+    mkdirSync('outputs/qa',{recursive:true});const screenshot=await send('Page.captureScreenshot',{format:'png'});
+    writeFileSync('outputs/qa/verify_3_4f_transport.png',Buffer.from(screenshot.data,'base64'));
+    await open();if(JSON.stringify(await saved())!==expected||await calculate()!==result)throw new Error('Odczyt zmienia wejście lub wynik');
+    if(legacy!==await evaluate(`localStorage.getItem('layout-studio-stations-v5')`)||legacy4!==await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`))throw new Error('Zmiana 4/5');
+    if((JSON.parse(await raw())).originalJson!==originalJson||errors.length)throw new Error('Zmiana źródła lub wyjątki');
+    console.log('PASS 3.4f: rzeczywisty worker transportu montażu, wynik, odczyt i izolacja danych 4/5.');
+  }else if(process.argv.includes('--transport-contract')){
     const expected=JSON.stringify(await saved());
     await field('Odstęp przybycia szkicu 6 [s]',1);await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');
     for(let i=0;i<100;i++){if(await evaluate(`!!document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"] [role="alert"]')`))break;await sleep(50);}

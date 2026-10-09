@@ -26,6 +26,7 @@ function simultaneousPeriods(runs: readonly WorkerScheduleRun[]) {
 }
 
 const causeLabel = {
+  transport: 'oczekiwanie na transport montażu',
   workers: 'oczekiwanie na pracowników',
   station: 'oczekiwanie na kopię stanowiska',
   'same-job': 'inna operacja tej samej sztuki bez dopuszczenia równoległości',
@@ -68,7 +69,7 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
   const concurrentPeriods = simultaneousPeriods(runs);
   return <div className="panel" aria-label="Harmonogram zespołu szkicu 6">
     <h3>Harmonogram zespołu — szkic 6</h3>
-    <p className="muted">Podgląd wymaga zapisanego składu i wyborów operacji. Praca na korpusie wymaga ról wszystkich operacji oraz jawnych instancji i przypisań. Równoległość wymaga zapisanej grupy obejmującej wszystkie trwające czynności; wspólny korpus zachowuje jedną lokalizację. Przewóz wykorzystuje wpisany czas trasy i zajmuje cel od wyjazdu do końca pracy. Bufory, ekipy i pojazdy transportowe pozostają poza zakresem.</p>
+    <p className="muted">Podgląd wymaga zapisanego składu i wyborów operacji. Praca na korpusie wymaga ról wszystkich operacji oraz jawnych instancji i przypisań. Równoległość wymaga zapisanej grupy obejmującej wszystkie trwające czynności; wspólny korpus zachowuje jedną lokalizację. Przewóz wykorzystuje wpisany czas trasy i zajmuje cel od wyjazdu do końca pracy. {project.assemblyTransport ? 'Przewóz uwzględnia zapisane zasoby montażu; dojazdy i powroty wózków oczekują na integrację. Bufory pozostają poza zakresem.' : 'Brak kontraktu zasobów transportu — przewóz nie uwzględnia dostępności osób ani urządzeń transportowych. Bufory pozostają poza zakresem.'}</p>
     {!project.workerRunSelection && <p className="notice">Najpierw zapisz stały skład i wybory dla wszystkich operacji.</p>}
     <div className="form-grid">
       <label className="field">Liczba sztuk w podglądzie<input aria-label="Liczba sztuk szkicu 6"
@@ -92,6 +93,7 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
           <td>{run.workerIds.join(', ')}
             {run.bodyId && <div>Korpus: {run.bodyId} · cel zarezerwowany [s]: {run.stationReserveStartSeconds}–{run.endSeconds}</div>}
             {project.operations.find(operation => operation.id === run.operationId)?.physicalRole?.kind === 'subassembly-preparation' && <div>Przygotowanie podzespołów — bez zajęcia korpusu</div>}
+            {run.transport?.workerIds && <div>Osoby transportu: {run.transport.workerIds.join(', ') || 'jawnie bez osób'} · urządzenia: {run.transport.equipmentIds?.join(', ') || 'jawnie bez urządzeń'}</div>}
             {run.transport && <div>Transport korpusu: {run.transport.routeId} · {run.transport.startSeconds}–{run.transport.endSeconds} s · {run.transport.basis === 'measured' ? 'zmierzony' : 'założony'}</div>}
             {run.equipmentIds && <div>Wyposażenie: {run.equipmentIds.length ? run.equipmentIds.join(', ') : 'jawnie bez wymagań'}</div>}
             {run.selectionRouteId && <div>Planowana następna trasa: {run.selectionRouteId} · {run.selectionDistanceMm} mm</div>}

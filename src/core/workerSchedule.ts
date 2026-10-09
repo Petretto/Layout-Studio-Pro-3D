@@ -1,3 +1,5 @@
+import {previewAssemblyDispatch,type AssemblyDispatch,type TransportDeviceReservation} from './assemblyDispatch';
+import {createCartBook,finishCartMovement,type CartBook} from './transportState';
 import {parseDomainProjectV6, type DomainProjectV6} from './domainProject';
 import {topologicalSort} from './validation';
 import {createWorkerRunPlan} from './workerRunPlan';
@@ -22,7 +24,7 @@ export interface WorkerScheduleRun {
   startSeconds: number;
   endSeconds: number;
   waitSeconds: number;
-  waitCauses: readonly ('workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body')[];
+  waitCauses: readonly ('workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body' | 'transport')[];
   reserveStartSeconds: number;
   reserveEndSeconds: number;
   workWindows: readonly CalendarWindow[];
@@ -34,7 +36,7 @@ export interface WorkerScheduleRun {
   arrivalDistanceMm?: number;
   bodyId?: string;
   stationReserveStartSeconds?: number;
-  transport?: {routeId: string; startSeconds: number; endSeconds: number; basis: 'measured' | 'assumed'; breakdown?:TransportBreakdown};
+  transport?: {workerIds?: readonly string[]; equipmentIds?: readonly string[]; routeId: string; startSeconds: number; endSeconds: number; basis: 'measured' | 'assumed'; breakdown?:TransportBreakdown};
 }
 
 export interface WorkerScheduleResult {
@@ -45,6 +47,8 @@ export interface WorkerScheduleResult {
   operationIds: readonly string[];
   bodyBook?: BodyBook;
   bodyEvents?: readonly BodyEvent[];
+  transportReservations?: readonly TransportDeviceReservation[];
+  cartBook?: CartBook;
 }
 
 type EventInput =
@@ -52,6 +56,7 @@ type EventInput =
   | {kind: 'completion'; at: number; job: number; step: number; stationId: string; copy: number}
   | {kind: 'release'; at: number; reservationId: string}
   | {kind: 'transport-end'; at: number; bodyId: string}
+  | {kind: 'cart-end'; at: number; equipmentId: string}
   | {kind: 'body-start'; at: number; bodyId: string; operationId: string; end: number; basis: 'confirmed' | 'assumed'}
   | {kind: 'wake'; at: number};
 type Event = EventInput & {order: number};
@@ -130,8 +135,11 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
     throw new Error('Partia: 1–10000; jawny odstęp przybycia musi być dodatni.');
   }
   const checked = parseDomainProjectV6(JSON.stringify(project));
-  if(checked.assemblyTransport) throw new Error('3.4.3: zapisane wymagania transportu montażu oczekują na integrację rezerwacji i fizycznego ruchu; harmonogram nie może ich pominąć.');
+  if(checked.assemblyTransport?.carts.some(c => c.afterUnload === 'return-to-initial')) throw new Error('3.4.3: jawne powroty wózków oczekują na integrację; harmonogram nie może ich pominąć.');
+  let cartBook = createCartBook(checked, (checked.assemblyTransport?.carts ?? []).map(({afterUnload,source,...cart}) => cart));
+  let transportDevices: readonly TransportDeviceReservation[] = [];
   const bodyRun = prepareBodyRun(checked, batch, bodyInput);
+  if(checked.assemblyTransport && !bodyRun) throw new Error('3.4.3: transport zasobowy wymaga fizycznego przebiegu korpusu; transport podzespołów oczekuje na integrację.');
   let bodyBook = bodyRun?.book;
   const bodyEvents: BodyEvent[] = [];
   const recordBody = (event: BodyEvent) => {
@@ -218,7 +226,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
   const remaining = jobs.map(() => steps.map(step => step.predecessorIds.length));
   const inFlight = jobs.map(() => new Set<number>());
   const waiting: {job: number; step: number; ready: number;
-    causes: Set<'workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body'>}[] = [];
+    causes: Set<'workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body' | 'transport'>}[] = [];
   const events = new EventQueue();
   const wakeTimes = new Set<number>();
   const wakeAt = (at: number, now: number) => {
@@ -227,7 +235,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
       events.push({kind: 'wake', at});
     }
   };
-  let book = createWorkerReservationBook(plan.teamWorkerIds);
+  let book = createWorkerReservationBook(checked.assemblyTransport ? checked.workers.map(w => w.id) : plan.teamWorkerIds);
   const runs: WorkerScheduleRun[] = [];
   let completed = 0;
   jobs.forEach((job, i) => events.push({kind: 'arrival', at: job.arrival, job: i}));
@@ -243,6 +251,8 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
           ready: now, causes: new Set()}); });
       } else if (event.kind === 'release') {
         book = releaseWorkerTeam(book, event.reservationId, now);
+      } else if (event.kind === 'cart-end') {
+        cartBook = finishCartMovement(cartBook,event.equipmentId,now);
       } else if (event.kind === 'transport-end') {
         recordBody({kind: 'finish-transfer', bodyId: event.bodyId, atSeconds: now});
       } else if (event.kind === 'body-start') {
@@ -279,7 +289,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
         const operation = byOperation.get(step.id)!;
         type SelectedRun = {workerIds: string[]; projected: NonNullable<ReturnType<typeof projectWork>>;
           reserveStart: number; reserveEnd: number; candidate: StationCandidate; departure: number; transportRoute?: DeclaredTransportRoute;
-          futureWaitCauses?: ('workers' | 'calendar')[]};
+          dispatch?: AssemblyDispatch; futureWaitCauses?: ('workers' | 'calendar')[]};
         const feasible: SelectedRun[] = [];
         let calendarWait = false;
         let workerWait = false;
@@ -288,6 +298,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
         let equipmentWait = false;
         let hasFreeCopy = false;
         let combinations = 0;
+        const transportFailures: string[] = [];
         for (const candidate of candidatesByOperation.get(step.id)!) {
           const body = bodyId ? bodyBook!.bodies.find(body => body.id === bodyId)! : undefined;
           if (body && (body.status !== 'available' && body.status !== 'reserved' || body.location.kind !== 'station')) {
@@ -308,8 +319,19 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
           }
           if (!copyFree && !bodyId) {stationWait = true; continue;}
           hasFreeCopy ||= copyFree;
-          const departure = copyFree ? now : copyReady.get(stationId)![candidate.copy - 1];
+          let departure = copyFree ? now : copyReady.get(stationId)![candidate.copy - 1];
           const transportRoute = body?.location.kind === 'station' ? bodyRoute(body.location, candidate) : undefined;
+          let dispatch: AssemblyDispatch | undefined;
+          if(transportRoute && checked.assemblyTransport) {
+            const busy = cartBook.carts.filter(c => c.movement);
+            if(busy.length) {busy.forEach(c => wakeAt(c.movement!.endSeconds,now));}
+            try {
+              dispatch = previewAssemblyDispatch(checked,transportRoute.id,cartBook,book,transportDevices,departure,`transport:${task.job+1}:${step.id}`);
+            } catch(failure) {
+              transportFailures.push((failure as Error).message);task.causes.add('transport');continue;
+            }
+            departure = dispatch.startSeconds;
+          }
           const arrival = departure + (transportRoute?.transportTime?.durationSeconds ?? 0);
           if (!Number.isFinite(arrival)) throw new Error('Transport przekroczył poprawny zakres czasu.');
           let selected: SelectedRun | null = null;
@@ -339,7 +361,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
                 const reserveStart = projected.atOffset(operation.reserveFromSeconds, false);
                 const reserveEnd = projected.atOffset(operation.reserveUntilSeconds, true);
                 if (![reserveStart, reserveEnd, projected.end].every(Number.isFinite)) throw new Error('Harmonogram przekroczył poprawny zakres czasu.');
-                const conflicts = book.reservations.filter(reservation => reserveStart < reservation.endSeconds &&
+                const conflicts = (dispatch?.workers ?? book).reservations.filter(reservation => reserveStart < reservation.endSeconds &&
                   reservation.startSeconds < reserveEnd && reservation.workerIds.some(id => workerIds.includes(id)));
                 if (conflicts.length) {
                   workerWait = true;
@@ -349,7 +371,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
                 }
                 if (start > arrival) calendarWait = true;
                 if (!selected || start < selected.projected.workWindows[0].startSeconds) {
-                  selected = {workerIds, projected, reserveStart, reserveEnd, candidate, departure, transportRoute,
+                  selected = {workerIds, projected, reserveStart, reserveEnd, candidate, departure, transportRoute, dispatch,
                     futureWaitCauses: [...futureWaitCauses]};
                 }
                 return;
@@ -412,6 +434,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
           selectedRoute = routePlan?.forward(step.id, chosen.candidate)?.route ?? branchPlan?.forward(step.id, chosen.candidate)[0]?.route;
         }
         if (!chosen) {
+          if(transportFailures.length && !cartBook.carts.some(c => c.movement)) throw new Error(transportFailures.join(' '));
           if (bodyWait) task.causes.add('body');
           if (equipmentWait) task.causes.add('equipment');
           if (stationWait && !hasFreeCopy) task.causes.add('station');
@@ -421,7 +444,8 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
         }
         const {workerIds, projected, reserveStart, reserveEnd} = chosen;
         if (chosen.departure > now) {
-          task.causes.add('station');
+          task.causes.add(chosen.dispatch ? 'transport' : 'station');
+          chosen.dispatch?.waitCauses.forEach(cause => task.causes.add(cause));
           wakeAt(chosen.departure, now);
           continue;
         }
@@ -431,6 +455,14 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
         const end = projected.end;
         const start = projected.workWindows[0].startSeconds;
         chosen.futureWaitCauses?.forEach(cause => task.causes.add(cause));
+        if(chosen.dispatch) {
+          book = chosen.dispatch.workers;cartBook = chosen.dispatch.carts;transportDevices = chosen.dispatch.devices;
+          chosen.dispatch.waitCauses.forEach(cause => task.causes.add(cause));
+          if(chosen.dispatch.workerIds.length) events.push({kind:'release',at:chosen.dispatch.endSeconds,reservationId:chosen.dispatch.reservationId});
+          for(const id of chosen.dispatch.equipmentIds) if(cartBook.carts.some(c => c.equipmentId === id)) {
+            events.push({kind:'cart-end',at:chosen.dispatch.endSeconds,equipmentId:id});
+          }
+        }
         if (bodyId) {
           const profile = step.staffing!.timeVariants.find(variant => variant.workerCount === operation.workerCount)!.timeProfile;
           if (chosen.transportRoute) {
@@ -464,6 +496,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
           run.stationReserveStartSeconds = now;
           if (chosen.transportRoute) run.transport = {routeId: chosen.transportRoute.id, startSeconds: now,
             endSeconds: now + chosen.transportRoute.transportTime!.durationSeconds, basis: chosen.transportRoute.transportTime!.basis};
+          if(run.transport && chosen.dispatch) {run.transport.workerIds = chosen.dispatch.workerIds;run.transport.equipmentIds = chosen.dispatch.equipmentIds;}
           if(run.transport){const breakdown=timingByRoute.get(run.transport.routeId)?.breakdown;if(breakdown)run.transport.breakdown={...breakdown};}
         }
         if (routing) {
@@ -492,5 +525,5 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
   jobs.forEach(job => { job.finish = Math.max(...job.ends); });
   if (jobs.some(job => !Number.isFinite(job.finish))) throw new Error('Proces nie został ukończony.');
   return {mode: calendars ? 'calendar' : 'logical', jobs, runs, reservations: book,
-    operationIds: steps.map(step => step.id), ...(bodyBook ? {bodyBook, bodyEvents} : {})};
+    operationIds: steps.map(step => step.id), ...(bodyBook ? {bodyBook, bodyEvents} : {}), ...(checked.assemblyTransport ? {transportReservations:transportDevices,cartBook} : {})};
 }
