@@ -271,3 +271,7 @@ Harmonogram szkicu 6 wykonuje jawny kontrakt partii: wytworzenie po zakończeniu
 
 ### Wybór kopii odbiorcy podzespołów — 3.4m2b (2026-10-12)
 Dla jawnych partii harmonogram porównuje dopuszczone kopie odbiorcy razem z dostawami, operacjami i wspólnymi zasobami. Każde wykonanie odbiorcze może mieć inne miejsce odbioru. Pierwszeństwo ma start operacji, potem długość tras; przegrane warianty nie zostawiają rezerwacji. Limit podglądu wynosi 64 kombinacje przypisań — większy zakres wymaga zawężenia dopuszczeń albo mniejszej partii sztuk. Opcja JIT działa bez tego porównania. Pełny formularz partii jest nadal w przygotowaniu.
+
+
+### Edytor partii podzespołów — 3.4m3 (2026-10-12)
+W Stanowiska v5, w szkicu 6, panel „Partie podzespołów — przygotowanie i pobranie” pozwala dodawać i edytować ID partii, definicję podzespołu, ilość wytworzoną/pobieraną, wspólną jednostkę, źródło oraz numery sztuk i operacje producenta/odbiorcy. Nowe pola są puste. Zapis waliduje dane i współpracuje z Cofnij/Ponów; można odrzucić lokalne zmiany lub jawnie usunąć konfigurację. Zapis zmiany unieważnia dotychczasowy wynik harmonogramu. Transport i JIT działają według wcześniej opisanych reguł; bufory/zapasy/dostawy cykliczne należą do dalszych etapów.

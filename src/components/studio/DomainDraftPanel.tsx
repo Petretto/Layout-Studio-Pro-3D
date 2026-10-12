@@ -25,6 +25,8 @@ import {DomainConcurrencyEditor} from './DomainConcurrencyEditor';
 import {DomainMaterialEditor} from './DomainMaterialEditor';
 import {DomainTransportEditor} from './DomainTransportEditor';
 import {editDomainAssemblyTransport} from '../../core/domainTransportEditing';
+import {DomainSubassemblyEditor} from './DomainSubassemblyEditor';
+import {editDomainSubassemblyFlow} from '../../core/domainSubassemblyEditing';
 import {editDomainMaterialNetwork} from '../../core/domainMaterialEditing';
 import {editDomainPhysicalRole} from '../../core/domainPhysicalRoleEditing';
 
@@ -209,6 +211,10 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
       canUndo={past.length > 0} canRedo={future.length > 0} />}
     {draft.status === 'valid' && <DomainTransportEditor key={`transport-${draft.raw}`} project={draft.saved.project}
       onApply={transport => applyDraftChange(project => editDomainAssemblyTransport(project,transport), 'Zapisano wymagania transportu montażu.')}
+      onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
+      canUndo={past.length > 0} canRedo={future.length > 0} />}
+    {draft.status === 'valid' && <DomainSubassemblyEditor key={`lots-${draft.raw}`} project={draft.saved.project}
+      onApply={flow => applyDraftChange(project => editDomainSubassemblyFlow(project,flow), 'Zapisano konfigurację partii podzespołów.')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
       canUndo={past.length > 0} canRedo={future.length > 0} />}
     {draft.status === 'valid' && <DomainBodyEditor key={`body-${draft.raw}`} project={draft.saved.project}

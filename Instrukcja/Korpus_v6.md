@@ -59,3 +59,11 @@ Dla połączenia z punktem zewnętrznym wpisz długość, wybierz **mm** albo **
 Punkt używany przez połączenie można usunąć dopiero po usunięciu lub zmianie tego połączenia. **Cofnij dane szkicu** i **Ponów dane szkicu** obejmują zapis sieci i pozostałe dane szkicu. **Usuń zapis sieci materiałowej** usuwa całą opcjonalną sieć; tę zmianę także można cofnąć w bieżącej sesji.
 
 Zgodnie z wybranym zakresem 1A magazyn jest punktem sieci. Definicja połączenia magazynowego nie włącza dostawy do przebiegu korpusu. Wyliczanie czasu przewozu i zasoby transportowe należą do dalszych etapów.
+
+
+## Partie podzespołów i ich transport
+1. Dodaj definicję podzespołu z producentem i odbiorcami oraz zgodną rolę przygotowania operacji. Uzupełnij skład, czasy i dopuszczenia kopii. Dla pracy na korpusie wskaż jego instancje.
+2. W panelu „Partie podzespołów — przygotowanie i pobranie” dodaj partię. Wpisz unikalne ID, wybierz podzespół, jawne ilości i ich jednostkę oraz źródło. Wpisz numer sztuki producenta i odbiorcy oraz wybierz zgodne operacje. Nie ma automatycznych wartości z BOM.
+3. Zapisz partie. Ilość pobierana nie może przekraczać wytworzonej; każda zadeklarowana operacja odbiorcza każdej sztuki wymaga przypisanej partii. Kolejne partie dodaj osobno. Zmiany można odrzucić albo cofnąć/ponowić po zapisie. Usunięcie całej konfiguracji jest osobną akcją.
+4. Uzupełnij skierowane trasy, czasy, urządzenia, osoby montażowe i kalendarze w panelach transportu. Po zakończeniu przygotowania partia rusza do wybranej kopii odbiorcy; pobranie następuje przy rzeczywistym starcie. Inspekcja pokazuje zdarzenia i ilości.
+5. Oblicz harmonogram. Warianty wielu kopii mają limit 64 kombinacji. Pojemność buforów i dalsze użycie pozostałej ilości nie są modelowane. Opcja „Symulacja bez transportu — wszystko dostępne just in time” pozwala jawnie założyć dostępność materiałów i policzyć sam proces. Domyślnie jest wyłączona; zapis zmian danych usuwa wynik i resetuje tę opcję.

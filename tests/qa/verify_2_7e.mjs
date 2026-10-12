@@ -183,6 +183,7 @@ if(process.argv.includes('--subassembly-copies')){
   p.stationRouting.routes.push({...structuredClone(p.stationRouting.routes[0]),id:'QA-R-D',to:{stationId:'ST-D',copy:1},distanceMm:100,transportTime:{durationSeconds:1,basis:'assumed',source:'Czas testowy alternatywy UI'}});
   p.assemblyTransport.routes.push({...structuredClone(p.assemblyTransport.routes[0]),stationRouteId:'QA-R-D'});
 }
+if(process.argv.includes('--subassembly-new'))delete draft.project.subassemblyFlow;
 const userData=mkdtempSync(join(tmpdir(),'layout-body-qa-'));
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(PORT)},stdio:'ignore'});
 const browser=spawn('C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',[
@@ -209,6 +210,38 @@ try{
   await evaluate(`localStorage.setItem('layout-studio-stations-v5',JSON.stringify({project:JSON.parse(${JSON.stringify(originalJson)}),originalJson:'',at:'2026-10-07T12:00:00Z'}));localStorage.setItem('layout-studio-domain-v6-draft-v1',${JSON.stringify(JSON.stringify(draft))})`);
   const open=async()=>{await send('Page.reload');await sleep(800);await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(b=>b.textContent.includes('Stanowiska v5')).click()`);await sleep(150);};
   await open();await sleep(1500);const legacy=await evaluate(`localStorage.getItem('layout-studio-stations-v5')`),legacy4=await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`);
+  if(process.argv.includes('--subassembly-editor')){
+    const panel='Partie podzespołów szkicu 6',before=JSON.stringify(await saved());
+    if(process.argv.includes('--subassembly-new')){
+      await click('Dodaj partię podzespołu',panel);
+      for(const label of ['Partia 1 ilość wytworzona','Partia 1 ilość pobierana','Partia 1 jednostka','Partia 1 źródło','Partia 1 sztuka producenta','Partia 1 sztuka odbiorcy']){
+        if(await evaluate(`document.querySelector('[aria-label='+JSON.stringify(${JSON.stringify(label)})+']').value`)!=='')throw new Error('Nowa partia ma domyślne dane');
+      }
+    }
+    await field('Partia 1 ID','QA-LOT');await field('Partia 1 podzespół','QA-SUB');
+    await field('Partia 1 ilość wytworzona',2);await field('Partia 1 ilość pobierana',3);
+    await field('Partia 1 jednostka','szt.');await field('Partia 1 źródło','Jawny odbiór formularza, dane syntetyczne');
+    await field('Partia 1 sztuka producenta',1);await field('Partia 1 producent','OP-A');
+    await field('Partia 1 sztuka odbiorcy',1);await field('Partia 1 odbiorca','OP-C');
+    await click('Zapisz partie podzespołów',panel);
+    if(JSON.stringify(await saved())!==before||!await evaluate(`document.querySelector('[aria-label="${panel}"]').textContent.includes('pobranie przekracza')`))throw new Error('Nie zablokowano nadmiernego pobrania');
+    await field('Partia 1 ilość pobierana',1);await click('Zapisz partie podzespołów',panel);
+    const expected=JSON.stringify(await saved());if((await saved()).subassemblyFlow.lots[0].quantity!==2)throw new Error('Nie zapisano partii');
+    await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==before)throw new Error('Cofnij partii zmienia projekt');
+    await click('Ponów dane szkicu',panel);if(JSON.stringify(await saved())!==expected)throw new Error('Ponów nie odtwarza partii');
+    await field('Partia 1 ID','');await click('Odrzuć zmiany partii',panel);
+    if(await evaluate(`document.querySelector('[aria-label="Partia 1 ID"]').value`)!=='QA-LOT')throw new Error('Odrzuć nie odświeża formularza');
+    await click('Dodaj partię podzespołu',panel);await field('Partia 2 ID','QA-LOT');await click('Zapisz partie podzespołów',panel);
+    if(JSON.stringify(await saved())!==expected||!await evaluate(`document.querySelector('[aria-label="${panel}"]').textContent.includes('powtórzone ID')`))throw new Error('Duplikat partii nie zablokowany');
+    await click('Odrzuć zmiany partii',panel);await click('Usuń partię 1',panel);await click('Zapisz partie podzespołów',panel);
+    if(JSON.stringify(await saved())!==expected)throw new Error('Pusta lista usunęła kontrakt bez jawnej akcji');await click('Odrzuć zmiany partii',panel);
+    await click('Usuń konfigurację partii',panel);if((await saved()).subassemblyFlow)throw new Error('Nie usunięto konfiguracji');
+    await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==expected)throw new Error('Nie przywrócono kontraktu');
+    await evaluate(`document.querySelector('[aria-label="${panel}"]').scrollIntoView()`);mkdirSync('outputs/qa',{recursive:true});
+    const shot=await send('Page.captureScreenshot',{format:'png'});
+    writeFileSync(`outputs/qa/verify_3_4m3_${process.argv.includes('--subassembly-new')?'new':'existing'}.png`,Buffer.from(shot.data,'base64'));
+    await open();if(JSON.stringify(await saved())!==expected||await evaluate(`document.querySelector('[aria-label="Partia 1 ilość wytworzona"]').value`)!=='2')throw new Error('Reload nie odtwarza formularza');
+  }
   if(process.argv.includes('--reverse-approach')){
     const panel='Transport montażu szkicu 6',before=JSON.stringify(await saved());
     await click('Przesuń QA-CART-2 wyżej w zestawie 1/1',panel);await click('Zapisz wymagania transportu',panel);
@@ -347,7 +380,7 @@ try{
       if(!movements.includes('Przewóz podzespołu')||movements.includes('Przewóz korpusu'))throw new Error('Błędny ładunek przewozu');
       await evaluate(`const p=document.querySelector('[aria-label="Inspekcja partii podzespołów"]');p.open=true;p.scrollIntoView({block:'center'})`);
       mkdirSync('outputs/qa',{recursive:true});const shot=await send('Page.captureScreenshot',{format:'png'});
-      writeFileSync(`outputs/qa/${process.argv.includes('--subassembly-copies')?`verify_3_4m2b_${process.argv.includes('--recipient-calendar')?'calendar':'fastest'}`:`verify_3_4m2_${process.argv.includes('--return')?'return':'transfer'}`}.png`,Buffer.from(shot.data,'base64'));
+      writeFileSync(`outputs/qa/${process.argv.includes('--subassembly-editor')?`verify_3_4m3_run_${process.argv.includes('--subassembly-new')?'new':'existing'}`:process.argv.includes('--subassembly-copies')?`verify_3_4m2b_${process.argv.includes('--recipient-calendar')?'calendar':'fastest'}`:`verify_3_4m2_${process.argv.includes('--return')?'return':'transfer'}`}.png`,Buffer.from(shot.data,'base64'));
     }
     await check(label);if(await evaluate(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`))throw new Error('Stary wynik nie wyczyszczony');
     const jit=await calculate();
@@ -356,12 +389,19 @@ try{
     await check(label);if(await calculate()!==normal)throw new Error('Wyłączenie JIT nie przywraca konfiguracji');
     await check(label);await calculate();await evaluate(`document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"]').scrollIntoView()`);
     mkdirSync('outputs/qa',{recursive:true});const shot=await send('Page.captureScreenshot',{format:'png'});
-    writeFileSync(`outputs/qa/${process.argv.includes('--subassembly-contract')?process.argv.includes('--subassembly-copies')?'verify_3_4m2b_jit':'verify_3_4m2_jit':'verify_3_4l'}_${process.argv.includes('--jit-unconfigured')?'unconfigured':process.argv.includes('--cart-run')?'configured':'branches'}.png`,Buffer.from(shot.data,'base64'));
+    writeFileSync(`outputs/qa/${process.argv.includes('--subassembly-contract')?process.argv.includes('--subassembly-editor')?'verify_3_4m3_jit':process.argv.includes('--subassembly-copies')?'verify_3_4m2b_jit':'verify_3_4m2_jit':'verify_3_4l'}_${process.argv.includes('--jit-unconfigured')?'unconfigured':process.argv.includes('--cart-run')?'configured':'branches'}.png`,Buffer.from(shot.data,'base64'));
     await open();if(await enabled())throw new Error('JIT utrwalony w projekcie');await check(label);
     if(await calculate()!==jit||JSON.stringify(await saved())!==expected)throw new Error('Zmiana wyniku lub zapisu');
+    if(process.argv.includes('--subassembly-editor')){
+      const panel='Partie podzespołów szkicu 6';
+      await field('Partia 1 ilość wytworzona',3);await click('Zapisz partie podzespołów',panel);
+      if(await enabled()||await evaluate(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`))throw new Error('Zapis partii zachował nieaktualny wynik/tryb JIT');
+      await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==expected)throw new Error('Cofnij zmiany po symulacji nie przywraca danych');
+      await check(label);if(await calculate()!==jit)throw new Error('Wynik po Cofnij partii nie jest odtwarzalny');
+    }
     if(legacy!==await evaluate(`localStorage.getItem('layout-studio-stations-v5')`)||legacy4!==await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`))throw new Error('Zmiana 4/5');
     if((JSON.parse(await raw())).originalJson!==originalJson||errors.length)throw new Error('Zmiana źródła lub wyjątki');
-    console.log(`PASS ${process.argv.includes('--subassembly-contract')?process.argv.includes('--subassembly-copies')?'3.4m2b':'3.4m2':'3.4l'}: JIT opt-in, worker, czas procesu, powrót do konfiguracji, reload i izolacja 4/5.`);
+    console.log(`PASS ${process.argv.includes('--subassembly-contract')?process.argv.includes('--subassembly-editor')?'3.4m3':process.argv.includes('--subassembly-copies')?'3.4m2b':'3.4m2':'3.4l'}: JIT opt-in, worker, czas procesu, powrót do konfiguracji, reload i izolacja 4/5.`);
   }else if(process.argv.includes('--transport-run')||process.argv.includes('--cart-run')){
     const expected=JSON.stringify(await saved());
     const calculate=async()=>{
