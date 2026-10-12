@@ -39,6 +39,7 @@ const causeLabel = {
 export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6}) {
   const [batch, setBatch] = useState(String(project.bodyRunInput?.jobs.length ?? 1));
   const [arrivalInterval, setArrivalInterval] = useState('');
+  const [justInTime,setJustInTime]=useState(false);
   const [result, setResult] = useState<WorkerScheduleResult | null>(null);
   const [error, setError] = useState('');
   const [progress, setProgress] = useState<ScheduleProgress | null>(null);
@@ -57,7 +58,7 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
         throw new Error('Podgląd dopuszcza partię od 1 do 100 sztuk.');
       }
       setProgress({completed: 0, total: project.operations.length * count});
-      cancelRef.current = startScheduleTask({project, batch: count, arrivalIntervalSeconds: Number(arrivalInterval)}, {
+      cancelRef.current = startScheduleTask({project, batch: count, arrivalIntervalSeconds: Number(arrivalInterval),transportMode:justInTime?'just-in-time':'configured'}, {
         progress: setProgress,
         result: value => {cancelRef.current = null;setProgress(null);setResult(value);},
         error: value => {cancelRef.current = null;setProgress(null);setError(value);},
@@ -69,7 +70,11 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
   const concurrentPeriods = simultaneousPeriods(runs);
   return <div className="panel" aria-label="Harmonogram zespołu szkicu 6">
     <h3>Harmonogram zespołu — szkic 6</h3>
-    <p className="muted">Podgląd wymaga zapisanego składu i wyborów operacji. Praca na korpusie wymaga ról wszystkich operacji oraz jawnych instancji i przypisań. Równoległość wymaga zapisanej grupy obejmującej wszystkie trwające czynności; wspólny korpus zachowuje jedną lokalizację. Przewóz wykorzystuje wpisany czas trasy i zajmuje cel od wyjazdu do końca pracy. {project.assemblyTransport ? 'Przewóz uwzględnia zapisane zasoby montażu; dojazdy i zadeklarowane powroty są osobnymi ruchami. Bufory pozostają poza zakresem.' : 'Brak kontraktu zasobów transportu — przewóz nie uwzględnia dostępności osób ani urządzeń transportowych. Bufory pozostają poza zakresem.'}</p>
+    <p className="muted">Podgląd wymaga zapisanego składu i wyborów operacji. Równoległość wymaga zapisanej grupy obejmującej wszystkie trwające czynności.</p>
+    {!justInTime&&<p className="muted">Praca na korpusie wymaga ról wszystkich operacji oraz jawnych instancji i przypisań; wspólny korpus zachowuje jedną lokalizację. Przewóz wykorzystuje wpisany czas trasy i zajmuje cel od wyjazdu do końca pracy. {project.assemblyTransport ? 'Przewóz uwzględnia zapisane zasoby montażu; dojazdy i zadeklarowane powroty są osobnymi ruchami. Bufory pozostają poza zakresem.' : 'Brak kontraktu zasobów transportu — przewóz nie uwzględnia dostępności osób ani urządzeń transportowych. Bufory pozostają poza zakresem.'}</p>}
+    <label className="toolbar"><input type="checkbox" aria-label="Symulacja bez transportu — just in time" checked={justInTime}
+      onChange={e=>{cancel();setMessage('');setJustInTime(e.target.checked);setResult(null);setError('');}}/>Symulacja bez transportu — wszystko dostępne just in time</label>
+    {justInTime&&<p className="notice">Włączono symulację samego procesu: bez czasów, tras i zasobów transportu oraz śledzenia fizycznych lokalizacji korpusów. Zachowane są zależności operacji, pracownicy, stanowiska, wyposażenie operacji i ich kalendarze. Dostępność materiałów jest założona. Opcja dotyczy tego podglądu i nie zmienia zapisanej konfiguracji.</p>}
     {!project.workerRunSelection && <p className="notice">Najpierw zapisz stały skład i wybory dla wszystkich operacji.</p>}
     <div className="form-grid">
       <label className="field">Liczba sztuk w podglądzie<input aria-label="Liczba sztuk szkicu 6"
@@ -85,6 +90,7 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
     {message && <p role="status">{message}</p>}
     {error && <p className="error" role="alert">Nie obliczono harmonogramu: {error}</p>}
     {result && <div role="status" aria-label="Wynik harmonogramu szkicu 6">
+      {result.transportMode==='just-in-time'&&<p aria-label="Tryb transportu wyniku">JUST IN TIME — symulacja procesu bez transportu; dostępność materiałów założona, fizyczne lokalizacje korpusów nie są obliczane.</p>}
       <p>{result.mode === 'calendar' ? 'Przebieg kalendarzowy' : 'Podgląd logiczny bez kalendarza'} · {result.jobs.length} szt. · {runs.length} wykonań · koniec ostatniej sztuki: {Math.max(...result.jobs.map(job => job.finish))} s · suma oczekiwania operacji: {totalWait} s.</p>
       <p className="muted">Przyczyna oczekiwania jest zapisana dla operacji, która musiała czekać. Przy kilku przyczynach w czasie oczekiwania pokazane są wszystkie.</p>
       <div className="table-wrap"><table><thead><tr><th>Sztuka</th><th>Operacja</th><th>Stanowisko / kopia</th><th>Pracownicy</th><th>Gotowa [s]</th><th>Start [s]</th><th>Koniec [s]</th><th>Oczekiwanie [s]</th><th>Przyczyna</th></tr></thead>

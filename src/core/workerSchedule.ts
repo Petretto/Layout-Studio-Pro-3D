@@ -41,7 +41,10 @@ export interface WorkerScheduleRun {
 
 export interface AssemblyTransportMovement {kind:'loaded'|'empty';purpose:'transfer'|'approach'|'return';routeId:string;workerIds:readonly string[];equipmentIds:readonly string[];startSeconds:number;endSeconds:number}
 
+export type TransportSimulationMode = 'configured' | 'just-in-time';
+
 export interface WorkerScheduleResult {
+  transportMode?: 'just-in-time';
   mode: 'logical' | 'calendar';
   jobs: readonly Job[];
   runs: readonly WorkerScheduleRun[];
@@ -133,17 +136,22 @@ function projectWork(windows: readonly CalendarWindow[], now: number, duration: 
 
 /** Draft-only event schedule. Transport time and physical body state are not inferred. */
 export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSeconds: number,
-  batch: number, bodyInput?: BodyRunInput, onProgress?: (completed: number, total: number) => void): WorkerScheduleResult {
+  batch: number, bodyInput?: BodyRunInput, onProgress?: (completed: number, total: number) => void, options: {transportMode?: TransportSimulationMode} = {}): WorkerScheduleResult {
   if (!Number.isFinite(arrivalIntervalSeconds) || arrivalIntervalSeconds <= 0 ||
       !Number.isSafeInteger(batch) || batch < 1 || batch > 10000) {
     throw new Error('Partia: 1–10000; jawny odstęp przybycia musi być dodatni.');
   }
-  const checked = parseDomainProjectV6(JSON.stringify(project));
+  if(options.transportMode!==undefined&&options.transportMode!=='configured'&&options.transportMode!=='just-in-time')throw new Error('Nieznany tryb transportu symulacji.');
+  const justInTime=options.transportMode==='just-in-time';
+  const parsed = parseDomainProjectV6(JSON.stringify(project));
+  const {assemblyTransport:_transport,bodyRunInput:_bodyInput,...processOnly}=parsed;
+  // A transient logical process view; saved transport declarations and physical locations remain untouched.
+  const checked: DomainProjectV6 = justInTime ? processOnly : parsed;
   let cartBook = createCartBook(checked, (checked.assemblyTransport?.carts ?? []).map(({afterUnload,source,...cart}) => cart));
   let transportDevices: readonly TransportDeviceReservation[] = [];
   const cartLocks = new Map<string,number>();
   const transportMovements: AssemblyTransportMovement[] = [];
-  const bodyRun = prepareBodyRun(checked, batch, bodyInput);
+  const bodyRun = justInTime ? undefined : prepareBodyRun(checked, batch, bodyInput);
   if(checked.assemblyTransport && !bodyRun) throw new Error('3.4.3: transport zasobowy wymaga fizycznego przebiegu korpusu; transport podzespołów oczekuje na integrację.');
   let bodyBook = bodyRun?.book;
   const bodyEvents: BodyEvent[] = [];
@@ -173,6 +181,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
   // Resolve a transient execution view. Keep the stored route's parameters as its source of truth.
   const timingByRoute=new Map<string,ResolvedTransportTime>();
   const routing = checked.stationRouting ? {...checked.stationRouting,routes:checked.stationRouting.routes.map(original=>{
+    if(justInTime)return original;
     const timing=resolveTransportTime(original);if(timing)timingByRoute.set(original.id,timing);
     const {transportCalculation:_calculation,...route}=original;
     return {...route,...(timing?{transportTime:timing}:{})};
@@ -220,9 +229,9 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
   onProgress?.(0, steps.length * batch);
   const linear = steps.every((step, index) => step.predecessorIds.length === (index ? 1 : 0) &&
     successors[index].length === (index < steps.length - 1 ? 1 : 0));
-  const routePlan = routing && (!checked.physicalConcurrency || linear) ?
+  const routePlan = !justInTime && routing && (!checked.physicalConcurrency || linear) ?
     createStationRoutePlan(checked, steps.map(step => step.id), candidatesByOperation) : null;
-  const branchPlan = routing && checked.physicalConcurrency && !linear ?
+  const branchPlan = !justInTime && routing && checked.physicalConcurrency && !linear ?
     createBodyBranchRoutePlan(checked, steps.map(step => step.id), candidatesByOperation) : null;
   const previousCopies = new Map<number, StationCandidate>();
   const jobs: Job[] = Array.from({length: batch}, (_, job) => ({id: job + 1,
@@ -285,7 +294,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
           endSeconds: event.end, basis: event.basis});
       } else {
         const completedStep = steps[event.step];
-        if (completedStep.physicalRole?.kind === 'body-work') {
+        if (bodyRun && completedStep.physicalRole?.kind === 'body-work') {
           recordBody({kind: 'release', bodyId: bodyRun!.bodyByJob.get(event.job + 1)!,
             atSeconds: now, operationId: completedStep.id});
         }
@@ -310,7 +319,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
           [...inFlight[task.job]].map(index => steps[index].id).concat(step.id))) {
           task.causes.add('same-job'); continue;
         }
-        const bodyId = step.physicalRole?.kind === 'body-work' ? bodyRun!.bodyByJob.get(task.job + 1)! : undefined;
+        const bodyId = bodyRun && step.physicalRole?.kind === 'body-work' ? bodyRun.bodyByJob.get(task.job + 1)! : undefined;
         const operation = byOperation.get(step.id)!;
         type SelectedRun = {workerIds: string[]; projected: NonNullable<ReturnType<typeof projectWork>>;
           reserveStart: number; reserveEnd: number; candidate: StationCandidate; departure: number; transportRoute?: DeclaredTransportRoute;
@@ -563,6 +572,6 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
   }
   jobs.forEach(job => { job.finish = Math.max(...job.ends); });
   if (jobs.some(job => !Number.isFinite(job.finish))) throw new Error('Proces nie został ukończony.');
-  return {mode: calendars ? 'calendar' : 'logical', jobs, runs, reservations: book,
+  return {mode: calendars ? 'calendar' : 'logical', ...(justInTime?{transportMode:'just-in-time' as const}:{}), jobs, runs, reservations: book,
     operationIds: steps.map(step => step.id), ...(bodyBook ? {bodyBook, bodyEvents} : {}), ...(checked.assemblyTransport ? {transportReservations:transportDevices,cartBook,transportMovements} : {})};
 }

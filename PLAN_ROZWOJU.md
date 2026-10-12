@@ -44,7 +44,7 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 3.4k: cały plan 23/67 = **34,3%**; pierwsze wydanie 23/65 = **35,4%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po 3.4l: cały plan 23/67 = **34,3%**; pierwsze wydanie 23/65 = **35,4%**. Weryfikacja: `node scripts/plan_progress.mjs`.
 
 Stan historyczny po 3.1c: cały plan 21/67 = **31,3%**. Pierwsze wydanie (etapy 1–7) 21/65 = **32,3%**. Etap 8 dotyczy kolejnej wersji. Obliczenia: `node scripts/plan_progress.mjs`; źródłem są tabele statusów tego pliku. Po 3.2a ukończony główny licznik pozostaje taki sam, bo 3.2 nie jest jeszcze odebrane.
 
@@ -76,6 +76,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+3.4l / rozszerzenie 3.4 (2026-10-12): zakończony zakres — jawna opcja symulacji samego procesu just in time w harmonogramie szkicu 6, domyślnie wyłączona. Pomija transport i fizyczne lokalizacje korpusów, zachowuje zależności operacji oraz zasoby i kalendarze montażu. Bez zmiany schematu i zapisu; wynik oznaczony JIT. Backup `backup/v0.4.0_przed_3_4l_20261012` (258 plików, zgodne SHA256). 176/176 testów, build/typecheck oraz Edge: konfiguracja transportu / brak konfiguracji / gałęzie, przełączanie, worker, odczyt i izolacja 4/5 PASS. Całe 3.4 nadal w trakcie — transport podzespołów do integracji. Postęp 34,3% / 35,4%.
 
 3.4k / część 3.4.3 (2026-10-12): zakończony zakres — zatwierdzone przez użytkownika zawsze kolejne dojazdy według zapisanej kolejności urządzeń. Przewóz czeka na rzeczywiste przyjazdy całego zestawu; UI pokazuje i pozwala zmienić kolejność ze wspólną historią. Schemat bez zmian. Backup `backup/v0.4.0_przed_3_4k_20261012` (258 plików, SHA256 bez rozbieżności). 173/173 testy, build/typecheck i Edge workera, zmiany kolejności/Cofnij/Ponów, inspekcji i odczytu PASS. Całe 3.4.3/3.4 w trakcie: fizyczny transport podzespołów pozostaje do integracji. Postęp 34,3% / 35,4%.
 

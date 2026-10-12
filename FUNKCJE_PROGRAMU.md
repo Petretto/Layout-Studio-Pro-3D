@@ -260,3 +260,6 @@ Aktualizacja 3.4j (2026-10-12): edytor transportu montażowego szkicu 6 obejmuje
 
 
 Aktualizacja 3.4k (2026-10-12): harmonogram wykonuje dojazdy kilku wózków zawsze kolejno, według kolejności urządzeń zestawu zatwierdzonej przez użytkownika. Także rozłączne osoby nie powodują równoległych dojazdów. Przewóz czeka na przyjazd wszystkich wózków i wspólne okno. UI pokazuje kolejność i pozwala ją zmienić; zapis, Cofnij/Ponów i odczyt odebrane. 173/173 testy, build i Edge poprawne. Całe 3.4 w trakcie przez brak fizycznego transportu podzespołów. Postęp 34,3% / 35,4%.
+
+### Symulacja procesu bez transportu — 3.4l (2026-10-12)
+W zakładce Stanowiska v5, panel Harmonogram zespołu — szkic 6, dostępny jest domyślnie wyłączony przełącznik „Symulacja bez transportu — wszystko dostępne just in time”. Pozwala liczyć sam proces bez konfiguracji transportów i korpusów, zachowując zależności, osoby, stanowiska, wyposażenie operacji i kalendarze. Wynik oznacza założoną dostępność materiałów; nie oblicza ruchów ani fizycznych lokalizacji korpusów. Wyłączenie przywraca transport według zapisanych danych. Opcja nie zmienia konfiguracji projektu i po ponownym otwarciu jest wyłączona.

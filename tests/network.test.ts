@@ -3133,3 +3133,35 @@ test('3.4k: kolejna partia nie przejmuje wózka w ruchu ani osób pierwszego doj
   }
   assert.ok(result.cartBook!.carts.every(c=>c.location?.stationId==='ST-C'&&c.movement===null));
 });
+
+
+test('3.4l: JIT jest jawny, pomija transport i nie zmienia projektu ani domyślnego wyniku',()=>{
+  const {project}=assemblyMovementFixture(),input=assemblyScheduleInput(),before=JSON.stringify(project);
+  const normal=scheduleWorkerRun(project,1,1,input);
+  assert.deepEqual(scheduleWorkerRun(project,1,1,input,undefined,{transportMode:'configured'}),normal);
+  assert.equal(normal.jobs[0].finish,22);
+  const jit=scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'});
+  assert.equal(jit.jobs[0].finish,20);assert.equal(jit.transportMode,'just-in-time');
+  assert.equal(jit.bodyBook,undefined);assert.equal(jit.transportMovements,undefined);
+  assert.ok(jit.runs.every(r=>!r.transport&&!r.bodyId));assert.equal(JSON.stringify(project),before);
+  const replies:ScheduleReply[]=[];executeScheduleRequest({project,batch:1,arrivalIntervalSeconds:1,transportMode:'just-in-time'},r=>replies.push(r));
+  assert.deepEqual((replies.find(r=>r.kind==='result') as {result:unknown}).result,jit);
+});
+test('3.4l: sam proces działa bez tras, korpusów i konfiguracji transportów',()=>{
+  const {project}=assemblyMovementFixture();delete project.assemblyTransport;delete project.bodyRunInput;
+  project.stationRouting!.routes=[];
+  assert.throws(()=>scheduleWorkerRun(project,1,1));
+  const result=scheduleWorkerRun(project,1,2,undefined,undefined,{transportMode:'just-in-time'});
+  assert.equal(result.runs.length,4);assert.equal(result.jobs[1].finish,30);
+  const reservations=result.reservations.reservations;
+  for(let i=0;i<reservations.length;i++)for(let j=i+1;j<reservations.length;j++){
+    const a=reservations[i],b=reservations[j];if(a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
+  }
+});
+test('3.4l: JIT zachowuje kalendarz montażu i odrzuca nieznany tryb',()=>{
+  const {project,workerId}=assemblyMovementFixture();
+  for(const id of project.workerRunSelection!.teamWorkerIds)project.resourceCalendars!.workers[id].breaks=[{startSeconds:10,endSeconds:15,basis:'assumed'}];
+  const result=scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'});
+  assert.equal(result.runs[1].startSeconds,15);assert.equal(result.jobs[0].finish,25);
+  assert.throws(()=>scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'other' as 'configured'}),/Nieznany tryb/);
+});

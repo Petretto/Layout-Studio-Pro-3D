@@ -108,3 +108,8 @@ Do not invoke every skill for every task.
 ## Multi-cart approaches — user decision 2026-10-12
 - Empty approaches for an assembly transport set always execute sequentially in the stored equipmentIds order, even when crews are disjoint.
 - Loaded movement waits for the actual arrival and joint availability of all required carts. Do not infer parallel approaches.
+
+## Process-only simulation — user instruction 2026-10-12
+- Provide an explicit opt-in just-in-time mode for simulation without configuring transport. Default OFF.
+- Skip transport durations, routes, reservations and physical body-location tracking in this mode; preserve operation dependencies and assembly resource/calendar constraints.
+- Label results as process-only with assumed material availability. Keep saved transport configuration unchanged.

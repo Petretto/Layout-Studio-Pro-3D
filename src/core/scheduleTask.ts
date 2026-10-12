@@ -1,8 +1,8 @@
 import type {DomainProjectV6} from './domainProject';
-import type {WorkerScheduleResult} from './workerSchedule';
+import type {WorkerScheduleResult,TransportSimulationMode} from './workerSchedule';
 import {startBackgroundTask, type WorkerPort, type CalculationProgress, type CalculationReply} from './backgroundTask';
 
-export interface ScheduleRequest {project: DomainProjectV6; batch: number; arrivalIntervalSeconds: number}
+export interface ScheduleRequest {project: DomainProjectV6; batch: number; arrivalIntervalSeconds: number; transportMode?: TransportSimulationMode}
 export type ScheduleProgress = CalculationProgress;
 export type ScheduleReply = CalculationReply<WorkerScheduleResult>;
 

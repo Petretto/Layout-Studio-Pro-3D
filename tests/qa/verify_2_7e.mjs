@@ -164,6 +164,7 @@ if(process.argv.includes('--transport-resources')){
   draft.project.equipment.push({id:'QA-BELT',name:'Przenośnik testowy UI'});
   if(process.argv.includes('--resource-new'))delete draft.project.assemblyTransport;
 }
+if(process.argv.includes('--jit-unconfigured')){delete draft.project.assemblyTransport;delete draft.project.bodyRunInput;draft.project.stationRouting.routes=[];}
 const userData=mkdtempSync(join(tmpdir(),'layout-body-qa-'));
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(PORT)},stdio:'ignore'});
 const browser=spawn('C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',[
@@ -307,7 +308,31 @@ try{
     await open();if(JSON.stringify(await saved())!==edited)throw new Error('Odczyt zmienił wymagania');
     console.log('PASS 3.4i: edycja zestawu, odmowy, Cofnij/Ponów, odrzucenie, usuwanie i odczyt.');
   }
-  if(process.argv.includes('--transport-run')||process.argv.includes('--cart-run')){
+  if(process.argv.includes('--jit-run')){
+    const expected=JSON.stringify(await saved()),label='Symulacja bez transportu — just in time';
+    const enabled=()=>evaluate(`document.querySelector('[aria-label="${label}"]').checked`);
+    const calculate=async()=>{
+      await field('Odstęp przybycia szkicu 6 [s]',1);await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');
+      for(let i=0;i<100;i++){if(await evaluate(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"], [aria-label="Harmonogram zespołu szkicu 6"] [role="alert"]')`))break;await sleep(50);}
+      return evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')?.textContent??null`);
+    };
+    if(await enabled())throw new Error('JIT domyślnie włączony');
+    const normal=await calculate();
+    if(process.argv.includes('--jit-unconfigured')?normal!==null:normal===null)throw new Error('Błędny tryb domyślny');
+    await check(label);if(await evaluate(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`))throw new Error('Stary wynik nie wyczyszczony');
+    const jit=await calculate();
+    if(!jit?.includes('JUST IN TIME')||jit.includes('Osoby transportu:')||jit.includes('Transport korpusu:'))throw new Error('Niepełne pominięcie transportu');
+    if(process.argv.includes('--cart-run')&&!jit.includes('koniec ostatniej sztuki: 20 s'))throw new Error('Błędny czas procesu JIT');
+    await check(label);if(await calculate()!==normal)throw new Error('Wyłączenie JIT nie przywraca konfiguracji');
+    await check(label);await calculate();await evaluate(`document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"]').scrollIntoView()`);
+    mkdirSync('outputs/qa',{recursive:true});const shot=await send('Page.captureScreenshot',{format:'png'});
+    writeFileSync(`outputs/qa/verify_3_4l_${process.argv.includes('--jit-unconfigured')?'unconfigured':process.argv.includes('--cart-run')?'configured':'branches'}.png`,Buffer.from(shot.data,'base64'));
+    await open();if(await enabled())throw new Error('JIT utrwalony w projekcie');await check(label);
+    if(await calculate()!==jit||JSON.stringify(await saved())!==expected)throw new Error('Zmiana wyniku lub zapisu');
+    if(legacy!==await evaluate(`localStorage.getItem('layout-studio-stations-v5')`)||legacy4!==await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`))throw new Error('Zmiana 4/5');
+    if((JSON.parse(await raw())).originalJson!==originalJson||errors.length)throw new Error('Zmiana źródła lub wyjątki');
+    console.log('PASS 3.4l: JIT opt-in, worker, czas procesu, powrót do konfiguracji, reload i izolacja 4/5.');
+  }else if(process.argv.includes('--transport-run')||process.argv.includes('--cart-run')){
     const expected=JSON.stringify(await saved());
     const calculate=async()=>{
       await field('Odstęp przybycia szkicu 6 [s]',1);await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');

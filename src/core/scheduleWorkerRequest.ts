@@ -9,7 +9,7 @@ export function executeScheduleRequest(request: ScheduleRequest, send: (reply: S
       request.project.bodyRunInput, (completed, total) => {
         const percent = Math.floor(completed * 100 / total);
         if (percent !== lastPercent) {lastPercent = percent;send({kind: 'progress', progress: {completed, total}});}
-      });
+      }, {transportMode:request.transportMode});
     send({kind: 'result', result});
   } catch (failure) {send({kind: 'error', message: (failure as Error).message});}
 }
