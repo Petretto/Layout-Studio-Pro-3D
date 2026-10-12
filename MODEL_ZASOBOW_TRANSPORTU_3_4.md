@@ -185,3 +185,22 @@ Formularz pokazuje kolejność urządzeń zestawu. Przycisk „Przesuń … wyż
 
 ## 3.4l — opcjonalna symulacja procesu just in time (2026-10-12)
 Przełącznik w harmonogramie zespołu szkicu 6 jest domyślnie wyłączony i dotyczy pojedynczego podglądu. Nie jest zapisywany w projekcie; ponowne otwarcie przywraca tryb konfiguracji. Włączenie usuwa z obliczeń czasy i trasy transportu, obsadę oraz urządzenia transportowe, dojazdy/powroty, wymagania instancji korpusów i ich fizyczne lokalizacje. Nie publikuje fikcyjnych ruchów ani teleportowanych korpusów. Zachowuje kandydatów stanowisk, wymagania wyposażenia operacji, skład zespołu, kalendarze, zależności i jawne grupy równoległości. Wynik jest oznaczony JUST IN TIME; dostępność materiałów jest założona, a nie zweryfikowana z zapasów. Wyłączenie przywraca pełną konfigurację. Źródłowy projekt nadal przechodzi walidację, a błędne referencje nie są ukrywane. Starsze przebiegi 4/5 pozostają odrębne.
+
+
+## 3.4m — kontrakt transportu podzespołów do przeglądu (2026-10-12)
+
+Status: propozycja, bez zmian schematu ani wyników. Ostatni odebrany zakres wykonawczy: 3.4l. Obecne definicje podzespołów wiążą producenta i odbiorców, lecz nie określają ilości, chwili wytworzenia/pobrania ani rozdziału na wykonania. Nie stanowią dowodu dostępności fizycznego podzespołu.
+
+Proponowany pierwszy zakres to jawne partie podzespołów przypisane do konkretnych wykonań producenta i odbiorcy (numer sztuki + ID operacji). Użytkownik podaje ID partii, ID definicji podzespołu, ilość i jednostkę oraz ilość pobieraną przez wskazane wykonanie odbiorcy, ze źródłem danych. Nic nie powstaje domyślnie z BOM. Walidacja sprawdza zgodność producenta/odbiorcy z definicją, unikalne ID, dodatnie skończone ilości, zgodne jednostki i bilans: suma przypisanych pobrań nie przekracza ilości partii. Brak danych blokuje fizyczny przebieg objęty tym kontraktem, zamiast zapewniać nieograniczony zapas.
+
+Dla ograniczenia zakresu pierwsza implementacja obsługuje partię wskazaną dla jednego odbiorczego wykonania; dzielenie partii, przewozy zbiorcze, magazynowe zapasy początkowe i dostawy cykliczne pozostają do osobnych kontraktów. Formularz nie uzupełnia ilości ani jednostek. Osobne wykonania mogą mieć własne partie. Powiązanie nie wymaga osobnej trasy, jeżeli przygotowanie i odbiór następują na tej samej kopii stanowiska.
+
+Proponowana reguła czasowa A: cała zadeklarowana partia staje się dostępna dopiero po zakończeniu przypisanego przygotowania; przewóz następuje istniejącą skierowaną trasą do wybranej kopii odbiorcy, a pobranie całej przypisanej ilości następuje atomowo przy rozpoczęciu operacji odbiorcy. Odbiorca czeka na wszystkie wymagane partie i korpus, jeśli jest wymagany. Przyjazd w tym samym czasie co start jest przetwarzany przed sprawdzeniem dostępności. Częściowe wydawanie podczas przygotowania ani pobieranie w toku operacji nie jest obsługiwane w tym wariancie.
+
+Alternatywa B: użytkownik określa osobne momenty dostępności i pobrania wewnątrz profili operacji. Tego nie da się zastąpić regułą A bez ryzyka zmiany przebiegu produkcji; wymaga dodatkowych danych i osobnego zakresu implementacji.
+
+Po zatwierdzeniu reguły czasowej: (1) backup i izolowany kontrakt typów/parsera/zapisu wraz z bilansem oraz ochroną źródeł 4/5; (2) kolejka zdarzeń wytworzenia, ruchu, przyjazdu i pobrania, wspólne rezerwacje osób/urządzeń, brak podwójnego pobrania oraz zgodność workera; (3) edytor, inspekcja, historia i zapis/odczyt na dwóch procesach. Każdy pakiet ma osobny odbiór. JIT nadal pomija fizyczny przepływ i jawnie zakłada dostępność; domyślny tryb pozostaje bez zmian.
+
+Transport partii nie rezerwuje korpusu podczas dojazdu/przewozu podzespołu. Zajęcie celu i miejsca odkładania wymagają jawnego zakresu: proponowany pierwszy wariant traktuje przyjazd jako dostępność do operacji, bez modelu pojemności bufora (3.5), i opisuje to w wyniku. Nie wolno przedstawiać tego jako zweryfikowanej pojemności składowania. Istniejące czasy, zestawy transportu, kolejne dojazdy wózków i polityki powrotu pozostają obowiązujące; bez operatorów magazynu.
+
+Kryteria odbioru: brak podwójnego zużycia, odbiorca nie startuje przed wytworzeniem i przyjazdem wszystkich wymaganych partii, rozłączne przygotowania mogą być równoległe tylko według jawnych grup, wspólna osoba/wózek pozostają wyłączne; brak czasu/trasy/ilości lub błędna referencja daje odmowę. Przykłady testowe są syntetyczne, ze źródłami, i nie stają się pomiarami procesu.

@@ -77,6 +77,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
+3.4m / część 3.4.3 (2026-10-12): zakończono przygotowanie propozycji kontraktu fizycznych partii podzespołów; implementacja oczekuje na decyzję o dostępności i pobraniu. Opis i trzy pakiety w `MODEL_ZASOBOW_TRANSPORTU_3_4.md`. Bez zmian schematu i obliczeń. Propozycja A: dostępność po końcu przygotowania, pobranie przy starcie odbiorcy; B: jawne momenty wewnątrz operacji. Ilości/przypisania zawsze jawne, bez danych dopowiedzianych z BOM. Postęp 34,3% / 35,4%.
+
 3.4l / rozszerzenie 3.4 (2026-10-12): zakończony zakres — jawna opcja symulacji samego procesu just in time w harmonogramie szkicu 6, domyślnie wyłączona. Pomija transport i fizyczne lokalizacje korpusów, zachowuje zależności operacji oraz zasoby i kalendarze montażu. Bez zmiany schematu i zapisu; wynik oznaczony JIT. Backup `backup/v0.4.0_przed_3_4l_20261012` (258 plików, zgodne SHA256). 176/176 testów, build/typecheck oraz Edge: konfiguracja transportu / brak konfiguracji / gałęzie, przełączanie, worker, odczyt i izolacja 4/5 PASS. Całe 3.4 nadal w trakcie — transport podzespołów do integracji. Postęp 34,3% / 35,4%.
 
 3.4k / część 3.4.3 (2026-10-12): zakończony zakres — zatwierdzone przez użytkownika zawsze kolejne dojazdy według zapisanej kolejności urządzeń. Przewóz czeka na rzeczywiste przyjazdy całego zestawu; UI pokazuje i pozwala zmienić kolejność ze wspólną historią. Schemat bez zmian. Backup `backup/v0.4.0_przed_3_4k_20261012` (258 plików, SHA256 bez rozbieżności). 173/173 testy, build/typecheck i Edge workera, zmiany kolejności/Cofnij/Ponów, inspekcji i odczytu PASS. Całe 3.4.3/3.4 w trakcie: fizyczny transport podzespołów pozostaje do integracji. Postęp 34,3% / 35,4%.
@@ -624,3 +626,5 @@ Ten dokument jest głównym rejestrem przyszłych prac. Historyczne raporty pozo
 | 2026-10-12 | 3.4.4 | w trakcie → wdrożone; pakiet 3.4j | Formularze wózków/przenośników, lokalizacji/polityk, kalendarzy i pustych tras z czasem oraz jawną obsadą. 169/169 testów, build, Edge na procesie sekwencyjnym i gałęziach, historia/odczyt/worker. Backup 257 zgodnych SHA256; raport 3.4. Całe 3.4 nadal w trakcie; postęp 34,3% / 35,4%. |
 
 | 2026-10-12 | 3.4.3 | kontynuacja — 3.4k zakończony | Decyzja użytkownika: zawsze kolejne dojazdy wózków według kolejności zestawu. 173/173 testy, build, Edge obu kolejności i zmiany przez UI z historią/odczytem. Backup 258 zgodnych SHA256. Pozostaje fizyczny transport podzespołów; raport 3.4. Postęp 34,3% / 35,4%. |
+
+| 2026-10-12 | 3.4.3 | przygotowano kontrakt — 3.4m | Propozycja partii podzespołów i trzech pakietów: zapis/bilans, kolejka/zasoby, UI/odbiór. Reguła dostępności/pobrania do decyzji użytkownika; bez zmian schematu i wyników. Postęp 34,3% / 35,4%. |
