@@ -1,3 +1,4 @@
+import {SubassemblyRun, type SubassemblyLotState, type SubassemblyEvent} from './subassemblyState';
 import {previewAssemblyDispatch,previewEmptyDispatch,type AssemblyDispatch,type TransportDeviceReservation} from './assemblyDispatch';
 import {createCartBook,finishCartMovement,startCartMovement,type CartBook,type CartMotionRoute} from './transportState';
 import {parseDomainProjectV6, type DomainProjectV6} from './domainProject';
@@ -24,7 +25,7 @@ export interface WorkerScheduleRun {
   startSeconds: number;
   endSeconds: number;
   waitSeconds: number;
-  waitCauses: readonly ('workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body' | 'transport')[];
+  waitCauses: readonly ('workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body' | 'transport' | 'subassembly')[];
   reserveStartSeconds: number;
   reserveEndSeconds: number;
   workWindows: readonly CalendarWindow[];
@@ -39,11 +40,13 @@ export interface WorkerScheduleRun {
   transport?: {workerIds?: readonly string[]; equipmentIds?: readonly string[]; routeId: string; startSeconds: number; endSeconds: number; basis: 'measured' | 'assumed'; breakdown?:TransportBreakdown};
 }
 
-export interface AssemblyTransportMovement {kind:'loaded'|'empty';purpose:'transfer'|'approach'|'return';routeId:string;workerIds:readonly string[];equipmentIds:readonly string[];startSeconds:number;endSeconds:number}
+export interface AssemblyTransportMovement {kind:'loaded'|'empty';purpose:'transfer'|'approach'|'return';routeId:string;workerIds:readonly string[];equipmentIds:readonly string[];startSeconds:number;endSeconds:number;lotId?:string}
 
 export type TransportSimulationMode = 'configured' | 'just-in-time';
 
 export interface WorkerScheduleResult {
+  subassemblyLots?: readonly SubassemblyLotState[];
+  subassemblyEvents?: readonly SubassemblyEvent[];
   transportMode?: 'just-in-time';
   mode: 'logical' | 'calendar';
   jobs: readonly Job[];
@@ -58,6 +61,8 @@ export interface WorkerScheduleResult {
 }
 
 type EventInput =
+  | {kind: 'lot-end'; at: number; lotId: string}
+  | {kind: 'lot-consume'; at: number; job: number; operationId: string; location: StationCopyRef}
   | {kind: 'arrival'; at: number; job: number}
   | {kind: 'completion'; at: number; job: number; step: number; stationId: string; copy: number}
   | {kind: 'release'; at: number; reservationId: string}
@@ -144,7 +149,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
   if(options.transportMode!==undefined&&options.transportMode!=='configured'&&options.transportMode!=='just-in-time')throw new Error('Nieznany tryb transportu symulacji.');
   const justInTime=options.transportMode==='just-in-time';
   const parsed = parseDomainProjectV6(JSON.stringify(project));
-  if (!justInTime && parsed.subassemblyFlow) throw new Error('3.4m2: fizyczny przepływ partii podzespołów oczekuje na integrację; można jawnie włączyć symulację just in time.');
+  const lotRun = !justInTime && parsed.subassemblyFlow ? new SubassemblyRun(parsed, batch) : undefined;
   const {assemblyTransport:_transport,bodyRunInput:_bodyInput,...processOnly}=parsed;
   // A transient logical process view; saved transport declarations and physical locations remain untouched.
   const checked: DomainProjectV6 = justInTime ? processOnly : parsed;
@@ -153,7 +158,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
   const cartLocks = new Map<string,number>();
   const transportMovements: AssemblyTransportMovement[] = [];
   const bodyRun = justInTime ? undefined : prepareBodyRun(checked, batch, bodyInput);
-  if(checked.assemblyTransport && !bodyRun) throw new Error('3.4.3: transport zasobowy wymaga fizycznego przebiegu korpusu; transport podzespołów oczekuje na integrację.');
+  if(checked.assemblyTransport && !bodyRun && !lotRun) throw new Error('3.4.3: transport zasobowy wymaga fizycznego przebiegu korpusu; transport podzespołów oczekuje na integrację.');
   let bodyBook = bodyRun?.book;
   const bodyEvents: BodyEvent[] = [];
   const recordBody = (event: BodyEvent) => {
@@ -210,6 +215,9 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
     candidatesByOperation.set(step.id, declared?.candidates ?? copies.get(baseStationId!)!.map((_, index) =>
       ({stationId: baseStationId!, copy: index + 1, requiredEquipmentIds: []})));
   }
+  if (lotRun) for (const lot of lotRun.lots) {
+    if (candidatesByOperation.get(lot.declaration.consumer.operationId)!.length !== 1) throw new Error('3.4m2: pierwszy zakres partii wymaga jednej jawnej kopii odbiorcy; wybór wielu kopii nie jest jeszcze obsługiwany.');
+  }
   const successors = steps.map(step => steps.flatMap((other, i) =>
     other.predecessorIds.includes(step.id) ? [i] : []));
   const sameCopy = (from: StationCopyRef, to: StationCopyRef) => from.stationId === to.stationId && from.copy === to.copy;
@@ -230,9 +238,9 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
   onProgress?.(0, steps.length * batch);
   const linear = steps.every((step, index) => step.predecessorIds.length === (index ? 1 : 0) &&
     successors[index].length === (index < steps.length - 1 ? 1 : 0));
-  const routePlan = !justInTime && routing && (!checked.physicalConcurrency || linear) ?
+  const routePlan = !justInTime && !lotRun && routing && (!checked.physicalConcurrency || linear) ?
     createStationRoutePlan(checked, steps.map(step => step.id), candidatesByOperation) : null;
-  const branchPlan = !justInTime && routing && checked.physicalConcurrency && !linear ?
+  const branchPlan = !justInTime && !lotRun && routing && checked.physicalConcurrency && !linear ?
     createBodyBranchRoutePlan(checked, steps.map(step => step.id), candidatesByOperation) : null;
   const previousCopies = new Map<number, StationCandidate>();
   const jobs: Job[] = Array.from({length: batch}, (_, job) => ({id: job + 1,
@@ -241,7 +249,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
   const remaining = jobs.map(() => steps.map(step => step.predecessorIds.length));
   const inFlight = jobs.map(() => new Set<number>());
   const waiting: {job: number; step: number; ready: number;
-    causes: Set<'workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body' | 'transport'>}[] = [];
+    causes: Set<'workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body' | 'transport' | 'subassembly'>}[] = [];
   const events = new EventQueue();
   const wakeTimes = new Set<number>();
   const wakeAt = (at: number, now: number) => {
@@ -260,7 +268,9 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
     if (!Number.isFinite(now)) throw new Error('Harmonogram przekroczył poprawny zakres czasu.');
     while (events.length && events.peek().at === now) {
       const event = events.pop();
-      if (event.kind === 'wake') wakeTimes.delete(now);
+      if (event.kind === 'lot-end') lotRun!.arrive(event.lotId, now);
+      else if (event.kind === 'lot-consume') lotRun!.consume(event.job,event.operationId,event.location,now);
+      else if (event.kind === 'wake') wakeTimes.delete(now);
       else if (event.kind === 'arrival') {
         steps.forEach((step, i) => { if (!step.predecessorIds.length) waiting.push({job: event.job, step: i,
           ready: now, causes: new Set()}); });
@@ -299,6 +309,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
           recordBody({kind: 'release', bodyId: bodyRun!.bodyByJob.get(event.job + 1)!,
             atSeconds: now, operationId: completedStep.id});
         }
+        lotRun?.produce(event.job + 1, completedStep.id, {stationId:event.stationId,copy:event.copy+1}, now);
         inFlight[event.job].delete(event.step);
         copies.get(event.stationId)![event.copy] = !runs.some(run => run.stationId === event.stationId &&
           run.copy === event.copy + 1 && run.endSeconds > now);
@@ -319,6 +330,46 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
         if (inFlight[task.job].size && !matchingConcurrencyGroup(checked.physicalConcurrency,
           [...inFlight[task.job]].map(index => steps[index].id).concat(step.id))) {
           task.causes.add('same-job'); continue;
+        }
+        const incoming = lotRun?.incoming(task.job + 1, step.id) ?? [];
+        if (incoming.length) {
+          const target = candidatesByOperation.get(step.id)![0];
+          const missing = incoming.filter(lot => lot.status === 'available' && !sameCopy(lot.location!, target));
+          // Validate all required legs before publishing any movement for this recipient.
+          for (const lot of missing) bodyRoute(lot.location!, target);
+          if (missing.length) {
+            const lot = missing[0], route = bodyRoute(lot.location!, target)!;
+            let dispatch: AssemblyDispatch | undefined;
+            if (checked.assemblyTransport) {
+              try {
+                dispatch = previewAssemblyDispatch(checked,route.id,cartBook,book,transportDevices,now,`lot:${lot.declaration.id}`,now,new Set(cartLocks.keys()));
+              } catch (failure) {
+                if (!cartLocks.size && !cartBook.carts.some(cart => cart.movement)) throw failure;
+                cartLocks.forEach(end => wakeAt(end,now));
+                cartBook.carts.forEach(cart => {if(cart.movement)wakeAt(cart.movement.endSeconds,now);});
+                task.causes.add('transport');continue;
+              }
+              const movement = dispatch.prefix ?? dispatch;
+              movement.waitCauses.forEach(cause => task.causes.add(cause));
+              if (movement.startSeconds > now) {task.causes.add('transport');wakeAt(movement.startSeconds,now);continue;}
+              book = movement.workers;cartBook = movement.carts;transportDevices = movement.devices;
+              if(movement.workerIds.length)events.push({kind:'release',at:movement.endSeconds,reservationId:movement.reservationId});
+              for(const id of movement.equipmentIds)if(cartBook.carts.some(cart=>cart.equipmentId===id)){
+                if(dispatch.prefix)cartLocks.set(id,movement.endSeconds);
+                events.push({kind:'cart-end',at:movement.endSeconds,equipmentId:id,
+                  returnToInitial:!dispatch.prefix && checked.assemblyTransport.carts.find(cart=>cart.equipmentId===id)!.afterUnload==='return-to-initial'});
+              }
+              transportMovements.push({kind:dispatch.prefix?'empty':'loaded',purpose:dispatch.prefix?'approach':'transfer',
+                routeId:movement.routeId,workerIds:movement.workerIds,equipmentIds:movement.equipmentIds,
+                startSeconds:now,endSeconds:movement.endSeconds,lotId:lot.declaration.id});
+              if(dispatch.prefix){task.causes.add('transport');started=true;break;}
+            }
+            const end = dispatch?.endSeconds ?? now + route.transportTime!.durationSeconds;
+            lotRun!.start(lot,target,now,end);events.push({kind:'lot-end',at:end,lotId:lot.declaration.id});
+            if(!dispatch)transportMovements.push({kind:'loaded',purpose:'transfer',routeId:route.id,workerIds:[],equipmentIds:[],startSeconds:now,endSeconds:end,lotId:lot.declaration.id});
+            task.causes.add('subassembly');started=true;break;
+          }
+          if(incoming.some(lot=>lot.status==='pending'||lot.status==='moving')){task.causes.add('subassembly');continue;}
         }
         const bodyId = bodyRun && step.physicalRole?.kind === 'body-work' ? bodyRun.bodyByJob.get(task.job + 1)! : undefined;
         const operation = byOperation.get(step.id)!;
@@ -526,6 +577,10 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
           else events.push({kind: 'body-start', at: start, bodyId, operationId: step.id, end,
             basis: profile.durationBasis === 'measured' ? 'confirmed' : 'assumed'});
         }
+        if(incoming.length) {
+          if(start===now)lotRun!.consume(task.job+1,step.id,chosen.candidate,now);
+          else events.push({kind:'lot-consume',at:start,job:task.job+1,operationId:step.id,location:chosen.candidate});
+        }
         const reservationId = `${task.job + 1}:${step.id}`;
         book = reserveWorkerTeam(book, {reservationId, workerIds,
           startSeconds: reserveStart, endSeconds: reserveEnd});
@@ -571,8 +626,10 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
       book.reservations.some(item => item.releasedAtSeconds !== item.endSeconds)) {
     throw new Error('Harmonogram nie zakończył wszystkich operacji lub rezerwacji; sprawdź jawne okna kalendarzy.');
   }
+  if(lotRun?.lots.some(lot=>lot.status!=='consumed'))throw new Error('Podzespoły: nie zakończono wszystkich pobrań; sprawdź zależności i przypisania partii.');
   jobs.forEach(job => { job.finish = Math.max(...job.ends); });
   if (jobs.some(job => !Number.isFinite(job.finish))) throw new Error('Proces nie został ukończony.');
   return {mode: calendars ? 'calendar' : 'logical', ...(justInTime?{transportMode:'just-in-time' as const}:{}), jobs, runs, reservations: book,
+    ...(lotRun?{subassemblyLots:lotRun.lots,subassemblyEvents:lotRun.events,...(!checked.assemblyTransport?{transportMovements}:{} )}:{}),
     operationIds: steps.map(step => step.id), ...(bodyBook ? {bodyBook, bodyEvents} : {}), ...(checked.assemblyTransport ? {transportReservations:transportDevices,cartBook,transportMovements} : {})};
 }

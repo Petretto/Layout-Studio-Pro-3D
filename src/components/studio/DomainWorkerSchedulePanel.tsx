@@ -26,6 +26,7 @@ function simultaneousPeriods(runs: readonly WorkerScheduleRun[]) {
 }
 
 const causeLabel = {
+  subassembly: 'oczekiwanie na wytworzenie lub dostarczenie podzespołu',
   transport: 'oczekiwanie na transport montażu',
   workers: 'oczekiwanie na pracowników',
   station: 'oczekiwanie na kopię stanowiska',
@@ -128,12 +129,19 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
         <p>Dojazd i powrót przemieszczają urządzenie bez korpusu. Przydziały osób są wspólne z montażem. Koniec produkcji i koniec powrotu urządzenia mogą mieć różne czasy.</p>
         <div className="table-wrap"><table><thead><tr><th>Ruch</th><th>Trasa</th><th>Przedział [s]</th><th>Osoby</th><th>Urządzenia</th></tr></thead>
           <tbody>{result.transportMovements.slice(0,100).map((movement,index)=><tr key={index}>
-            <td>{movement.purpose==='approach'?'Dojazd bez ładunku':movement.purpose==='return'?'Powrót bez ładunku':'Przewóz korpusu'}</td>
+            <td>{movement.purpose==='approach'?'Dojazd bez ładunku':movement.purpose==='return'?'Powrót bez ładunku':movement.lotId?'Przewóz podzespołu':'Przewóz korpusu'}{movement.lotId&&` · partia ${movement.lotId}`}</td>
             <td>{movement.routeId}</td><td>{movement.startSeconds}–{movement.endSeconds}</td>
-            <td>{movement.workerIds.join(', ')||'jawnie bez osób'}</td><td>{movement.equipmentIds.join(', ')||'jawnie bez urządzeń'}</td>
+            <td>{movement.workerIds.join(', ')||(project.assemblyTransport?'jawnie bez osób':'zasoby nie modelowane')}</td><td>{movement.equipmentIds.join(', ')||(project.assemblyTransport?'jawnie bez urządzeń':'zasoby nie modelowane')}</td>
           </tr>)}</tbody></table></div>
         {result.transportMovements.length>100&&<p>Pokazano pierwsze 100 ruchów.</p>}
         <p>Końcowe położenie wózków: {result.cartBook?.carts.map(c=>`${c.equipmentId}: ${c.location?`${c.location.stationId} / ${c.location.copy}`:'w ruchu'}`).join('; ')||'brak zadeklarowanych wózków'}.</p>
+      </details>}
+      {result.subassemblyLots&&<details aria-label="Inspekcja partii podzespołów"><summary>Partie podzespołów ({result.subassemblyLots.length})</summary>
+        <p>Cała partia jest dostępna po zakończeniu przygotowania. Przypisana ilość jest pobierana przy starcie odbiorcy. Pojemność buforów i wykorzystanie pozostałej ilości nie są modelowane.</p>
+        <ul>{result.subassemblyLots.slice(0,100).map(lot=><li key={lot.declaration.id}>{lot.declaration.id} · {lot.declaration.subassemblyId} · {lot.declaration.producer.job}:{lot.declaration.producer.operationId} → {lot.declaration.consumer.job}:{lot.declaration.consumer.operationId} · pobrano {lot.declaration.consumptionQuantity} / {lot.declaration.quantity} {lot.declaration.unit} · pozostało bez dalszego przypisania: {lot.remainingQuantity} {lot.declaration.unit}</li>)}</ul>
+        {result.subassemblyLots.length>100&&<p>Pokazano pierwsze 100 partii.</p>}
+        <ol>{result.subassemblyEvents?.slice(0,500).map((event,index)=><li key={index}>{event.atSeconds} s · {event.lotId} · {event.kind==='produced'?'Wytworzenie':event.kind==='start-transfer'?'Wyjazd':event.kind==='arrived'?'Przyjazd':'Pobranie'} · {event.location.stationId} / {event.location.copy} · {event.quantity} {result.subassemblyLots!.find(lot=>lot.declaration.id===event.lotId)!.declaration.unit}</li>)}</ol>
+        {(result.subassemblyEvents?.length??0)>500&&<p>Pokazano pierwsze 500 zdarzeń.</p>}
       </details>}
       {result.bodyBook && <div aria-label="Inspekcja korpusów przebiegu">
         <h4>Końcowe położenie korpusów</h4>

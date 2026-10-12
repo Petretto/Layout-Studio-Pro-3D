@@ -263,3 +263,7 @@ Aktualizacja 3.4k (2026-10-12): harmonogram wykonuje dojazdy kilku wózków zaws
 
 ### Symulacja procesu bez transportu — 3.4l (2026-10-12)
 W zakładce Stanowiska v5, panel Harmonogram zespołu — szkic 6, dostępny jest domyślnie wyłączony przełącznik „Symulacja bez transportu — wszystko dostępne just in time”. Pozwala liczyć sam proces bez konfiguracji transportów i korpusów, zachowując zależności, osoby, stanowiska, wyposażenie operacji i kalendarze. Wynik oznacza założoną dostępność materiałów; nie oblicza ruchów ani fizycznych lokalizacji korpusów. Wyłączenie przywraca transport według zapisanych danych. Opcja nie zmienia konfiguracji projektu i po ponownym otwarciu jest wyłączona.
+
+
+### Fizyczne partie podzespołów — 3.4m2 (2026-10-12)
+Harmonogram szkicu 6 wykonuje jawny kontrakt partii: wytworzenie po zakończeniu przygotowania, przewóz do jedynej dopuszczonej kopii odbiorcy i pobranie przy jego faktycznym starcie. Transport dzieli osoby i urządzenia z montażem, korzysta z dojazdów/powrotów i kalendarzy. Odbiorca czeka na wszystkie wymagane partie. Inspekcja pokazuje zdarzenia i ilości oraz odróżnia przewóz podzespołu od korpusu. Kontrakt na razie dostępny przez API/zapis szkicu; formularz jest w planowanym 3.4m3. Wiele kopii odbiorcy oraz pojemność buforów pozostają poza tym zakresem. JIT pomija fizyczny przepływ partii.

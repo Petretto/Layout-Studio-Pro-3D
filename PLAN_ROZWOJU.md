@@ -44,7 +44,7 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 3.4m1: cały plan 23/67 = **34,3%**; pierwsze wydanie 23/65 = **35,4%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po 3.4m2: cały plan 23/67 = **34,3%**; pierwsze wydanie 23/65 = **35,4%**. Weryfikacja: `node scripts/plan_progress.mjs`.
 
 Stan historyczny po 3.1c: cały plan 21/67 = **31,3%**. Pierwsze wydanie (etapy 1–7) 21/65 = **32,3%**. Etap 8 dotyczy kolejnej wersji. Obliczenia: `node scripts/plan_progress.mjs`; źródłem są tabele statusów tego pliku. Po 3.2a ukończony główny licznik pozostaje taki sam, bo 3.2 nie jest jeszcze odebrane.
 
@@ -76,6 +76,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+3.4m2 / część 3.4.3 (2026-10-12): zakończony pierwszy zakres — wytworzenie, przewóz i pobranie partii przy rzeczywistym starcie, wspólne osoby/urządzenia, dojazdy/powroty, kalendarze, wynik workera i inspekcja. Jedna jawna kopia odbiorcy; wybór wielu kopii odmawia do 3.4m2b. Formularz partii w 3.4m3. Backup `backup/v0.4.0_przed_3_4m2_20261012` (260 zgodnych SHA256). 188/188 testów, build/typecheck, Edge transfer/powrót/JIT/reload/izolacja PASS. Całe 3.4.3/3.4 nadal w trakcie. Postęp 34,3% / 35,4%.
 
 3.4m1 / część 3.4.3 (2026-10-12): zakończony zakres — zatwierdzone A, kontrakt jawnych partii podzespołów, referencje wykonań, ilości/jednostki i bilans pobrania, parser/API zapisu, ochrona źródeł 4/5. Fizyczny przebieg z kontraktem jawnie odmawia do integracji 3.4m2; JIT działa. Backup `backup/v0.4.0_przed_3_4m1_20261012` (258 zgodnych SHA256). 179/179 testów, build/typecheck i Edge odczytu/odmowy/JIT/reload/izolacji PASS. Całe 3.4 w trakcie; następne 3.4m2 — zdarzenia partii i transport, potem 3.4m3 — formularz/inspekcja. Postęp 34,3% / 35,4%.
 
@@ -632,3 +634,5 @@ Ten dokument jest głównym rejestrem przyszłych prac. Historyczne raporty pozo
 | 2026-10-12 | 3.4.3 | przygotowano kontrakt — 3.4m | Propozycja partii podzespołów i trzech pakietów: zapis/bilans, kolejka/zasoby, UI/odbiór. Reguła dostępności/pobrania do decyzji użytkownika; bez zmian schematu i wyników. Postęp 34,3% / 35,4%. |
 
 | 2026-10-12 | 3.4.3 | kontynuacja — 3.4m1 zakończony | Decyzja A, kontrakt partii/parser/zapis, jawne referencje/ilości, ochrona źródeł 4/5. 179/179 testów, build i Edge. Backup 258 zgodne SHA256. Integracja fizyczna i formularz pozostają; postęp 34,3% / 35,4%. |
+
+| 2026-10-12 | 3.4.3 | kontynuacja — 3.4m2 pierwszy zakres zakończony | Kolejka partii i wspólne zasoby, pobranie przy faktycznym starcie, worker i inspekcja. 188/188 testów, build, dwa przebiegi w Edge. Backup 260 zgodnych SHA256. Wiele kopii odbiorcy i formularz pozostają; postęp 34,3% / 35,4%. |

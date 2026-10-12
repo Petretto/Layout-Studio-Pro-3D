@@ -3184,11 +3184,11 @@ test('3.4m1: partie zapisują jawne ilości, wykonania i regułę A, bez mutacji
   const edited=editDomainSubassemblyFlow(project,flow);
   assert.equal(JSON.stringify(project),before);assert.deepEqual(parseDomainProjectV6(JSON.stringify(edited)).subassemblyFlow,flow);
   assert.deepEqual(editDomainSubassemblyFlow(edited,undefined),project);
-  assert.throws(()=>scheduleWorkerRun(edited,1,1),/3.4m2/);
+  assert.throws(()=>scheduleWorkerRun(edited,1,1),/instanc|korpus/i);
   const jit=scheduleWorkerRun(edited,1,1,undefined,undefined,{transportMode:'just-in-time'});
   assert.equal(jit.transportMode,'just-in-time');assert.equal(jit.jobs[0].finish,20);
   const replies:ScheduleReply[]=[];executeScheduleRequest({project:edited,batch:1,arrivalIntervalSeconds:1},r=>replies.push(r));
-  assert.ok(replies.some(r=>r.kind==='error'&&r.message.includes('3.4m2')));
+  assert.ok(replies.some(r=>r.kind==='error'));
 });
 test('3.4m1: parser odrzuca błędne referencje, ilości i niejawne reguły',()=>{
   const {project,flow}=subassemblyFlowFixture();
@@ -3222,4 +3222,103 @@ test('3.4m1: odczyt, cofnięcie i odmowa zapisu chronią dokładne źródła 4/5
     const raw=JSON.stringify(corrupt);storage.setItem(DOMAIN_DRAFT_STORAGE_KEY,raw);
     assert.equal(readDomainDraft(storage).status,'corrupt');assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),raw);
   }
+});
+
+
+function subassemblyScheduleFixture(){
+  const {project,flow}=subassemblyFlowFixture();project.subassemblyFlow=flow;
+  const input=assemblyScheduleInput();input.bodies[0].location={kind:'station',stationId:'ST-C',copy:1};
+  project.bodyRunInput=input;return project;
+}
+test('3.4m2: przygotowanie, przewóz i pobranie partii mają rzeczywiste zdarzenia i wspólne osoby',()=>{
+  const project=subassemblyScheduleFixture(),before=JSON.stringify(project);
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+  assert.equal(result.jobs[0].finish,22);
+  assert.deepEqual(result.subassemblyEvents!.map(e=>[e.kind,e.atSeconds]),[['produced',10],['start-transfer',10],['arrived',12],['consumed',12]]);
+  assert.equal(result.subassemblyLots![0].remainingQuantity,1);assert.equal(result.subassemblyLots![0].status,'consumed');
+  assert.equal(result.transportMovements![0].lotId,'LOT-1');assert.equal(result.bodyEvents!.filter(e=>e.kind==='start-transfer').length,0);
+  const replies:ScheduleReply[]=[];executeScheduleRequest({project,batch:1,arrivalIntervalSeconds:1},r=>replies.push(r));
+  assert.deepEqual((replies.find(r=>r.kind==='result') as {result:unknown}).result,result);
+  assert.equal(JSON.stringify(project),before);
+  const jit=scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'});
+  assert.equal(jit.jobs[0].finish,20);assert.equal(jit.subassemblyEvents,undefined);
+});
+test('3.4m2: dwie partie czekają na wspólny wózek i powrót, odbiorca pobiera obie atomowo',()=>{
+  const project=subassemblyScheduleFixture();addReturnRoute(project);
+  project.assemblyTransport!.carts[0].afterUnload='return-to-initial';
+  project.subassemblyFlow!.lots.push({...structuredClone(project.subassemblyFlow!.lots[0]),id:'LOT-2'});
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+  assert.deepEqual(result.transportMovements!.map(m=>[m.purpose,m.startSeconds,m.endSeconds]),[['transfer',10,12],['return',12,17],['transfer',17,19],['return',19,24]]);
+  assert.equal(result.jobs[0].finish,29);
+  assert.deepEqual(result.subassemblyEvents!.filter(e=>e.kind==='consumed').map(e=>e.atSeconds),[19,19]);
+  const reservations=result.reservations.reservations;
+  for(let i=0;i<reservations.length;i++)for(let j=i+1;j<reservations.length;j++){
+    const a=reservations[i],b=reservations[j];if(a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
+  }
+});
+test('3.4m2: kalendarz przesuwa przewóz i pobranie, bez rezerwowania korpusu podczas dojazdu',()=>{
+  const project=subassemblyScheduleFixture();project.assemblyTransport!.carts[0].calendar.breaks=[{startSeconds:10,endSeconds:15,basis:'assumed'}];
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+  assert.equal(result.subassemblyEvents!.find(e=>e.kind==='start-transfer')!.atSeconds,15);
+  assert.equal(result.subassemblyEvents!.find(e=>e.kind==='consumed')!.atSeconds,17);
+  assert.equal(result.bodyEvents!.find(e=>e.kind==='reserve')!.atSeconds,17);
+  assert.ok(result.runs[1].waitCauses.includes('calendar'));
+  const approach=subassemblyScheduleFixture();addReturnRoute(approach);
+  approach.assemblyTransport!.carts[0].initialLocation={stationId:'ST-C',copy:1};
+  const withApproach=scheduleWorkerRun(approach,1,1,approach.bodyRunInput);
+  assert.deepEqual(withApproach.transportMovements!.map(m=>[m.purpose,m.startSeconds,m.endSeconds]),[['approach',10,15],['transfer',15,17]]);
+});
+test('3.4m2: brak ilości dla wykonania, brak drogi i nieobsługiwany wybór kopii dają odmowę',()=>{
+  const project=subassemblyScheduleFixture();assert.throws(()=>scheduleWorkerRun(project,1,2),/brak jawnej partii/);
+  project.subassemblyFlow!.lots[0].producer.job=2;assert.throws(()=>scheduleWorkerRun(project,1,1,project.bodyRunInput),/poza uruchomioną/);
+  const noRoute=subassemblyScheduleFixture();delete noRoute.assemblyTransport;noRoute.stationRouting!.routes=[];
+  assert.throws(()=>scheduleWorkerRun(noRoute,1,1,noRoute.bodyRunInput),/brak jawnej trasy/);
+  const multi=subassemblyScheduleFixture();multi.stationSettings['ST-C'].parallelStations=2;
+  multi.stationRouting!.operations.find(o=>o.operationId===multi.operations[1].id)!.candidates.push({stationId:'ST-C',copy:2,requiredEquipmentIds:[]});
+  assert.throws(()=>scheduleWorkerRun(multi,1,1,multi.bodyRunInput),/jednej jawnej kopii/);
+});
+test('3.4m2: lokalne pobranie nie tworzy ruchu, stare trasy bez zasobów nadal liczą czas',()=>{
+  const project=subassemblyScheduleFixture();delete project.assemblyTransport;
+  const timeOnly=scheduleWorkerRun(project,1,1,project.bodyRunInput);assert.equal(timeOnly.jobs[0].finish,22);assert.equal(timeOnly.transportMovements![0].lotId,'LOT-1');
+  project.stationRouting!.operations.find(o=>o.operationId===project.operations[1].id)!.candidates=[{stationId:'ST-A',copy:1,requiredEquipmentIds:[]}];
+  project.bodyRunInput!.bodies[0].location={kind:'station',stationId:'ST-A',copy:1};
+  const local=scheduleWorkerRun(project,1,1,project.bodyRunInput);assert.equal(local.jobs[0].finish,20);
+  assert.deepEqual(local.subassemblyEvents!.map(e=>e.kind),['produced','consumed']);assert.equal(local.transportMovements!.length,0);
+});
+
+
+test('3.4m2: wspólna osoba odbiorcy czeka na powrót, pobranie następuje przy rzeczywistym starcie',()=>{
+  const project=subassemblyScheduleFixture();addReturnRoute(project);project.assemblyTransport!.carts[0].afterUnload='return-to-initial';
+  project.workerRunSelection!.operations[1].eligibleWorkerIds=[project.workers[0].id];
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+  assert.equal(result.runs[1].startSeconds,17);assert.equal(result.jobs[0].finish,27);
+  assert.equal(result.subassemblyEvents!.find(e=>e.kind==='consumed')!.atSeconds,17);
+});
+test('3.4m2: odbiorca gotowy wcześniej czeka na producenta, bez cichego brakującego materiału',()=>{
+  const project=subassemblyScheduleFixture();project.operations[1].predecessorIds=[];
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+  assert.equal(result.runs[1].startSeconds,12);assert.ok(result.runs[1].waitCauses.includes('subassembly'));
+  project.operations[0].predecessorIds=[project.operations[1].id];
+  assert.throws(()=>scheduleWorkerRun(project,1,1,project.bodyRunInput),/nie zakończył/);
+});
+
+
+test('3.4m2: dwie sztuki nie przejmują cudzej partii, wózka ani osoby',()=>{
+  const project=subassemblyScheduleFixture();addReturnRoute(project);project.assemblyTransport!.carts[0].afterUnload='return-to-initial';
+  const second=structuredClone(project.subassemblyFlow!.lots[0]);second.id='LOT-JOB-2';second.producer.job=2;second.consumer.job=2;project.subassemblyFlow!.lots.push(second);
+  const input=project.bodyRunInput!;input.bodies.push({...structuredClone(input.bodies[0]),id:'BODY-2'});input.jobs.push({job:2,bodyId:'BODY-2'});
+  const result=scheduleWorkerRun(project,1,2,input);
+  assert.equal(result.subassemblyEvents!.filter(e=>e.kind==='consumed').length,2);
+  assert.ok(result.subassemblyLots!.every(l=>l.status==='consumed'));
+  const movements=result.transportMovements!;
+  for(let i=0;i<movements.length;i++)for(let j=i+1;j<movements.length;j++){
+    const a=movements[i],b=movements[j];if(a.equipmentIds.some(id=>b.equipmentIds.includes(id))||a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
+  }
+});
+test('3.4m2: transport między przygotowaniami działa bez instancji korpusu',()=>{
+  const project=subassemblyScheduleFixture();delete project.bodyRunInput;
+  const consumer=project.operations[1];consumer.physicalRole={kind:'subassembly-preparation',subassemblyIds:['END-PART']};
+  project.subassemblies.push({id:'END-PART',name:'Końcowy podzespół testowy',producerOperationId:consumer.id,consumerOperationIds:[]});
+  const result=scheduleWorkerRun(project,1,1);assert.equal(result.jobs[0].finish,22);
+  assert.equal(result.bodyBook,undefined);assert.equal(result.subassemblyEvents!.filter(e=>e.kind==='consumed').length,1);
 });
