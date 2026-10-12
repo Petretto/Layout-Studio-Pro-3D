@@ -104,3 +104,7 @@ Do not invoke every skill for every task.
 - Do not count warehouse operators' work time, workload, calendars, or resource reservations.
 - Warehouse replenishment is material availability: use explicit stock, consumption, delivery quantity and timing/frequency to determine whether production remains supplied (3.5/3.6).
 - Do not infer initial stock, replenishment quantities, consumption-event timing or delivery intervals from BOM or transport duration.
+
+## Multi-cart approaches — user decision 2026-10-12
+- Empty approaches for an assembly transport set always execute sequentially in the stored equipmentIds order, even when crews are disjoint.
+- Loaded movement waits for the actual arrival and joint availability of all required carts. Do not infer parallel approaches.

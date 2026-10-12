@@ -3054,7 +3054,7 @@ test('3.4h: niewykonalny zestaw nie przejmuje ani jednego wózka, wygrywa jawna 
   project.assemblyTransport!.routes[0].alternatives.pop();
   assert.throws(()=>scheduleWorkerRun(project,1,1,assemblyScheduleInput()),/wspólnego ciągłego okna/);
   project.assemblyTransport!.carts[1].initialLocation={stationId:'ST-C',copy:1};
-  assert.throws(()=>scheduleWorkerRun(project,1,1,assemblyScheduleInput()),/wszystkich egzemplarzy/);
+  assert.throws(()=>scheduleWorkerRun(project,1,1,assemblyScheduleInput()),/jawnego dojazdu/);
 });
 test('3.4h: wózki zestawu wracają osobnymi trasami, wspólna osoba nie ma nakładających przydziałów',()=>{
   const project=multipleCartFixture();addReturnRoute(project);
@@ -3068,4 +3068,68 @@ test('3.4h: wózki zestawu wracają osobnymi trasami, wspólna osoba nie ma nak�
   for(let i=0;i<reservations.length;i++)for(let j=i+1;j<reservations.length;j++){
     const a=reservations[i],b=reservations[j];if(a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
   }
+});
+
+
+function multipleApproachFixture(){
+  const project=multipleCartFixture();addReturnRoute(project);
+  project.workers.push({id:'APPROACH-2',name:'Druga osoba dojazdu testowego'});
+  project.resourceCalendars!.workers['APPROACH-2']=structuredClone(project.resourceCalendars!.workers[project.workers[0].id]);
+  project.assemblyTransport!.carts.forEach(c=>c.initialLocation={stationId:'ST-C',copy:1});
+  project.assemblyTransport!.emptyRoutes.push({...structuredClone(project.assemblyTransport!.emptyRoutes[0]),id:'APPROACH-SECOND',equipmentId:'CART-2',
+    transportTime:{durationSeconds:8,basis:'assumed',source:'Jawny test drugiego dojazdu'},workerAssignment:{workerIds:['APPROACH-2'],source:'Jawny test drugiej obsady'}});
+  return project;
+}
+test('3.4k: rozłączne osoby nie zrównoleglają dojazdów zestawu, przewóz czeka na oba przyjazdy',()=>{
+  const project=multipleApproachFixture(),before=JSON.stringify(project),input=assemblyScheduleInput();
+  const result=scheduleWorkerRun(project,1,1,input),movements=result.transportMovements!;
+  assert.deepEqual(movements.map(m=>[m.purpose,m.startSeconds,m.endSeconds]),[['approach',10,15],['approach',15,23],['transfer',23,25]]);
+  assert.deepEqual(movements[0].equipmentIds,['CART']);assert.deepEqual(movements[1].equipmentIds,['CART-2']);
+  const run=result.runs.find(r=>r.transport)!;assert.equal(run.stationReserveStartSeconds,23);
+  assert.equal(result.bodyEvents!.find(e=>e.kind==='start-transfer')!.atSeconds,23);
+  assert.ok(result.cartBook!.carts.every(c=>c.location?.stationId==='ST-C'&&c.movement===null));
+  const replies:ScheduleReply[]=[];executeScheduleRequest({project:{...project,bodyRunInput:input},batch:1,arrivalIntervalSeconds:1},r=>replies.push(r));
+  assert.deepEqual((replies.find(r=>r.kind==='result') as {result:unknown}).result,result);assert.equal(JSON.stringify(project),before);
+});
+test('3.4k: kolejność urządzeń steruje dojazdami, wspólna osoba i przerwa pozostają respektowane',()=>{
+  const project=multipleApproachFixture();project.assemblyTransport!.routes[0].alternatives[0].equipmentIds.reverse();
+  const result=scheduleWorkerRun(project,1,1,assemblyScheduleInput());
+  assert.deepEqual(result.transportMovements!.map(m=>[m.equipmentIds,m.startSeconds,m.endSeconds]),[[['CART-2'],10,18],[['CART'],18,23],[['CART-2','CART'],23,25]]);
+  const shared=multipleApproachFixture();shared.assemblyTransport!.emptyRoutes[1].workerAssignment!.workerIds=[shared.workers[0].id];
+  shared.assemblyTransport!.carts[1].calendar.breaks=[{startSeconds:15,endSeconds:20,basis:'assumed'}];
+  const delayed=scheduleWorkerRun(shared,1,1,assemblyScheduleInput());
+  assert.deepEqual(delayed.transportMovements!.map(m=>[m.startSeconds,m.endSeconds]),[[10,15],[20,28],[28,30]]);
+  const reservations=delayed.reservations.reservations;
+  for(let i=0;i<reservations.length;i++)for(let j=i+1;j<reservations.length;j++){
+    const a=reservations[i],b=reservations[j];if(a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
+  }
+});
+test('3.4k: wózek przy odbiorze pomija dojazd, brak drogi lub okna drugiego nie publikuje przegranej alternatywy',()=>{
+  const project=multipleApproachFixture();project.assemblyTransport!.carts[0].initialLocation={stationId:'ST-A',copy:1};
+  const result=scheduleWorkerRun(project,1,1,assemblyScheduleInput());
+  assert.deepEqual(result.transportMovements!.map(m=>[m.purpose,m.startSeconds,m.endSeconds]),[['approach',10,18],['transfer',18,20]]);
+  const invalid=multipleApproachFixture();invalid.assemblyTransport!.emptyRoutes.pop();
+  const before=JSON.stringify(invalid);assert.throws(()=>scheduleWorkerRun(invalid,1,1,assemblyScheduleInput()),/jawnego dojazdu/);assert.equal(JSON.stringify(invalid),before);
+  invalid.assemblyTransport!.routes[0].alternatives.push({workerIds:[invalid.workers[0].id],equipmentIds:[]});
+  const alternative=scheduleWorkerRun(invalid,1,1,assemblyScheduleInput());
+  assert.equal(alternative.transportMovements!.length,1);assert.ok(alternative.cartBook!.carts.every(c=>c.location?.stationId==='ST-C'));
+  assert.equal(alternative.transportReservations!.length,0);
+  const closed=multipleApproachFixture();closed.assemblyTransport!.carts[1].calendar.shifts[0].endSeconds=7;
+  assert.throws(()=>scheduleWorkerRun(closed,1,1,assemblyScheduleInput()),/wspólnego okna/);
+});
+
+test('3.4k: kolejna partia nie przejmuje wózka w ruchu ani osób pierwszego dojazdu',()=>{
+  const project=multipleApproachFixture();
+  const input:BodyRunInput={bodies:[1,2].map(i=>({id:`MULTI-${i}`,productId:'PRODUCT',location:{kind:'station',stationId:'ST-A',copy:1}})),jobs:[1,2].map(job=>({job,bodyId:`MULTI-${job}`}))};
+  const result=scheduleWorkerRun(project,1,2,input);assert.equal(result.runs.length,4);
+  assert.equal(result.transportMovements!.filter(m=>m.purpose==='transfer').length,2);
+  const movements=result.transportMovements!;
+  for(let i=0;i<movements.length;i++)for(let j=i+1;j<movements.length;j++){
+    const a=movements[i],b=movements[j];if(a.equipmentIds.some(id=>b.equipmentIds.includes(id))||a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
+  }
+  const reservations=result.reservations.reservations;
+  for(let i=0;i<reservations.length;i++)for(let j=i+1;j<reservations.length;j++){
+    const a=reservations[i],b=reservations[j];if(a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
+  }
+  assert.ok(result.cartBook!.carts.every(c=>c.location?.stationId==='ST-C'&&c.movement===null));
 });

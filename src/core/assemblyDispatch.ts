@@ -43,7 +43,6 @@ export function previewAssemblyDispatch(project: DomainProjectV6, routeId: strin
         const cart = carts.carts.find(c => c.equipmentId === cartId)!;
         if(cart.movement || lockedCarts.has(cart.equipmentId)) throw new Error('3.4.3: wózek oczekuje na zakończenie aktywnego ruchu lub powrotu.');
         if(cart.location && (cart.location.stationId !== route.from.stationId || cart.location.copy !== route.from.copy)) {
-          if(cartIds.length > 1) throw new Error('3.4.3: zestaw wielu wózków wymaga wszystkich egzemplarzy przy miejscu odbioru; wspólne dojazdy oczekują na integrację.');
           const emptyRoute = rules.emptyRoutes.find(r => r.equipmentId === cart.equipmentId &&
             r.from.stationId === cart.location!.stationId && r.from.copy === cart.location!.copy &&
             r.to.stationId === route.from.stationId && r.to.copy === route.from.copy);
@@ -52,7 +51,9 @@ export function previewAssemblyDispatch(project: DomainProjectV6, routeId: strin
           const arrived = finishCartMovement(prefix.carts,cart.equipmentId,prefix.endSeconds);
           const oneAlternative = {...project,assemblyTransport:{...rules,routes:rules.routes.map(r => r === rule ? {...r,alternatives:[alternative]} : r)}};
           const loaded = previewAssemblyDispatch(oneAlternative,routeId,arrived,prefix.workers,prefix.devices,
-            Math.max(earliest,prefix.endSeconds),reservationId);
+            Math.max(earliest,prefix.endSeconds),reservationId,Math.max(emptyEarliest,prefix.endSeconds),lockedCarts);
+          // Publish only the first approach. Later carts are re-planned after its actual arrival.
+          // The user's sequential policy follows the stored equipment order, even for disjoint crews.
           const candidate = {...loaded,prefix};
           if(!best || candidate.startSeconds < best.startSeconds) best = candidate;
           continue alternatives;

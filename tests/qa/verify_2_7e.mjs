@@ -153,6 +153,12 @@ if(process.argv.includes('--multi-cart')){
   t.routes[0].alternatives[0].equipmentIds.push('QA-CART-2');
   t.emptyRoutes.push({...structuredClone(t.emptyRoutes[0]),id:'EMPTY-RETURN-2',equipmentId:'QA-CART-2'});
 }
+if(process.argv.includes('--sequential-approach')){
+  const p=draft.project,t=p.assemblyTransport,calendar=structuredClone(t.carts[0].calendar);
+  p.workers.push({id:'APPROACH-2',name:'Osoba drugiego dojazdu'});p.resourceCalendars.workers['APPROACH-2']=calendar;
+  t.emptyRoutes[1].workerAssignment={workerIds:['APPROACH-2'],source:'Jawna obsada drugiego dojazdu'};
+  t.emptyRoutes[1].transportTime={durationSeconds:8,basis:'assumed',source:'Jawny test 8 s'};
+}
 if(process.argv.includes('--editor-new'))delete draft.project.assemblyTransport;
 if(process.argv.includes('--transport-resources')){
   draft.project.equipment.push({id:'QA-BELT',name:'Przenośnik testowy UI'});
@@ -184,6 +190,14 @@ try{
   await evaluate(`localStorage.setItem('layout-studio-stations-v5',JSON.stringify({project:JSON.parse(${JSON.stringify(originalJson)}),originalJson:'',at:'2026-10-07T12:00:00Z'}));localStorage.setItem('layout-studio-domain-v6-draft-v1',${JSON.stringify(JSON.stringify(draft))})`);
   const open=async()=>{await send('Page.reload');await sleep(800);await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(b=>b.textContent.includes('Stanowiska v5')).click()`);await sleep(150);};
   await open();await sleep(1500);const legacy=await evaluate(`localStorage.getItem('layout-studio-stations-v5')`),legacy4=await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`);
+  if(process.argv.includes('--reverse-approach')){
+    const panel='Transport montażu szkicu 6',before=JSON.stringify(await saved());
+    await click('Przesuń QA-CART-2 wyżej w zestawie 1/1',panel);await click('Zapisz wymagania transportu',panel);
+    const reordered=JSON.stringify(await saved());
+    if((await saved()).assemblyTransport.routes[0].alternatives[0].equipmentIds[0]!=='QA-CART-2')throw new Error('Nie zapisano kolejności urządzeń');
+    await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==before)throw new Error('Cofnij kolejności zmienił projekt');
+    await click('Ponów dane szkicu',panel);if(JSON.stringify(await saved())!==reordered)throw new Error('Ponów kolejności zmienił projekt');
+  }
   if(process.argv.includes('--transport-resources')){
     const panel='Transport montażu szkicu 6',initial=JSON.stringify(await saved());
     const ref=value=>JSON.stringify(value),route=draft.project.stationRouting.routes[0];
@@ -304,13 +318,17 @@ try{
     if(!result.includes(process.argv.includes('--cart-run')?'ST-C / 1':'ST-Q / 1')||!result.includes('założony')||!result.includes('Osoby transportu: W'))throw new Error('Brak rzeczywistego wyniku transportu');
     if(process.argv.includes('--cart-run')) {
       const inspection=await evaluate(`document.querySelector('[aria-label="Inspekcja ruchów transportu montażu"]').textContent`);
-      if(process.argv.includes('--approach')&&(!inspection.includes('Dojazd bez ładunku')||!inspection.includes('10–15')))throw new Error('Brak dojazdu w UI');
+      if(process.argv.includes('--approach')&&!process.argv.includes('--sequential-approach')&&(!inspection.includes('Dojazd bez ładunku')||!inspection.includes('10–15')))throw new Error('Brak dojazdu w UI');
       if(process.argv.includes('--return')&&(!inspection.includes('Powrót bez ładunku')||!inspection.includes('22–27')||!inspection.includes('QA-CART: ST-A / 1')))throw new Error('Brak powrotu w UI');
-      if(process.argv.includes('--multi-cart')&&(!inspection.includes('QA-CART, QA-CART-2')||!inspection.includes('QA-CART-2: ST-A / 1')||!inspection.includes('27–32')))throw new Error('Brak atomowego zestawu i osobnych powrotów w UI');
+      if(process.argv.includes('--multi-cart')&&!process.argv.includes('--sequential-approach')&&(!inspection.includes('QA-CART, QA-CART-2')||!inspection.includes('QA-CART-2: ST-A / 1')||!inspection.includes('27–32')))throw new Error('Brak atomowego zestawu i osobnych powrotów w UI');
+      if(process.argv.includes('--sequential-approach')){
+        const expected=process.argv.includes('--reverse-approach')?['10–18','18–23']:['10–15','15–23'];
+        if(!expected.every(t=>inspection.includes(t))||!inspection.includes('23–25')||!inspection.includes('QA-CART-2: ST-C / 1')||inspection.includes('Powrót bez ładunku'))throw new Error('Brak kolejnych dojazdów zestawu w UI');
+      }
       await evaluate(`const p=document.querySelector('[aria-label="Inspekcja ruchów transportu montażu"]');p.open=true;p.scrollIntoView({block:'center'})`);
     }else await evaluate(`document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"]').scrollIntoView()`);
     mkdirSync('outputs/qa',{recursive:true});const screenshot=await send('Page.captureScreenshot',{format:'png'});
-    writeFileSync(process.argv.includes('--transport-resources')?`outputs/qa/verify_3_4j_worker_${process.argv.includes('--resource-new')?'new':process.argv.includes('--cart-run')?'cart':'branches'}.png`:process.argv.includes('--transport-editor')?`outputs/qa/verify_3_4i_worker_${process.argv.includes('--editor-new')?'new':process.argv.includes('--cart-run')?'cart':'branches'}.png`:process.argv.includes('--multi-cart')?'outputs/qa/verify_3_4h_multi_cart.png':process.argv.includes('--cart-run')?`outputs/qa/verify_3_4g_${process.argv.includes('--return')?'return':'approach'}.png`:'outputs/qa/verify_3_4f_transport.png',Buffer.from(screenshot.data,'base64'));
+    writeFileSync(process.argv.includes('--sequential-approach')?`outputs/qa/verify_3_4k_${process.argv.includes('--reverse-approach')?'reverse':'ordered'}.png`:process.argv.includes('--transport-resources')?`outputs/qa/verify_3_4j_worker_${process.argv.includes('--resource-new')?'new':process.argv.includes('--cart-run')?'cart':'branches'}.png`:process.argv.includes('--transport-editor')?`outputs/qa/verify_3_4i_worker_${process.argv.includes('--editor-new')?'new':process.argv.includes('--cart-run')?'cart':'branches'}.png`:process.argv.includes('--multi-cart')?'outputs/qa/verify_3_4h_multi_cart.png':process.argv.includes('--cart-run')?`outputs/qa/verify_3_4g_${process.argv.includes('--return')?'return':'approach'}.png`:'outputs/qa/verify_3_4f_transport.png',Buffer.from(screenshot.data,'base64'));
     await open();if(JSON.stringify(await saved())!==expected||await calculate()!==result)throw new Error('Odczyt zmienia wejście lub wynik');
     const afterLegacy=await evaluate(`localStorage.getItem('layout-studio-stations-v5')`),afterLegacy4=await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`);
     if(legacy!==afterLegacy||legacy4!==afterLegacy4){
@@ -319,7 +337,7 @@ try{
       throw new Error('Zmiana 4/5');
     }
     if((JSON.parse(await raw())).originalJson!==originalJson||errors.length)throw new Error('Zmiana źródła lub wyjątki');
-    console.log(`PASS ${process.argv.includes('--multi-cart')?'3.4h':process.argv.includes('--cart-run')?'3.4g':'3.4f'}: rzeczywisty worker transportu montażu, wynik, odczyt i izolacja danych 4/5.`);
+    console.log(`PASS ${process.argv.includes('--sequential-approach')?'3.4k':process.argv.includes('--multi-cart')?'3.4h':process.argv.includes('--cart-run')?'3.4g':'3.4f'}: rzeczywisty worker transportu montażu, wynik, odczyt i izolacja danych 4/5.`);
   }else if(process.argv.includes('--transport-contract')){
     const expected=JSON.stringify(await saved());
     await field('Odstęp przybycia szkicu 6 [s]',1);await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');

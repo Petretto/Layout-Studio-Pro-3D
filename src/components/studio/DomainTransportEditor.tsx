@@ -50,7 +50,7 @@ export function DomainTransportEditor({project,onApply,onUndo,onRedo,canUndo,can
     <h3>Wymagania transportu międzyoperacyjnego</h3>
     <p className="muted">Wskaż osoby montażowe i konkretne urządzenia dla każdej używanej trasy. Osoby mają wspólne rezerwacje z montażem.
       Harmonogram wybiera najwcześniejszy wykonalny zestaw; przy remisie obowiązuje kolejność poniżej. Czas pracy magazynierów nie jest liczony.</p>
-    <p className="muted">Podaj jawne lokalizacje, kalendarze i reguły wózków oraz dane pustych ruchów. Brak kalendarza osób transportu uzupełnisz w panelu kalendarzy zasobów. Bez urządzenia transportowego wybierz jawnie jego brak.</p>
+    <p className="muted">Podaj jawne lokalizacje, kalendarze i reguły wózków oraz dane pustych ruchów. Dojazdy kilku wózków jednego zestawu odbywają się zawsze kolejno, zgodnie z kolejnością urządzeń w zestawie. Brak kalendarza osób transportu uzupełnisz w panelu kalendarzy zasobów. Bez urządzenia transportowego wybierz jawnie jego brak.</p>
     <div className="toolbar"><button disabled={!canUndo} onClick={onUndo}>Cofnij dane szkicu</button>
       <button disabled={!canRedo} onClick={onRedo}>Ponów dane szkicu</button></div>
     <TransportResourceFields project={project} value={transport} onChange={change} confirmed={motionChoices} onConfirm={confirmMotion}/>
@@ -74,6 +74,10 @@ export function DomainTransportEditor({project,onApply,onUndo,onRedo,canUndo,can
           {!a.workerIds.length&&<label><input type="checkbox" aria-label={`${label} bez osób`}
             checked={emptyChoices[`${i}:${j}:people`]??false}
             onChange={e=>confirmEmpty(`${i}:${j}:people`,e.target.checked)}/>Jawnie bez osób transportujących</label>}
+          <p>Kolejność urządzeń zestawu: {a.equipmentIds.length?a.equipmentIds.join(' → '):'jawnie bez urządzenia'}</p>
+          <div className="toolbar">{a.equipmentIds.map((id,k)=><button key={id} disabled={k===0} onClick={()=>{
+            const equipmentIds=[...a.equipmentIds];[equipmentIds[k-1],equipmentIds[k]]=[equipmentIds[k],equipmentIds[k-1]];edit({...a,equipmentIds});
+          }}>Przesuń {id} wyżej w zestawie {i+1}/{j+1}</button>)}</div>
           <p>Urządzenia transportowe</p><div className="toolbar">{devices.map(d=><label key={d.equipmentId}><input type="checkbox"
             aria-label={`${label} urządzenie ${d.equipmentId}`} checked={a.equipmentIds.includes(d.equipmentId)} onChange={e=>edit({...a,equipmentIds:toggle(a.equipmentIds,d.equipmentId,e.target.checked)})}/>
             {project.equipment.find(e=>e.id===d.equipmentId)?.name} · {d.equipmentId}</label>)}</div>

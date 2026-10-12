@@ -257,3 +257,6 @@ Aktualizacja 3.4i (2026-10-09): szkic 6 ma formularz wymagań transportu istniej
 
 
 Aktualizacja 3.4j (2026-10-12): edytor transportu montażowego szkicu 6 obejmuje wózki/przenośniki z istniejących egzemplarzy wyposażenia, konkretne kopie, jawne kalendarze urządzeń, początkowe miejsca i polityki wózków oraz puste trasy z długością, czasem wpisanym/wyliczonym i osobną obsadą ze źródłem. Odmowy błędów chronią zapis; używane urządzenia wymagają wcześniejszego usunięcia referencji. Wspólne Cofnij/Ponów, odrzucenie, usuwanie, odczyt i worker odebrane na procesie sekwencyjnym oraz gałęziach. 169/169 testów, build i Edge poprawne. 3.4.4 wdrożone; całe 3.4 w trakcie przez brak fizycznego transportu podzespołów i dojazdów wielu wózków. Czas pracy magazynierów nie jest liczony. Postęp 34,3% / 35,4%.
+
+
+Aktualizacja 3.4k (2026-10-12): harmonogram wykonuje dojazdy kilku wózków zawsze kolejno, według kolejności urządzeń zestawu zatwierdzonej przez użytkownika. Także rozłączne osoby nie powodują równoległych dojazdów. Przewóz czeka na przyjazd wszystkich wózków i wspólne okno. UI pokazuje kolejność i pozwala ją zmienić; zapis, Cofnij/Ponów i odczyt odebrane. 173/173 testy, build i Edge poprawne. Całe 3.4 w trakcie przez brak fizycznego transportu podzespołów. Postęp 34,3% / 35,4%.

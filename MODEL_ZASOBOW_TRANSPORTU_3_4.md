@@ -145,3 +145,40 @@ Pusta trasa wymaga ID, wózka, skierowanych końców, długości w mm i źródł
 Egzemplarz używany w wymaganiach lub pustych trasach można zmienić/usunąć dopiero po usunięciu jego referencji w formularzu. Nie ma cichego usuwania zależności. Duplikat egzemplarza jest odrzucany, lecz formularz pozwala go poprawić lub usunąć. Wszystkie zmiany przechodzą przez istniejącą walidację, zapis i wspólną historię; Odrzuć przywraca zapisany kontrakt.
 
 Instrukcja: w Stanowiska v5 otwórz transport osobnego szkicu 6. Dodaj istniejący egzemplarz wyposażenia jako wózek lub przenośnik, wybierz kopie i wprowadź zmiany/przerwy. Dla wózka wybierz regułę po rozładunku i źródło. Dodaj skierowane puste trasy potrzebne do dojazdów/powrotów, uzupełnij drogę, czas i obsadę. Następnie wskaż zestawy urządzeń/osób w wymaganiach używanych tras i zapisz kontrakt. Brak sprzętu można nadal jawnie zadeklarować. Obliczenia wymagają również kalendarzy osób, ról fizycznych i przypisań korpusów. Ograniczenia 3.4.3 pozostają jawne: transport podzespołów i dojazdy zestawu wielu wózków.
+
+
+## Propozycja dojazdów zestawu 3.4k / część 3.4.3 — 2026-10-12
+
+Status: przygotowane do decyzji użytkownika; nie zmienia zapisu ani wykonania. Dzisiejszy harmonogram wykonuje zestaw wielu wózków, jeśli wszystkie znajdują się przy odbiorze, lecz odmawia dojazdu takiego zestawu. Dane pojedynczych pustych tras już zawierają kierunek, czas, własną obsadę ze źródłem i kalendarz urządzenia. Nie przesądzają, czy urządzenia tego samego zestawu mają dojeżdżać równolegle.
+
+Proponowane warianty:
+
+- A (rekomendowany): niezależne dojazdy mogą się nakładać, jeśli mają rozłączną jawną obsadę, różne egzemplarze i dostępne ciągłe okna. Wspólne osoby wymuszają kolejność rezerwacji.
+- B: dojazdy zestawu zawsze następują kolejno, według kolejności wózków w zapisanym zestawie, również przy rozłącznej obsadzie.
+
+Przykład wyłącznie syntetyczny: dwa wózki gotowe do dojazdu w 10 s, trasy 5 s i 8 s, rozłączne osoby, przewóz 2 s, brak innych ograniczeń. A daje dojazdy 10–15 i 10–18 s, potem przewóz 18–20 s. B daje 10–15 i 15–23 s, potem przewóz 23–25 s. Przy jednej wspólnej osobie również A daje sekwencję 10–15 i 15–23 s. Te liczby nie są danymi produkcyjnymi.
+
+Niezmienne kryteria obu wariantów:
+
+1. Przewóz startuje dopiero po rzeczywistym przyjeździe wszystkich wózków oraz znalezieniu wspólnego okna pełnego zestawu/osób.
+2. Dojazdy korzystają wyłącznie z jawnych skierowanych pustych tras, ich obsady i czasu. Brak drogi, obsady lub okna daje odmowę zamiast teleportacji.
+3. Dojazd nie przejmuje korpusu ani celu operacji. Każdy pusty odcinek publikuje atomowo własne osoby/urządzenie; przegrany kandydat nie publikuje rezerwacji.
+4. Po zakończeniu dojazdu wózek ma rzeczywistą lokalizację, a wybór i przewóz są przeliczane z aktualnych rejestrów, jak w istniejącym zakresie pojedynczego wózka. Nie wprowadza się ukrytej rezerwacji całego zestawu w czasie oczekiwania.
+5. Zdarzenia różnych wózków nie mogą cofać globalnego czasu CartBook ani nadpisywać nowszych rezerwacji starą migawką. Przyszłe przydziały montażu pozostają respektowane.
+6. Odbiór: dwa wózki z różną/wspólną obsadą, jeden już przy odbiorze, różne czasy i przerwy, niewykonalna alternatywa bez częściowych przydziałów, brak trasy jednego urządzenia, zgodność workera, inspekcja UI i identyczny wynik po odczycie.
+
+Pytanie o wariant A/B przekazano użytkownikowi. Do jego rozstrzygnięcia obowiązuje dotychczasowa jawna odmowa dojazdów zestawu. Transport podzespołów pozostaje osobnym zakresem; ta decyzja nie wprowadza operatorów magazynu ani zapasów/dostaw.
+
+
+### Decyzja użytkownika do 3.4k — 2026-10-12
+
+Wybrano wariant B: „Zawsze kolejno, według kolejności wózków w zapisanym zestawie”. Wariant A powyżej pozostaje wyłącznie historią rozważanej propozycji. Reguła obowiązuje także dla rozłącznych osób i nie wymaga nowego pola schematu.
+
+
+## Wykonanie kolejnych dojazdów 3.4k — 2026-10-12
+
+Po decyzji B harmonogram obsługuje dojazdy kilku wózków z zapisanej alternatywy. Pomija wózek już przy odbiorze; pozostałe przegląda w kolejności equipmentIds. Podgląd następnego dojazdu zaczyna się najwcześniej po przyjeździe poprzedniego, także przy różnych osobach. Dopiero po wirtualnym sprawdzeniu wszystkich odcinków i wspólnego przewozu można wybrać kandydata. Publikowany jest tylko pierwszy aktualny dojazd; po rzeczywistym zdarzeniu przyjazdu reszta jest ponownie planowana z aktualnych rejestrów. Przegrana alternatywa nie publikuje ruchów ani rezerwacji.
+
+Przekazywane są aktualne blokady wózków, również oczekiwanie na zadeklarowany powrót. Wózki nie są teleportowane ani przenoszone przez migawkę przyszłego czasu. Korpus i cel operacji pozostają wolne podczas dojazdów, a cel jest rezerwowany od rzeczywistego wyjazdu z korpusem. Schemat/migracja nie zmieniają się: reguła B jest zatwierdzoną regułą wykonawczą, korzystającą z istniejącej kolejności zestawu.
+
+Formularz pokazuje kolejność urządzeń zestawu. Przycisk „Przesuń … wyżej” zmienia ją przed zapisem; wspólne Cofnij/Ponów odtwarza kolejność. Po odczycie obliczenia korzystają z zapisanej kolejności. Podzespoły fizyczne pozostają do integracji w 3.4.3. Praca magazynierów i dostawy zapasu nie należą do tego przebiegu.
