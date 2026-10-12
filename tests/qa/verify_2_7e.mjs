@@ -154,6 +154,10 @@ if(process.argv.includes('--multi-cart')){
   t.emptyRoutes.push({...structuredClone(t.emptyRoutes[0]),id:'EMPTY-RETURN-2',equipmentId:'QA-CART-2'});
 }
 if(process.argv.includes('--editor-new'))delete draft.project.assemblyTransport;
+if(process.argv.includes('--transport-resources')){
+  draft.project.equipment.push({id:'QA-BELT',name:'Przenośnik testowy UI'});
+  if(process.argv.includes('--resource-new'))delete draft.project.assemblyTransport;
+}
 const userData=mkdtempSync(join(tmpdir(),'layout-body-qa-'));
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(PORT)},stdio:'ignore'});
 const browser=spawn('C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',[
@@ -180,6 +184,82 @@ try{
   await evaluate(`localStorage.setItem('layout-studio-stations-v5',JSON.stringify({project:JSON.parse(${JSON.stringify(originalJson)}),originalJson:'',at:'2026-10-07T12:00:00Z'}));localStorage.setItem('layout-studio-domain-v6-draft-v1',${JSON.stringify(JSON.stringify(draft))})`);
   const open=async()=>{await send('Page.reload');await sleep(800);await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(b=>b.textContent.includes('Stanowiska v5')).click()`);await sleep(150);};
   await open();await sleep(1500);const legacy=await evaluate(`localStorage.getItem('layout-studio-stations-v5')`),legacy4=await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`);
+  if(process.argv.includes('--transport-resources')){
+    const panel='Transport montażu szkicu 6',initial=JSON.stringify(await saved());
+    const ref=value=>JSON.stringify(value),route=draft.project.stationRouting.routes[0];
+    if(process.argv.includes('--resource-new')){
+      await click('Dodaj wózek',panel);await field('Wózek 1 egzemplarz','QA-CART');
+      await field('Wózek 1 lokalizacja początkowa',ref(route.from));await field('Wózek 1 źródło reguły','Jawna reguła UI');
+      await click('Zapisz wymagania transportu',panel);
+      if(JSON.stringify(await saved())!==initial)throw new Error('Brak polityki zmienił dane');
+      await field('Wózek 1 po rozładunku','return-to-initial');await click('Dodaj Wózek 1 zmiana',panel);
+      await field('Wózek 1 zmiana 1 początek',0);await field('Wózek 1 zmiana 1 koniec',1000);
+      await click('Dodaj wymaganie trasy',panel);await field('Transport 1 trasa',route.id);await field('Transport 1 źródło','Jawna reguła montażu UI');
+      await click('Dodaj zestaw do trasy 1',panel);await check('Transport 1 zestaw 1 osoba W');await check('Transport 1 zestaw 1 urządzenie QA-CART');
+      await click('Dodaj pustą trasę',panel);await field('Pusta trasa 1 ID','EMPTY-RETURN');await field('Pusta trasa 1 wózek','QA-CART');
+      await field('Pusta trasa 1 od',ref(route.to));await field('Pusta trasa 1 do',ref(route.from));await field('Pusta trasa 1 długość [mm]',5000);
+      await field('Pusta trasa 1 źródło długości','Jawna droga testu UI');await check('Pusta trasa 1 potwierdzenie drogi');
+      await field('Pusta trasa 1 tryb czasu','direct');await field('Pusta trasa 1 Czas transportu',5);await field('Pusta trasa 1 Czas transportu źródło','Jawny czas testu UI');
+      await check('Pusta trasa 1 osoba W');await field('Pusta trasa 1 źródło obsady','Jawna obsada testu UI');
+      await click('Zapisz wymagania transportu',panel);
+      if(!(await saved()).assemblyTransport?.emptyRoutes[0]?.workerAssignment?.workerIds.includes('W'))throw new Error('Nie utworzono pustego ruchu przez UI');
+    }
+    const before=JSON.stringify(await saved());
+    if(process.argv.includes('--cart-run')){
+      await click('Dodaj wózek',panel);await field('Wózek 2 egzemplarz','QA-CART');
+      if(await evaluate(`document.querySelector('[aria-label="Wózek 2 egzemplarz"]').disabled`))throw new Error('Duplikat blokuje korektę formularza');
+      await click('Zapisz wymagania transportu',panel);if(JSON.stringify(await saved())!==before)throw new Error('Duplikat zmienił zapis');
+      await click('Usuń Wózek 2',panel);
+
+      await field('Wózek 1 źródło reguły','Zmienione źródło UI');await click('Dodaj Wózek 1 przerwa',panel);
+      await field('Wózek 1 przerwa 1 początek',9);await field('Wózek 1 przerwa 1 koniec',8);await click('Zapisz wymagania transportu',panel);
+      if(JSON.stringify(await saved())!==before)throw new Error('Błędna przerwa zmieniła dane');
+      await field('Wózek 1 przerwa 1 koniec',10);
+      await field('Pusta trasa 1 źródło długości','Potwierdzona droga odbioru UI');await click('Zapisz wymagania transportu',panel);
+      if(JSON.stringify(await saved())!==before)throw new Error('Niepotwierdzona droga zmieniła dane');
+      await check('Pusta trasa 1 potwierdzenie drogi');
+      await field('Pusta trasa 1 tryb czasu','calculated');await field('Pusta trasa 1 Prędkość',1000);await field('Pusta trasa 1 Prędkość źródło','Test 1000 mm/s');
+      await field('Pusta trasa 1 Załadunek',0);await field('Pusta trasa 1 Załadunek źródło','Jawnie zero');
+      await field('Pusta trasa 1 Rozładunek',0);await field('Pusta trasa 1 Rozładunek źródło','Jawnie zero');
+      await check('Pusta trasa 1 osoba W');await click('Zapisz wymagania transportu',panel);
+      if(JSON.stringify(await saved())!==before)throw new Error('Brak obsady zmienił dane');
+      await check('Pusta trasa 1 bez osób');await click('Zapisz wymagania transportu',panel);
+      if((await saved()).assemblyTransport.emptyRoutes[0].workerAssignment.workerIds.length!==0)throw new Error('Jawny brak obsady nie zapisał się');
+      await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==before)throw new Error('Cofnij zasobów nie działa');
+      await click('Ponów dane szkicu',panel);await check('Pusta trasa 1 osoba W');
+      await click('Zapisz wymagania transportu',panel);
+      if(!(await evaluate(`document.querySelector('[aria-label="Wózek 1 egzemplarz"]').disabled`)))throw new Error('Używany egzemplarz można zmienić');
+    }
+    const current=JSON.stringify(await saved());await click('Dodaj przenośnik',panel);
+    await field('Przenośnik 1 egzemplarz','QA-BELT');await field('Przenośnik 1 od',ref(route.from));await field('Przenośnik 1 do',ref(route.to));
+    await click('Dodaj Przenośnik 1 zmiana',panel);await field('Przenośnik 1 zmiana 1 początek',0);await field('Przenośnik 1 zmiana 1 koniec',1000);
+    await check('Transport 1 zestaw 1 urządzenie QA-BELT');await field('Przenośnik 1 do',ref(route.from));await click('Zapisz wymagania transportu',panel);
+    if(JSON.stringify(await saved())!==current)throw new Error('Nieprawidłowy przenośnik zmienił zapis');
+    await field('Przenośnik 1 do',ref(route.to));await click('Zapisz wymagania transportu',panel);
+    const edited=JSON.stringify(await saved());if(edited===current)throw new Error('Nie zapisano przenośnika');
+    await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==current)throw new Error('Cofnij przenośnika nie działa');
+    await click('Ponów dane szkicu',panel);if(JSON.stringify(await saved())!==edited)throw new Error('Ponów przenośnika nie działa');
+    if(!await evaluate(`[...document.querySelector('[aria-label="Transport montażu szkicu 6"]').querySelectorAll('button')].find(b=>b.textContent==='Usuń Przenośnik 1').disabled`))throw new Error('Można usunąć używany przenośnik');
+    await check('Transport 1 zestaw 1 urządzenie QA-BELT');await click('Usuń Przenośnik 1',panel);
+    if(!process.argv.includes('--cart-run'))await check('Transport 1 zestaw 1 bez urządzeń');
+    await click('Zapisz wymagania transportu',panel);if((await saved()).assemblyTransport.conveyors.length)throw new Error('Nie usunięto zwolnionego przenośnika');
+    await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==edited)throw new Error('Nie odtworzono urządzenia i zestawu');
+    if(process.argv.includes('--cart-run')){
+      await click('Usuń Pusta trasa 1',panel);await click('Zapisz wymagania transportu',panel);
+      if((await saved()).assemblyTransport.emptyRoutes.length!==0)throw new Error('Nie usunięto pustej trasy');
+      await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==edited)throw new Error('Historia pustych tras zmieniła dane');
+      await field('Wózek 1 źródło reguły','Niezapisana zmiana zasobu');await click('Odrzuć zmiany transportu',panel);
+      if(await evaluate(`document.querySelector('[aria-label="Wózek 1 źródło reguły"]').value`)!==(await saved()).assemblyTransport.carts[0].source)throw new Error('Nie odrzucono formularza zasobów');
+      await evaluate(`document.querySelector('[aria-label="Pusta trasa 1 ID"]').closest('fieldset').scrollIntoView()`);
+      mkdirSync('outputs/qa',{recursive:true});const emptyShot=await send('Page.captureScreenshot',{format:'png'});
+      writeFileSync(`outputs/qa/verify_3_4j_empty_${process.argv.includes('--resource-new')?'new':'cart'}.png`,Buffer.from(emptyShot.data,'base64'));
+    }
+    await evaluate(`document.querySelector('[aria-label="Transport montażu szkicu 6"]').scrollIntoView()`);
+    mkdirSync('outputs/qa',{recursive:true});const shot=await send('Page.captureScreenshot',{format:'png'});
+    writeFileSync(`outputs/qa/verify_3_4j_${process.argv.includes('--resource-new')?'new':process.argv.includes('--cart-run')?'cart':'branches'}.png`,Buffer.from(shot.data,'base64'));
+    await open();if(JSON.stringify(await saved())!==edited)throw new Error('Odczyt zmienia zasoby');
+    console.log('PASS 3.4j: urządzenia, kalendarze, puste ruchy, błędy, historia i odczyt.');
+  }
   if(process.argv.includes('--transport-editor')){
     const panel='Transport montażu szkicu 6';
     if(process.argv.includes('--editor-new')){
@@ -230,9 +310,14 @@ try{
       await evaluate(`const p=document.querySelector('[aria-label="Inspekcja ruchów transportu montażu"]');p.open=true;p.scrollIntoView({block:'center'})`);
     }else await evaluate(`document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"]').scrollIntoView()`);
     mkdirSync('outputs/qa',{recursive:true});const screenshot=await send('Page.captureScreenshot',{format:'png'});
-    writeFileSync(process.argv.includes('--transport-editor')?`outputs/qa/verify_3_4i_worker_${process.argv.includes('--editor-new')?'new':process.argv.includes('--cart-run')?'cart':'branches'}.png`:process.argv.includes('--multi-cart')?'outputs/qa/verify_3_4h_multi_cart.png':process.argv.includes('--cart-run')?`outputs/qa/verify_3_4g_${process.argv.includes('--return')?'return':'approach'}.png`:'outputs/qa/verify_3_4f_transport.png',Buffer.from(screenshot.data,'base64'));
+    writeFileSync(process.argv.includes('--transport-resources')?`outputs/qa/verify_3_4j_worker_${process.argv.includes('--resource-new')?'new':process.argv.includes('--cart-run')?'cart':'branches'}.png`:process.argv.includes('--transport-editor')?`outputs/qa/verify_3_4i_worker_${process.argv.includes('--editor-new')?'new':process.argv.includes('--cart-run')?'cart':'branches'}.png`:process.argv.includes('--multi-cart')?'outputs/qa/verify_3_4h_multi_cart.png':process.argv.includes('--cart-run')?`outputs/qa/verify_3_4g_${process.argv.includes('--return')?'return':'approach'}.png`:'outputs/qa/verify_3_4f_transport.png',Buffer.from(screenshot.data,'base64'));
     await open();if(JSON.stringify(await saved())!==expected||await calculate()!==result)throw new Error('Odczyt zmienia wejście lub wynik');
-    if(legacy!==await evaluate(`localStorage.getItem('layout-studio-stations-v5')`)||legacy4!==await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`))throw new Error('Zmiana 4/5');
+    const afterLegacy=await evaluate(`localStorage.getItem('layout-studio-stations-v5')`),afterLegacy4=await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`);
+    if(legacy!==afterLegacy||legacy4!==afterLegacy4){
+      const keys=(a,b)=>Object.keys({...JSON.parse(a),...JSON.parse(b)}).filter(k=>JSON.stringify(JSON.parse(a)[k])!==JSON.stringify(JSON.parse(b)[k]));
+      console.log('Zmiana 4/5 — pola:',JSON.stringify({v5:keys(legacy,afterLegacy),v4:keys(legacy4,afterLegacy4)}));
+      throw new Error('Zmiana 4/5');
+    }
     if((JSON.parse(await raw())).originalJson!==originalJson||errors.length)throw new Error('Zmiana źródła lub wyjątki');
     console.log(`PASS ${process.argv.includes('--multi-cart')?'3.4h':process.argv.includes('--cart-run')?'3.4g':'3.4f'}: rzeczywisty worker transportu montażu, wynik, odczyt i izolacja danych 4/5.`);
   }else if(process.argv.includes('--transport-contract')){

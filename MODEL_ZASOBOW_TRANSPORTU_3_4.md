@@ -134,3 +134,14 @@ W panelu Stanowiska v5, dla osobnego szkicu 6, formularz wymagań transportu wyb
 Formularz zachowuje deklaracje wózków, przenośników i pustych tras. Zapis przechodzi przez editDomainAssemblyTransport i wspólny zapis/historię szkicu; Cofnij/Ponów odświeża formularz. Odrzuć zmiany przywraca zapisane dane. Schemat i migracja bez zmian. Wymagania używanych tras muszą być kompletne przed obliczeniem; usunięcie wymagania nie oznacza automatycznie transportu bez zasobów.
 
 Instrukcja: dodaj wymaganie, wybierz trasę i podaj źródło, dodaj zestaw, zaznacz osoby i urządzenia albo jawne braki, następnie zapisz wymagania. Kolejność zestawów jest kolejnością rozstrzygania remisów. Wszystkie używane trasy wymagają własnych reguł. Deklaracje urządzeń, ich kalendarzy, początkowych lokalizacji, polityk oraz pustych tras pozostają do następnego zakresu edytora 3.4.4.
+
+
+## Pełny formularz kontraktu 3.4j / 3.4.4 — 2026-10-12
+
+Edytor transportu szkicu 6 obejmuje teraz istniejące egzemplarze wózków/przenośników, konkretne kopie stanowisk, jawne kalendarze urządzeń, początkowe lokalizacje i polityki wózków oraz puste trasy. Polityka nowego wózka nie ma domyślnej wartości; należy ją wybrać i podać źródło. Nowy kalendarz zaczyna od pustych list (brak dostępnego czasu), bez wymyślonych zmian. Użytkownik podaje przedziały i ich pochodzenie. Osoby transportu pozostają wspólne z montażem i korzystają z panelu kalendarzy osób.
+
+Pusta trasa wymaga ID, wózka, skierowanych końców, długości w mm i źródła. Zmiana drogi/źródła cofa jej potwierdzenie. Czas korzysta z TransportTimingEditor: wpisany albo wyliczony, ze źródłami i pochodzeniem parametrów. Obsada pustego ruchu jest osobna, ma źródło i wymaga zaznaczenia osób albo jawnego braku osób. Starszy zapis bez workerAssignment nadal jest odczytywany; przed zapisem w tym formularzu należy uzupełnić obsadę pustych tras. Parser/migracja nie zmieniły się.
+
+Egzemplarz używany w wymaganiach lub pustych trasach można zmienić/usunąć dopiero po usunięciu jego referencji w formularzu. Nie ma cichego usuwania zależności. Duplikat egzemplarza jest odrzucany, lecz formularz pozwala go poprawić lub usunąć. Wszystkie zmiany przechodzą przez istniejącą walidację, zapis i wspólną historię; Odrzuć przywraca zapisany kontrakt.
+
+Instrukcja: w Stanowiska v5 otwórz transport osobnego szkicu 6. Dodaj istniejący egzemplarz wyposażenia jako wózek lub przenośnik, wybierz kopie i wprowadź zmiany/przerwy. Dla wózka wybierz regułę po rozładunku i źródło. Dodaj skierowane puste trasy potrzebne do dojazdów/powrotów, uzupełnij drogę, czas i obsadę. Następnie wskaż zestawy urządzeń/osób w wymaganiach używanych tras i zapisz kontrakt. Brak sprzętu można nadal jawnie zadeklarować. Obliczenia wymagają również kalendarzy osób, ról fizycznych i przypisań korpusów. Ograniczenia 3.4.3 pozostają jawne: transport podzespołów i dojazdy zestawu wielu wózków.

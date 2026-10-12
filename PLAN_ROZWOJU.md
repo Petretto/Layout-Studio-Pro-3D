@@ -1,7 +1,7 @@
 # Plan rozwoju i rejestr postępu aplikacji
 
 Data utworzenia: 2026-09-29  
-Ostatnia aktualizacja: 2026-10-09
+Ostatnia aktualizacja: 2026-10-12
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
 Przykładowy przypadek testowy: niepełny proces Eko; odbiór uniwersalności wymaga także niezależnych procesów.
 
@@ -44,7 +44,7 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 3.3b: cały plan 23/67 = **34,3%**; pierwsze wydanie 23/65 = **35,4%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po 3.4j: cały plan 23/67 = **34,3%**; pierwsze wydanie 23/65 = **35,4%**. Weryfikacja: `node scripts/plan_progress.mjs`.
 
 Stan historyczny po 3.1c: cały plan 21/67 = **31,3%**. Pierwsze wydanie (etapy 1–7) 21/65 = **32,3%**. Etap 8 dotyczy kolejnej wersji. Obliczenia: `node scripts/plan_progress.mjs`; źródłem są tabele statusów tego pliku. Po 3.2a ukończony główny licznik pozostaje taki sam, bo 3.2 nie jest jeszcze odebrane.
 
@@ -76,6 +76,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+3.4j / 3.4.4 (2026-10-12): wdrożone — pełny edytor kontraktu transportu montażowego: wymagania tras, wózki/przenośniki, jawne lokalizacje/polityki, kalendarze urządzeń i puste trasy z czasem/obsadą. Backup `backup/v0.4.0_przed_3_4j_20261012` (257 plików, SHA256 bez rozbieżności). 169/169 testów, build/typecheck i Edge: nowy kontrakt, istniejący wózek, przenośnik na gałęziach; odmowy, historia, odrzucenie, usuwanie i odczyt z identycznym wynikiem workera PASS. Schemat i algorytm harmonogramu bez zmian. Całe 3.4 nadal w trakcie: fizyczny transport podzespołów i dojazdy wielu wózków w 3.4.3. Postęp 34,3% / 35,4%.
 
 3.4i / część 3.4.4 (2026-10-09): zakończony zakres — edytor wymagań tras, źródeł i jawnych zestawów osób/urządzeń, wspólna historia i odczyt. Backup `backup/v0.4.0_przed_3_4i_20261009` (256 plików, SHA256 bez rozbieżności). 169/169 testów, build/typecheck i Edge: proces sekwencyjny, gałęzie i utworzenie nowego kontraktu; błędy nie zmieniają zapisu, Cofnij/Ponów, odrzucenie i usuwanie, ponowny odczyt i wynik workera PASS. Całe 3.4.4 w trakcie: formularze urządzeń/kalendarzy/pustych tras pozostają do kolejnego zakresu. Postęp 34,3% / 35,4%.
 
@@ -370,7 +372,7 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 3.4.1 | Zinwentaryzować aktualne rezerwacje, przygotować propozycję kontraktu zasobów, warianty domenowe i kryteria odbioru. | wdrożone |
 | 3.4.2 | Po decyzji wdrożyć kontrakt zapisu, referencje zasobów i kalendarze z ochroną starych szkiców. | wdrożone |
 | 3.4.3 | Zintegrować atomowe rezerwacje transportu ze wspólnymi osobami, oczekiwaniem i wynikiem workera. | w trakcie |
-| 3.4.4 | Dodać edytor i inspekcję; odebrać historię, zapis/odczyt i dwa niezależne procesy w UI. | w trakcie |
+| 3.4.4 | Dodać edytor i inspekcję; odebrać historię, zapis/odczyt i dwa niezależne procesy w UI. | wdrożone |
 | 3.5 | Wprowadzić bufory o ograniczonej pojemności oraz jednoznaczne reguły blokowania i zwalniania stanowiska. Dla zaopatrzenia montażu uwzględniać zapas, zużycie, ilość i częstotliwość dostaw materiału potrzebną do płynnej produkcji, bez czasu/rezerwacji operatorów magazynu. | nierozpoczęte |
 | 3.6 | Pokazywać stany pracy, oczekiwania na materiał/operatora, blokady wyjścia i transportu wraz z czasami ich trwania. | nierozpoczęte |
 | 3.7 | Wykrywać zatrzymanie lub zakleszczenie procesu i przedstawiać jego przyczynę zamiast pozornego zakończenia symulacji. | nierozpoczęte |
@@ -614,3 +616,5 @@ Ten dokument jest głównym rejestrem przyszłych prac. Historyczne raporty pozo
 | 2026-10-09 | 3.4.3 | kontynuacja — 3.4h | Atomowy zestaw wielu wózków przy miejscu odbioru, wspólne kalendarze, osobne powroty; 169/169 testów, build i Edge. Backup 256 zgodnych SHA256. Całość nadal w trakcie; raport 3.4. Postęp 34,3% / 35,4%. |
 
 | 2026-10-09 | 3.4.4 | nierozpoczęte → w trakcie; pakiet 3.4i zakończony | Edytor wymagań tras i jawnych zestawów osób/urządzeń; historia, odmowy, zapis/odczyt i worker na dwóch procesach w Edge. 169/169 testów, build, backup 256 zgodnych SHA256. Formularze urządzeń i pustych tras pozostają; raport 3.4. Postęp 34,3% / 35,4%. |
+
+| 2026-10-12 | 3.4.4 | w trakcie → wdrożone; pakiet 3.4j | Formularze wózków/przenośników, lokalizacji/polityk, kalendarzy i pustych tras z czasem oraz jawną obsadą. 169/169 testów, build, Edge na procesie sekwencyjnym i gałęziach, historia/odczyt/worker. Backup 257 zgodnych SHA256; raport 3.4. Całe 3.4 nadal w trakcie; postęp 34,3% / 35,4%. |

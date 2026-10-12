@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {TransportResourceFields} from './TransportResourceFields';
 import type {DomainProjectV6} from '../../core/domainProject';
 import {validateAssemblyTransport,type AssemblyTransport} from '../../core/assemblyTransport';
 
@@ -12,6 +13,10 @@ export function DomainTransportEditor({project,onApply,onUndo,onRedo,canUndo,can
   const initialChoices=()=>Object.fromEntries((project.assemblyTransport?.routes??[]).flatMap((r,i)=>r.alternatives.flatMap((a,j)=>[
     [`${i}:${j}:people`,a.workerIds.length===0],[`${i}:${j}:devices`,a.equipmentIds.length===0]])));
   const [emptyChoices,setEmptyChoices]=useState<Record<string,boolean>>(initialChoices);
+  const initialMotionChoices=()=>Object.fromEntries((project.assemblyTransport?.emptyRoutes??[]).flatMap((r,i)=>[
+    [`${i}:geometry`,true],[`${i}:people`,r.workerAssignment?.workerIds.length===0]]));
+  const [motionChoices,setMotionChoices]=useState<Record<string,boolean>>(initialMotionChoices);
+  const confirmMotion=(key:string,value:boolean)=>{setMotionChoices(current=>({...current,[key]:value}));setDirty(true);setError('');};
   const change=(next:AssemblyTransport)=>{setTransport(next);setDirty(true);setError('');};
   const changeRule=(index:number,rule:AssemblyTransport['routes'][number])=>change({...transport,
     routes:transport.routes.map((r,i)=>i===index?rule:r)});
@@ -32,6 +37,11 @@ export function DomainTransportEditor({project,onApply,onUndo,onRedo,canUndo,can
         if(!a.workerIds.length&&!emptyChoices[`${i}:${j}:people`])throw new Error(`Trasa ${i+1}, zestaw ${j+1}: potwierdź brak osób.`);
         if(!a.equipmentIds.length&&!emptyChoices[`${i}:${j}:devices`])throw new Error(`Trasa ${i+1}, zestaw ${j+1}: potwierdź brak urządzeń.`);
       }));
+      transport.emptyRoutes.forEach((r,i)=>{
+        if(!motionChoices[`${i}:geometry`])throw new Error(`Pusta trasa ${i+1}: potwierdź drogę.`);
+        if(!r.workerAssignment)throw new Error(`Pusta trasa ${i+1}: podaj jawną obsadę i jej źródło.`);
+        if(!r.workerAssignment.workerIds.length&&!motionChoices[`${i}:people`])throw new Error(`Pusta trasa ${i+1}: potwierdź brak osób.`);
+      });
       if(onApply(validateAssemblyTransport(project,transport)))setDirty(false);
     }catch(failure){setError((failure as Error).message);}
   };
@@ -40,10 +50,10 @@ export function DomainTransportEditor({project,onApply,onUndo,onRedo,canUndo,can
     <h3>Wymagania transportu międzyoperacyjnego</h3>
     <p className="muted">Wskaż osoby montażowe i konkretne urządzenia dla każdej używanej trasy. Osoby mają wspólne rezerwacje z montażem.
       Harmonogram wybiera najwcześniejszy wykonalny zestaw; przy remisie obowiązuje kolejność poniżej. Czas pracy magazynierów nie jest liczony.</p>
-    <p className="muted">Ten formularz edytuje wymagania tras. Deklaracje wózków, przenośników, kalendarzy i pustych tras pozostają zachowane;
-      ich formularze są jeszcze w przygotowaniu. Bez zadeklarowanych urządzeń można jawnie wybrać transport bez urządzenia.</p>
+    <p className="muted">Podaj jawne lokalizacje, kalendarze i reguły wózków oraz dane pustych ruchów. Brak kalendarza osób transportu uzupełnisz w panelu kalendarzy zasobów. Bez urządzenia transportowego wybierz jawnie jego brak.</p>
     <div className="toolbar"><button disabled={!canUndo} onClick={onUndo}>Cofnij dane szkicu</button>
       <button disabled={!canRedo} onClick={onRedo}>Ponów dane szkicu</button></div>
+    <TransportResourceFields project={project} value={transport} onChange={change} confirmed={motionChoices} onConfirm={confirmMotion}/>
     {transport.routes.map((rule,i)=><fieldset key={i}><legend>Wymaganie trasy {i+1}</legend>
       <div className="form-grid"><label className="field">Trasa<select aria-label={`Transport ${i+1} trasa`} value={rule.stationRouteId}
         onChange={e=>changeRule(i,{...rule,stationRouteId:e.target.value})}><option value="">Wybierz trasę</option>
@@ -79,6 +89,6 @@ export function DomainTransportEditor({project,onApply,onUndo,onRedo,canUndo,can
     {error&&<p role="alert">{error}</p>}
     <div className="toolbar"><button onClick={()=>change({...transport,routes:[...transport.routes,{stationRouteId:'',source:'',alternatives:[]}]})}>Dodaj wymaganie trasy</button>
       <button disabled={!dirty} onClick={save}>Zapisz wymagania transportu</button>
-      <button disabled={!dirty} onClick={()=>{setTransport(structuredClone(project.assemblyTransport??{scope:'assembly-only',carts:[],conveyors:[],emptyRoutes:[],routes:[]}));setEmptyChoices(initialChoices());setDirty(false);setError('');}}>Odrzuć zmiany transportu</button></div>
+      <button disabled={!dirty} onClick={()=>{setTransport(structuredClone(project.assemblyTransport??{scope:'assembly-only',carts:[],conveyors:[],emptyRoutes:[],routes:[]}));setEmptyChoices(initialChoices());setMotionChoices(initialMotionChoices());setDirty(false);setError('');}}>Odrzuć zmiany transportu</button></div>
   </div>;
 }
