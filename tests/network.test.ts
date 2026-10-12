@@ -1,3 +1,5 @@
+import {editDomainSubassemblyFlow} from '../src/core/domainSubassemblyEditing';
+import type {SubassemblyFlow} from '../src/core/subassemblyFlow';
 import {reserveAssemblyMovement,finishAssemblyMovement} from '../src/core/assemblyMovement';
 import {editDomainAssemblyTransport} from '../src/core/domainTransportEditing';
 import {validateAssemblyTransport,type AssemblyTransport} from '../src/core/assemblyTransport';
@@ -3164,4 +3166,60 @@ test('3.4l: JIT zachowuje kalendarz montażu i odrzuca nieznany tryb',()=>{
   const result=scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'});
   assert.equal(result.runs[1].startSeconds,15);assert.equal(result.jobs[0].finish,25);
   assert.throws(()=>scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'other' as 'configured'}),/Nieznany tryb/);
+});
+
+
+function subassemblyFlowFixture(){
+  const {project}=assemblyMovementFixture();
+  const producer=project.operations[0].id,consumer=project.operations[1].id;
+  project.operations[0].physicalRole={kind:'subassembly-preparation',subassemblyIds:['SUB-FLOW']};
+  project.subassemblies=[{id:'SUB-FLOW',name:'Partia syntetyczna',producerOperationId:producer,consumerOperationIds:[consumer]}];
+  const flow:SubassemblyFlow={availability:'producer-finish',consumption:'consumer-start',lots:[{
+    id:'LOT-1',subassemblyId:'SUB-FLOW',quantity:2,unit:'szt.',producer:{job:1,operationId:producer},
+    consumer:{job:1,operationId:consumer},consumptionQuantity:1,source:'Jawny scenariusz testowy, nie pomiar produkcji'}]};
+  return {project,flow};
+}
+test('3.4m1: partie zapisują jawne ilości, wykonania i regułę A, bez mutacji projektu',()=>{
+  const {project,flow}=subassemblyFlowFixture(),before=JSON.stringify(project);
+  const edited=editDomainSubassemblyFlow(project,flow);
+  assert.equal(JSON.stringify(project),before);assert.deepEqual(parseDomainProjectV6(JSON.stringify(edited)).subassemblyFlow,flow);
+  assert.deepEqual(editDomainSubassemblyFlow(edited,undefined),project);
+  assert.throws(()=>scheduleWorkerRun(edited,1,1),/3.4m2/);
+  const jit=scheduleWorkerRun(edited,1,1,undefined,undefined,{transportMode:'just-in-time'});
+  assert.equal(jit.transportMode,'just-in-time');assert.equal(jit.jobs[0].finish,20);
+  const replies:ScheduleReply[]=[];executeScheduleRequest({project:edited,batch:1,arrivalIntervalSeconds:1},r=>replies.push(r));
+  assert.ok(replies.some(r=>r.kind==='error'&&r.message.includes('3.4m2')));
+});
+test('3.4m1: parser odrzuca błędne referencje, ilości i niejawne reguły',()=>{
+  const {project,flow}=subassemblyFlowFixture();
+  const bad=(change:(value:SubassemblyFlow)=>void)=>{const value=structuredClone(flow);change(value);assert.throws(()=>editDomainSubassemblyFlow(project,value));};
+  bad(f=>f.lots.push(structuredClone(f.lots[0])));bad(f=>f.lots[0].quantity=0);bad(f=>f.lots[0].consumptionQuantity=3);
+  bad(f=>f.lots[0].unit=' ');bad(f=>f.lots[0].source='');bad(f=>f.lots[0].producer.job=0);
+  bad(f=>f.lots[0].consumer.job=1.5);bad(f=>f.lots[0].producer.operationId='UNKNOWN');
+  bad(f=>f.lots[0].subassemblyId='UNKNOWN');bad(f=>f.lots[0].consumer.operationId=f.lots[0].producer.operationId);
+  bad(f=>f.lots=[]);bad(f=>(f as unknown as {consumption:string}).consumption='during-work');
+  bad(f=>(f.lots[0] as unknown as {extra:number}).extra=1);
+  const edited=editDomainSubassemblyFlow(project,flow),broken=structuredClone(edited);broken.subassemblies=[];
+  assert.throws(()=>parseDomainProjectV6(JSON.stringify(broken)));
+  const missingRole=structuredClone(project);delete missingRole.operations[0].physicalRole;
+  assert.throws(()=>editDomainSubassemblyFlow(missingRole,flow),/przygotowania/);
+});
+test('3.4m1: odczyt, cofnięcie i odmowa zapisu chronią dokładne źródła 4/5',()=>{
+  const {project,flow}=subassemblyFlowFixture(),edited=editDomainSubassemblyFlow(project,flow);
+  for(const originalJson of [JSON.stringify(derive(parseProject(JSON.stringify(base))).project),readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8')]){
+    const storage=new DraftStorage(),initial=saveDomainDraft(storage,{project,originalJson},null);
+    const written=saveDomainDraft(storage,{project:edited,originalJson},initial.raw),reopened=readDomainDraft(storage);
+    assert.equal(reopened.status,'valid');if(reopened.status==='valid'){
+      assert.equal(reopened.saved.originalJson,originalJson);assert.deepEqual(reopened.saved.project.subassemblyFlow,flow);
+    }
+    const invalid=structuredClone(edited);invalid.subassemblyFlow!.lots[0].consumptionQuantity=99;
+    assert.throws(()=>saveDomainDraft(storage,{project:invalid,originalJson},written.raw));
+    assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),written.raw);
+    const undone=saveDomainDraft(storage,{project,originalJson},written.raw);
+    const old=readDomainDraft(storage);assert.equal(old.status,'valid');if(old.status==='valid')assert.equal(old.saved.project.subassemblyFlow,undefined);
+    saveDomainDraft(storage,{project:edited,originalJson},undone.raw);
+    const corrupt=JSON.parse(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY)!);corrupt.project.subassemblyFlow.lots[0].unit='';
+    const raw=JSON.stringify(corrupt);storage.setItem(DOMAIN_DRAFT_STORAGE_KEY,raw);
+    assert.equal(readDomainDraft(storage).status,'corrupt');assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),raw);
+  }
 });

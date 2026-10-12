@@ -144,6 +144,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
   if(options.transportMode!==undefined&&options.transportMode!=='configured'&&options.transportMode!=='just-in-time')throw new Error('Nieznany tryb transportu symulacji.');
   const justInTime=options.transportMode==='just-in-time';
   const parsed = parseDomainProjectV6(JSON.stringify(project));
+  if (!justInTime && parsed.subassemblyFlow) throw new Error('3.4m2: fizyczny przepływ partii podzespołów oczekuje na integrację; można jawnie włączyć symulację just in time.');
   const {assemblyTransport:_transport,bodyRunInput:_bodyInput,...processOnly}=parsed;
   // A transient logical process view; saved transport declarations and physical locations remain untouched.
   const checked: DomainProjectV6 = justInTime ? processOnly : parsed;

@@ -165,6 +165,12 @@ if(process.argv.includes('--transport-resources')){
   if(process.argv.includes('--resource-new'))delete draft.project.assemblyTransport;
 }
 if(process.argv.includes('--jit-unconfigured')){delete draft.project.assemblyTransport;delete draft.project.bodyRunInput;draft.project.stationRouting.routes=[];}
+if(process.argv.includes('--subassembly-contract')){
+  const project=draft.project,producer=project.operations[0].id,consumer=project.operations[1].id;
+  project.operations[0].physicalRole={kind:'subassembly-preparation',subassemblyIds:['QA-SUB']};
+  project.subassemblies=[{id:'QA-SUB',name:'Podzespół testowy',producerOperationId:producer,consumerOperationIds:[consumer]}];
+  project.subassemblyFlow={availability:'producer-finish',consumption:'consumer-start',lots:[{id:'QA-LOT',subassemblyId:'QA-SUB',quantity:1,unit:'szt.',producer:{job:1,operationId:producer},consumer:{job:1,operationId:consumer},consumptionQuantity:1,source:'Syntetyczny odbiór kontraktu 3.4m1'}]};
+}
 const userData=mkdtempSync(join(tmpdir(),'layout-body-qa-'));
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(PORT)},stdio:'ignore'});
 const browser=spawn('C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',[
@@ -318,7 +324,8 @@ try{
     };
     if(await enabled())throw new Error('JIT domyślnie włączony');
     const normal=await calculate();
-    if(process.argv.includes('--jit-unconfigured')?normal!==null:normal===null)throw new Error('Błędny tryb domyślny');
+    if((process.argv.includes('--jit-unconfigured')||process.argv.includes('--subassembly-contract'))?normal!==null:normal===null)throw new Error('Błędny tryb domyślny');
+    if(process.argv.includes('--subassembly-contract')&&!await evaluate(`document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"]').textContent.includes('3.4m2')`))throw new Error('Brak odmowy niepodłączonych partii');
     await check(label);if(await evaluate(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`))throw new Error('Stary wynik nie wyczyszczony');
     const jit=await calculate();
     if(!jit?.includes('JUST IN TIME')||jit.includes('Osoby transportu:')||jit.includes('Transport korpusu:'))throw new Error('Niepełne pominięcie transportu');
@@ -326,12 +333,12 @@ try{
     await check(label);if(await calculate()!==normal)throw new Error('Wyłączenie JIT nie przywraca konfiguracji');
     await check(label);await calculate();await evaluate(`document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"]').scrollIntoView()`);
     mkdirSync('outputs/qa',{recursive:true});const shot=await send('Page.captureScreenshot',{format:'png'});
-    writeFileSync(`outputs/qa/verify_3_4l_${process.argv.includes('--jit-unconfigured')?'unconfigured':process.argv.includes('--cart-run')?'configured':'branches'}.png`,Buffer.from(shot.data,'base64'));
+    writeFileSync(`outputs/qa/${process.argv.includes('--subassembly-contract')?'verify_3_4m1':'verify_3_4l'}_${process.argv.includes('--jit-unconfigured')?'unconfigured':process.argv.includes('--cart-run')?'configured':'branches'}.png`,Buffer.from(shot.data,'base64'));
     await open();if(await enabled())throw new Error('JIT utrwalony w projekcie');await check(label);
     if(await calculate()!==jit||JSON.stringify(await saved())!==expected)throw new Error('Zmiana wyniku lub zapisu');
     if(legacy!==await evaluate(`localStorage.getItem('layout-studio-stations-v5')`)||legacy4!==await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`))throw new Error('Zmiana 4/5');
     if((JSON.parse(await raw())).originalJson!==originalJson||errors.length)throw new Error('Zmiana źródła lub wyjątki');
-    console.log('PASS 3.4l: JIT opt-in, worker, czas procesu, powrót do konfiguracji, reload i izolacja 4/5.');
+    console.log(`PASS ${process.argv.includes('--subassembly-contract')?'3.4m1':'3.4l'}: JIT opt-in, worker, czas procesu, powrót do konfiguracji, reload i izolacja 4/5.`);
   }else if(process.argv.includes('--transport-run')||process.argv.includes('--cart-run')){
     const expected=JSON.stringify(await saved());
     const calculate=async()=>{

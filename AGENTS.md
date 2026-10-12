@@ -113,3 +113,7 @@ Do not invoke every skill for every task.
 - Provide an explicit opt-in just-in-time mode for simulation without configuring transport. Default OFF.
 - Skip transport durations, routes, reservations and physical body-location tracking in this mode; preserve operation dependencies and assembly resource/calendar constraints.
 - Label results as process-only with assumed material availability. Keep saved transport configuration unchanged.
+
+## Subassembly flow — user decision 2026-10-12
+- Approved rule A: the whole explicitly declared subassembly lot becomes available at producer completion; the assigned quantity is consumed atomically at recipient start.
+- Quantities, units and producer/recipient execution assignments remain explicit; do not derive stock or quantities from BOM.

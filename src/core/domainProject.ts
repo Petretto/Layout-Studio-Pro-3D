@@ -11,6 +11,7 @@ import {validateBodyRunInput, type BodyRunInput} from './bodyRunInput';
 import {validatePhysicalConcurrency, type PhysicalConcurrency} from './physicalConcurrency';
 import {validateMaterialNetwork, type MaterialNetworkV6} from './materialNetwork';
 import {validateAssemblyTransport, type AssemblyTransport} from './assemblyTransport';
+import {validateSubassemblyFlow, type SubassemblyFlow} from './subassemblyFlow';
 
 export type DomainTimeBasis = 'measured' | 'assumed';
 export interface DomainTimeInterval {startSeconds: number; endSeconds: number; basis: DomainTimeBasis}
@@ -60,6 +61,7 @@ export interface DomainProjectV6 extends Omit<StationProjectV5,
   physicalConcurrency?: PhysicalConcurrency;
   materialNetwork?: MaterialNetworkV6;
   assemblyTransport?: AssemblyTransport;
+  subassemblyFlow?: SubassemblyFlow;
 }
 
 export interface PreparedDomainMigration {
@@ -274,6 +276,7 @@ export function parseDomainProjectV6(text: string): DomainProjectV6 {
   if (has(raw, 'physicalConcurrency')) validatePhysicalConcurrency(raw as unknown as DomainProjectV6, raw.physicalConcurrency);
   if (has(raw, 'materialNetwork')) validateMaterialNetwork(raw as unknown as DomainProjectV6, raw.materialNetwork);
   if (has(raw, 'assemblyTransport')) validateAssemblyTransport(raw as unknown as DomainProjectV6, raw.assemblyTransport);
+  if (has(raw, 'subassemblyFlow')) validateSubassemblyFlow(raw as unknown as DomainProjectV6, raw.subassemblyFlow);
   return raw as unknown as DomainProjectV6;
 }
 
@@ -282,8 +285,8 @@ export function prepareDomainMigration(preview: DomainMigrationPreview): Prepare
   const checked = verifyDomainMigrationPreview(preview);
   const {schemaVersion: _version, processSteps, workstationSettings, stations, stationRouting: _unsupportedRouting,
     bodyRunInput: _unsupportedBodies, physicalConcurrency: _unsupportedConcurrency, materialNetwork: _unsupportedMaterialNetwork,
-    assemblyTransport: _unsupportedAssemblyTransport, ...source} =
-    checked.stationProject as StationProjectV5 & {stationRouting?: unknown; bodyRunInput?: unknown; physicalConcurrency?: unknown; materialNetwork?: unknown; assemblyTransport?: unknown};
+    assemblyTransport: _unsupportedAssemblyTransport, subassemblyFlow: _unsupportedSubassemblyFlow, ...source} =
+    checked.stationProject as StationProjectV5 & {stationRouting?: unknown; bodyRunInput?: unknown; physicalConcurrency?: unknown; materialNetwork?: unknown; assemblyTransport?: unknown; subassemblyFlow?: unknown};
   const operations = processSteps.map(step => {
     const {assignedWorkstationId: _assignment, timeProfile: _unsupportedProfile,
       staffing: _unsupportedStaffing, physicalRole: _unsupportedRole, ...operation} =
