@@ -3268,14 +3268,14 @@ test('3.4m2: kalendarz przesuwa przewóz i pobranie, bez rezerwowania korpusu po
   const withApproach=scheduleWorkerRun(approach,1,1,approach.bodyRunInput);
   assert.deepEqual(withApproach.transportMovements!.map(m=>[m.purpose,m.startSeconds,m.endSeconds]),[['approach',10,15],['transfer',15,17]]);
 });
-test('3.4m2: brak ilości dla wykonania, brak drogi i nieobsługiwany wybór kopii dają odmowę',()=>{
+test('3.4m2: brak ilości i drogi dają odmowę, nieosiągalna alternatywa nie psuje wykonalnej kopii',()=>{
   const project=subassemblyScheduleFixture();assert.throws(()=>scheduleWorkerRun(project,1,2),/brak jawnej partii/);
   project.subassemblyFlow!.lots[0].producer.job=2;assert.throws(()=>scheduleWorkerRun(project,1,1,project.bodyRunInput),/poza uruchomioną/);
   const noRoute=subassemblyScheduleFixture();delete noRoute.assemblyTransport;noRoute.stationRouting!.routes=[];
   assert.throws(()=>scheduleWorkerRun(noRoute,1,1,noRoute.bodyRunInput),/brak jawnej trasy/);
   const multi=subassemblyScheduleFixture();multi.stationSettings['ST-C'].parallelStations=2;
   multi.stationRouting!.operations.find(o=>o.operationId===multi.operations[1].id)!.candidates.push({stationId:'ST-C',copy:2,requiredEquipmentIds:[]});
-  assert.throws(()=>scheduleWorkerRun(multi,1,1,multi.bodyRunInput),/jednej jawnej kopii/);
+  assert.equal(scheduleWorkerRun(multi,1,1,multi.bodyRunInput).runs[1].copy,1);
 });
 test('3.4m2: lokalne pobranie nie tworzy ruchu, stare trasy bez zasobów nadal liczą czas',()=>{
   const project=subassemblyScheduleFixture();delete project.assemblyTransport;
@@ -3321,4 +3321,79 @@ test('3.4m2: transport między przygotowaniami działa bez instancji korpusu',()
   project.subassemblies.push({id:'END-PART',name:'Końcowy podzespół testowy',producerOperationId:consumer.id,consumerOperationIds:[]});
   const result=scheduleWorkerRun(project,1,1);assert.equal(result.jobs[0].finish,22);
   assert.equal(result.bodyBook,undefined);assert.equal(result.subassemblyEvents!.filter(e=>e.kind==='consumed').length,1);
+});
+
+
+function multipleSubassemblyRecipientFixture(){
+  const project=subassemblyScheduleFixture();delete project.bodyRunInput;
+  const consumer=project.operations[1];consumer.physicalRole={kind:'subassembly-preparation',subassemblyIds:['OUTPUT']};
+  project.subassemblies.push({id:'OUTPUT',name:'Testowy podzespół wynikowy',producerOperationId:consumer.id,consumerOperationIds:[]});
+  project.stations.push({id:'ST-D',name:'Alternatywny odbiorca testowy',operationIds:[]});
+  project.stationSettings['ST-D']={operators:1,parallelStations:1};
+  project.resourceCalendars!.stations['ST-D']=structuredClone(project.resourceCalendars!.stations['ST-C']);
+  project.stationRouting!.operations.find(o=>o.operationId===consumer.id)!.candidates.push({stationId:'ST-D',copy:1,requiredEquipmentIds:[]});
+  const route={...structuredClone(project.stationRouting!.routes[0]),id:'R-D',to:{stationId:'ST-D',copy:1},distanceMm:100,
+    transportTime:{durationSeconds:1,basis:'assumed' as const,source:'Syntetyczny czas alternatywy'}};
+  project.stationRouting!.routes.push(route);
+  project.assemblyTransport!.routes.push({...structuredClone(project.assemblyTransport!.routes[0]),stationRouteId:'R-D'});
+  return project;
+}
+test('3.4m2b: wcześniejszy start wybiera drugą kopię, przegrana trasa nie pozostawia rezerwacji',()=>{
+  const project=multipleSubassemblyRecipientFixture(),before=JSON.stringify(project);
+  const result=scheduleWorkerRun(project,1,1);
+  assert.equal(result.runs[1].stationId,'ST-D');assert.equal(result.jobs[0].finish,21);
+  assert.deepEqual(result.transportMovements!.map(m=>m.routeId),['R-D']);
+  assert.equal(result.transportReservations!.length,1);assert.equal(result.subassemblyEvents!.filter(e=>e.kind==='consumed').length,1);
+  assert.equal(JSON.stringify(project),before);
+  const replies:ScheduleReply[]=[];executeScheduleRequest({project,batch:1,arrivalIntervalSeconds:1},r=>replies.push(r));
+  assert.deepEqual((replies.find(r=>r.kind==='result') as {result:unknown}).result,result);
+});
+test('3.4m2b: kalendarz odbiorcy wygrywa z krótszym przewozem, remis rozstrzyga droga',()=>{
+  const project=multipleSubassemblyRecipientFixture();
+  project.resourceCalendars!.stations['ST-D'].shifts[0].startSeconds=30;
+  const calendar=scheduleWorkerRun(project,1,1);assert.equal(calendar.runs[1].stationId,'ST-C');assert.equal(calendar.jobs[0].finish,22);
+  project.resourceCalendars!.stations['ST-D'].shifts[0].startSeconds=0;
+  project.stationRouting!.routes.find(r=>r.id==='R-D')!.transportTime!.durationSeconds=2;
+  const shorter=scheduleWorkerRun(project,1,1);assert.equal(shorter.runs[1].stationId,'ST-D');
+  project.stationRouting!.routes.find(r=>r.id==='R-D')!.distanceMm=project.stationRouting!.routes[0].distanceMm;
+  assert.equal(scheduleWorkerRun(project,1,1).runs[1].stationId,'ST-C');
+});
+test('3.4m2b: brak trasy lub zestawu jednej kopii pozwala wybrać drugą, wszystkie niewykonalne odmawiają',()=>{
+  const project=multipleSubassemblyRecipientFixture();project.assemblyTransport!.routes.pop();
+  assert.equal(scheduleWorkerRun(project,1,1).runs[1].stationId,'ST-C');
+  project.assemblyTransport!.routes=[];
+  assert.throws(()=>scheduleWorkerRun(project,1,1),/brak wykonalnego przypisania/);
+});
+test('3.4m2b: kilka partii trafia do jednej wybranej kopii, bez porzuconych przydziałów',()=>{
+  const project=multipleSubassemblyRecipientFixture();delete project.assemblyTransport;
+  project.subassemblyFlow!.lots.push({...structuredClone(project.subassemblyFlow!.lots[0]),id:'LOT-SECOND'});
+  const result=scheduleWorkerRun(project,1,1);
+  assert.equal(result.runs[1].stationId,'ST-D');
+  assert.ok(result.subassemblyEvents!.filter(e=>e.kind==='consumed').every(e=>e.location.stationId==='ST-D'));
+  assert.equal(result.subassemblyEvents!.filter(e=>e.kind==='start-transfer').length,2);
+});
+test('3.4m2b: limit kombinacji jest jawny i nie dotyczy JIT',()=>{
+  const project=multipleSubassemblyRecipientFixture();
+  project.subassemblyFlow!.lots=Array.from({length:7},(_,i)=>{const lot=structuredClone(project.subassemblyFlow!.lots[0]);lot.id=`LIMIT-${i}`;lot.producer.job=i+1;lot.consumer.job=i+1;return lot;});
+  const before=JSON.stringify(project);
+  assert.throws(()=>scheduleWorkerRun(project,1,7),/ponad 64 kombinacje/);
+  assert.equal(JSON.stringify(project),before);
+  const jit=scheduleWorkerRun(project,1,7,undefined,undefined,{transportMode:'just-in-time'});assert.equal(jit.runs.length,14);
+});
+
+
+test('3.4m2b: przewóz korpusu wpływa na wybór kopii, różne sztuki mogą mieć różnych odbiorców',()=>{
+  const project=multipleSubassemblyRecipientFixture();delete project.assemblyTransport;
+  project.operations[1].physicalRole={kind:'body-work'};project.subassemblies.pop();
+  const cToD={...structuredClone(project.stationRouting!.routes[0]),id:'C-D',from:{stationId:'ST-C',copy:1},to:{stationId:'ST-D',copy:1},
+    transportTime:{durationSeconds:20,basis:'assumed' as const,source:'Testowy czas korpusu'}};
+  project.stationRouting!.routes.push(cToD,{...structuredClone(cToD),id:'D-C',from:cToD.to,to:cToD.from});
+  const input=assemblyScheduleInput();input.bodies[0].location={kind:'station',stationId:'ST-C',copy:1};
+  project.bodyRunInput=input;
+  assert.equal(scheduleWorkerRun(project,1,1,input).runs[1].stationId,'ST-C');
+  const lot=structuredClone(project.subassemblyFlow!.lots[0]);lot.id='JOB-2';lot.producer.job=2;lot.consumer.job=2;project.subassemblyFlow!.lots.push(lot);
+  input.bodies.push({id:'BODY-D',productId:'PRODUCT',location:{kind:'station',stationId:'ST-D',copy:1}});input.jobs.push({job:2,bodyId:'BODY-D'});
+  const result=scheduleWorkerRun(project,1,2,input);
+  assert.deepEqual(result.runs.filter(r=>r.operationId===project.operations[1].id).map(r=>[r.job,r.stationId]),[[1,'ST-C'],[2,'ST-D']]);
+  assert.equal(result.bodyEvents!.filter(e=>e.kind==='start-transfer').length,0);
 });

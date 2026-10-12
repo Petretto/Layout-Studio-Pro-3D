@@ -267,3 +267,7 @@ W zakładce Stanowiska v5, panel Harmonogram zespołu — szkic 6, dostępny jes
 
 ### Fizyczne partie podzespołów — 3.4m2 (2026-10-12)
 Harmonogram szkicu 6 wykonuje jawny kontrakt partii: wytworzenie po zakończeniu przygotowania, przewóz do jedynej dopuszczonej kopii odbiorcy i pobranie przy jego faktycznym starcie. Transport dzieli osoby i urządzenia z montażem, korzysta z dojazdów/powrotów i kalendarzy. Odbiorca czeka na wszystkie wymagane partie. Inspekcja pokazuje zdarzenia i ilości oraz odróżnia przewóz podzespołu od korpusu. Kontrakt na razie dostępny przez API/zapis szkicu; formularz jest w planowanym 3.4m3. Wiele kopii odbiorcy oraz pojemność buforów pozostają poza tym zakresem. JIT pomija fizyczny przepływ partii.
+
+
+### Wybór kopii odbiorcy podzespołów — 3.4m2b (2026-10-12)
+Dla jawnych partii harmonogram porównuje dopuszczone kopie odbiorcy razem z dostawami, operacjami i wspólnymi zasobami. Każde wykonanie odbiorcze może mieć inne miejsce odbioru. Pierwszeństwo ma start operacji, potem długość tras; przegrane warianty nie zostawiają rezerwacji. Limit podglądu wynosi 64 kombinacje przypisań — większy zakres wymaga zawężenia dopuszczeń albo mniejszej partii sztuk. Opcja JIT działa bez tego porównania. Pełny formularz partii jest nadal w przygotowaniu.

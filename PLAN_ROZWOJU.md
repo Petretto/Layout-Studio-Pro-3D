@@ -44,7 +44,7 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 3.4m2: cały plan 23/67 = **34,3%**; pierwsze wydanie 23/65 = **35,4%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po 3.4m2b: cały plan 23/67 = **34,3%**; pierwsze wydanie 23/65 = **35,4%**. Weryfikacja: `node scripts/plan_progress.mjs`.
 
 Stan historyczny po 3.1c: cały plan 21/67 = **31,3%**. Pierwsze wydanie (etapy 1–7) 21/65 = **32,3%**. Etap 8 dotyczy kolejnej wersji. Obliczenia: `node scripts/plan_progress.mjs`; źródłem są tabele statusów tego pliku. Po 3.2a ukończony główny licznik pozostaje taki sam, bo 3.2 nie jest jeszcze odebrane.
 
@@ -76,6 +76,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+3.4m2b / część 3.4.3 (2026-10-12): zakończony zakres — wiele kopii odbiorców przez niezależne pełne przebiegi kombinacji, wybór według gotowości/startu/tras, bez rezerwacji przegranych. Jawny limit 64 kombinacji i odmowa zamiast niesprawdzonego wyboru. Backup `backup/v0.4.0_przed_3_4m2b_20261012` (261 zgodnych SHA256). 194/194 testów, build/typecheck i Edge: druga kopia/zmiana kalendarza, worker, JIT, reload, izolacja 4/5 PASS. Integracja 3.4.3 odebrana w opisanym zakresie; 3.4.4 ponownie w trakcie dla formularza partii 3.4m3. Całe 3.4 nadal w trakcie. Postęp 34,3% / 35,4%.
 
 3.4m2 / część 3.4.3 (2026-10-12): zakończony pierwszy zakres — wytworzenie, przewóz i pobranie partii przy rzeczywistym starcie, wspólne osoby/urządzenia, dojazdy/powroty, kalendarze, wynik workera i inspekcja. Jedna jawna kopia odbiorcy; wybór wielu kopii odmawia do 3.4m2b. Formularz partii w 3.4m3. Backup `backup/v0.4.0_przed_3_4m2_20261012` (260 zgodnych SHA256). 188/188 testów, build/typecheck, Edge transfer/powrót/JIT/reload/izolacja PASS. Całe 3.4.3/3.4 nadal w trakcie. Postęp 34,3% / 35,4%.
 
@@ -381,8 +383,8 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 3.4 | Modelować dostępność transportu międzyoperacyjnego na montażu: operator montażowy, wózek lub przenośnik; odróżnić czas przemieszczenia od oczekiwania na zasób. Nie modelować czasu pracy operatorów magazynu. | w trakcie |
 | 3.4.1 | Zinwentaryzować aktualne rezerwacje, przygotować propozycję kontraktu zasobów, warianty domenowe i kryteria odbioru. | wdrożone |
 | 3.4.2 | Po decyzji wdrożyć kontrakt zapisu, referencje zasobów i kalendarze z ochroną starych szkiców. | wdrożone |
-| 3.4.3 | Zintegrować atomowe rezerwacje transportu ze wspólnymi osobami, oczekiwaniem i wynikiem workera. | w trakcie |
-| 3.4.4 | Dodać edytor i inspekcję; odebrać historię, zapis/odczyt i dwa niezależne procesy w UI. | wdrożone |
+| 3.4.3 | Zintegrować atomowe rezerwacje transportu ze wspólnymi osobami, oczekiwaniem i wynikiem workera. Wiele kopii partii: jawny limit 64 kombinacji (3.4m2b), bez modelu pojemności buforów. | wdrożone |
+| 3.4.4 | Dodać edytor i inspekcję; odebrać historię, zapis/odczyt i dwa niezależne procesy w UI. Kontrakt urządzeń/tras odebrany w 3.4j; po rozszerzeniu o partie pozostaje ich formularz 3.4m3. | w trakcie |
 | 3.5 | Wprowadzić bufory o ograniczonej pojemności oraz jednoznaczne reguły blokowania i zwalniania stanowiska. Dla zaopatrzenia montażu uwzględniać zapas, zużycie, ilość i częstotliwość dostaw materiału potrzebną do płynnej produkcji, bez czasu/rezerwacji operatorów magazynu. | nierozpoczęte |
 | 3.6 | Pokazywać stany pracy, oczekiwania na materiał/operatora, blokady wyjścia i transportu wraz z czasami ich trwania. | nierozpoczęte |
 | 3.7 | Wykrywać zatrzymanie lub zakleszczenie procesu i przedstawiać jego przyczynę zamiast pozornego zakończenia symulacji. | nierozpoczęte |
@@ -636,3 +638,5 @@ Ten dokument jest głównym rejestrem przyszłych prac. Historyczne raporty pozo
 | 2026-10-12 | 3.4.3 | kontynuacja — 3.4m1 zakończony | Decyzja A, kontrakt partii/parser/zapis, jawne referencje/ilości, ochrona źródeł 4/5. 179/179 testów, build i Edge. Backup 258 zgodne SHA256. Integracja fizyczna i formularz pozostają; postęp 34,3% / 35,4%. |
 
 | 2026-10-12 | 3.4.3 | kontynuacja — 3.4m2 pierwszy zakres zakończony | Kolejka partii i wspólne zasoby, pobranie przy faktycznym starcie, worker i inspekcja. 188/188 testów, build, dwa przebiegi w Edge. Backup 260 zgodnych SHA256. Wiele kopii odbiorcy i formularz pozostają; postęp 34,3% / 35,4%. |
+
+| 2026-10-12 | 3.4.3, 3.4.4 | integracja wdrożona; edytor ponownie w trakcie — 3.4m2b | Wiele kopii odbiorców, pełne przebiegi i izolacja przegranych, 194/194 testów/build/Edge. Backup 261 zgodnych SHA256. Jawny limit 64 kombinacji. Zakres 3.4.4 rozszerzony o formularz partii 3.4m3; wcześniejszy odbiór urządzeń/tras zachowany. Postęp 34,3% / 35,4%. |

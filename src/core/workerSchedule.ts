@@ -140,8 +140,8 @@ function projectWork(windows: readonly CalendarWindow[], now: number, duration: 
 }
 
 /** Draft-only event schedule. Transport time and physical body state are not inferred. */
-export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSeconds: number,
-  batch: number, bodyInput?: BodyRunInput, onProgress?: (completed: number, total: number) => void, options: {transportMode?: TransportSimulationMode} = {}): WorkerScheduleResult {
+function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds: number,
+  batch: number, bodyInput?: BodyRunInput, onProgress?: (completed: number, total: number) => void, options: {transportMode?: TransportSimulationMode} = {}, recipientCopies: ReadonlyMap<string, StationCandidate> = new Map()): WorkerScheduleResult {
   if (!Number.isFinite(arrivalIntervalSeconds) || arrivalIntervalSeconds <= 0 ||
       !Number.isSafeInteger(batch) || batch < 1 || batch > 10000) {
     throw new Error('Partia: 1–10000; jawny odstęp przybycia musi być dodatni.');
@@ -214,9 +214,6 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
     }
     candidatesByOperation.set(step.id, declared?.candidates ?? copies.get(baseStationId!)!.map((_, index) =>
       ({stationId: baseStationId!, copy: index + 1, requiredEquipmentIds: []})));
-  }
-  if (lotRun) for (const lot of lotRun.lots) {
-    if (candidatesByOperation.get(lot.declaration.consumer.operationId)!.length !== 1) throw new Error('3.4m2: pierwszy zakres partii wymaga jednej jawnej kopii odbiorcy; wybór wielu kopii nie jest jeszcze obsługiwany.');
   }
   const successors = steps.map(step => steps.flatMap((other, i) =>
     other.predecessorIds.includes(step.id) ? [i] : []));
@@ -333,7 +330,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
         }
         const incoming = lotRun?.incoming(task.job + 1, step.id) ?? [];
         if (incoming.length) {
-          const target = candidatesByOperation.get(step.id)![0];
+          const target = recipientCopies.get(JSON.stringify([task.job+1,step.id])) ?? candidatesByOperation.get(step.id)![0];
           const missing = incoming.filter(lot => lot.status === 'available' && !sameCopy(lot.location!, target));
           // Validate all required legs before publishing any movement for this recipient.
           for (const lot of missing) bodyRoute(lot.location!, target);
@@ -386,6 +383,8 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
         let combinations = 0;
         const transportFailures: string[] = [];
         for (const candidate of candidatesByOperation.get(step.id)!) {
+          const target = incoming.length ? recipientCopies.get(JSON.stringify([task.job+1,step.id])) ?? candidatesByOperation.get(step.id)![0] : undefined;
+          if(target && !sameCopy(target,candidate))continue;
           const body = bodyId ? bodyBook!.bodies.find(body => body.id === bodyId)! : undefined;
           if (body && (body.status !== 'available' && body.status !== 'reserved' || body.location.kind !== 'station')) {
             bodyWait = true; continue;
@@ -632,4 +631,79 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
   return {mode: calendars ? 'calendar' : 'logical', ...(justInTime?{transportMode:'just-in-time' as const}:{}), jobs, runs, reservations: book,
     ...(lotRun?{subassemblyLots:lotRun.lots,subassemblyEvents:lotRun.events,...(!checked.assemblyTransport?{transportMovements}:{} )}:{}),
     operationIds: steps.map(step => step.id), ...(bodyBook ? {bodyBook, bodyEvents} : {}), ...(checked.assemblyTransport ? {transportReservations:transportDevices,cartBook,transportMovements} : {})};
+}
+
+
+/** Compare complete, isolated ledgers; failed or losing assignments never publish reservations. */
+export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSeconds: number,
+  batch: number, bodyInput?: BodyRunInput, onProgress?: (completed: number, total: number) => void,
+  options: {transportMode?: TransportSimulationMode} = {}): WorkerScheduleResult {
+  if (!Number.isFinite(arrivalIntervalSeconds) || arrivalIntervalSeconds <= 0 || !Number.isSafeInteger(batch) || batch < 1 || batch > 10000) {
+    throw new Error('Partia: 1–10000; jawny odstęp przybycia musi być dodatni.');
+  }
+  if (!project.subassemblyFlow || options.transportMode === 'just-in-time') {
+    return scheduleWorkerRunFixed(project, arrivalIntervalSeconds, batch, bodyInput, onProgress, options);
+  }
+  const checked = parseDomainProjectV6(JSON.stringify(project));
+  // Verify coverage/range before expanding candidate assignments.
+  const lots = new SubassemblyRun(checked, batch);
+  const operationOrder = topologicalSort(checked.operations).map(operation => operation.id);
+  const recipients = [...new Map(lots.lots.map(lot => {
+    const ref = lot.declaration.consumer;
+    return [JSON.stringify([ref.job,ref.operationId]),ref] as const;
+  })).entries()].map(([key,ref]) => {
+    const declared = checked.stationRouting?.operations.find(operation => operation.operationId === ref.operationId);
+    const station = checked.stations.find(station => station.operationIds.includes(ref.operationId));
+    const count = station ? checked.stationSettings[station.id]?.parallelStations : undefined;
+    const candidates = declared?.candidates ?? (station && count ? Array.from({length:count},(_,i)=>({stationId:station.id,copy:i+1,requiredEquipmentIds:[]})) : []);
+    if(!candidates.length)throw new Error(`Odbiorca ${ref.job}:${ref.operationId}: brak jawnych dopuszczeń kopii.`);
+    return {key,...ref,candidates};
+  });
+  if(recipients.every(ref=>ref.candidates.length===1)) {
+    return scheduleWorkerRunFixed(checked,arrivalIntervalSeconds,batch,bodyInput,onProgress,options);
+  }
+  let combinations = 1;
+  for(const ref of recipients) {
+    combinations *= ref.candidates.length;
+    if(combinations > 64)throw new Error('3.4m2b: ponad 64 kombinacje kopii odbiorców podzespołów. Zawęź jawne dopuszczenia albo zmniejsz partię podglądu; żaden wariant nie został wybrany.');
+  }
+  if(checked.operations.length * batch > 5000)throw new Error('Szkic harmonogramu dopuszcza najwyżej 5000 wykonań.');
+  const variants: WorkerScheduleResult[] = [], failures = new Set<string>();
+  const assignment = new Map<string,StationCandidate>();
+  const variable = recipients.filter(ref=>ref.candidates.length>1);
+  for(const ref of recipients.filter(ref=>ref.candidates.length===1))assignment.set(ref.key,ref.candidates[0]);
+  const total = checked.operations.length * batch;
+  onProgress?.(0,total);
+  const visit = (index:number) => {
+    if(index < variable.length) {
+      const ref = variable[index];
+      for(const candidate of ref.candidates){assignment.set(ref.key,candidate);visit(index+1);}
+      return;
+    }
+    try{variants.push(scheduleWorkerRunFixed(checked,arrivalIntervalSeconds,batch,bodyInput,undefined,options,assignment));}
+    catch(failure){failures.add((failure as Error).message);}
+  };
+  visit(0);
+  if(!variants.length)throw new Error(`3.4m2b: brak wykonalnego przypisania kopii. ${[...failures].join(' ')}`);
+  const findRun = (result:WorkerScheduleResult,ref:typeof recipients[number])=>result.runs.find(run=>run.job===ref.job&&run.operationId===ref.operationId)!;
+  // Earlier ready recipients retain priority; job and technological order resolve equal readiness.
+  recipients.sort((a,b)=>Math.min(...variants.map(result=>findRun(result,a).readySeconds))-Math.min(...variants.map(result=>findRun(result,b).readySeconds)) || a.job-b.job || operationOrder.indexOf(a.operationId)-operationOrder.indexOf(b.operationId));
+  const routeDistance = new Map((checked.stationRouting?.routes ?? []).map(route=>[route.id,route.distanceMm] as const));
+  const emptyDistance = new Map((checked.assemblyTransport?.emptyRoutes ?? []).map(route=>[route.id,route.distanceMm] as const));
+  const distance = (result:WorkerScheduleResult,ref:typeof recipients[number]) => {
+    const ids = new Set(lots.incoming(ref.job,ref.operationId).map(lot=>lot.declaration.id));
+    const deliveries = (result.transportMovements ?? []).filter(movement=>movement.lotId&&ids.has(movement.lotId));
+    return deliveries.reduce((sum,movement)=>sum+((movement.kind==='empty'?emptyDistance:routeDistance).get(movement.routeId)??0),0) + (findRun(result,ref).transport ? routeDistance.get(findRun(result,ref).transport!.routeId)??0 : 0);
+  };
+  variants.sort((a,b)=>{
+    for(const ref of recipients){
+      const start = findRun(a,ref).startSeconds-findRun(b,ref).startSeconds;
+      if(start)return start;
+      const route = distance(a,ref)-distance(b,ref);
+      if(route)return route;
+    }
+    return 0; // Stable stored candidate order for an exact tie.
+  });
+  onProgress?.(total,total);
+  return variants[0];
 }
