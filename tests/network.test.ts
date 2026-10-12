@@ -1,5 +1,8 @@
 import {editDomainSubassemblyFlow} from '../src/core/domainSubassemblyEditing';
 import type {SubassemblyFlow} from '../src/core/subassemblyFlow';
+import {editDomainStationBuffers, editDomainMaterialSupply} from '../src/core/domainBuffersEditing';
+import type {StationBuffersV6} from '../src/core/stationBuffers';
+import type {MaterialSupplyV6} from '../src/core/materialSupply';
 import {reserveAssemblyMovement,finishAssemblyMovement} from '../src/core/assemblyMovement';
 import {editDomainAssemblyTransport} from '../src/core/domainTransportEditing';
 import {validateAssemblyTransport,type AssemblyTransport} from '../src/core/assemblyTransport';
@@ -3396,4 +3399,147 @@ test('3.4m2b: przewóz korpusu wpływa na wybór kopii, różne sztuki mogą mie
   const result=scheduleWorkerRun(project,1,2,input);
   assert.deepEqual(result.runs.filter(r=>r.operationId===project.operations[1].id).map(r=>[r.job,r.stationId]),[[1,'ST-C'],[2,'ST-D']]);
   assert.equal(result.bodyEvents!.filter(e=>e.kind==='start-transfer').length,0);
+});
+
+test('3.5a: bufory stanowisk zapisują jawne pojemności i regułę bbas, bez mutacji projektu',()=>{
+  const {project}=subassemblyFlowFixture(),before=JSON.stringify(project);
+  const buffers: StationBuffersV6 = {
+    buffers: [
+      {stationId: 'ST-C', copy: 1, inputCapacity: 2, outputCapacity: 1, blockingPolicy: 'bbas'},
+      {stationId: 'ST-A', copy: null, inputCapacity: null, outputCapacity: 5, blockingPolicy: 'bbas-worker-released'}
+    ]
+  };
+  const edited=editDomainStationBuffers(project,buffers);
+  assert.equal(JSON.stringify(project),before);
+  assert.deepEqual(parseDomainProjectV6(JSON.stringify(edited)).stationBuffers,buffers);
+  assert.deepEqual(editDomainStationBuffers(edited,undefined),project);
+});
+
+test('3.5a: parser buforów odrzuca nieznane stanowisko, zły numer kopii, ujemne pojemności i duplikaty',()=>{
+  const {project}=subassemblyFlowFixture();
+  const valid: StationBuffersV6 = {
+    buffers: [{stationId: 'ST-C', copy: 1, inputCapacity: 1, outputCapacity: 1, blockingPolicy: 'bbas'}]
+  };
+  const bad=(change:(b:StationBuffersV6)=>void)=>{
+    const copy=structuredClone(valid);change(copy);
+    assert.throws(()=>editDomainStationBuffers(project,copy));
+  };
+  bad(b=>b.buffers[0].stationId='UNKNOWN');
+  bad(b=>b.buffers[0].copy=99);
+  bad(b=>b.buffers[0].copy=0);
+  bad(b=>b.buffers[0].inputCapacity=-1);
+  bad(b=>b.buffers[0].outputCapacity=-5);
+  bad(b=>b.buffers.push(structuredClone(b.buffers[0])));
+  bad(b=>(b.buffers[0] as unknown as {blockingPolicy:string}).blockingPolicy='unknown-policy');
+  bad(b=>(b as unknown as {extra:boolean}).extra=true);
+});
+
+test('3.5a: zaopatrzenie materiałowe zapisuje harmonogram cykliczny i jawny, bez mutacji projektu',()=>{
+  const {project}=subassemblyFlowFixture(),before=JSON.stringify(project);
+  const supply: MaterialSupplyV6 = {
+    items: [
+      {
+        id: 'SUP-1',
+        componentId: 'PART-A',
+        targetStationId: 'ST-C',
+        initialStock: 10,
+        unit: 'szt.',
+        schedule: {kind: 'periodic', batchQuantity: 5, intervalSeconds: 60, firstDeliverySeconds: 30},
+        source: 'Katalog zaopatrzenia linii'
+      },
+      {
+        id: 'SUP-2',
+        componentId: 'PART-B',
+        targetStationId: 'ST-A',
+        initialStock: 0,
+        unit: 'szt.',
+        schedule: {
+          kind: 'explicit-deliveries',
+          deliveries: [
+            {deliveryTimeSeconds: 50, quantity: 10},
+            {deliveryTimeSeconds: 120, quantity: 15}
+          ]
+        },
+        source: 'Harmonogram dostaw JIT'
+      }
+    ]
+  };
+  const edited=editDomainMaterialSupply(project,supply);
+  assert.equal(JSON.stringify(project),before);
+  assert.deepEqual(parseDomainProjectV6(JSON.stringify(edited)).materialSupply,supply);
+  assert.deepEqual(editDomainMaterialSupply(edited,undefined),project);
+});
+
+test('3.5a: parser zaopatrzenia odrzuca nieznane stanowisko, ujemny zapas, puste ID i błędne harmonogramy',()=>{
+  const {project}=subassemblyFlowFixture();
+  const valid: MaterialSupplyV6 = {
+    items: [{
+      id: 'SUP-1',
+      componentId: 'PART-A',
+      targetStationId: 'ST-C',
+      initialStock: 10,
+      unit: 'szt.',
+      schedule: {kind: 'periodic', batchQuantity: 5, intervalSeconds: 60, firstDeliverySeconds: 0},
+      source: 'Plan zaopatrzenia'
+    }]
+  };
+  const bad=(change:(s:MaterialSupplyV6)=>void)=>{
+    const copy=structuredClone(valid);change(copy);
+    assert.throws(()=>editDomainMaterialSupply(project,copy));
+  };
+  bad(s=>s.items[0].targetStationId='UNKNOWN');
+  bad(s=>s.items[0].initialStock=-1);
+  bad(s=>s.items[0].id='');
+  bad(s=>s.items.push(structuredClone(s.items[0])));
+  bad(s=>s.items[0].schedule={kind:'periodic',batchQuantity:0,intervalSeconds:60});
+  bad(s=>s.items[0].schedule={kind:'periodic',batchQuantity:10,intervalSeconds:-10});
+  bad(s=>s.items[0].schedule={kind:'explicit-deliveries',deliveries:[{deliveryTimeSeconds:-5,quantity:10}]});
+  bad(s=>s.items[0].schedule={kind:'explicit-deliveries',deliveries:[{deliveryTimeSeconds:10,quantity:0}]});
+});
+
+test('3.5a: zapis i odczyt draftu zachowują bufory i zaopatrzenie, a odmowy chronią źródło 4/5',()=>{
+  const {project}=subassemblyFlowFixture();
+  const buffers: StationBuffersV6 = {
+    buffers: [{stationId: 'ST-C', copy: 1, inputCapacity: 3, outputCapacity: 2, blockingPolicy: 'bbas'}]
+  };
+  const supply: MaterialSupplyV6 = {
+    items: [{
+      id: 'SUP-1',
+      componentId: 'PART-A',
+      targetStationId: 'ST-C',
+      initialStock: 5,
+      unit: 'szt.',
+      schedule: {kind: 'periodic', batchQuantity: 10, intervalSeconds: 100},
+      source: 'Dane wejściowe magazynu'
+    }]
+  };
+  const withBuffers=editDomainStationBuffers(project,buffers);
+  const withBoth=editDomainMaterialSupply(withBuffers,supply);
+
+  for(const originalJson of [JSON.stringify(derive(parseProject(JSON.stringify(base))).project),readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8')]){
+    const storage=new DraftStorage(),initial=saveDomainDraft(storage,{project,originalJson},null);
+    const written=saveDomainDraft(storage,{project:withBoth,originalJson},initial.raw);
+    const reopened=readDomainDraft(storage);
+    assert.equal(reopened.status,'valid');
+    if(reopened.status==='valid'){
+      assert.equal(reopened.saved.originalJson,originalJson);
+      assert.deepEqual(reopened.saved.project.stationBuffers,buffers);
+      assert.deepEqual(reopened.saved.project.materialSupply,supply);
+    }
+
+    // Odmowa przy uszkodzonych danych
+    const invalid=structuredClone(withBoth);
+    invalid.stationBuffers!.buffers[0].inputCapacity=-99;
+    assert.throws(()=>saveDomainDraft(storage,{project:invalid,originalJson},written.raw));
+    assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),written.raw);
+
+    // Cofnięcie
+    const undone=saveDomainDraft(storage,{project,originalJson},written.raw);
+    const old=readDomainDraft(storage);
+    assert.equal(old.status,'valid');
+    if(old.status==='valid'){
+      assert.equal(old.saved.project.stationBuffers,undefined);
+      assert.equal(old.saved.project.materialSupply,undefined);
+    }
+  }
 });
