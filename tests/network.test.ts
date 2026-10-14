@@ -1,3 +1,4 @@
+import {MaterialStockRun} from '../src/core/materialStock';
 import {editDomainSubassemblyFlow} from '../src/core/domainSubassemblyEditing';
 import type {SubassemblyFlow} from '../src/core/subassemblyFlow';
 import {editDomainStationBuffers, editDomainMaterialSupply} from '../src/core/domainBuffersEditing';
@@ -3567,4 +3568,115 @@ test('3.5a1: puste kontrakty i jawne bufory bez limitu zachowują dawny wynik',(
   assert.deepEqual(scheduleWorkerRun(project,1,1,project.bodyRunInput),before);
   project.stationBuffers.buffers.push({stationId:'ST-C',copy:1,inputCapacity:null,outputCapacity:null,blockingPolicy:'bbas'});
   assert.deepEqual(scheduleWorkerRun(project,1,1,project.bodyRunInput),before);
+});
+
+
+function materialScheduleFixture(){
+  const {project}=assemblyMovementFixture();delete project.assemblyTransport;delete project.stationRouting;delete project.bodyRunInput;
+  project.operations.forEach(operation=>delete operation.physicalRole);
+  project.materialSupply={items:[{id:'SUPPLY-A',componentId:'MATERIAL-A',targetStationId:'ST-A',initialStock:1,unit:'szt.',
+    schedule:{kind:'periodic',batchQuantity:1,intervalSeconds:20,firstDeliverySeconds:30},source:'Jawny syntetyczny test dostaw'}],
+    consumptions:[{operationId:project.operations[0].id,supplyId:'SUPPLY-A',quantity:1,source:'Jawny test zużycia'}]};
+  return project;
+}
+test('3.5b1: braki materiału przesuwają start, dostawy nie rezerwują magazynierów',()=>{
+  const project=materialScheduleFixture(),before=JSON.stringify(project);
+  const result=scheduleWorkerRun(project,1,2);
+  assert.deepEqual(result.runs.filter(r=>r.operationId===project.operations[0].id).map(r=>r.startSeconds),[0,30]);
+  assert.equal(result.jobs[1].finish,50);assert.ok(result.runs.find(r=>r.job===2&&r.operationId===project.operations[0].id)!.waitCauses.includes('material'));
+  assert.equal(result.reservations.reservations.length,4);assert.equal(result.materialStocks![0].consumed,2);assert.equal(result.materialStocks![0].stock,1);
+  const replies:ScheduleReply[]=[];executeScheduleRequest({project,batch:2,arrivalIntervalSeconds:1},r=>replies.push(r));
+  assert.deepEqual((replies.find(r=>r.kind==='result') as {result:unknown}).result,result);assert.equal(JSON.stringify(project),before);
+  assert.equal(scheduleWorkerRun(project,1,2,undefined,undefined,{transportMode:'just-in-time'}).materialStocks,undefined);
+});
+test('3.5b1: dostawa przed pobraniem przy tym samym czasie i atomowy zestaw materiałów',()=>{
+  const project=materialScheduleFixture();project.materialSupply!.items[0].initialStock=0;
+  project.materialSupply!.items[0].schedule={kind:'explicit-deliveries',deliveries:[{deliveryTimeSeconds:10,quantity:1}]};
+  project.materialSupply!.items.push({...structuredClone(project.materialSupply!.items[0]),id:'SUPPLY-B',componentId:'B',initialStock:1,schedule:{kind:'explicit-deliveries',deliveries:[]}});
+  project.materialSupply!.consumptions!.push({...structuredClone(project.materialSupply!.consumptions![0]),supplyId:'SUPPLY-B'});
+  const result=scheduleWorkerRun(project,1,1);assert.equal(result.runs[0].startSeconds,10);
+  assert.deepEqual(result.materialEvents!.map(e=>[e.kind,e.atSeconds]),[['delivery',10],['consumption',10],['consumption',10]]);
+  assert.ok(result.materialStocks!.every(stock=>stock.stock===0));
+});
+test('3.5b1: pobranie czeka na realny kalendarz operacji, a nie na chwilę gotowości',()=>{
+  const project=materialScheduleFixture();project.resourceCalendars!.stations['ST-A'].shifts[0].startSeconds=15;
+  const result=scheduleWorkerRun(project,1,1);assert.equal(result.runs[0].startSeconds,15);
+  assert.equal(result.materialEvents!.find(e=>e.kind==='consumption')!.atSeconds,15);
+});
+test('3.5b1: zapas chroni przydzielone przyszłe pobranie i nie zużywa się dwukrotnie',()=>{
+  const project=materialScheduleFixture();const ledger=new MaterialStockRun(project),operation=project.operations[0].id;
+  ledger.advance(0);ledger.reserve(1,operation,20);
+  assert.equal(ledger.earliest(operation,1),30);ledger.reserve(2,operation,30);
+  ledger.advance(20);ledger.consume(1,operation,20);assert.equal(ledger.stocks[0].stock,0);
+  ledger.advance(30);ledger.consume(2,operation,30);assert.equal(ledger.stocks[0].stock,0);
+  assert.throws(()=>ledger.consume(2,operation,30),/powtórzone/);
+});
+test('3.5b1: dostawy cykliczne nie tworzą niekończącej się kolejki i grupują długie okresy',()=>{
+  const project=materialScheduleFixture();project.materialSupply!.items[0].schedule={kind:'periodic',batchQuantity:1,intervalSeconds:0.001,firstDeliverySeconds:0};
+  const result=scheduleWorkerRun(project,1,1);assert.ok(result.materialEvents!.length<10);
+  assert.ok(result.materialEvents!.some(e=>(e.deliveryCount??0)>1));assert.equal(result.jobs[0].finish,20);
+});
+test('3.5b1: stary kontrakt jest czytelny, ale nie wyznacza ilości ani pierwszej dostawy',()=>{
+  const project=materialScheduleFixture();delete project.materialSupply!.consumptions;
+  assert.ok(parseDomainProjectV6(JSON.stringify(project)).materialSupply);assert.throws(()=>scheduleWorkerRun(project,1,1),/jawnego zużycia/);
+  project.materialSupply!.consumptions=[{operationId:project.operations[0].id,supplyId:'SUPPLY-A',quantity:1,source:'Jawny test'}];
+  delete (project.materialSupply!.items[0].schedule as {firstDeliverySeconds?:number}).firstDeliverySeconds;
+  assert.ok(parseDomainProjectV6(JSON.stringify(project)).materialSupply);assert.throws(()=>scheduleWorkerRun(project,1,1),/pierwszej dostawy/);
+});
+test('3.5b1: wyczerpany jawny harmonogram odmawia wyniku zamiast ujemnego zapasu',()=>{
+  const project=materialScheduleFixture();project.materialSupply!.items[0].initialStock=0;
+  project.materialSupply!.items[0].schedule={kind:'explicit-deliveries',deliveries:[]};
+  assert.throws(()=>scheduleWorkerRun(project,1,1),/brak wystarczającego zapasu/);
+});
+test('3.5b1: zużycie roundtrip i odmowy błędnych referencji nie zmieniają zapisu',()=>{
+  const project=materialScheduleFixture(),supply=project.materialSupply!,before=JSON.stringify(project);
+  assert.deepEqual(parseDomainProjectV6(before).materialSupply,supply);
+  for(const mutate of [(value:MaterialSupplyV6)=>value.consumptions![0].quantity=0,
+    (value:MaterialSupplyV6)=>value.consumptions![0].operationId='UNKNOWN',
+    (value:MaterialSupplyV6)=>value.consumptions![0].supplyId='UNKNOWN',
+    (value:MaterialSupplyV6)=>value.consumptions!.push(structuredClone(value.consumptions![0]))]){
+    const invalid=structuredClone(supply);mutate(invalid);assert.throws(()=>editDomainMaterialSupply(project,invalid));
+  }
+  assert.equal(JSON.stringify(project),before);
+  const source=readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8'),storage=new DraftStorage();
+  const saved=saveDomainDraft(storage,{project,originalJson:source},null),reopened=readDomainDraft(storage);
+  assert.equal(reopened.status,'valid');if(reopened.status==='valid')assert.deepEqual(reopened.saved.project.materialSupply,supply);
+  const broken=structuredClone(project);broken.materialSupply!.consumptions![0].quantity=-1;
+  assert.throws(()=>saveDomainDraft(storage,{project:broken,originalJson:source},saved.raw));assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),saved.raw);
+});
+
+
+test('3.5b1: przyszły start na korpusie pobiera materiał dopiero po dostawie',()=>{
+  const project=subassemblyScheduleFixture();
+  project.materialSupply={items:[{id:'BODY-SUP',componentId:'M',targetStationId:'ST-C',initialStock:0,unit:'szt.',schedule:{kind:'periodic',batchQuantity:1,intervalSeconds:100,firstDeliverySeconds:25},source:'Test przyszłego startu'}],
+    consumptions:[{operationId:project.operations[1].id,supplyId:'BODY-SUP',quantity:1,source:'Jawne zużycie na korpusie'}]};
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+  assert.equal(result.runs[1].startSeconds,25);assert.equal(result.jobs[0].finish,35);
+  assert.deepEqual(result.materialEvents!.map(e=>[e.kind,e.atSeconds]),[['delivery',25],['consumption',25]]);
+  assert.ok(result.runs[1].waitCauses.includes('material'));
+});
+test('3.5b1: kopie stanowiska dzielą zapas, krótszy odstęp dostaw usuwa oczekiwanie',()=>{
+  const project=materialScheduleFixture();project.stationSettings['ST-A'].parallelStations=2;
+  project.workerRunSelection!.operations[0].eligibleWorkerIds=[...project.workerRunSelection!.teamWorkerIds];
+  const scarce=scheduleWorkerRun(project,1,2);assert.equal(scarce.runs.find(r=>r.job===2&&r.operationId===project.operations[0].id)!.startSeconds,30);
+  project.materialSupply!.items[0].schedule={kind:'periodic',batchQuantity:1,intervalSeconds:1,firstDeliverySeconds:1};
+  const supplied=scheduleWorkerRun(project,1,2);assert.equal(supplied.runs.find(r=>r.job===2&&r.operationId===project.operations[0].id)!.startSeconds,1);
+  assert.equal(supplied.materialStocks![0].consumed,2);
+});
+
+
+test('3.5b1: zużycie nie korzysta z zapasu przy innym stanowisku',()=>{
+  const project=materialScheduleFixture();project.materialSupply!.items[0].targetStationId='ST-C';
+  assert.throws(()=>scheduleWorkerRun(project,1,1),/nie pasują do żadnego dopuszczonego stanowiska/);
+});
+
+
+test('3.5b1: ilości dziesiętne nie tworzą fikcyjnych niedoborów ani zapasu resztkowego',()=>{
+  const project=materialScheduleFixture();project.materialSupply!.items[0].initialStock=0.3;
+  project.materialSupply!.items[0].schedule={kind:'explicit-deliveries',deliveries:[]};project.materialSupply!.consumptions![0].quantity=0.1;
+  const ledger=new MaterialStockRun(project),operation=project.operations[0].id;ledger.advance(0);
+  for(let job=1;job<=3;job++){ledger.reserve(job,operation,0);ledger.consume(job,operation,0);}
+  assert.equal(ledger.stocks[0].stock,0);assert.equal(ledger.stocks[0].consumed,0.3);
+  project.materialSupply!.items[0].initialStock=0;project.materialSupply!.items[0].schedule={kind:'periodic',batchQuantity:0.1,intervalSeconds:0.1,firstDeliverySeconds:0.1};
+  const periodic=new MaterialStockRun(project);periodic.advance(0.3);assert.equal(periodic.stocks[0].delivered,0.3);
 });

@@ -279,3 +279,7 @@ W Stanowiska v5, w szkicu 6, panel „Partie podzespołów — przygotowanie i p
 
 ### Bufory i zaopatrzenie — stan 3.5a1, 2026-10-14
 Kontrakty pojemności buforów i dostaw są odczytywane w szkicu 6, lecz jeszcze nie sterują symulacją. Harmonogram wyjaśnia odmowę przy zapisanych ograniczeniach buforów lub zaopatrzeniu, zamiast je pomijać. Jawny JIT może założyć dostępność materiałów; nie znosi nieobsługiwanych ograniczeń buforów. Puste kontrakty i bufory bez limitów zachowują dawne zachowanie. Integracja zapasu/zużycia i blokowania pozostaje w 3.5b.
+
+
+### Zużycie i dostawy materiałów — 3.5b1 (2026-10-14)
+Harmonogram szkicu 6 uwzględnia kompletny jawny kontrakt zaopatrzenia: zapas początkowy, ilości i terminy dostaw oraz zużycie przypisane do operacji. Niedobór przesuwa faktyczny start, a dostawa w tym samym czasie poprzedza pobranie. Operacja pobiera wszystkie swoje materiały atomowo i chroni wcześniej przydzielone przyszłe pobrania. Zapas jest wspólny dla kopii zadeklarowanego stanowiska. Inspekcja pokazuje bilans i zdarzenia; nie rezerwuje się magazynierów. Stare niekompletne kontrakty nadal można odczytać, lecz trzeba uzupełnić zużycie i pierwszy termin przed symulacją. JIT omija zapas, zakładając dostępność. Pełny formularz pozostaje do 3.5c, a ograniczone bufory do 3.5b2.

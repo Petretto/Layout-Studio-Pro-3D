@@ -26,6 +26,7 @@ function simultaneousPeriods(runs: readonly WorkerScheduleRun[]) {
 }
 
 const causeLabel = {
+  material: 'oczekiwanie na materiał',
   subassembly: 'oczekiwanie na wytworzenie lub dostarczenie podzespołu',
   transport: 'oczekiwanie na transport montażu',
   workers: 'oczekiwanie na pracowników',
@@ -135,6 +136,15 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
           </tr>)}</tbody></table></div>
         {result.transportMovements.length>100&&<p>Pokazano pierwsze 100 ruchów.</p>}
         <p>Końcowe położenie wózków: {result.cartBook?.carts.map(c=>`${c.equipmentId}: ${c.location?`${c.location.stationId} / ${c.location.copy}`:'w ruchu'}`).join('; ')||'brak zadeklarowanych wózków'}.</p>
+      </details>}
+      {result.materialStocks&&<details aria-label="Inspekcja zapasów materiałowych"><summary>Zaopatrzenie i zapas materiałów ({result.materialStocks.length})</summary>
+        <p>Zapas przy zadeklarowanym stanowisku jest wspólny dla jego kopii. Pobranie następuje przy faktycznym starcie operacji; dostawa w tym samym czasie jest obsługiwana wcześniej. Nie liczymy pracy magazynierów ani pojemności składowania. Stan obejmuje dostawy do końca produkcji.</p>
+        <div className="table-wrap"><table><thead><tr><th>Zaopatrzenie / materiał</th><th>Stanowisko</th><th>Jednostka</th><th>Zapas początkowy</th><th>Dostarczono</th><th>Pobrano</th><th>Zapas końcowy</th></tr></thead>
+          <tbody>{result.materialStocks.slice(0,100).map(stock=><tr key={stock.supplyId}><td>{stock.supplyId} / {stock.componentId}</td><td>{stock.stationId}</td><td>{stock.unit}</td><td>{stock.initialStock}</td><td>{stock.delivered}</td><td>{stock.consumed}</td><td>{stock.stock}</td></tr>)}</tbody></table></div>
+        {result.materialStocks.length>100&&<p>Pokazano pierwsze 100 pozycji zapasu.</p>}
+        <ol>{result.materialEvents?.slice(0,500).map((event,index)=><li key={index}>{event.atSeconds} s · {event.supplyId} · {event.kind==='consumption'?`Pobranie przez ${event.job}:${event.operationId}`:
+          (event.deliveryCount??0)>1?`Dostawy cykliczne: ${event.deliveryCount}, od ${event.firstDeliverySeconds} do ${event.atSeconds} s`:'Dostawa'} · {event.quantity} {result.materialStocks!.find(stock=>stock.supplyId===event.supplyId)!.unit}</li>)}</ol>
+        {(result.materialEvents?.length??0)>500&&<p>Pokazano pierwsze 500 zdarzeń lub grup dostaw. Dostawy cykliczne między zdarzeniami procesu są grupowane; ilości obejmują wszystkie terminy według zapisanego harmonogramu.</p>}
       </details>}
       {result.subassemblyLots&&<details aria-label="Inspekcja partii podzespołów"><summary>Partie podzespołów ({result.subassemblyLots.length})</summary>
         <p>Cała partia jest dostępna po zakończeniu przygotowania. Przypisana ilość jest pobierana przy starcie odbiorcy. Pojemność buforów i wykorzystanie pozostałej ilości nie są modelowane.</p>

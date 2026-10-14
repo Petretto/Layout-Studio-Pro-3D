@@ -1,3 +1,4 @@
+import {MaterialStockRun, type MaterialStock, type MaterialStockEvent} from './materialStock';
 import {SubassemblyRun, type SubassemblyLotState, type SubassemblyEvent} from './subassemblyState';
 import {previewAssemblyDispatch,previewEmptyDispatch,type AssemblyDispatch,type TransportDeviceReservation} from './assemblyDispatch';
 import {createCartBook,finishCartMovement,startCartMovement,type CartBook,type CartMotionRoute} from './transportState';
@@ -25,7 +26,7 @@ export interface WorkerScheduleRun {
   startSeconds: number;
   endSeconds: number;
   waitSeconds: number;
-  waitCauses: readonly ('workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body' | 'transport' | 'subassembly')[];
+  waitCauses: readonly ('workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body' | 'transport' | 'subassembly' | 'material')[];
   reserveStartSeconds: number;
   reserveEndSeconds: number;
   workWindows: readonly CalendarWindow[];
@@ -45,6 +46,8 @@ export interface AssemblyTransportMovement {kind:'loaded'|'empty';purpose:'trans
 export type TransportSimulationMode = 'configured' | 'just-in-time';
 
 export interface WorkerScheduleResult {
+  materialStocks?: readonly MaterialStock[];
+  materialEvents?: readonly MaterialStockEvent[];
   subassemblyLots?: readonly SubassemblyLotState[];
   subassemblyEvents?: readonly SubassemblyEvent[];
   transportMode?: 'just-in-time';
@@ -61,6 +64,7 @@ export interface WorkerScheduleResult {
 }
 
 type EventInput =
+  | {kind: 'material-consume'; at: number; job: number; operationId: string}
   | {kind: 'lot-end'; at: number; lotId: string}
   | {kind: 'lot-consume'; at: number; job: number; operationId: string; location: StationCopyRef}
   | {kind: 'arrival'; at: number; job: number}
@@ -153,9 +157,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
       buffer.outputCapacity !== null && buffer.outputCapacity !== undefined)) {
     throw new Error('3.5b: ograniczona pojemność buforów oczekuje na integrację. Harmonogram nie pomija zapisanych limitów, także w trybie JIT.');
   }
-  if (!justInTime && parsed.materialSupply?.items.length) {
-    throw new Error('3.5b: dostępność materiałów i zużycie oczekują na integrację. Można jawnie włączyć JIT, zakładając dostępność materiałów.');
-  }
+  const stockRun = !justInTime && parsed.materialSupply?.items.length ? new MaterialStockRun(parsed) : undefined;
   const lotRun = !justInTime && parsed.subassemblyFlow ? new SubassemblyRun(parsed, batch) : undefined;
   const {assemblyTransport:_transport,bodyRunInput:_bodyInput,...processOnly}=parsed;
   // A transient logical process view; saved transport declarations and physical locations remain untouched.
@@ -221,6 +223,9 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
     }
     candidatesByOperation.set(step.id, declared?.candidates ?? copies.get(baseStationId!)!.map((_, index) =>
       ({stationId: baseStationId!, copy: index + 1, requiredEquipmentIds: []})));
+    if(stockRun?.applies(step.id)&&!candidatesByOperation.get(step.id)!.some(candidate=>stockRun.permits(step.id,candidate.stationId))) {
+      throw new Error(`Zużycie operacji ${step.id}: pozycje zaopatrzenia nie pasują do żadnego dopuszczonego stanowiska.`);
+    }
   }
   const successors = steps.map(step => steps.flatMap((other, i) =>
     other.predecessorIds.includes(step.id) ? [i] : []));
@@ -253,7 +258,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   const remaining = jobs.map(() => steps.map(step => step.predecessorIds.length));
   const inFlight = jobs.map(() => new Set<number>());
   const waiting: {job: number; step: number; ready: number;
-    causes: Set<'workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body' | 'transport' | 'subassembly'>}[] = [];
+    causes: Set<'workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body' | 'transport' | 'subassembly' | 'material'>}[] = [];
   const events = new EventQueue();
   const wakeTimes = new Set<number>();
   const wakeAt = (at: number, now: number) => {
@@ -270,9 +275,11 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   while (events.length) {
     const now = events.peek().at;
     if (!Number.isFinite(now)) throw new Error('Harmonogram przekroczył poprawny zakres czasu.');
+    if(completed < steps.length * batch)stockRun?.advance(now);
     while (events.length && events.peek().at === now) {
       const event = events.pop();
-      if (event.kind === 'lot-end') lotRun!.arrive(event.lotId, now);
+      if (event.kind === 'material-consume') stockRun!.consume(event.job,event.operationId,now);
+      else if (event.kind === 'lot-end') lotRun!.arrive(event.lotId, now);
       else if (event.kind === 'lot-consume') lotRun!.consume(event.job,event.operationId,event.location,now);
       else if (event.kind === 'wake') wakeTimes.delete(now);
       else if (event.kind === 'arrival') {
@@ -379,7 +386,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
         const operation = byOperation.get(step.id)!;
         type SelectedRun = {workerIds: string[]; projected: NonNullable<ReturnType<typeof projectWork>>;
           reserveStart: number; reserveEnd: number; candidate: StationCandidate; departure: number; transportRoute?: DeclaredTransportRoute;
-          dispatch?: AssemblyDispatch; futureWaitCauses?: ('workers' | 'calendar')[]};
+          dispatch?: AssemblyDispatch; futureWaitCauses?: ('workers' | 'calendar' | 'material')[]};
         const feasible: SelectedRun[] = [];
         let calendarWait = false;
         let workerWait = false;
@@ -390,6 +397,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
         let combinations = 0;
         const transportFailures: string[] = [];
         for (const candidate of candidatesByOperation.get(step.id)!) {
+          if(stockRun&&!stockRun.permits(step.id,candidate.stationId)){task.causes.add('material');continue;}
           const target = incoming.length ? recipientCopies.get(JSON.stringify([task.job+1,step.id])) ?? candidatesByOperation.get(step.id)![0] : undefined;
           if(target && !sameCopy(target,candidate))continue;
           const body = bodyId ? bodyBook!.bodies.find(body => body.id === bodyId)! : undefined;
@@ -441,7 +449,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
             combinations++;
             if (bodyId) {
               let probe = arrival;
-              const futureWaitCauses = new Set<'workers' | 'calendar'>();
+              const futureWaitCauses = new Set<'workers' | 'calendar' | 'material'>();
               for (let attempt = 0; attempt < 10000; attempt++) {
                 const windows = calendars ? sharedAvailability(calendars, stationId, workerIds) :
                   [{startSeconds: probe, endSeconds: probe + operation.durationSeconds}];
@@ -462,6 +470,8 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
                   probe = start + Math.max(...conflicts.map(conflict => conflict.endSeconds - reserveStart));
                   continue;
                 }
+                const materialStart = stockRun?.earliest(step.id,start) ?? start;
+                if(materialStart > start){futureWaitCauses.add('material');probe=materialStart;continue;}
                 if (start > arrival) calendarWait = true;
                 if (!selected || start < selected.projected.workWindows[0].startSeconds) {
                   selected = {workerIds, projected, reserveStart, reserveEnd, candidate, departure, transportRoute, dispatch,
@@ -498,6 +508,8 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
                 Math.max(now, conflict.endSeconds - operation.reserveFromSeconds), now));
               return;
             }
+            const materialStart = stockRun?.earliest(step.id,now) ?? now;
+            if(materialStart > now){task.causes.add('material');wakeAt(materialStart,now);return;}
             selected = {workerIds, projected, reserveStart, reserveEnd, candidate, departure};
           };
           choose([], 0);
@@ -583,6 +595,11 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
           else events.push({kind: 'body-start', at: start, bodyId, operationId: step.id, end,
             basis: profile.durationBasis === 'measured' ? 'confirmed' : 'assumed'});
         }
+        if(stockRun?.applies(step.id)){
+          stockRun.reserve(task.job+1,step.id,start);
+          if(start===now)stockRun.consume(task.job+1,step.id,now);
+          else events.push({kind:'material-consume',at:start,job:task.job+1,operationId:step.id});
+        }
         if(incoming.length) {
           if(start===now)lotRun!.consume(task.job+1,step.id,chosen.candidate,now);
           else events.push({kind:'lot-consume',at:start,job:task.job+1,operationId:step.id,location:chosen.candidate});
@@ -636,6 +653,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   jobs.forEach(job => { job.finish = Math.max(...job.ends); });
   if (jobs.some(job => !Number.isFinite(job.finish))) throw new Error('Proces nie został ukończony.');
   return {mode: calendars ? 'calendar' : 'logical', ...(justInTime?{transportMode:'just-in-time' as const}:{}), jobs, runs, reservations: book,
+    ...(stockRun?{materialStocks:stockRun.stocks,materialEvents:[...stockRun.events].sort((a,b)=>a.atSeconds-b.atSeconds||(a.kind===b.kind?0:a.kind==='delivery'?-1:1))}:{}),
     ...(lotRun?{subassemblyLots:lotRun.lots,subassemblyEvents:lotRun.events,...(!checked.assemblyTransport?{transportMovements}:{} )}:{}),
     operationIds: steps.map(step => step.id), ...(bodyBook ? {bodyBook, bodyEvents} : {}), ...(checked.assemblyTransport ? {transportReservations:transportDevices,cartBook,transportMovements} : {})};
 }

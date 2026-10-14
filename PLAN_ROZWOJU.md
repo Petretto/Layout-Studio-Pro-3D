@@ -44,7 +44,7 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 3.5a1: cały plan 24/67 = **35,8%**; pierwsze wydanie 24/65 = **36,9%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po 3.5b1: cały plan 24/67 = **35,8%**; pierwsze wydanie 24/65 = **36,9%**. Weryfikacja: `node scripts/plan_progress.mjs`.
 
 Stan historyczny po 3.1c: cały plan 21/67 = **31,3%**. Pierwsze wydanie (etapy 1–7) 21/65 = **32,3%**. Etap 8 dotyczy kolejnej wersji. Obliczenia: `node scripts/plan_progress.mjs`; źródłem są tabele statusów tego pliku. Po 3.2a ukończony główny licznik pozostaje taki sam, bo 3.2 nie jest jeszcze odebrane.
 
@@ -76,6 +76,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+3.5b1 / część 3.5 (2026-10-14): zakończony zakres — jawne zużycie, jawny pierwszy termin, rejestr zapasu/dostaw/przyszłych pobrań i atomowe pobranie przy faktycznym starcie, dostawa przed pobraniem, brak pracy magazynierów. Odczyt starych kontraktów chroniony; JIT działa. Backup `backup/v0.4.0_przed_3_5b1_20261014` (271 zgodnych SHA256). 213/213 testów, build/typecheck i Edge późnej/terminowej dostawy, bilansu, workera/JIT/reload/izolacji 4/5 PASS. Raport 3.5. Całe 3.5 w trakcie; następny 3.5b2 — blokowanie ograniczonych buforów, potem 3.5c — formularze. Postęp 35,8% / 36,9%.
 
 3.5a1 / część 3.5 (2026-10-14): zakończony zakres — przegląd po Gemini i jawne odmowy niepodłączonego zaopatrzenia/ograniczonych buforów zamiast ich pomijania. JIT świadomie zakłada dostępność materiału, nie ignoruje ograniczeń buforów. Schemat i zapis bez zmian. Backup `backup/v0.4.0_przed_3_5a1_20261014` (270 zgodnych SHA256). 201/201 testów, build/typecheck i Edge workera/odmowy/JIT/reload/izolacji 4/5 PASS. Zatwierdzone reguły pobrania/dostaw i blokowania zapisane w AGENTS.md/modelu; raport `WERYFIKACJA_BUFOROW_I_ZAOPATRZENIA_3_5.md`. Całe 3.5 nadal w trakcie. Następny 3.5b — jawne zużycie i terminy, rejestr dostępności oraz integracja. Postęp 35,8% / 36,9%.
 
@@ -652,3 +654,5 @@ Ten dokument jest głównym rejestrem przyszłych prac. Historyczne raporty pozo
 | 2026-10-12 | 3.5 | rozpoczęto → w trakcie — 3.5a | Kontrakt danych buforów (`StationBuffersV6`) z regułą blokowania oraz zaopatrzenia materiałowego (`MaterialSupplyV6`) z harmonogramami dostaw. Walidacja, odmowy błędnych danych, ochrona źródeł 4/5 i migracja wsteczna. Backup 266 zgodnych SHA256. 199/199 testów, build/typecheck PASS. Postęp 35,8% / 36,9%. |
 
 | 2026-10-14 | 3.5 | kontynuacja — 3.5a1 zakończony | Zabezpieczenie przed pomijaniem buforów/zaopatrzenia, 201 testów/build/Edge, backup 270 zgodnych SHA256. Decyzje użytkownika: jawne zużycie przy starcie i dostawa przed nim, jawne terminy, blokowanie po zakończeniu z jawną polityką operatora. Integracja pozostaje; postęp 35,8% / 36,9%. |
+
+| 2026-10-14 | 3.5 | kontynuacja — 3.5b1 zakończony | Jawne zużycie i terminy dostaw, chronione przyszłe pobrania, rzeczywisty start, bilans zapasu/workera/JIT. 213/213 testów, build i Edge; backup 271 zgodnych SHA256. Bufory i formularze pozostają. Postęp 35,8% / 36,9%. |

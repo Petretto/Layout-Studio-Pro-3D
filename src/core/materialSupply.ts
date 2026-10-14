@@ -31,6 +31,8 @@ export interface MaterialSupplyItem {
 
 export interface MaterialSupplyV6 {
   items: MaterialSupplyItem[];
+  /** Absent in older contracts: readable, but not executable until explicitly supplied. */
+  consumptions?: {operationId: string; supplyId: string; quantity: number; source: string}[];
 }
 
 function object(value: unknown, keys: readonly string[], label: string): Record<string, unknown> {
@@ -71,12 +73,12 @@ function validateSchedule(value: unknown): SupplySchedule {
     const intervalSeconds = positiveNumber(raw.intervalSeconds, 'Częstotliwość dostaw');
     const firstDeliverySeconds = raw.firstDeliverySeconds !== undefined
       ? nonNegativeNumber(raw.firstDeliverySeconds, 'Czas pierwszej dostawy')
-      : 0;
+      : undefined;
     return {
       kind: 'periodic',
       batchQuantity,
       intervalSeconds,
-      firstDeliverySeconds,
+      ...(firstDeliverySeconds !== undefined ? {firstDeliverySeconds} : {}),
     };
   } else if (raw.kind === 'explicit-deliveries') {
     object(raw, ['kind', 'deliveries'], 'Harmonogram jawny');
@@ -99,7 +101,7 @@ function validateSchedule(value: unknown): SupplySchedule {
 }
 
 export function validateMaterialSupply(project: DomainProjectV6, value: unknown): MaterialSupplyV6 {
-  const raw = object(value, ['items'], 'Zaopatrzenie materiałowe');
+  const raw = object(value, ['items', 'consumptions'], 'Zaopatrzenie materiałowe');
   if (!Array.isArray(raw.items) || raw.items.length > 500) {
     throw new Error('Zaopatrzenie materiałowe: wymagana lista do 500 wpisów.');
   }
@@ -135,5 +137,17 @@ export function validateMaterialSupply(project: DomainProjectV6, value: unknown)
     };
   });
 
-  return {items};
+  if (raw.consumptions === undefined) return {items};
+  if (!Array.isArray(raw.consumptions) || raw.consumptions.length > 5000) throw new Error('Zużycie: wymagana lista do 5000 wpisów.');
+  const pairs = new Set<string>();
+  const consumptions = raw.consumptions.map(value => {
+    const entry = object(value, ['operationId', 'supplyId', 'quantity', 'source'], 'Zużycie materiału');
+    const operationId = text(entry.operationId, 'Operacja zużycia'), supplyId = text(entry.supplyId, 'Pozycja zaopatrzenia');
+    if (!project.operations.some(operation => operation.id === operationId) || !ids.has(supplyId)) throw new Error('Zużycie: nieznana operacja lub pozycja zaopatrzenia.');
+    const pair = JSON.stringify([operationId, supplyId]);
+    if (pairs.has(pair)) throw new Error('Zużycie: powtórzone przypisanie operacji i zaopatrzenia.');
+    pairs.add(pair);
+    return {operationId, supplyId, quantity: positiveNumber(entry.quantity, 'Ilość zużycia'), source: text(entry.source, 'Źródło zużycia')};
+  });
+  return {items, consumptions};
 }
