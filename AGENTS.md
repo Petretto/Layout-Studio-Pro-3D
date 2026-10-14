@@ -67,7 +67,8 @@ Test strategy:
 5. After a fix, rerun the failing tests and the relevant regression subset. Expand only for a concrete failure or unresolved risk; do not repeat checks solely because another file was edited.
 6. Run the full suite periodically, by default after three completed implementation packages since the last full run, or earlier at a substantial integration/migration checkpoint whose effects cannot reliably be covered by a scoped subset. State the reason for the full run. Documentation-only tasks do not require automated regression.
 7. Build/typecheck at a meaningful package checkpoint when applicable, not after each small edit. Run UI and save/reopen checks only for affected paths.
-8. Record which tests actually ran (focused or full), their scope and result; do not report skipped tests as executed. Last full baseline at adoption: 213 tests, commit 3eebffd (2026-10-14).
+8. Routine focused tests and attributable fixes are authorized by the user (2026-10-14); do not ask for permission per test. If the execution environment requires escalation, request only that concrete tool permission.
+9. Record which tests actually ran (focused or full), their scope and result; do not report skipped tests as executed. Last full baseline at adoption: 213 tests, commit 3eebffd (2026-10-14).
 
 Avoid repeated tool calls that return information already established and still valid.
 

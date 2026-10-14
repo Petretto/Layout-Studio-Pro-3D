@@ -1,3 +1,5 @@
+import {applyBufferedBodyEvent,validateBufferedBodyBook,type BufferedBodyBook} from '../src/core/bufferedBodyState';
+import {reserveBufferedAssemblyMovement,finishBufferedAssemblyMovement} from '../src/core/bufferedAssemblyMovement';
 import {createBufferBook,applyBufferEvent,bufferLoad,bufferHasSpace,bufferCanAccept,outputBlock} from '../src/core/bufferState';
 import {MaterialStockRun} from '../src/core/materialStock';
 import {editDomainSubassemblyFlow} from '../src/core/domainSubassemblyEditing';
@@ -3829,4 +3831,126 @@ test('3.5b2b: wspólny operator nie jest odbierany blokadzie, zwolnienie usuwa z
   project.stationBuffers!.buffers[0].blockingPolicy='bbas-worker-released';
   const result=scheduleWorkerRun(project,1,2,undefined,undefined,{transportMode:'just-in-time'});
   assert.equal(result.jobs[1].finish,80);
+});
+
+
+function bufferedBodyFixture(){
+  const {project,carts,workers,workerId}=assemblyMovementFixture();
+  project.stationBuffers={buffers:[
+    {stationId:'ST-A',copy:1,inputCapacity:1,outputCapacity:1,blockingPolicy:'bbas'},
+    {stationId:'ST-C',copy:1,inputCapacity:1,outputCapacity:null} ]};
+  const input=assemblyScheduleInput();
+  input.bodies.push({...input.bodies[0],id:'OTHER'});
+  const initial:BufferedBodyBook={bodies:createBodyBook(project,input.bodies,0),buffers:createBufferBook(project)};
+  const reserved={...initial,bodies:applyBodyEvent(initial.bodies,{kind:'reserve',bodyId:'BODY',atSeconds:0,
+    operationId:project.operations[0].id,endSeconds:10,basis:'assumed'})};
+  const output=applyBufferedBodyEvent(reserved,{kind:'complete-to-output',bodyId:'BODY',atSeconds:10,
+    operationId:project.operations[0].id,to:{stationId:'ST-A',copy:1,side:'output'}});
+  return {project,carts,workers,workerId,reserved,output};
+}
+const bufferMoveRequest={bodyId:'BODY',stationRouteId:'R-A',alternativeIndex:0,reservationId:'BUFFER-MOVE',earliestSeconds:10};
+
+test('3.5b2c1: rzeczywisty wózek, korpus i zajętość celu zmieniają się wspólnie, start odbiorcy zwalnia wejście',()=>{
+  const {project,carts,workers,output}=bufferedBodyFixture(),before=JSON.stringify({project,carts,workers,output});
+  const move=reserveBufferedAssemblyMovement(project,output,carts,workers,bufferMoveRequest);
+  assert.deepEqual([move.movement.startSeconds,move.movement.endSeconds],[10,12]);
+  assert.equal(move.physical.bodies.bodies[0].status,'moving');
+  assert.equal(move.movement.carts.carts[0].location,null);
+  const target={stationId:'ST-C',copy:1,side:'input' as const};
+  assert.equal(bufferLoad(move.physical.buffers,target),1);
+  assert.equal(bufferLoad(move.physical.buffers,{stationId:'ST-A',copy:1,side:'output'}),0);
+  const arrived=finishBufferedAssemblyMovement(move,move.physical,move.movement.carts,move.movement.workers,12);
+  assert.deepEqual(arrived.physical.buffers.tokens[0].location,target);
+  assert.deepEqual(arrived.movement.carts.carts[0].location,{stationId:'ST-C',copy:1});
+  assert.equal(bodyAvailableAt(arrived.physical.bodies,'BODY',target),true);
+  assert.equal(bufferLoad(arrived.physical.buffers,target),1);
+  const started=applyBufferedBodyEvent(arrived.physical,{kind:'start-operation',bodyId:'BODY',atSeconds:12,
+    operationId:project.operations[1].id,endSeconds:22,basis:'assumed'});
+  assert.equal(bufferLoad(started.buffers,target),0);assert.equal(started.bodies.bodies[0].status,'reserved');
+  assert.equal(JSON.stringify({project,carts,workers,output}),before);
+});
+
+test('3.5b2c1: rezerwacja celu nie zwalnia źródła, oczekiwanie na osobę nie skraca transportu',()=>{
+  const {project,carts,workers,workerId,output}=bufferedBodyFixture();
+  const target={stationId:'ST-C',copy:1,side:'input' as const};
+  const prepared=applyBufferedBodyEvent(output,{kind:'reserve-input',bodyId:'BODY',to:target,atSeconds:10});
+  assert.equal(bufferLoad(prepared.buffers,output.buffers.tokens[0].location!),1);
+  assert.equal(bufferLoad(prepared.buffers,target),1);assert.equal(prepared.bodies.bodies[0].status,'available');
+  const cancelled=applyBufferedBodyEvent(prepared,{kind:'cancel-input',bodyId:'BODY',atSeconds:10});
+  assert.deepEqual(cancelled.buffers.tokens,output.buffers.tokens);
+  const busy=reserveWorkerTeam(workers,{reservationId:'OTHER-WORK',workerIds:[workerId],startSeconds:10,endSeconds:15});
+  const move=reserveBufferedAssemblyMovement(project,output,carts,busy,bufferMoveRequest);
+  assert.deepEqual([move.movement.startSeconds,move.movement.endSeconds],[15,17]);
+  const body=move.physical.bodies.bodies[0];assert.equal(body.status,'moving');
+  if(body.status==='moving')assert.deepEqual([body.transfer.startSeconds,body.transfer.endSeconds],[15,17]);
+  assert.deepEqual(move.movement.waitCauses,['workers']);
+});
+
+test('3.5b2c1: pełny cel lub brak kalendarza nie publikuje połowy przydziału',()=>{
+  const {project,carts,workers,output}=bufferedBodyFixture();
+  const waiting=applyBufferedBodyEvent(output,{kind:'reserve-input',bodyId:'BODY',atSeconds:10,
+    to:{stationId:'ST-C',copy:1,side:'input'}});
+  const occupied={...waiting,bodies:applyBodyEvent(waiting.bodies,{kind:'reserve',bodyId:'OTHER',atSeconds:10,
+    operationId:project.operations[0].id,endSeconds:20,basis:'assumed'})};
+  const before=JSON.stringify({occupied,carts,workers});
+  assert.throws(()=>applyBufferedBodyEvent(occupied,{kind:'complete-to-output',bodyId:'OTHER',atSeconds:20,
+    operationId:project.operations[0].id,to:{stationId:'ST-A',copy:1,side:'output'}}),/Bufor pełny/);
+  assert.equal(occupied.bodies.bodies.find(b=>b.id==='OTHER')!.status,'reserved');
+  assert.equal(JSON.stringify({occupied,carts,workers}),before);
+  delete project.resourceCalendars!.workers[project.workers[0].id];
+  const unchanged=JSON.stringify({output,carts,workers});
+  assert.throws(()=>reserveBufferedAssemblyMovement(project,output,carts,workers,bufferMoveRequest),/kalendarza/);
+  assert.equal(JSON.stringify({output,carts,workers}),unchanged);
+});
+
+
+test('3.5b2c1: drugi korpus nie przejmuje ostatniego miejsca obiecanego transportowi',()=>{
+  const {project,carts,workers,output}=bufferedBodyFixture();
+  const move=reserveBufferedAssemblyMovement(project,output,carts,workers,bufferMoveRequest);
+  let next={...move.physical,bodies:applyBodyEvent(move.physical.bodies,{kind:'reserve',bodyId:'OTHER',atSeconds:10,
+    operationId:project.operations[0].id,endSeconds:11,basis:'assumed'})};
+  next=applyBufferedBodyEvent(next,{kind:'complete-to-output',bodyId:'OTHER',atSeconds:11,
+    operationId:project.operations[0].id,to:{stationId:'ST-A',copy:1,side:'output'}});
+  const before=JSON.stringify(next);
+  assert.throws(()=>applyBufferedBodyEvent(next,{kind:'reserve-input',bodyId:'OTHER',atSeconds:11,
+    to:{stationId:'ST-C',copy:1,side:'input'}}),/Bufor pełny/);
+  assert.throws(()=>reserveBufferedAssemblyMovement(project,next,move.movement.carts,move.movement.workers,
+    {...bufferMoveRequest,bodyId:'OTHER',reservationId:'SECOND',earliestSeconds:11}),/Bufor pełny/);
+  assert.equal(JSON.stringify(next),before);
+  // Arrival preserves intervening events and the other body's output occupancy.
+  const arrived=finishBufferedAssemblyMovement(move,next,move.movement.carts,move.movement.workers,12);
+  assert.equal(arrived.physical.buffers.tokens.length,2);
+  assert.equal(arrived.physical.bodies.bodies.find(b=>b.id==='OTHER')!.status,'available');
+});
+
+test('3.5b2c1: przedwczesny przyjazd, anulowanie w ruchu, sprzeczna lokalizacja i pojemność zero odmawiają',()=>{
+  const {project,carts,workers,output}=bufferedBodyFixture();
+  const move=reserveBufferedAssemblyMovement(project,output,carts,workers,bufferMoveRequest);
+  const before=JSON.stringify(move);
+  assert.throws(()=>finishBufferedAssemblyMovement(move,move.physical,move.movement.carts,move.movement.workers,11),/nie zakończył/);
+  assert.throws(()=>applyBufferedBodyEvent(move.physical,{kind:'cancel-input',bodyId:'BODY',atSeconds:11}),/w ruchu/);
+  assert.throws(()=>applyBufferedBodyEvent(output,{kind:'depart',bodyId:'BODY',atSeconds:10,endSeconds:12,basis:'assumed'}),/wcześniejszej rezerwacji/);
+  const invalid=structuredClone(output);invalid.buffers.tokens[0].location!.stationId='ST-C';
+  assert.throws(()=>validateBufferedBodyBook(invalid),/Sprzeczna lokalizacja/);
+  const zero=structuredClone(output);zero.buffers.places=zero.buffers.places.map(p=>p.side==='input'?{...p,capacity:0}:p);
+  assert.throws(()=>reserveBufferedAssemblyMovement(project,zero,carts,workers,bufferMoveRequest),/pojemność 0/);
+  assert.equal(JSON.stringify(move),before);
+});
+
+
+test('3.5b2c1: wspólne zakończenie chroni nowsze rezerwacje oraz odmawia sprzecznego wózka i błędnego startu',()=>{
+  const {project,carts,workers,workerId,output}=bufferedBodyFixture();
+  const move=reserveBufferedAssemblyMovement(project,output,carts,workers,bufferMoveRequest);
+  const newer=reserveWorkerTeam(move.movement.workers,{reservationId:'AFTER',workerIds:[workerId],startSeconds:12,endSeconds:20});
+  const wrong=structuredClone(move.movement.carts);wrong.carts[0].movement!.from={stationId:'ST-C',copy:1};
+  const before=JSON.stringify({physical:move.physical,wrong,newer});
+  assert.throws(()=>finishBufferedAssemblyMovement(move,move.physical,wrong,newer,12),/niezgodny przewóz/);
+  assert.equal(JSON.stringify({physical:move.physical,wrong,newer}),before);
+  const arrived=finishBufferedAssemblyMovement(move,move.physical,move.movement.carts,newer,12);
+  assert.deepEqual(arrived.movement.workers.reservations.find(r=>r.reservationId==='AFTER'),newer.reservations.find(r=>r.reservationId==='AFTER'));
+  const unchanged=JSON.stringify(arrived.physical);
+  assert.throws(()=>applyBufferedBodyEvent(arrived.physical,{kind:'start-operation',bodyId:'BODY',atSeconds:12,
+    operationId:'UNKNOWN',endSeconds:22,basis:'assumed'}),/nieznana operacja/);
+  assert.equal(JSON.stringify(arrived.physical),unchanged);
+  assert.throws(()=>applyBufferedBodyEvent(output,{kind:'cancel-input',bodyId:'BODY',atSeconds:9}),/cofa czas/);
 });
