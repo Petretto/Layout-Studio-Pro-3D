@@ -3543,3 +3543,28 @@ test('3.5a: zapis i odczyt draftu zachowują bufory i zaopatrzenie, a odmowy chr
     }
   }
 });
+
+
+test('3.5a1: harmonogram i worker nie ignorują zapisanych limitów buforów ani zaopatrzenia',()=>{
+  const project=subassemblyScheduleFixture();
+  const supply:MaterialSupplyV6={items:[{id:'SUP-GUARD',componentId:'PART-A',targetStationId:'ST-C',initialStock:0,unit:'szt.',schedule:{kind:'explicit-deliveries',deliveries:[]},source:'Jawny test niedostępności'}]};
+  project.materialSupply=supply;const before=JSON.stringify(project);
+  assert.throws(()=>scheduleWorkerRun(project,1,1,project.bodyRunInput),/3.5b/);
+  const replies:ScheduleReply[]=[];executeScheduleRequest({project,batch:1,arrivalIntervalSeconds:1},r=>replies.push(r));
+  assert.ok(replies.some(r=>r.kind==='error'&&r.message.includes('3.5b')));
+  const jit=scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'});
+  assert.equal(jit.transportMode,'just-in-time');assert.equal(jit.jobs[0].finish,20);
+  assert.equal(JSON.stringify(project),before);
+  project.stationBuffers={buffers:[{stationId:'ST-C',copy:1,inputCapacity:0,outputCapacity:null,blockingPolicy:'bbas'}]};
+  assert.throws(()=>scheduleWorkerRun(project,1,1,project.bodyRunInput),/pojemność buforów/);
+  assert.throws(()=>scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'}),/także w trybie JIT/);
+  project.stationBuffers.buffers[0].inputCapacity=null;project.stationBuffers.buffers[0].outputCapacity=1;
+  assert.throws(()=>scheduleWorkerRun(project,1,1,project.bodyRunInput),/pojemność buforów/);
+});
+test('3.5a1: puste kontrakty i jawne bufory bez limitu zachowują dawny wynik',()=>{
+  const project=subassemblyScheduleFixture(),before=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+  project.materialSupply={items:[]};project.stationBuffers={buffers:[]};
+  assert.deepEqual(scheduleWorkerRun(project,1,1,project.bodyRunInput),before);
+  project.stationBuffers.buffers.push({stationId:'ST-C',copy:1,inputCapacity:null,outputCapacity:null,blockingPolicy:'bbas'});
+  assert.deepEqual(scheduleWorkerRun(project,1,1,project.bodyRunInput),before);
+});

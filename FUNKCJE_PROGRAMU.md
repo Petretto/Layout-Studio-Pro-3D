@@ -275,3 +275,7 @@ Dla jawnych partii harmonogram porównuje dopuszczone kopie odbiorcy razem z dos
 
 ### Edytor partii podzespołów — 3.4m3 (2026-10-12)
 W Stanowiska v5, w szkicu 6, panel „Partie podzespołów — przygotowanie i pobranie” pozwala dodawać i edytować ID partii, definicję podzespołu, ilość wytworzoną/pobieraną, wspólną jednostkę, źródło oraz numery sztuk i operacje producenta/odbiorcy. Nowe pola są puste. Zapis waliduje dane i współpracuje z Cofnij/Ponów; można odrzucić lokalne zmiany lub jawnie usunąć konfigurację. Zapis zmiany unieważnia dotychczasowy wynik harmonogramu. Transport i JIT działają według wcześniej opisanych reguł; bufory/zapasy/dostawy cykliczne należą do dalszych etapów.
+
+
+### Bufory i zaopatrzenie — stan 3.5a1, 2026-10-14
+Kontrakty pojemności buforów i dostaw są odczytywane w szkicu 6, lecz jeszcze nie sterują symulacją. Harmonogram wyjaśnia odmowę przy zapisanych ograniczeniach buforów lub zaopatrzeniu, zamiast je pomijać. Jawny JIT może założyć dostępność materiałów; nie znosi nieobsługiwanych ograniczeń buforów. Puste kontrakty i bufory bez limitów zachowują dawne zachowanie. Integracja zapasu/zużycia i blokowania pozostaje w 3.5b.

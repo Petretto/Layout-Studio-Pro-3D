@@ -149,6 +149,13 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   if(options.transportMode!==undefined&&options.transportMode!=='configured'&&options.transportMode!=='just-in-time')throw new Error('Nieznany tryb transportu symulacji.');
   const justInTime=options.transportMode==='just-in-time';
   const parsed = parseDomainProjectV6(JSON.stringify(project));
+  if (parsed.stationBuffers?.buffers.some(buffer => buffer.inputCapacity !== null && buffer.inputCapacity !== undefined ||
+      buffer.outputCapacity !== null && buffer.outputCapacity !== undefined)) {
+    throw new Error('3.5b: ograniczona pojemność buforów oczekuje na integrację. Harmonogram nie pomija zapisanych limitów, także w trybie JIT.');
+  }
+  if (!justInTime && parsed.materialSupply?.items.length) {
+    throw new Error('3.5b: dostępność materiałów i zużycie oczekują na integrację. Można jawnie włączyć JIT, zakładając dostępność materiałów.');
+  }
   const lotRun = !justInTime && parsed.subassemblyFlow ? new SubassemblyRun(parsed, batch) : undefined;
   const {assemblyTransport:_transport,bodyRunInput:_bodyInput,...processOnly}=parsed;
   // A transient logical process view; saved transport declarations and physical locations remain untouched.

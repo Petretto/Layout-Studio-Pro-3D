@@ -117,3 +117,9 @@ Do not invoke every skill for every task.
 ## Subassembly flow — user decision 2026-10-12
 - Approved rule A: the whole explicitly declared subassembly lot becomes available at producer completion; the assigned quantity is consumed atomically at recipient start.
 - Quantities, units and producer/recipient execution assignments remain explicit; do not derive stock or quantities from BOM.
+
+
+## Buffers and material supply — user decisions 2026-10-14
+- Material consumption quantities must be explicit for each operation. Consume the whole assigned quantity at actual operation start; process deliveries before consumption at equal time.
+- Delivery times, including the first periodic delivery, are explicit. Do not infer zero as the first delivery time.
+- Full output buffers block after processing has finished: retain the product and block the station/equipment until space is released. The configuration explicitly selects whether the operator remains occupied or is released.
