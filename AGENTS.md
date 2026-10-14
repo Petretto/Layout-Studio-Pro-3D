@@ -63,7 +63,11 @@ Test strategy:
 1. smallest relevant tests first;
 2. fix attributable failures without routine confirmation;
 3. rerun focused tests;
-4. broader regression/build at meaningful integration checkpoints, not after every edit.
+4. During implementation, run only tests of changed behavior and directly affected dependencies; use suite/name filters instead of running the full suite by default.
+5. After a fix, rerun the failing tests and the relevant regression subset. Expand only for a concrete failure or unresolved risk; do not repeat checks solely because another file was edited.
+6. Run the full suite periodically, by default after three completed implementation packages since the last full run, or earlier at a substantial integration/migration checkpoint whose effects cannot reliably be covered by a scoped subset. State the reason for the full run. Documentation-only tasks do not require automated regression.
+7. Build/typecheck at a meaningful package checkpoint when applicable, not after each small edit. Run UI and save/reopen checks only for affected paths.
+8. Record which tests actually ran (focused or full), their scope and result; do not report skipped tests as executed. Last full baseline at adoption: 213 tests, commit 3eebffd (2026-10-14).
 
 Avoid repeated tool calls that return information already established and still valid.
 
@@ -123,3 +127,8 @@ Do not invoke every skill for every task.
 - Material consumption quantities must be explicit for each operation. Consume the whole assigned quantity at actual operation start; process deliveries before consumption at equal time.
 - Delivery times, including the first periodic delivery, are explicit. Do not infer zero as the first delivery time.
 - Full output buffers block after processing has finished: retain the product and block the station/equipment until space is released. The configuration explicitly selects whether the operator remains occupied or is released.
+
+
+## Buffer scope and transport — user decisions 2026-10-14
+- copy=null applies the declared capacity separately to each copy, not as one shared station pool. Overlapping all-copy and individual-copy declarations require explicit correction.
+- Reserve destination buffer space before transport departure. Capacity 0 means direct handoff to a ready operation, without waiting in that buffer.

@@ -1,3 +1,4 @@
+import {createBufferBook,applyBufferEvent,bufferLoad,bufferHasSpace,bufferCanAccept,outputBlock} from '../src/core/bufferState';
 import {MaterialStockRun} from '../src/core/materialStock';
 import {editDomainSubassemblyFlow} from '../src/core/domainSubassemblyEditing';
 import type {SubassemblyFlow} from '../src/core/subassemblyFlow';
@@ -3679,4 +3680,66 @@ test('3.5b1: ilości dziesiętne nie tworzą fikcyjnych niedoborów ani zapasu r
   assert.equal(ledger.stocks[0].stock,0);assert.equal(ledger.stocks[0].consumed,0.3);
   project.materialSupply!.items[0].initialStock=0;project.materialSupply!.items[0].schedule={kind:'periodic',batchQuantity:0.1,intervalSeconds:0.1,firstDeliverySeconds:0.1};
   const periodic=new MaterialStockRun(project);periodic.advance(0.3);assert.equal(periodic.stocks[0].delivered,0.3);
+});
+
+
+function bufferFixture(){
+  const project=materialScheduleFixture();
+  project.stationSettings['ST-A'].parallelStations=2;
+  project.stationBuffers={buffers:[{stationId:'ST-A',copy:null,inputCapacity:1,outputCapacity:1,blockingPolicy:'bbas'},
+    {stationId:'ST-C',copy:1,inputCapacity:1,outputCapacity:0,blockingPolicy:'bbas-worker-released'}]};
+  return project;
+}
+test('3.5b2a: pojemności stosują się osobno do kopii, rezerwacje zajmują miejsce przed przyjazdem',()=>{
+  const project=bufferFixture(),before=JSON.stringify(project),book=createBufferBook(project);
+  const a={stationId:'ST-A',copy:1,side:'input' as const},b={...a,copy:2};
+  const reserved=applyBufferEvent(book,{kind:'reserve',id:'BODY-1',to:a,atSeconds:0});
+  assert.equal(bufferLoad(reserved,a),1);assert.equal(bufferHasSpace(reserved,a),false);assert.equal(bufferHasSpace(reserved,b),true);
+  assert.throws(()=>applyBufferEvent(reserved,{kind:'reserve',id:'BODY-2',to:a,atSeconds:0}),/Bufor pełny/);
+  const independent=applyBufferEvent(reserved,{kind:'reserve',id:'BODY-2',to:b,atSeconds:0});
+  assert.equal(bufferLoad(independent,b),1);assert.equal(book.tokens.length,0);assert.equal(JSON.stringify(project),before);
+});
+test('3.5b2a: przewóz ma jedną lokalizację, miejsce w celu i zwalnia źródło dopiero przy wyjeździe',()=>{
+  const project=bufferFixture(),source={stationId:'ST-A',copy:1,side:'output' as const},target={stationId:'ST-C',copy:1,side:'input' as const};
+  let book=createBufferBook(project);
+  book=applyBufferEvent(book,{kind:'reserve',id:'BODY',to:source,atSeconds:1});
+  book=applyBufferEvent(book,{kind:'arrive',id:'BODY',atSeconds:1});
+  const reserved=applyBufferEvent(book,{kind:'reserve',id:'BODY',to:target,atSeconds:2});
+  assert.equal(bufferLoad(reserved,source),1);assert.equal(bufferLoad(reserved,target),1);
+  const departed=applyBufferEvent(reserved,{kind:'depart',id:'BODY',atSeconds:3});
+  assert.equal(bufferLoad(departed,source),0);assert.equal(departed.tokens[0].location,undefined);
+  assert.throws(()=>applyBufferEvent(departed,{kind:'cancel',id:'BODY',atSeconds:4}),/w ruchu/);
+  const arrived=applyBufferEvent(departed,{kind:'arrive',id:'BODY',atSeconds:5});
+  assert.deepEqual(arrived.tokens[0].location,target);assert.equal(arrived.tokens[0].destination,undefined);
+  assert.equal(applyBufferEvent(arrived,{kind:'remove',id:'BODY',atSeconds:6}).tokens.length,0);
+});
+test('3.5b2a: pełny bufor blokuje stanowisko/wyposażenie, polityka określa operatora',()=>{
+  const project=bufferFixture(),output={stationId:'ST-A',copy:1,side:'output' as const};
+  let book=createBufferBook(project);assert.equal(outputBlock(book,output).blocked,false);
+  book=applyBufferEvent(book,{kind:'reserve',id:'BODY',to:output,atSeconds:0});
+  assert.deepEqual(outputBlock(book,output),{blocked:true,holdStation:true,holdEquipment:true,holdWorkers:true});
+  const zero={stationId:'ST-C',copy:1,side:'output' as const};
+  assert.deepEqual(outputBlock(book,zero),{blocked:true,holdStation:true,holdEquipment:true,holdWorkers:false});
+  assert.equal(bufferCanAccept(book,zero,false),false);assert.equal(bufferCanAccept(book,zero,true),true);
+  assert.equal(outputBlock(book,zero,true).blocked,false);
+  assert.throws(()=>applyBufferEvent(book,{kind:'reserve',id:'OTHER',to:zero,atSeconds:0}),/pojemność 0/);
+});
+test('3.5b2a: konflikt konfiguracji i brak jawnej polityki/kopii odmawiają bez dopowiadania',()=>{
+  const project=bufferFixture();
+  project.stationBuffers!.buffers.push({stationId:'ST-A',copy:1,inputCapacity:1,outputCapacity:1,blockingPolicy:'bbas'});
+  assert.throws(()=>createBufferBook(project),/nakładające/);
+  project.stationBuffers!.buffers.pop();delete project.stationBuffers!.buffers[0].blockingPolicy;
+  assert.throws(()=>createBufferBook(project),/jawna polityka/);
+  project.stationBuffers!.buffers[0].blockingPolicy='bbas';delete project.stationSettings['ST-A'].parallelStations;
+  assert.throws(()=>createBufferBook(project),/jawnej liczby kopii/);
+});
+test('3.5b2a: niewybrana rezerwacja jest odwracalna, nieznane miejsca i cofnięcie czasu odmawiają',()=>{
+  const project=bufferFixture(),ref={stationId:'ST-A',copy:1,side:'input' as const},empty=createBufferBook(project);
+  const reserved=applyBufferEvent(empty,{kind:'reserve',id:'BODY',to:ref,atSeconds:10});
+  assert.equal(applyBufferEvent(reserved,{kind:'cancel',id:'BODY',atSeconds:10}).tokens.length,0);
+  assert.throws(()=>applyBufferEvent(reserved,{kind:'reserve',id:'BODY',to:{...ref,copy:2},atSeconds:10}),/już rezerwację/);
+  assert.throws(()=>applyBufferEvent(reserved,{kind:'arrive',id:'BODY',atSeconds:9}),/cofa czas/);
+  assert.throws(()=>applyBufferEvent(empty,{kind:'reserve',id:'X',to:{...ref,copy:99},atSeconds:0}),/nieznane miejsce/);
+  assert.throws(()=>applyBufferEvent(reserved,{kind:'unknown',id:'BODY',atSeconds:10} as never),/nieznany rodzaj/);
+  assert.equal(empty.tokens.length,0);
 });
