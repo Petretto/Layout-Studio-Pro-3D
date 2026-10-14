@@ -3559,7 +3559,7 @@ test('3.5a1: harmonogram i worker nie ignorują zapisanych limitów buforów ani
   assert.equal(JSON.stringify(project),before);
   project.stationBuffers={buffers:[{stationId:'ST-C',copy:1,inputCapacity:0,outputCapacity:null,blockingPolicy:'bbas'}]};
   assert.throws(()=>scheduleWorkerRun(project,1,1,project.bodyRunInput),/pojemność buforów/);
-  assert.throws(()=>scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'}),/także w trybie JIT/);
+  assert.equal(scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'}).jobs[0].finish,20);
   project.stationBuffers.buffers[0].inputCapacity=null;project.stationBuffers.buffers[0].outputCapacity=1;
   assert.throws(()=>scheduleWorkerRun(project,1,1,project.bodyRunInput),/pojemność buforów/);
 });
@@ -3742,4 +3742,91 @@ test('3.5b2a: niewybrana rezerwacja jest odwracalna, nieznane miejsca i cofnięc
   assert.throws(()=>applyBufferEvent(empty,{kind:'reserve',id:'X',to:{...ref,copy:99},atSeconds:0}),/nieznane miejsce/);
   assert.throws(()=>applyBufferEvent(reserved,{kind:'unknown',id:'BODY',atSeconds:10} as never),/nieznany rodzaj/);
   assert.equal(empty.tokens.length,0);
+});
+
+
+function bufferedProcessFixture(policy:'bbas'|'bbas-worker-released'='bbas'){
+  const project=materialScheduleFixture();delete project.materialSupply;
+  const profile=project.operations[1].staffing!.timeVariants[0].timeProfile;profile.durationSeconds=30;
+  profile.operatorPresence=[{startSeconds:0,endSeconds:30,basis:'assumed'}];profile.manualWork=[];profile.machineRun=[];
+  project.stationBuffers={buffers:[{stationId:'ST-A',copy:1,inputCapacity:null,outputCapacity:1,blockingPolicy:policy},
+    {stationId:'ST-C',copy:1,inputCapacity:0,outputCapacity:null}]};
+  return project;
+}
+test('3.5b2b: praca kończy się przed zwolnieniem gniazda, pełne wyjście zatrzymuje operatora',()=>{
+  const project=bufferedProcessFixture(),before=JSON.stringify(project);
+  const result=scheduleWorkerRun(project,1,3,undefined,undefined,{transportMode:'just-in-time'});
+  const source=result.runs.filter(run=>run.operationId===project.operations[0].id);
+  assert.deepEqual(source.map(run=>[run.endSeconds,run.stationReleaseSeconds,run.blockedSeconds]),[[10,10,0],[20,20,0],[30,40,10]]);
+  assert.equal(result.jobs[2].finish,100);
+  const third=result.reservations.reservations.find(r=>r.reservationId===`3:${project.operations[0].id}`)!;
+  assert.deepEqual([third.startSeconds,third.endSeconds,third.releasedAtSeconds],[20,40,40]);
+  assert.equal(result.transportMode,'just-in-time');assert.equal(result.bodyBook,undefined);assert.equal(JSON.stringify(project),before);
+  const replies:ScheduleReply[]=[];executeScheduleRequest({project,batch:3,arrivalIntervalSeconds:1,transportMode:'just-in-time'},r=>replies.push(r));
+  assert.deepEqual((replies.find(r=>r.kind==='result') as {result:unknown}).result,result);
+});
+test('3.5b2b: polityka zwolnienia operatora zachowuje blokadę stanowiska i wyposażenia',()=>{
+  const project=bufferedProcessFixture('bbas-worker-released');
+  const result=scheduleWorkerRun(project,1,3,undefined,undefined,{transportMode:'just-in-time'});
+  const source=result.runs.filter(run=>run.operationId===project.operations[0].id)[2];
+  assert.equal(source.stationReleaseSeconds,40);assert.equal(source.endSeconds,30);
+  const reservation=result.reservations.reservations.find(r=>r.reservationId===`3:${source.operationId}`)!;
+  assert.equal(reservation.endSeconds,30);assert.equal(reservation.releasedAtSeconds,30);
+});
+test('3.5b2b: pojemność 0 wymaga gotowego odbiorcy, a wejście 1 uwalnia wcześniejszy bufor',()=>{
+  const project=bufferedProcessFixture();project.stationBuffers!.buffers[0].outputCapacity=0;
+  const direct=scheduleWorkerRun(project,1,3,undefined,undefined,{transportMode:'just-in-time'});
+  assert.deepEqual(direct.runs.filter(r=>r.operationId===project.operations[0].id).map(r=>[r.endSeconds,r.stationReleaseSeconds]),[[10,10],[20,40],[50,70]]);
+  project.stationBuffers!.buffers[0].outputCapacity=1;project.stationBuffers!.buffers[1].inputCapacity=1;
+  const queued=scheduleWorkerRun(project,1,3,undefined,undefined,{transportMode:'just-in-time'});
+  assert.ok(queued.runs.filter(r=>r.operationId===project.operations[0].id).every(r=>r.blockedSeconds===0));
+  const reservations=queued.reservations.reservations;
+  for(let i=0;i<reservations.length;i++)for(let j=i+1;j<reservations.length;j++){
+    const a=reservations[i],b=reservations[j];if(a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
+  }
+});
+test('3.5b2b: nieobsługiwane fizyczne bufory, gałęzie i skończone wyjście nie dają pozornego wyniku',()=>{
+  const project=bufferedProcessFixture();assert.throws(()=>scheduleWorkerRun(project,1,1),/fizycznym transportem/);
+  project.operations[1].predecessorIds=[];assert.throws(()=>scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'}),/jednego ciągu/);
+  project.operations[1].predecessorIds=[project.operations[0].id];project.stationBuffers!.buffers[1].outputCapacity=1;project.stationBuffers!.buffers[1].blockingPolicy='bbas';
+  assert.throws(()=>scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'}),/jawnego odbioru/);
+});
+test('3.5b2b: kalendarz odbiorcy przesuwa przekazanie, częściowa obecność nie jest przedłużana domyślnie',()=>{
+  const project=bufferedProcessFixture();project.stationBuffers!.buffers[0].outputCapacity=0;
+  project.resourceCalendars!.stations['ST-C'].shifts[0].startSeconds=25;
+  const result=scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'});
+  assert.equal(result.runs[0].stationReleaseSeconds,25);assert.equal(result.runs[1].startSeconds,25);
+  project.operations[0].staffing!.timeVariants[0].timeProfile.operatorPresence[0].endSeconds=5;
+  assert.throws(()=>scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'}),/obecności przez całą/);
+});
+
+
+test('3.5b2b: nowe wykonanie nie zajmuje zablokowanej kopii ani zatrzymanego pracownika',()=>{
+  const project=bufferedProcessFixture();
+  const result=scheduleWorkerRun(project,1,4,undefined,undefined,{transportMode:'just-in-time'});
+  const source=result.runs.filter(run=>run.operationId===project.operations[0].id);
+  assert.equal(source[3].startSeconds,40);assert.equal(source[2].stationReleaseSeconds,40);
+  const reservations=result.reservations.reservations;
+  for(let i=0;i<reservations.length;i++)for(let j=i+1;j<reservations.length;j++){
+    const a=reservations[i],b=reservations[j];if(a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
+  }
+});
+
+
+test('3.5b2b: nie przypisuje przyszłej częściowej obecności, gdy operator może pozostać zablokowany',()=>{
+  const project=bufferedProcessFixture();
+  project.operations[1].staffing!.timeVariants[0].timeProfile.operatorPresence[0].startSeconds=20;
+  assert.throws(()=>scheduleWorkerRun(project,1,2,undefined,undefined,{transportMode:'just-in-time'}),/częściowa obecność/);
+  project.stationBuffers!.buffers[0].blockingPolicy='bbas-worker-released';
+  const result=scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'});
+  assert.equal(result.jobs[0].finish,40);
+});
+
+
+test('3.5b2b: wspólny operator nie jest odbierany blokadzie, zwolnienie usuwa zakleszczenie',()=>{
+  const project=bufferedProcessFixture();project.workerRunSelection!.operations[1].eligibleWorkerIds=[project.workers[0].id];
+  assert.throws(()=>scheduleWorkerRun(project,1,2,undefined,undefined,{transportMode:'just-in-time'}),/zakleszczenie/);
+  project.stationBuffers!.buffers[0].blockingPolicy='bbas-worker-released';
+  const result=scheduleWorkerRun(project,1,2,undefined,undefined,{transportMode:'just-in-time'});
+  assert.equal(result.jobs[1].finish,80);
 });

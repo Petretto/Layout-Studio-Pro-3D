@@ -26,6 +26,7 @@ function simultaneousPeriods(runs: readonly WorkerScheduleRun[]) {
 }
 
 const causeLabel = {
+  buffer: 'oczekiwanie na miejsce w buforze',
   material: 'oczekiwanie na materiał',
   subassembly: 'oczekiwanie na wytworzenie lub dostarczenie podzespołu',
   transport: 'oczekiwanie na transport montażu',
@@ -99,6 +100,7 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
         <tbody>{runs.slice(0, 100).map(run => <tr key={`${run.job}:${run.operationId}`}>
           <td>{run.job}</td><td>{run.operationId}</td><td>{run.stationId} / {run.copy}</td>
           <td>{run.workerIds.join(', ')}
+            {run.stationReleaseSeconds!==undefined&&<div>Zwolnienie stanowiska: {run.stationReleaseSeconds} s · blokada po pracy: {run.blockedSeconds} s</div>}
             {run.bodyId && <div>Korpus: {run.bodyId} · cel zarezerwowany [s]: {run.stationReserveStartSeconds}–{run.endSeconds}</div>}
             {project.operations.find(operation => operation.id === run.operationId)?.physicalRole?.kind === 'subassembly-preparation' && <div>Przygotowanie podzespołów — bez zajęcia korpusu</div>}
             {run.transport?.workerIds && <div>Osoby transportu: {run.transport.workerIds.join(', ') || 'jawnie bez osób'} · urządzenia: {run.transport.equipmentIds?.join(', ') || 'jawnie bez urządzeń'}</div>}
@@ -136,6 +138,11 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
           </tr>)}</tbody></table></div>
         {result.transportMovements.length>100&&<p>Pokazano pierwsze 100 ruchów.</p>}
         <p>Końcowe położenie wózków: {result.cartBook?.carts.map(c=>`${c.equipmentId}: ${c.location?`${c.location.stationId} / ${c.location.copy}`:'w ruchu'}`).join('; ')||'brak zadeklarowanych wózków'}.</p>
+      </details>}
+      {result.bufferBook&&<details aria-label="Inspekcja buforów procesu JIT"><summary>Bufory i zwalnianie stanowisk</summary>
+        <p>Podgląd logiczny JIT: jeden ciąg operacji i jedna kopia dla każdej operacji, bez fizycznego transportu. Zakończenie pracy i zwolnienie stanowiska są odrębne. Pojemność 0 wymaga gotowej operacji do przekazania bez oczekiwania.</p>
+        <ol>{result.bufferEvents?.slice(0,500).map((event,index)=><li key={index}>{event.atSeconds} s · sztuka {event.job} · {event.stationId} / {event.copy} · {event.kind==='blocked'?'Blokada po zakończeniu':event.kind==='released'?'Zwolnienie stanowiska':event.kind==='handoff'?'Przekazanie bez transportu':event.kind==='input'?'Bufor wejściowy':'Bufor wyjściowy'}</li>)}</ol>
+        {(result.bufferEvents?.length??0)>500&&<p>Pokazano pierwsze 500 zdarzeń.</p>}
       </details>}
       {result.materialStocks&&<details aria-label="Inspekcja zapasów materiałowych"><summary>Zaopatrzenie i zapas materiałów ({result.materialStocks.length})</summary>
         <p>Zapas przy zadeklarowanym stanowisku jest wspólny dla jego kopii. Pobranie następuje przy faktycznym starcie operacji; dostawa w tym samym czasie jest obsługiwana wcześniej. Nie liczymy pracy magazynierów ani pojemności składowania. Stan obejmuje dostawy do końca produkcji.</p>

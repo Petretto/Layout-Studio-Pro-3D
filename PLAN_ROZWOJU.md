@@ -44,7 +44,7 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 3.5b2a: cały plan 24/67 = **35,8%**; pierwsze wydanie 24/65 = **36,9%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po 3.5b2b: cały plan 24/67 = **35,8%**; pierwsze wydanie 24/65 = **36,9%**. Weryfikacja: `node scripts/plan_progress.mjs`.
 
 Stan historyczny po 3.1c: cały plan 21/67 = **31,3%**. Pierwsze wydanie (etapy 1–7) 21/65 = **32,3%**. Etap 8 dotyczy kolejnej wersji. Obliczenia: `node scripts/plan_progress.mjs`; źródłem są tabele statusów tego pliku. Po 3.2a ukończony główny licznik pozostaje taki sam, bo 3.2 nie jest jeszcze odebrane.
 
@@ -76,6 +76,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+3.5b2b / część 3.5 (2026-10-14): zakończony pierwszy zakres — ograniczone bufory w jawnym JIT: pojedynczy ciąg i jedna kopia na operację, osobny koniec pracy/zwolnienie, blokada stanowiska/wyposażenia i dwie polityki osób, inspekcja. Backup `backup/v0.4.0_przed_3_5b2b_20261014` (273 zgodnych SHA256). Celowane 5 PASS, jedna pełna regresja 224/224 PASS na integracji; po lokalnym zabezpieczeniu obecności tylko podzbiór buforów: finalnie 8/8 PASS. Końcowy typecheck/build i Edge obu polityk/workera/JIT/reload/izolacji PASS. Zakresy nieobsługiwane jawnie odmawiają. Całe 3.5 nadal w trakcie; następny 3.5b2c — fizyczny transport i dalsze profile z buforami, formularze w 3.5c. Postęp 35,8% / 36,9%.
 
 3.5b2a / część 3.5 (2026-10-14): zakończony zakres — niezależny rejestr pojemności/rezerwacji, osobne kopie, miejsce przed wyjazdem, zwolnienie źródła/przyjazd, odmowy konfliktów i jawne polityki operatora. Pojemność 0 wymaga gotowej operacji bez oczekiwania. Backup `backup/v0.4.0_przed_3_5b2a_20261014` (272 zgodnych SHA256). Testy celowane 5/5 PASS, typecheck/build PASS; bez pełnej regresji i UI, bo rejestr nie jest jeszcze podłączony. Raport 3.5. Następny 3.5b2b — faktyczne blokowanie/zwalnianie i rezerwacje w harmonogramie. Całe 3.5 w trakcie; postęp 35,8% / 36,9%.
 
@@ -662,3 +664,5 @@ Ten dokument jest głównym rejestrem przyszłych prac. Historyczne raporty pozo
 | 2026-10-14 | 3.5 | kontynuacja — 3.5b1 zakończony | Jawne zużycie i terminy dostaw, chronione przyszłe pobrania, rzeczywisty start, bilans zapasu/workera/JIT. 213/213 testów, build i Edge; backup 271 zgodnych SHA256. Bufory i formularze pozostają. Postęp 35,8% / 36,9%. |
 
 | 2026-10-14 | 3.5 | kontynuacja — 3.5b2a zakończony | Rejestr miejsc i rezerwacji, przyjazdy/zwalnianie, 5 celowanych testów PASS, typecheck/build. Backup 272 zgodnych SHA256. Integracja pozostaje. Zasady testów ograniczone do niezbędnych; pełna regresja okresowo. Postęp 35,8% / 36,9%. |
+
+| 2026-10-14 | 3.5 | kontynuacja — 3.5b2b pierwszy zakres zakończony | JIT z buforami, koniec pracy/zwolnienie i dwie polityki osób, worker/inspekcja. Celowane 5 PASS, jedna pełna 224/224, potem tylko podzbiór buforów, finalnie 8/8 po poprawce, build i Edge obu polityk. Backup 273 zgodne SHA256. Tryb fizyczny i dalsze zakresy nadal w trakcie; postęp 35,8% / 36,9%. |

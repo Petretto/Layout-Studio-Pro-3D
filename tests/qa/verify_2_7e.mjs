@@ -186,6 +186,12 @@ if(process.argv.includes('--subassembly-copies')){
 if(process.argv.includes('--subassembly-new'))delete draft.project.subassemblyFlow;
 if(process.argv.includes('--supply-guard'))draft.project.materialSupply={items:[{id:'QA-SUP',componentId:'QA-MAT',targetStationId:'ST-C',initialStock:0,unit:'szt.',schedule:{kind:'explicit-deliveries',deliveries:[]},source:'Jawny test braku dostaw'}]};
 if(process.argv.includes('--supply-run'))draft.project.materialSupply={items:[{id:'QA-SUP',componentId:'QA-MAT',targetStationId:'ST-C',initialStock:0,unit:'szt.',schedule:{kind:'periodic',batchQuantity:1,intervalSeconds:100,firstDeliverySeconds:process.argv.includes('--supply-fast')?12:25},source:'Syntetyczny test dostępności'}],consumptions:[{operationId:'OP-C',supplyId:'QA-SUP',quantity:1,source:'Jawny test pobrania przy starcie'}]};
+if(process.argv.includes('--buffer-run')){
+ const p=draft.project;p.workers.push({id:'BUFFER-W',name:'Osoba odbiorcy UI'});p.workerRunSelection.teamWorkerIds.push('BUFFER-W');p.workerRunSelection.operations[1].eligibleWorkerIds=['BUFFER-W'];p.resourceCalendars.workers['BUFFER-W']=structuredClone(p.resourceCalendars.workers.W);
+ p.operations[1].staffing.timeVariants[0].timeProfile=structuredClone(p.operations[1].staffing.timeVariants[0].timeProfile);
+ const profile=p.operations[1].staffing.timeVariants[0].timeProfile;profile.durationSeconds=30;profile.operatorPresence=[{startSeconds:0,endSeconds:30,basis:'assumed'}];
+ p.stationBuffers={buffers:[{stationId:'ST-A',copy:1,inputCapacity:null,outputCapacity:1,blockingPolicy:process.argv.includes('--buffer-released')?'bbas-worker-released':'bbas'},{stationId:'ST-C',copy:1,inputCapacity:0,outputCapacity:null}]};
+}
 const userData=mkdtempSync(join(tmpdir(),'layout-body-qa-'));
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(PORT)},stdio:'ignore'});
 const browser=spawn('C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',[
@@ -365,13 +371,14 @@ try{
     const expected=JSON.stringify(await saved()),label='Symulacja bez transportu — just in time';
     const enabled=()=>evaluate(`document.querySelector('[aria-label="${label}"]').checked`);
     const calculate=async()=>{
+      if(process.argv.includes('--buffer-run'))await field('Liczba sztuk szkicu 6',3);
       await field('Odstęp przybycia szkicu 6 [s]',1);await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');
       for(let i=0;i<100;i++){if(await evaluate(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"], [aria-label="Harmonogram zespołu szkicu 6"] [role="alert"]')`))break;await sleep(50);}
       return evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')?.textContent??null`);
     };
     if(await enabled())throw new Error('JIT domyślnie włączony');
     const normal=await calculate();
-    if((process.argv.includes('--jit-unconfigured')||process.argv.includes('--supply-guard'))?normal!==null:normal===null)throw new Error('Błędny tryb domyślny');
+    if((process.argv.includes('--jit-unconfigured')||process.argv.includes('--supply-guard')||process.argv.includes('--buffer-run'))?normal!==null:normal===null)throw new Error('Błędny tryb domyślny');
     if(process.argv.includes('--supply-run')){
       const time=process.argv.includes('--supply-fast')?12:25;
       if(!normal.includes(`koniec ostatniej sztuki: ${time+10} s`))throw new Error('Błędny koniec procesu z dostawą');
@@ -398,11 +405,20 @@ try{
     await check(label);if(await evaluate(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`))throw new Error('Stary wynik nie wyczyszczony');
     const jit=await calculate();
     if(!jit?.includes('JUST IN TIME')||jit.includes('Osoby transportu:')||jit.includes('Transport korpusu:'))throw new Error('Niepełne pominięcie transportu');
-    if(process.argv.includes('--cart-run')&&!jit.includes('koniec ostatniej sztuki: 20 s'))throw new Error('Błędny czas procesu JIT');
+    if(process.argv.includes('--cart-run')&&!jit.includes(`koniec ostatniej sztuki: ${process.argv.includes('--buffer-run')?100:20} s`))throw new Error('Błędny czas procesu JIT');
+    if(process.argv.includes('--buffer-run')){
+      if(!jit.includes('Zwolnienie stanowiska: 40 s')||!jit.includes('blokada po pracy: 10 s'))throw new Error('Brak rzeczywistej blokady w UI');
+      const inspection=await evaluate(`document.querySelector('[aria-label="Inspekcja buforów procesu JIT"]').textContent`);
+      if(!inspection.includes('Blokada po zakończeniu')||!inspection.includes('Zwolnienie stanowiska'))throw new Error('Brak inspekcji buforów');
+      const reservation=process.argv.includes('--buffer-released')?'20–30':'20–40';if(!jit.includes(reservation))throw new Error('Błędna polityka zatrzymania operatora');
+      await evaluate(`const p=document.querySelector('[aria-label="Inspekcja buforów procesu JIT"]');p.open=true;p.scrollIntoView({block:'center'})`);
+      mkdirSync('outputs/qa',{recursive:true});const shot=await send('Page.captureScreenshot',{format:'png'});
+      writeFileSync(`outputs/qa/verify_3_5b2b_${process.argv.includes('--buffer-released')?'released':'held'}.png`,Buffer.from(shot.data,'base64'));
+    }
     await check(label);if(await calculate()!==normal)throw new Error('Wyłączenie JIT nie przywraca konfiguracji');
     await check(label);await calculate();await evaluate(`document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"]').scrollIntoView()`);
     mkdirSync('outputs/qa',{recursive:true});const shot=await send('Page.captureScreenshot',{format:'png'});
-    writeFileSync(`outputs/qa/${process.argv.includes('--supply-run')?'verify_3_5b1_jit':process.argv.includes('--supply-guard')?'verify_3_5a1':process.argv.includes('--subassembly-contract')?process.argv.includes('--subassembly-editor')?'verify_3_4m3_jit':process.argv.includes('--subassembly-copies')?'verify_3_4m2b_jit':'verify_3_4m2_jit':'verify_3_4l'}_${process.argv.includes('--jit-unconfigured')?'unconfigured':process.argv.includes('--cart-run')?'configured':'branches'}.png`,Buffer.from(shot.data,'base64'));
+    writeFileSync(`outputs/qa/${process.argv.includes('--buffer-run')?'verify_3_5b2b_jit':process.argv.includes('--supply-run')?'verify_3_5b1_jit':process.argv.includes('--supply-guard')?'verify_3_5a1':process.argv.includes('--subassembly-contract')?process.argv.includes('--subassembly-editor')?'verify_3_4m3_jit':process.argv.includes('--subassembly-copies')?'verify_3_4m2b_jit':'verify_3_4m2_jit':'verify_3_4l'}_${process.argv.includes('--jit-unconfigured')?'unconfigured':process.argv.includes('--cart-run')?'configured':'branches'}.png`,Buffer.from(shot.data,'base64'));
     await open();if(await enabled())throw new Error('JIT utrwalony w projekcie');await check(label);
     if(await calculate()!==jit||JSON.stringify(await saved())!==expected)throw new Error('Zmiana wyniku lub zapisu');
     if(process.argv.includes('--subassembly-editor')){
@@ -414,7 +430,7 @@ try{
     }
     if(legacy!==await evaluate(`localStorage.getItem('layout-studio-stations-v5')`)||legacy4!==await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`))throw new Error('Zmiana 4/5');
     if((JSON.parse(await raw())).originalJson!==originalJson||errors.length)throw new Error('Zmiana źródła lub wyjątki');
-    console.log(`PASS ${process.argv.includes('--supply-run')?'3.5b1':process.argv.includes('--supply-guard')?'3.5a1':process.argv.includes('--subassembly-contract')?process.argv.includes('--subassembly-editor')?'3.4m3':process.argv.includes('--subassembly-copies')?'3.4m2b':'3.4m2':'3.4l'}: JIT opt-in, worker, czas procesu, powrót do konfiguracji, reload i izolacja 4/5.`);
+    console.log(`PASS ${process.argv.includes('--buffer-run')?'3.5b2b':process.argv.includes('--supply-run')?'3.5b1':process.argv.includes('--supply-guard')?'3.5a1':process.argv.includes('--subassembly-contract')?process.argv.includes('--subassembly-editor')?'3.4m3':process.argv.includes('--subassembly-copies')?'3.4m2b':'3.4m2':'3.4l'}: JIT opt-in, worker, czas procesu, powrót do konfiguracji, reload i izolacja 4/5.`);
   }else if(process.argv.includes('--transport-run')||process.argv.includes('--cart-run')){
     const expected=JSON.stringify(await saved());
     const calculate=async()=>{

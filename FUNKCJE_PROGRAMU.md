@@ -283,3 +283,7 @@ Kontrakty pojemności buforów i dostaw są odczytywane w szkicu 6, lecz jeszcze
 
 ### Zużycie i dostawy materiałów — 3.5b1 (2026-10-14)
 Harmonogram szkicu 6 uwzględnia kompletny jawny kontrakt zaopatrzenia: zapas początkowy, ilości i terminy dostaw oraz zużycie przypisane do operacji. Niedobór przesuwa faktyczny start, a dostawa w tym samym czasie poprzedza pobranie. Operacja pobiera wszystkie swoje materiały atomowo i chroni wcześniej przydzielone przyszłe pobrania. Zapas jest wspólny dla kopii zadeklarowanego stanowiska. Inspekcja pokazuje bilans i zdarzenia; nie rezerwuje się magazynierów. Stare niekompletne kontrakty nadal można odczytać, lecz trzeba uzupełnić zużycie i pierwszy termin przed symulacją. JIT omija zapas, zakładając dostępność. Pełny formularz pozostaje do 3.5c, a ograniczone bufory do 3.5b2.
+
+
+### Bufory w procesie JIT — 3.5b2b (2026-10-14)
+Jawnie włączony JIT może obliczać ograniczone bufory dla jednego ciągu operacji i jednej kopii każdej operacji. Koniec pracy jest oddzielony od zwolnienia stanowiska i wyposażenia; pełne wyjście zatrzymuje albo zwalnia operatora według zapisanej polityki. Inspekcja pokazuje blokady i przekazania, bez fizycznego transportu. Polityka zatrzymania operatora wymaga w tym pierwszym zakresie pełnej obecności przez wszystkie operacje. Gałęzie, wybór kopii i ograniczone wyjście końcowe wymagają dalszej obsługi; fizyczny tryb z ograniczonymi buforami nadal wyjaśnia odmowę. Formularz buforów pozostaje w 3.5c.

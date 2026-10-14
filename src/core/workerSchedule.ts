@@ -1,3 +1,5 @@
+import {projectWork} from './workProjection';
+import {scheduleBufferedProcess} from './bufferedProcessSchedule';
 import {MaterialStockRun, type MaterialStock, type MaterialStockEvent} from './materialStock';
 import {SubassemblyRun, type SubassemblyLotState, type SubassemblyEvent} from './subassemblyState';
 import {previewAssemblyDispatch,previewEmptyDispatch,type AssemblyDispatch,type TransportDeviceReservation} from './assemblyDispatch';
@@ -25,8 +27,10 @@ export interface WorkerScheduleRun {
   readySeconds: number;
   startSeconds: number;
   endSeconds: number;
+  stationReleaseSeconds?: number;
+  blockedSeconds?: number;
   waitSeconds: number;
-  waitCauses: readonly ('workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body' | 'transport' | 'subassembly' | 'material')[];
+  waitCauses: readonly ('workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body' | 'transport' | 'subassembly' | 'material' | 'buffer')[];
   reserveStartSeconds: number;
   reserveEndSeconds: number;
   workWindows: readonly CalendarWindow[];
@@ -46,6 +50,8 @@ export interface AssemblyTransportMovement {kind:'loaded'|'empty';purpose:'trans
 export type TransportSimulationMode = 'configured' | 'just-in-time';
 
 export interface WorkerScheduleResult {
+  bufferBook?: import('./bufferState').BufferBook;
+  bufferEvents?: readonly import('./bufferedProcessSchedule').BufferedProcessEvent[];
   materialStocks?: readonly MaterialStock[];
   materialEvents?: readonly MaterialStockEvent[];
   subassemblyLots?: readonly SubassemblyLotState[];
@@ -115,34 +121,6 @@ class EventQueue {
   }
 }
 
-function projectWork(windows: readonly CalendarWindow[], now: number, duration: number) {
-  const workWindows: CalendarWindow[] = [];
-  let remaining = duration;
-  for (const window of windows) {
-    if (window.endSeconds <= now) continue;
-    const startSeconds = workWindows.length ? window.startSeconds : Math.max(now, window.startSeconds);
-    if (startSeconds >= window.endSeconds) continue;
-    const endSeconds = Math.min(window.endSeconds, startSeconds + remaining);
-    workWindows.push({startSeconds, endSeconds});
-    remaining -= endSeconds - startSeconds;
-    if (remaining <= 0) break;
-  }
-  if (remaining > 0) return null;
-  const pauses = workWindows.slice(1).map((window, i) => ({
-    startSeconds: workWindows[i].endSeconds, endSeconds: window.startSeconds,
-  })).filter(window => window.startSeconds < window.endSeconds);
-  const atOffset = (offset: number, endBoundary: boolean) => {
-    let progress = 0;
-    for (const window of workWindows) {
-      const next = progress + window.endSeconds - window.startSeconds;
-      if (offset < next || (endBoundary && offset === next)) return window.startSeconds + offset - progress;
-      progress = next;
-    }
-    return workWindows[workWindows.length - 1].endSeconds;
-  };
-  return {workWindows, pauses, end: workWindows[workWindows.length - 1].endSeconds, atOffset};
-}
-
 /** Draft-only event schedule. Transport time and physical body state are not inferred. */
 function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds: number,
   batch: number, bodyInput?: BodyRunInput, onProgress?: (completed: number, total: number) => void, options: {transportMode?: TransportSimulationMode} = {}, recipientCopies: ReadonlyMap<string, StationCandidate> = new Map()): WorkerScheduleResult {
@@ -155,7 +133,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   const parsed = parseDomainProjectV6(JSON.stringify(project));
   if (parsed.stationBuffers?.buffers.some(buffer => buffer.inputCapacity !== null && buffer.inputCapacity !== undefined ||
       buffer.outputCapacity !== null && buffer.outputCapacity !== undefined)) {
-    throw new Error('3.5b: ograniczona pojemność buforów oczekuje na integrację. Harmonogram nie pomija zapisanych limitów, także w trybie JIT.');
+    throw new Error('3.5b: ograniczona pojemność buforów z fizycznym transportem oczekuje na integrację. Można jawnie wybrać JIT dla pojedynczego ciągu operacji.');
   }
   const stockRun = !justInTime && parsed.materialSupply?.items.length ? new MaterialStockRun(parsed) : undefined;
   const lotRun = !justInTime && parsed.subassemblyFlow ? new SubassemblyRun(parsed, batch) : undefined;
@@ -258,7 +236,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   const remaining = jobs.map(() => steps.map(step => step.predecessorIds.length));
   const inFlight = jobs.map(() => new Set<number>());
   const waiting: {job: number; step: number; ready: number;
-    causes: Set<'workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body' | 'transport' | 'subassembly' | 'material'>}[] = [];
+    causes: Set<'workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body' | 'transport' | 'subassembly' | 'material' | 'buffer'>}[] = [];
   const events = new EventQueue();
   const wakeTimes = new Set<number>();
   const wakeAt = (at: number, now: number) => {
@@ -665,6 +643,9 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
   options: {transportMode?: TransportSimulationMode} = {}): WorkerScheduleResult {
   if (!Number.isFinite(arrivalIntervalSeconds) || arrivalIntervalSeconds <= 0 || !Number.isSafeInteger(batch) || batch < 1 || batch > 10000) {
     throw new Error('Partia: 1–10000; jawny odstęp przybycia musi być dodatni.');
+  }
+  if(options.transportMode==='just-in-time'&&project.stationBuffers?.buffers.some(buffer=>buffer.inputCapacity!=null||buffer.outputCapacity!=null)) {
+    return scheduleBufferedProcess(project,arrivalIntervalSeconds,batch,onProgress);
   }
   if (!project.subassemblyFlow || options.transportMode === 'just-in-time') {
     return scheduleWorkerRunFixed(project, arrivalIntervalSeconds, batch, bodyInput, onProgress, options);
