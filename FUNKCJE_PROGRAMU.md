@@ -394,3 +394,20 @@ W ramach zamknięcia Etapu 3 zrealizowano kompleksowy audyt i zautomatyzowane te
   - W przeglądarce Edge (CDP) zweryfikowano płynność przełączania widoków Gantta (68 ms) oraz kliknięcia/nawigacji do obiektów (4 ms), bez zamrażania wątku interfejsu (zrzut `outputs/qa/verify_3_9.png`).
 - **Formalny odbiór Etapu 3**: Wszystkie kryteria etapu zostały spełnione; Etap 3 osiągnął status **wdrożone (10/10 = 100,0%)**.
 
+### Oddzielne obciążenie stanowisk, maszyn i operatorów oraz mianowniki wskaźników — 4.1 (2026-10-16)
+W ramach rozpoczęcia Etapu 4 wdrożono precyzyjne rozdzielenie i objaśnienie wskaźników obciążenia:
+- **Statyczne bilansowanie i analiza zdolności (Yamazumi / BalancingBoard)**:
+  - Wprowadzono moduł `src/core/workloadBalancing.ts` obliczający oddzielnie obciążenie stanowiska, maszyny oraz operatorów;
+  - Wskaźnik stanowiska: odnosi cykl stacji do iloczynu kopii i czasu taktu ($K \cdot T_{\text{takt}}$);
+  - Wskaźnik maszyny: odnosi czas technologicznego biegu maszyn do iloczynu kopii i czasu taktu ($K \cdot T_{\text{takt}}$);
+  - Wskaźnik operatorów: odnosi czas pracy ręcznej do iloczynu obsady i czasu taktu ($(O \cdot K) \cdot T_{\text{takt}}$);
+  - Dodano czytelną tabelę w widoku bilansowania z jawną formułą matematyczną i słownym objaśnieniem bazy mianownika dla każdej stacji.
+- **Dynamiczny harmonogram symulacji partii (szkic 6 / scheduleStateMetrics)**:
+  - Zdefiniowano `EquipmentStateMetrics` oraz algorytm `calculateEquipmentMetrics(...)` śledzący czas biegu maszyn (z profilu `machineRun` lub operacji) oraz ruchy transportowe wyposażenia (np. wózków);
+  - Do `StationStateMetrics` i `WorkerStateMetrics` dodano jawne pola bazy mianownika (`denominatorSeconds`, `denominatorBasis`) oraz formuły obliczeniowe (`occupancyFormula`, `processingFormula`, `activityFormula`);
+  - Rozszerzono panel harmonogramu szkicu 6 (`DomainWorkerSchedulePanel.tsx`) o dedykowaną tabelę inspekcji maszyn i wyposażenia oraz kolumny z objaśnieniem mianowników dla stanowisk i pracowników.
+- **Weryfikacja**:
+  - Testy jednostkowe `calculateStaticWorkload` i `calculateScheduleStateMetrics` w `tests/network.test.ts` potwierdziły poprawność matematyczną formuł i mianowników;
+  - Weryfikacja Edge CDP w `tests/qa/verify_4_1.mjs` potwierdziła poprawne renderowanie tabeli i etykiet (zrzut `outputs/qa/verify_4_1.png`).
+
+

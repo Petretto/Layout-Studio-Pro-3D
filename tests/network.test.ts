@@ -14,11 +14,13 @@ import {validateAssemblyTransport,type AssemblyTransport} from '../src/core/asse
 import {createCartBook,startCartMovement,finishCartMovement,type CartMotionRoute} from '../src/core/transportState';
 import {
   calculateScheduleStateMetrics,
+  calculateEquipmentMetrics,
   calculateWaitBreakdown,
   classifyWaitCause,
   calculateRunDurations,
   calculateTransportMetrics,
 } from '../src/core/scheduleStateMetrics';
+import {calculateStaticWorkload} from '../src/core/workloadBalancing';
 import {
   parseProcessStallDiagnostic,
   formatProcessStallMessage,
@@ -5402,6 +5404,169 @@ test('3.9: skalowalność silnika symulacji sieciowej dla dużych partii (100, 2
 
   assert.equal(networkBenchmarks.length, 4);
   assert.equal(networkBenchmarks[3].completedParts, 1000);
+});
+
+test('4.1: statyczne oddzielne obciążenie stanowisk, maszyn i operatorów oraz objaśnienie mianowników (calculateStaticWorkload)', () => {
+  // Scenariusz A: 1 stacja, 1 kopia, 1 operator, takt 60 s, 2 operacje (20 s i 30 s)
+  const stationA = {
+    id: 'WS-1',
+    name: 'Stanowisko montażu',
+    sequenceIndex: 1,
+    assignedStepIds: ['OP-1', 'OP-2'],
+    cycleTimeSeconds: 50,
+    isBottleneck: false,
+    xMm: 0,
+    yMm: 0,
+  };
+  const stepsA = [
+    {id: 'OP-1', name: 'Montaż A', standardTimeSeconds: 20, vaTimeSeconds: 15, nvaTimeSeconds: 5, sequenceNumber: 1, predecessorIds: []},
+    {id: 'OP-2', name: 'Montaż B', standardTimeSeconds: 30, vaTimeSeconds: 25, nvaTimeSeconds: 5, sequenceNumber: 2, predecessorIds: ['OP-1']},
+  ];
+
+  const wlA = calculateStaticWorkload(stationA, 60, stepsA);
+  assert.equal(wlA.stationId, 'WS-1');
+  assert.equal(wlA.copies, 1);
+  assert.equal(wlA.totalOperators, 1);
+  assert.equal(wlA.stationCycleSeconds, 50);
+  assert.equal(wlA.stationDenominatorSeconds, 60);
+  assert.equal(wlA.stationWorkloadPercent, 83.333);
+  assert.equal(wlA.stationFormula, '50 s / (1 × 60 s) = 83.3%');
+  assert.ok(wlA.stationDenominatorDescription.includes('czas taktu (60 s) × 1 kopia = 60 s'));
+
+  assert.equal(wlA.operatorCycleSeconds, 50);
+  assert.equal(wlA.operatorDenominatorSeconds, 60);
+  assert.equal(wlA.operatorWorkloadPercent, 83.333);
+  assert.equal(wlA.operatorFormula, '50 s / (1 × 60 s) = 83.3%');
+
+  assert.equal(wlA.machineCycleSeconds, 0);
+  assert.equal(wlA.machineDenominatorSeconds, 60);
+  assert.equal(wlA.machineWorkloadPercent, 0);
+
+  // Scenariusz B: 2 równoległe kopie stacji, 2 operatorów na kopię (obsada łącznie = 4), takt 50 s
+  const wlB = calculateStaticWorkload(stationA, 50, stepsA, {parallelStations: 2, operators: 2});
+  assert.equal(wlB.copies, 2);
+  assert.equal(wlB.operatorsPerCopy, 2);
+  assert.equal(wlB.totalOperators, 4);
+  assert.equal(wlB.stationCycleSeconds, 50);
+  // Mianownik stacji = 2 * 50 = 100 s -> obciążenie 50%
+  assert.equal(wlB.stationDenominatorSeconds, 100);
+  assert.equal(wlB.stationWorkloadPercent, 50);
+  assert.equal(wlB.stationFormula, '50 s / (2 × 50 s) = 50.0%');
+  // Mianownik operatorów = 4 * 50 = 200 s -> obciążenie 25%
+  assert.equal(wlB.operatorDenominatorSeconds, 200);
+  assert.equal(wlB.operatorWorkloadPercent, 25);
+  assert.equal(wlB.operatorFormula, '50 s / (4 × 50 s) = 25.0%');
+
+  // Scenariusz C: Schemat 6 z jawnym profilem technologicznym (praca ręczna vs bieg maszyny)
+  const domainStepsC: any[] = [
+    {
+      id: 'OP-1',
+      name: 'Obróbka CNC z załadunkiem ręcznym',
+      standardTimeSeconds: 40,
+      vaTimeSeconds: 35,
+      nvaTimeSeconds: 5,
+      sequenceNumber: 1,
+      predecessorIds: [],
+      timeProfile: {
+        durationSeconds: 40,
+        durationBasis: 'measured',
+        manualWork: [{startSeconds: 0, endSeconds: 10, basis: 'measured'}],
+        machineRun: [{startSeconds: 10, endSeconds: 40, basis: 'measured'}],
+        operatorPresence: [{startSeconds: 0, endSeconds: 10, basis: 'measured'}],
+      },
+    },
+  ];
+  const stationC = {
+    id: 'WS-CNC',
+    name: 'Gniazdo CNC',
+    sequenceIndex: 1,
+    assignedStepIds: ['OP-1'],
+    cycleTimeSeconds: 40,
+    isBottleneck: false,
+    xMm: 0,
+    yMm: 0,
+  };
+  const wlC = calculateStaticWorkload(stationC, 50, domainStepsC);
+  assert.equal(wlC.stationCycleSeconds, 40);
+  assert.equal(wlC.machineCycleSeconds, 30); // 40 - 10 = 30 s pracy maszyny
+  assert.equal(wlC.operatorCycleSeconds, 10); // 10 s pracy manualnej
+  assert.equal(wlC.stationWorkloadPercent, 80); // 40 / 50 = 80.0%
+  assert.equal(wlC.machineWorkloadPercent, 60); // 30 / 50 = 60.0%
+  assert.equal(wlC.operatorWorkloadPercent, 20); // 10 / 50 = 20.0%
+  assert.equal(wlC.stationFormula, '40 s / (1 × 50 s) = 80.0%');
+  assert.equal(wlC.machineFormula, '30 s / (1 × 50 s) = 60.0%');
+  assert.equal(wlC.operatorFormula, '10 s / (1 × 50 s) = 20.0%');
+});
+
+test('4.1: dynamiczne oddzielne metryki obciążenia stanowisk, maszyn i operatorów oraz mianowniki w harmonogramie partii (calculateScheduleStateMetrics)', () => {
+  const {project, input} = bufferedPhysicalFixture(1, 'bbas-worker-released');
+  const cartId = project.assemblyTransport!.carts[0].equipmentId;
+  // Dodajmy jawne wyposażenie technologiczne do stacji z zachowaniem wózków
+  project.equipment = [
+    ...project.equipment,
+    {id: 'EQ-TOOL-1', name: 'Wkrętak automatyczny ST-A', stationId: 'ST-A'},
+  ];
+  // Przypiszmy wkrętak do operacji 1
+  project.operations[0].timeProfile = {
+    durationSeconds: 20,
+    durationBasis: 'measured',
+    manualWork: [{startSeconds: 0, endSeconds: 8, basis: 'measured'}],
+    machineRun: [{startSeconds: 8, endSeconds: 20, basis: 'measured'}],
+    operatorPresence: [{startSeconds: 0, endSeconds: 20, basis: 'measured'}],
+  };
+
+  const result = scheduleWorkerRun(structuredClone(project), 1, 1, structuredClone(input));
+  // Oznaczmy wykorzystanie EQ-TOOL-1 w wykonaniu operacji 1
+  result.runs[0].equipmentIds = ['EQ-TOOL-1'];
+
+  const metrics = calculateScheduleStateMetrics(project, result);
+
+  // 1. Sprawdzenie mianownika ogólnego
+  assert.ok(metrics.makespanSeconds > 0);
+  const makespan = metrics.makespanSeconds;
+
+  // 2. Sprawdzenie obciążenia stanowisk i objaśnień mianowników
+  assert.equal(metrics.stations.length, 3); // ST-A, ST-B, ST-C (wszystkie stacje projektu)
+  for (const st of metrics.stations) {
+    assert.equal(st.denominatorSeconds, makespan);
+    assert.equal(st.denominatorBasis, 'czas realizacji partii (makespan) dla danej kopii stanowiska');
+    assert.ok(st.occupancyFormula.includes(`${st.totalOccupiedTimeSeconds} s / ${makespan} s`));
+    assert.ok(st.processingFormula.includes(`${st.processingTimeSeconds} s / ${makespan} s`));
+    assert.equal(st.occupancyRatio, Math.min(1, Math.round((st.totalOccupiedTimeSeconds / makespan) * 1000) / 1000));
+  }
+
+  // 3. Sprawdzenie obciążenia maszyn / wyposażenia
+  assert.ok(metrics.equipment.length >= 2);
+  const toolEq = metrics.equipment.find(e => e.equipmentId === 'EQ-TOOL-1')!;
+  assert.ok(toolEq);
+  assert.equal(toolEq.equipmentName, 'Wkrętak automatyczny ST-A');
+  assert.equal(toolEq.stationId, 'ST-A');
+  assert.equal(toolEq.operationsCount, 1);
+  // Czas biegu maszyny z profilu (20 - 8 = 12 s)
+  assert.equal(toolEq.runTimeSeconds, 12);
+  assert.equal(toolEq.transportTimeSeconds, 0);
+  assert.equal(toolEq.totalActiveTimeSeconds, 12);
+  assert.equal(toolEq.idleTimeSeconds, Math.round((makespan - 12) * 1000) / 1000);
+  assert.equal(toolEq.denominatorSeconds, makespan);
+  assert.equal(toolEq.denominatorBasis, 'czas realizacji partii (makespan)');
+  assert.equal(toolEq.formula, `12 s / ${makespan} s = ${(toolEq.utilizationRatio * 100).toFixed(1)}%`);
+
+  const cartEq = metrics.equipment.find(e => e.equipmentId === cartId)!;
+  assert.ok(cartEq);
+  // Wózek transportowy uczestniczy w ruchach transfer i return
+  assert.ok(cartEq.transportTimeSeconds > 0);
+  assert.equal(cartEq.totalActiveTimeSeconds, cartEq.transportTimeSeconds);
+  assert.equal(cartEq.denominatorSeconds, makespan);
+  assert.equal(cartEq.formula, `${cartEq.totalActiveTimeSeconds} s / ${makespan} s = ${(cartEq.utilizationRatio * 100).toFixed(1)}%`);
+
+  // 4. Sprawdzenie obciążenia operatorów i objaśnień mianowników
+  assert.equal(metrics.workers.length, 3); // 2 montażystów + 1 pracownik transportu montażu
+  for (const w of metrics.workers) {
+    assert.equal(w.denominatorSeconds, makespan);
+    assert.equal(w.denominatorBasis, 'czas realizacji partii (makespan) dostępny dla operatora');
+    assert.ok(w.activityFormula.includes(`${w.totalActiveTimeSeconds} s / ${makespan} s`));
+    assert.equal(w.activityRatio, Math.min(1, Math.round((w.totalActiveTimeSeconds / makespan) * 1000) / 1000));
+  }
 });
 
 

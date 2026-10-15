@@ -327,8 +327,8 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
         </details>
       </div>}
       {stateMetrics && <details aria-label="Inspekcja wykorzystania i stanów stanowisk" open={selectedTarget?.category === 'station' ? true : undefined}><summary>Stany i wykorzystanie stanowisk ({stateMetrics.stations.length})</summary>
-        <p className="muted">Zestawienie czasów przetwarzania, blokad po zakończeniu operacji (brak miejsca w buforze wyjściowym) oraz oczekiwania na lokalną kontynuację na tej samej kopii. Wskaźnik zajęcia uwzględnia łączny czas obecności korpusu na stanowisku w odniesieniu do czasu trwania partii.</p>
-        <div className="table-wrap"><table><thead><tr><th>Stanowisko / kopia</th><th>Operacje</th><th>Przetwarzanie [s]</th><th>Blokada wyjścia [s]</th><th>Oczekiwanie lokalne [s]</th><th>Łączne zajęcie [s]</th><th>Bezczynność [s]</th><th>Wskaźnik zajęcia</th><th>Wskaźnik pracy</th></tr></thead>
+        <p className="muted">Zestawienie czasów przetwarzania, blokad po zakończeniu operacji (brak miejsca w buforze wyjściowym) oraz oczekiwania na lokalną kontynuację na tej samej kopii. Wskaźnik zajęcia odnosi łączny czas obecności korpusu na stanowisku do czasu trwania partii (mianownik: makespan = {stateMetrics.makespanSeconds} s).</p>
+        <div className="table-wrap"><table><thead><tr><th>Stanowisko / kopia</th><th>Operacje</th><th>Przetwarzanie [s]</th><th>Blokada wyjścia [s]</th><th>Oczekiwanie lokalne [s]</th><th>Łączne zajęcie [s]</th><th>Bezczynność [s]</th><th>Wskaźnik zajęcia</th><th>Wskaźnik pracy</th><th>Objaśnienie mianownika i wzór</th></tr></thead>
           <tbody>{stateMetrics.stations.slice(0, 100).map(st => {
             const isStationSelected = selectedTarget?.category === 'station' &&
               selectedTarget.id === st.stationId &&
@@ -347,15 +347,35 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
               <td>{st.continuationWaitTimeSeconds}</td>
               <td>{st.totalOccupiedTimeSeconds}</td>
               <td>{st.idleTimeSeconds}</td>
-              <td>{(st.occupancyRatio * 100).toFixed(1)}%</td>
+              <td><strong>{(st.occupancyRatio * 100).toFixed(1)}%</strong></td>
               <td>{(st.processingRatio * 100).toFixed(1)}%</td>
+              <td><small>{st.occupancyFormula} (baza: {st.denominatorBasis})</small></td>
             </tr>;
           })}</tbody></table></div>
         {stateMetrics.stations.length > 100 && <p className="muted">Pokazano pierwsze 100 stanowisk.</p>}
       </details>}
+      {stateMetrics && <details aria-label="Inspekcja wykorzystania i stanów maszyn"><summary>Stany i wykorzystanie maszyn i wyposażenia ({stateMetrics.equipment.length})</summary>
+        <p className="muted">Zestawienie czasów biegu technologicznego maszyn i wyposażenia oraz przemieszczeń w transporcie montażu. Wskaźnik wykorzystania odnosi łączny czas pracy maszyny do czasu trwania partii (mianownik: makespan = {stateMetrics.makespanSeconds} s).</p>
+        {!stateMetrics.equipment.length ? <p>Brak zadeklarowanego wyposażenia w projekcie.</p> :
+        <div className="table-wrap"><table><thead><tr><th>Urządzenie / Maszyna</th><th>Stanowisko</th><th>Operacje / ruchy</th><th>Czas biegu maszyny [s]</th><th>Transport [s]</th><th>Łączny czas aktywny [s]</th><th>Bezczynność [s]</th><th>Wskaźnik wykorzystania</th><th>Objaśnienie mianownika i wzór</th></tr></thead>
+          <tbody>{stateMetrics.equipment.slice(0, 100).map(eq => {
+            return <tr key={eq.equipmentId}>
+              <td><strong>{eq.equipmentName ? `${eq.equipmentName} (${eq.equipmentId})` : eq.equipmentId}</strong></td>
+              <td>{eq.stationId || 'ogólne / mobilne'}</td>
+              <td>{eq.operationsCount}</td>
+              <td>{eq.runTimeSeconds}</td>
+              <td>{eq.transportTimeSeconds}</td>
+              <td>{eq.totalActiveTimeSeconds}</td>
+              <td>{eq.idleTimeSeconds}</td>
+              <td><strong>{(eq.utilizationRatio * 100).toFixed(1)}%</strong></td>
+              <td><small>{eq.formula} (baza: {eq.denominatorBasis})</small></td>
+            </tr>;
+          })}</tbody></table></div>}
+        {stateMetrics.equipment.length > 100 && <p className="muted">Pokazano pierwsze 100 pozycji wyposażenia.</p>}
+      </details>}
       {stateMetrics && <details aria-label="Inspekcja aktywności i stanów pracowników" open={selectedTarget?.category === 'worker' ? true : undefined}><summary>Stany i aktywność pracowników ({stateMetrics.workers.length})</summary>
-        <p className="muted">Zestawienie czasów montażu, transportu, przetrzymania w blokadzie bufora wyjściowego (polityka bbas ze wstrzymaniem operatora) oraz przerw kalendarzowych. Wskaźnik aktywności odnosi łączny czas zaangażowania do czasu trwania partii.</p>
-        <div className="table-wrap"><table><thead><tr><th>Pracownik</th><th>Operacje</th><th>Montaż [s]</th><th>Transport [s]</th><th>Zatrzymanie w blokadzie [s]</th><th>Pauzy [s]</th><th>Łączny czas aktywny [s]</th><th>Bezczynność [s]</th><th>Wskaźnik aktywności</th></tr></thead>
+        <p className="muted">Zestawienie czasów montażu, transportu, przetrzymania w blokadzie bufora wyjściowego (polityka bbas ze wstrzymaniem operatora) oraz przerw kalendarzowych. Wskaźnik aktywności odnosi łączny czas zaangażowania do czasu trwania partii (mianownik: makespan = {stateMetrics.makespanSeconds} s).</p>
+        <div className="table-wrap"><table><thead><tr><th>Pracownik</th><th>Operacje</th><th>Montaż [s]</th><th>Transport [s]</th><th>Zatrzymanie w blokadzie [s]</th><th>Pauzy [s]</th><th>Łączny czas aktywny [s]</th><th>Bezczynność [s]</th><th>Wskaźnik aktywności</th><th>Objaśnienie mianownika i wzór</th></tr></thead>
           <tbody>{stateMetrics.workers.slice(0, 100).map(w => {
             const isWorkerSelected = selectedTarget?.category === 'worker' &&
               selectedTarget.id === w.workerId;
@@ -374,7 +394,8 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
               <td>{w.pauseTimeSeconds}</td>
               <td>{w.totalActiveTimeSeconds}</td>
               <td>{w.idleTimeSeconds}</td>
-              <td>{(w.activityRatio * 100).toFixed(1)}%</td>
+              <td><strong>{(w.activityRatio * 100).toFixed(1)}%</strong></td>
+              <td><small>{w.activityFormula} (baza: {w.denominatorBasis})</small></td>
             </tr>;
           })}</tbody></table></div>
         {stateMetrics.workers.length > 100 && <p className="muted">Pokazano pierwszych 100 pracowników.</p>}

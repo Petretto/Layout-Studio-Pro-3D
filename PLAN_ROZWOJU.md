@@ -77,7 +77,9 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
-4.1 (2026-10-16): nierozpoczęte — pokazywać oddzielnie obciążenie stanowisk, maszyn i operatorów oraz objaśnić mianowniki wskaźników.
+4.2 (2026-10-16): nierozpoczęte — umożliwić blokowanie przydziałów przed automatycznym balansowaniem.
+
+4.1 (2026-10-16): wdrożone — pokazywać oddzielnie obciążenie stanowisk, maszyn i operatorów oraz objaśnić mianowniki wskaźników. Moduł obliczeniowy `src/core/workloadBalancing.ts` rozdzielający statyczne obciążenie stanowisk, maszyn i operatorów, z uwzględnieniem liczby kopii, obsady i profili technologicznych. Jawna prezentacja mianowników ($K \cdot T_{\text{takt}}$ oraz $(O \cdot K) \cdot T_{\text{takt}}$), formuł i opisów w dedykowanej tabeli widoku bilansowania `BalancingBoard.tsx`. W dynamicznym harmonogramie symulacji partii (`scheduleStateMetrics.ts` oraz `DomainWorkerSchedulePanel.tsx`): wdrożenie `EquipmentStateMetrics` (czas pracy technologicznej, transport, bezczynność, stopień wykorzystania) oraz wzbogacenie metryk stanowisk i pracowników o ścisłe bazy mianownika (makespan) i wzory obliczeniowe. Backup `backup/v0.4.0_przed_4_1_20261016` (162 pliki z SHA256). Pełna regresja 282/282 PASS, build/typecheck PASS, test Edge CDP zrzut `outputs/qa/verify_4_1.png` (111 505 bajtów). Raport: `RAPORT_OBCIAZENIA_I_MIANOWNIKOW_4_1.md`. Następny punkt: 4.2 — umożliwić blokowanie przydziałów przed automatycznym balansowaniem. Postęp: cały plan 30/67 = 44,8%, pierwsze wydanie 30/65 = 46,2%, Etap 4: 1/7 = 14,3%. Vercel nie zweryfikowano.
 
 3.9 (2026-10-16): wdrożone — sprawdzenie wyników na ręcznie policzonych scenariuszach i większych partiach oraz pomiary czasu obliczeń i responsywności UI. Formalny odbiór i zamknięcie Etapu 3 (10/10 = 100,0% wdrożone). Weryfikacja 5 precyzyjnych scenariuszy matematycznych (dokładność 1 ms): 1) czasy transportu, wydłużenie o delta t i niezmiennik translacji obiektów 3D; 2) wpływ pojemności buforów (0 vs 1) oraz polityk blokowania operatora (bbas vs bbas-worker-released); 3) lokalna kontynuacja na tej samej kopii bez ruchu i buforów; 4) zaopatrzenie materiałowe i opóźnienie dostaw; 5) pełna niezależność obliczeń od prędkości animacji (1x–5000x) i pauzy. Pomiary skalowalności: harmonogram z buforami dla partii 100 sztuk (200 operacji) w 258 ms (klonowanie Web Workera 2,5 ms, Gantt 28 ms); symulacja sieciowa 1000 sztuk w 52 ms; test Edge CDP responsywności UI: obliczenia 296 ms, zmiana widoku 68 ms, kliknięcie 4 ms (zrzut `outputs/qa/verify_3_9.png`). Raport: `WERYFIKACJA_SKALOWALNOSCI_I_DOKLADNOSCI_3_9.md`. Backup `backup/v0.4.0_przed_3_9_20261015` (290 plików z SHA256). Pełna regresja 280/280 PASS, build/typecheck PASS. Następny punkt: 4.1 (Etap 4) — oddzielne obciążenie stanowisk, maszyn i operatorów oraz mianowniki wskaźników. Postęp: cały plan 29/67 = 43,3%, pierwsze wydanie 29/65 = 44,6%, Etap 3: 10/10 = 100,0%. Vercel nie zweryfikowano.
 
@@ -436,7 +438,7 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 
 | ID | Krok / oczekiwany rezultat | Status |
 | --- | --- | --- |
-| 4.1 | Pokazywać oddzielnie obciążenie stanowisk, maszyn i operatorów oraz objaśnić mianowniki wskaźników. | nierozpoczęte |
+| 4.1 | Pokazywać oddzielnie obciążenie stanowisk, maszyn i operatorów oraz objaśnić mianowniki wskaźników. | wdrożone |
 | 4.2 | Umożliwić blokowanie przydziałów przed automatycznym balansowaniem. | nierozpoczęte |
 | 4.3 | Uwzględniać wymagania wyposażenia i kompetencji oraz wskazywać brak wykonalnego przydziału. | nierozpoczęte |
 | 4.4 | Wyjaśniać przyczynę ograniczenia przepustowości: obróbka, obsada, transport, blokada lub brak materiału. | nierozpoczęte |
@@ -534,6 +536,7 @@ Każdy kolejny wpis powinien wskazywać konkretne ID. Nie usuwać historii przy 
 
 | Data | ID | Zmiana statusu | Rezultat / dowód / uwagi |
 | --- | --- | --- | --- |
+| 2026-10-16 | 4.1 | nierozpoczęte → wdrożone | Oddzielne obciążenie stanowisk, maszyn i operatorów oraz jawne mianowniki wskaźników. Moduł `workloadBalancing.ts` z formułami i opisami mianowników dla widoku bilansowania `BalancingBoard.tsx`. Rozszerzenie `scheduleStateMetrics.ts` o `EquipmentStateMetrics` oraz jawne pola bazy mianownika i formuły dla stanowisk i pracowników. Testy 282/282 PASS, Edge CDP UI PASS (`outputs/qa/verify_4_1.png`). Raport: `RAPORT_OBCIAZENIA_I_MIANOWNIKOW_4_1.md`. Postęp: cały plan 30/67 = 44,8%, pierwsze wydanie 30/65 = 46,2%, Etap 4: 1/7 = 14,3%. |
 | 2026-10-06 | 2.5.2 | w trakcie → wdrożone | Pauza i wznowienie z tym samym zespołem oraz kopią, jawne odcinki pracy i pauzy, odmowa częściowego kalendarza lub zbyt krótkiego horyzontu; starszy szkic zachowuje podgląd logiczny. Backup 167 plików, testy 105/105, build; `WERYFIKACJA_KALENDARZA_2_5.md`. UI pozostaje w 2.5.3. |
 | 2026-10-06 | 2.5.2 | nierozpoczęte → w trakcie | Rozpoczęto podłączenie jawnych kalendarzy do odrębnego harmonogramu szkicu 6. |
 | 2026-10-05 | 2.5.1 | w trakcie → wdrożone | Jawne kalendarze osób i stanowisk w szkicu 6, walidacja przedziałów i źródła, obliczenie wspólnej dostępności, zapis/odczyt i odmowy; backup 164 zgodne SHA256, 104/104 testy, build. Kontrakt `MODEL_KALENDARZA_2_5.md`, raport `WERYFIKACJA_KALENDARZA_2_5.md`. Punkt 2.5 pozostaje w trakcie. |

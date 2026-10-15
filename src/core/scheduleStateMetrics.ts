@@ -39,6 +39,25 @@ export interface StationStateMetrics {
   idleTimeSeconds: number;
   occupancyRatio: number;
   processingRatio: number;
+  denominatorSeconds: number;
+  denominatorBasis: string;
+  occupancyFormula: string;
+  processingFormula: string;
+}
+
+export interface EquipmentStateMetrics {
+  equipmentId: string;
+  equipmentName: string;
+  stationId?: string;
+  operationsCount: number;
+  runTimeSeconds: number;
+  transportTimeSeconds: number;
+  totalActiveTimeSeconds: number;
+  idleTimeSeconds: number;
+  utilizationRatio: number;
+  denominatorSeconds: number;
+  denominatorBasis: string;
+  formula: string;
 }
 
 export interface WorkerStateMetrics {
@@ -52,6 +71,9 @@ export interface WorkerStateMetrics {
   totalActiveTimeSeconds: number;
   idleTimeSeconds: number;
   activityRatio: number;
+  denominatorSeconds: number;
+  denominatorBasis: string;
+  activityFormula: string;
 }
 
 export interface TransportStateMetrics {
@@ -72,6 +94,7 @@ export interface ScheduleStateSummary {
   totalContinuationWaitSeconds: number;
   transportMetrics: TransportStateMetrics;
   stations: StationStateMetrics[];
+  equipment: EquipmentStateMetrics[];
   workers: WorkerStateMetrics[];
   runs: RunStateDurations[];
 }
@@ -254,6 +277,13 @@ export function calculateStationMetrics(
       const idle = Math.max(0, makespan - totalOccupied);
       const occupancyRatio = makespan > 0 ? Math.min(1, totalOccupied / makespan) : 0;
       const processingRatio = makespan > 0 ? Math.min(1, processing / makespan) : 0;
+      const denominatorBasis = 'czas realizacji partii (makespan) dla danej kopii stanowiska';
+      const occupancyFormula = makespan > 0
+        ? `${round3(totalOccupied)} s / ${round3(makespan)} s = ${(occupancyRatio * 100).toFixed(1)}%`
+        : '0.0%';
+      const processingFormula = makespan > 0
+        ? `${round3(processing)} s / ${round3(makespan)} s = ${(processingRatio * 100).toFixed(1)}%`
+        : '0.0%';
 
       result.push({
         stationId: station.id,
@@ -267,8 +297,78 @@ export function calculateStationMetrics(
         idleTimeSeconds: round3(idle),
         occupancyRatio: round3(occupancyRatio),
         processingRatio: round3(processingRatio),
+        denominatorSeconds: round3(makespan),
+        denominatorBasis,
+        occupancyFormula,
+        processingFormula,
       });
     }
+  }
+
+  return result;
+}
+
+export function calculateEquipmentMetrics(
+  project: DomainProjectV6,
+  runs: readonly WorkerScheduleRun[],
+  movements: readonly AssemblyTransportMovement[] | undefined,
+  makespan: number,
+): EquipmentStateMetrics[] {
+  const result: EquipmentStateMetrics[] = [];
+  const operationsById = new Map(project.operations.map(op => [op.id, op]));
+
+  for (const eq of project.equipment) {
+    let runTime = 0;
+    let transportTime = 0;
+    let operationsCount = 0;
+
+    for (const run of runs) {
+      const op = operationsById.get(run.operationId);
+      const isUsedInRun = run.equipmentIds?.includes(eq.id);
+      if (!isUsedInRun) continue;
+
+      operationsCount++;
+      if (op?.timeProfile?.machineRun?.length) {
+        const machineDuration = op.timeProfile.machineRun.reduce(
+          (sum, interval) => sum + Math.max(0, interval.endSeconds - interval.startSeconds),
+          0,
+        );
+        runTime += machineDuration;
+      } else {
+        runTime += Math.max(0, run.endSeconds - run.startSeconds);
+      }
+    }
+
+    if (movements?.length) {
+      for (const m of movements) {
+        if (m.equipmentIds.includes(eq.id)) {
+          transportTime += Math.max(0, m.endSeconds - m.startSeconds);
+        }
+      }
+    }
+
+    const totalActiveTime = runTime + transportTime;
+    const idleTime = Math.max(0, makespan - totalActiveTime);
+    const utilizationRatio = makespan > 0 ? Math.min(1, totalActiveTime / makespan) : 0;
+    const denominatorBasis = 'czas realizacji partii (makespan)';
+    const formula = makespan > 0
+      ? `${round3(totalActiveTime)} s / ${round3(makespan)} s = ${(utilizationRatio * 100).toFixed(1)}%`
+      : '0.0%';
+
+    result.push({
+      equipmentId: eq.id,
+      equipmentName: eq.name,
+      stationId: eq.stationId,
+      operationsCount,
+      runTimeSeconds: round3(runTime),
+      transportTimeSeconds: round3(transportTime),
+      totalActiveTimeSeconds: round3(totalActiveTime),
+      idleTimeSeconds: round3(idleTime),
+      utilizationRatio: round3(utilizationRatio),
+      denominatorSeconds: round3(makespan),
+      denominatorBasis,
+      formula,
+    });
   }
 
   return result;
@@ -311,6 +411,10 @@ export function calculateWorkerMetrics(
     const totalActiveTime = workTime + heldBlockTime + transportTime;
     const idleTime = Math.max(0, makespan - totalActiveTime - pauseTime);
     const activityRatio = makespan > 0 ? Math.min(1, totalActiveTime / makespan) : 0;
+    const denominatorBasis = 'czas realizacji partii (makespan) dostępny dla operatora';
+    const activityFormula = makespan > 0
+      ? `${round3(totalActiveTime)} s / ${round3(makespan)} s = ${(activityRatio * 100).toFixed(1)}%`
+      : '0.0%';
 
     result.push({
       workerId: worker.id,
@@ -323,6 +427,9 @@ export function calculateWorkerMetrics(
       totalActiveTimeSeconds: round3(totalActiveTime),
       idleTimeSeconds: round3(idleTime),
       activityRatio: round3(activityRatio),
+      denominatorSeconds: round3(makespan),
+      denominatorBasis,
+      activityFormula,
     });
   }
 
@@ -352,6 +459,7 @@ export function calculateScheduleStateMetrics(
   const {partitioned: waitBreakdownPartitioned, presence: waitBreakdownPresence} = calculateWaitBreakdown(runs);
   const transportMetrics = calculateTransportMetrics(movements);
   const stations = calculateStationMetrics(project, runs, makespanSeconds);
+  const equipment = calculateEquipmentMetrics(project, runs, movements, makespanSeconds);
   const workers = calculateWorkerMetrics(project, runs, movements, makespanSeconds);
 
   return {
@@ -364,6 +472,7 @@ export function calculateScheduleStateMetrics(
     totalContinuationWaitSeconds,
     transportMetrics,
     stations,
+    equipment,
     workers,
     runs: runDurations,
   };

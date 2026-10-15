@@ -4,6 +4,7 @@ import { moveOperation } from '../../core/editing';
 import { OperationInspector } from './OperationInspector';
 import { effectiveCycle } from '../../core/resources';
 import { fmt, formatTimeValue, formatTimeWithUnit } from './Fields';
+import { calculateStaticWorkload } from '../../core/workloadBalancing';
 
 const colors = ['#2563eb', '#087f8c', '#7c3aed', '#b45309', '#be185d', '#047857'];
 export function BalancingBoard({ project: p, change }: { project: ProjectData; change: (p: ProjectData) => void }) {
@@ -62,6 +63,41 @@ export function BalancingBoard({ project: p, change }: { project: ProjectData; c
       </div>
       <p className="muted">Dla bardzo krótkich operacji użyj listy wyboru. Puste stanowisko jest usuwane automatycznie. Przestawienie operacji nie usuwa jej materiałów.</p>
       {current && <OperationInspector key={`${current.id}/${current.name}/${current.standardTimeSeconds}/${current.vaTimeSeconds}`} project={p} step={current} change={change} report={setMessage} />}
+    </div>
+    <div className="panel" aria-label="Oddzielne obciążenie stanowisk, maszyn i operatorów">
+      <h3>Oddzielne obciążenie stanowisk, maszyn i operatorów oraz mianowniki wskaźników</h3>
+      <p className="muted">Każdy wskaźnik podaje dokładny licznik, mianownik i formułę matematyczną. Mianownik czasu taktu ({formatTimeWithUnit(b.taktTimeSeconds, unit)}) jest skalowany przez liczbę równoległych kopii (dla stanowisk i maszyn) lub łączną obsadę (dla operatorów).</p>
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Stanowisko</th>
+              <th>Kopie / Obsada</th>
+              <th>Obciążenie stanowiska [%]</th>
+              <th>Mianownik stanowiska</th>
+              <th>Obciążenie operatorów [%]</th>
+              <th>Mianownik operatorów</th>
+              <th>Obciążenie maszyn [%]</th>
+              <th>Mianownik maszyn</th>
+            </tr>
+          </thead>
+          <tbody>
+            {b.workstations.map(ws => {
+              const wl = calculateStaticWorkload(ws, b.taktTimeSeconds, p.processSteps, p.workstationSettings?.[ws.id]);
+              return <tr key={ws.id}>
+                <td><strong>{ws.name} ({ws.id})</strong></td>
+                <td>{wl.copies} {wl.copies === 1 ? 'kopia' : 'kopie'} · {wl.totalOperators} {wl.totalOperators === 1 ? 'operator' : 'operatorów'}</td>
+                <td><strong className={wl.stationWorkloadPercent > 100 ? 'bad' : 'good'}>{wl.stationWorkloadPercent}%</strong><div><small>{wl.stationFormula}</small></div></td>
+                <td><small>{wl.stationDenominatorDescription}</small></td>
+                <td><strong className={wl.operatorWorkloadPercent > 100 ? 'bad' : 'good'}>{wl.operatorWorkloadPercent}%</strong><div><small>{wl.operatorFormula}</small></div></td>
+                <td><small>{wl.operatorDenominatorDescription}</small></td>
+                <td><strong className={wl.machineWorkloadPercent > 100 ? 'bad' : 'good'}>{wl.machineWorkloadPercent}%</strong><div><small>{wl.machineFormula}</small></div></td>
+                <td><small>{wl.machineDenominatorDescription}</small></td>
+              </tr>;
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>;
 }
