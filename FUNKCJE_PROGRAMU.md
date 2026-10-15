@@ -313,3 +313,16 @@ Umożliwia konfigurację buforów wejściowych i wyjściowych stanowisk:
 - natychmiastowe unieważnienie starego wyniku symulacji w panelu harmonogramu po zapisaniu zmian.
 Kolejny krok to formularz zaopatrzenia materiałowego montażu w 3.5c2.
 
+### Formularz zaopatrzenia materiałowego montażu — 3.5c2 (2026-10-15)
+W module Stanowiska v5 w Szkicu 6 dodano panel „Zaopatrzenie materiałowe montażu — zapasy i dostawy” (`DomainSupplyEditor.tsx`).
+Umożliwia pełną konfigurację dostępności materiałów i ich zużycia na linii montażowej:
+- definiowanie pozycji materiałowych (`MaterialSupplyItem`): unikalne ID, identyfikator komponentu/materiału (`componentId`), powiązanie ze stanowiskiem docelowym linii, zapas początkowy ($\ge 0$), jednostka miary oraz źródło danych;
+- harmonogramy dostaw:
+  - cykliczne (`periodic`): wielkość partii dostawy (> 0), interwał dostaw (> 0) oraz opcjonalny jawny termin pierwszej dostawy ($\ge 0$);
+  - jawne terminy (`explicit-deliveries`): dynamiczna lista dostaw z czasem dostawy [s] ($\ge 0$) oraz ilością (> 0);
+- przypisywanie zużycia materiałów do operacji (`MaterialConsumptionV6`): wybór operacji montażowej, powiązanie z pozycją zaopatrzenia, ilość zużycia na wykonanie (> 0) oraz źródło danych zużycia;
+- walidację spójności danych: odrzucanie ujemnych zapasów/ilości, duplikatów identyfikatorów pozycji, powtórzonych przypisań zużycia tej samej operacji i zaopatrzenia, nieznanych stanowisk lub operacji oraz pustych pól;
+- integrację ze wspólną historią operacji Cofnij/Ponów, odrzucenie niezapisanych zmian pól oraz usunięcie całej konfiguracji zaopatrzenia;
+- natychmiastowe unieważnienie starego wyniku symulacji w panelu harmonogramu po zapisaniu zmian zaopatrzenia (remount panelu przez unikalny klucz `draft.raw`).
+
+

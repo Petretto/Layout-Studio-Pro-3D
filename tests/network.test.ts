@@ -7,7 +7,7 @@ import {editDomainSubassemblyFlow} from '../src/core/domainSubassemblyEditing';
 import type {SubassemblyFlow} from '../src/core/subassemblyFlow';
 import {editDomainStationBuffers, editDomainMaterialSupply} from '../src/core/domainBuffersEditing';
 import {validateStationBuffers, type StationBuffersV6} from '../src/core/stationBuffers';
-import type {MaterialSupplyV6} from '../src/core/materialSupply';
+import {validateMaterialSupply, type MaterialSupplyV6} from '../src/core/materialSupply';
 import {reserveAssemblyMovement,finishAssemblyMovement} from '../src/core/assemblyMovement';
 import {editDomainAssemblyTransport} from '../src/core/domainTransportEditing';
 import {validateAssemblyTransport,type AssemblyTransport} from '../src/core/assemblyTransport';
@@ -4460,4 +4460,146 @@ test('3.5c1: integracja draft storage, historia Cofnij/Ponów i izolacja orygina
     assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),raw);
   }
 });
+
+test('3.5c2: edycja zaopatrzenia materiałowego montażu w szkicu 6 (pozycje, harmonogramy i zużycie)', () => {
+  const project = materialScheduleFixture();
+  const supply: MaterialSupplyV6 = {
+    items: [
+      {
+        id: 'SUP-1',
+        componentId: 'PART-A',
+        targetStationId: 'ST-A',
+        initialStock: 5,
+        unit: 'szt.',
+        schedule: {kind: 'periodic', batchQuantity: 10, intervalSeconds: 60, firstDeliverySeconds: 15},
+        source: 'Dostawy cykliczne',
+      },
+      {
+        id: 'SUP-2',
+        componentId: 'PART-B',
+        targetStationId: 'ST-C',
+        initialStock: 0,
+        unit: 'kg',
+        schedule: {
+          kind: 'explicit-deliveries',
+          deliveries: [
+            {deliveryTimeSeconds: 20, quantity: 5},
+            {deliveryTimeSeconds: 80, quantity: 5},
+          ],
+        },
+        source: 'Dostawy jawne',
+      },
+    ],
+    consumptions: [
+      {operationId: project.operations[0].id, supplyId: 'SUP-1', quantity: 2, source: 'Zużycie OP-1'},
+      {operationId: project.operations[1].id, supplyId: 'SUP-2', quantity: 1, source: 'Zużycie OP-2'},
+    ],
+  };
+
+  const before = JSON.stringify(project);
+  const edited = editDomainMaterialSupply(project, supply);
+  assert.equal(JSON.stringify(project), before);
+  assert.deepEqual(parseDomainProjectV6(JSON.stringify(edited)).materialSupply, supply);
+  assert.deepEqual(editDomainMaterialSupply(edited, undefined).materialSupply, undefined);
+});
+
+test('3.5c2: walidacja zaopatrzenia odrzuca duplikaty, nieznane referencje, ujemne wartości i puste pola', () => {
+  const project = materialScheduleFixture();
+  const validSupply: MaterialSupplyV6 = {
+    items: [{
+      id: 'SUP-1',
+      componentId: 'PART-A',
+      targetStationId: 'ST-A',
+      initialStock: 5,
+      unit: 'szt.',
+      schedule: {kind: 'periodic', batchQuantity: 10, intervalSeconds: 60, firstDeliverySeconds: 0},
+      source: 'Plan zaopatrzenia',
+    }],
+    consumptions: [{
+      operationId: project.operations[0].id,
+      supplyId: 'SUP-1',
+      quantity: 1,
+      source: 'Zużycie planowane',
+    }],
+  };
+
+  assert.doesNotThrow(() => validateMaterialSupply(project, validSupply));
+  assert.throws(() => validateMaterialSupply(project, {...validSupply, items: [{...validSupply.items[0], id: ''}]}), /wymagany tekst/);
+  assert.throws(() => validateMaterialSupply(project, {...validSupply, items: [{...validSupply.items[0], targetStationId: 'NONEXISTENT'}]}), /nieznane stanowisko/);
+  assert.throws(() => validateMaterialSupply(project, {...validSupply, items: [{...validSupply.items[0], initialStock: -1}]}), /nieujemna liczba/);
+  assert.throws(() => validateMaterialSupply(project, {
+    ...validSupply,
+    items: [validSupply.items[0], validSupply.items[0]],
+  }), /powtórzone ID/);
+  assert.throws(() => validateMaterialSupply(project, {
+    ...validSupply,
+    consumptions: [{operationId: 'NONEXISTENT_OP', supplyId: 'SUP-1', quantity: 1, source: 'Błędna operacja'}],
+  }), /nieznana operacja lub pozycja zaopatrzenia/);
+  assert.throws(() => validateMaterialSupply(project, {
+    ...validSupply,
+    consumptions: [{operationId: project.operations[0].id, supplyId: 'NONEXISTENT_SUP', quantity: 1, source: 'Błędne zaopatrzenie'}],
+  }), /nieznana operacja lub pozycja zaopatrzenia/);
+  assert.throws(() => validateMaterialSupply(project, {
+    ...validSupply,
+    consumptions: [{operationId: project.operations[0].id, supplyId: 'SUP-1', quantity: 0, source: 'Błędna ilość'}],
+  }), /dodatnia liczba/);
+  assert.throws(() => validateMaterialSupply(project, {
+    ...validSupply,
+    consumptions: [
+      {operationId: project.operations[0].id, supplyId: 'SUP-1', quantity: 1, source: 'Wpis 1'},
+      {operationId: project.operations[0].id, supplyId: 'SUP-1', quantity: 2, source: 'Wpis 2'},
+    ],
+  }), /powtórzone przypisanie/);
+});
+
+test('3.5c2: integracja draft storage, historia Cofnij/Ponów i izolacja oryginalnych źródeł 4/5 dla zaopatrzenia', () => {
+  const project = materialScheduleFixture();
+  const supply: MaterialSupplyV6 = {
+    items: [{
+      id: 'SUP-QA',
+      componentId: 'MAT-QA',
+      targetStationId: 'ST-A',
+      initialStock: 10,
+      unit: 'szt.',
+      schedule: {kind: 'periodic', batchQuantity: 5, intervalSeconds: 30, firstDeliverySeconds: 10},
+      source: 'Test draft storage',
+    }],
+    consumptions: [{
+      operationId: project.operations[0].id,
+      supplyId: 'SUP-QA',
+      quantity: 2,
+      source: 'Zużycie test',
+    }],
+  };
+  const edited = editDomainMaterialSupply(project, supply);
+
+  for (const originalJson of [
+    JSON.stringify(derive(parseProject(JSON.stringify(base))).project),
+    readFileSync('tests/qa/Eko_D5_actual_export_v5.json', 'utf8'),
+  ]) {
+    const storage = new DraftStorage(), initial = saveDomainDraft(storage, {project, originalJson}, null);
+    const written = saveDomainDraft(storage, {project: edited, originalJson}, initial.raw), reopened = readDomainDraft(storage);
+    assert.equal(reopened.status, 'valid');
+    if (reopened.status === 'valid') {
+      assert.equal(reopened.saved.originalJson, originalJson);
+      assert.deepEqual(reopened.saved.project.materialSupply, supply);
+    }
+    const invalid = structuredClone(edited);
+    invalid.materialSupply!.items[0].initialStock = -10;
+    assert.throws(() => saveDomainDraft(storage, {project: invalid, originalJson}, written.raw));
+    assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY), written.raw);
+    const undone = saveDomainDraft(storage, {project, originalJson}, written.raw);
+    const old = readDomainDraft(storage);
+    assert.equal(old.status, 'valid');
+    if (old.status === 'valid') assert.deepEqual(old.saved.project.materialSupply, project.materialSupply);
+    saveDomainDraft(storage, {project: edited, originalJson}, undone.raw);
+    const corrupt = JSON.parse(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY)!);
+    corrupt.project.materialSupply.items[0].targetStationId = 'NONEXISTENT';
+    const raw = JSON.stringify(corrupt);
+    storage.setItem(DOMAIN_DRAFT_STORAGE_KEY, raw);
+    assert.equal(readDomainDraft(storage).status, 'corrupt');
+    assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY), raw);
+  }
+});
+
 

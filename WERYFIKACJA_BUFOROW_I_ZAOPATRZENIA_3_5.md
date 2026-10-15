@@ -94,3 +94,31 @@ Weryfikacja:
   9. Izolacja źródeł 4/5 i brak wyjątków w konsoli.
 Całe zadanie 3.5 w trakcie. Kolejny pakiet: 3.5c2 — formularz zaopatrzenia materiałowego montażu w UI. Postęp: cały plan 24/67 = 35,8%, pierwsze wydanie 24/65 = 36,9%. Vercel nie zweryfikowano.
 
+## 3.5c2 — Weryfikacja formularza zaopatrzenia materiałowego montażu w UI Studio (2026-10-15)
+
+Zakres:
+- Komponent `src/components/studio/DomainSupplyEditor.tsx` wbudowany do `DomainDraftPanel.tsx` z kluczem `key={supply-${draft.raw}}`.
+- Pełna obsługa pozycji zaopatrzenia (`MaterialSupplyItem`): ID, komponent, stanowisko docelowe, zapas początkowy, jednostka, źródło danych.
+- Harmonogramy cykliczne (partia, interwał, opcjonalny jawny czas pierwszej dostawy) oraz jawne dostawy (lista terminów i ilości).
+- Przypisania zużycia materiałów do operacji (`MaterialConsumptionV6`): operacja, pozycja zaopatrzenia, ilość, źródło.
+- Integracja z `editDomainMaterialSupply`, wspólna historia Cofnij/Ponów, odrzucenie niezapisanych zmian, usuwanie konfiguracji oraz unieważnienie wyniku symulacji harmonogramu zespołu.
+
+Weryfikacja:
+- Nowe testy jednostkowe/integracyjne w `tests/network.test.ts`: 3/3 PASS (edycja i usuwanie zaopatrzenia bez mutacji projektu, odmowy walidatora przy błędnych referencjach/duplikatach/ujemnych wartościach, integracja ze storage draftu, historia Cofnij/Ponów i odporność na uszkodzony zapis).
+- Celowany zestaw testów buforów i zaopatrzenia 3.5: **69/69 PASS**.
+- Zestaw testów regresyjnych `core`: **34/34 PASS**.
+- Kompilacja TypeScript (`tsc --noEmit`) oraz pełny build (`npm run build`): PASS, bez błędów typowania i ostrzeżeń.
+- Test przeglądarkowy Edge CDP (`tests/qa/verify_2_7e.mjs --supply-editor`): PASS. Przetestowano:
+  1. Dodanie pozycji zaopatrzenia (`SUP-QA-1`, `MAT-QA-1`, stanowisko `ST-A`).
+  2. Blokadę ujemnego zapasu początkowego (`nieujemna liczba`).
+  3. Dodanie przypisania zużycia materiału do operacji montażowej (`OP-A`, ilość 2).
+  4. Zapis do `localStorage`, operacje Cofnij i Ponów.
+  5. Odrzucenie niezapisanych zmian pól (`Odrzuć zmiany zaopatrzenia`).
+  6. Usunięcie konfiguracji zaopatrzenia i jej przywrócenie przez Cofnij.
+  7. Zrzut ekranu do `outputs/qa/verify_3_5c2.png`, wizualny odbiór PASS.
+  8. Odtworzenie stanu po przeładowaniu strony (`open()` / reload).
+  9. Unieważnienie wyniku symulacji po zapisie modyfikacji zaopatrzenia.
+  10. Izolacja źródeł 4/5 i brak wyjątków w konsoli.
+Całe zadanie 3.5 w trakcie. Następny krok: zbiorczy odbiór integracyjny buforów i zaopatrzenia. Postęp: cały plan 24/67 = 35,8%, pierwsze wydanie 24/65 = 36,9%. Vercel nie zweryfikowano.
+
+

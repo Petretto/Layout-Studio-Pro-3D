@@ -28,7 +28,8 @@ import {editDomainAssemblyTransport} from '../../core/domainTransportEditing';
 import {DomainSubassemblyEditor} from './DomainSubassemblyEditor';
 import {editDomainSubassemblyFlow} from '../../core/domainSubassemblyEditing';
 import {DomainBuffersEditor} from './DomainBuffersEditor';
-import {editDomainStationBuffers} from '../../core/domainBuffersEditing';
+import {DomainSupplyEditor} from './DomainSupplyEditor';
+import {editDomainStationBuffers, editDomainMaterialSupply} from '../../core/domainBuffersEditing';
 import {editDomainMaterialNetwork} from '../../core/domainMaterialEditing';
 import {editDomainPhysicalRole} from '../../core/domainPhysicalRoleEditing';
 
@@ -221,6 +222,10 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
       canUndo={past.length > 0} canRedo={future.length > 0} />}
     {draft.status === 'valid' && <DomainBuffersEditor key={`buffers-${draft.raw}`} project={draft.saved.project}
       onApply={buffers => applyDraftChange(project => editDomainStationBuffers(project, buffers), 'Zapisano konfigurację buforów stanowisk w szkicu 6.')}
+      onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
+      canUndo={past.length > 0} canRedo={future.length > 0} />}
+    {draft.status === 'valid' && <DomainSupplyEditor key={`supply-${draft.raw}`} project={draft.saved.project}
+      onApply={supply => applyDraftChange(project => editDomainMaterialSupply(project, supply), 'Zapisano zaopatrzenie materiałowe w szkicu 6.')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
       canUndo={past.length > 0} canRedo={future.length > 0} />}
     {draft.status === 'valid' && <DomainBodyEditor key={`body-${draft.raw}`} project={draft.saved.project}

@@ -149,3 +149,17 @@ Edytor umożliwia:
 - Nienaruszanie dotychczasowych modeli: aktywne projekty v4/v5, format JSON i logika symulacji pozostają ściśle odizolowane i niezmienione.
 Kolejny pakiet: 3.5c2 — formularz zaopatrzenia materiałowego montażu w UI.
 
+## 15. 3.5c2 — edytor zaopatrzenia materiałowego montażu w UI Studio (2026-10-15)
+Wprowadzono formularz `DomainSupplyEditor.tsx` wbudowany w panel Szkicu 6 (`DomainDraftPanel.tsx`), powiązany ze wspólną historią operacji Cofnij/Ponów, bezpośrednią walidacją kontraktu `MaterialSupplyV6` i zapisem w `localStorage` pod kluczem szkicu 6.
+Edytor umożliwia:
+- Konfigurację pozycji materiałowych (`MaterialSupplyItem`): unikalne ID, identyfikator komponentu/materiału (`componentId`), przypisanie do stanowiska docelowego (wybór z listy stanowisk projektu), zapas początkowy ($\ge 0$), jednostkę miary (np. `szt.`, `kg`) oraz źródło danych.
+- Definiowanie harmonogramów dostaw (`SupplySchedule`):
+  - Harmonogram cykliczny (`periodic`): wielkość partii dostawy (> 0), interwał dostaw (> 0) oraz opcjonalny jawny termin pierwszej dostawy ($\ge 0$).
+  - Harmonogram jawnych dostaw (`explicit-deliveries`): dynamiczna lista pojedynczych dostaw z czasem dostawy ($\ge 0$) i ilością (> 0).
+- Przypisywanie zużycia materiałów do operacji (`MaterialConsumptionV6`): wybór operacji z listy operacji projektu, wybór pozycji zaopatrzenia ze skonfigurowanych pozycji, ilość zużycia na wykonanie (> 0) oraz źródło danych zużycia.
+- Pełną walidację spójności: wykrywanie i odrzucanie duplikatów ID zaopatrzenia, powtórzonych przypisań tej samej operacji i zaopatrzenia, ujemnych zapasów/ilości, nieznanych stanowisk lub operacji oraz pustych identyfikatorów. Błędy walidacji są prezentowane w UI i uniemożliwiają zapis uszkodzonego stanu.
+- Bezpieczeństwo danych: odrzucenie niezapisanych zmian przywraca stan do poprzednio zapisanego kontraktu; przycisk „Usuń konfigurację zaopatrzenia” pozwala jawnie usunąć deklarację zaopatrzenia (`materialSupply: undefined`).
+- Integrację z symulacją i unieważnienie wyników: zapis zaopatrzenia automatycznie aktualizuje klucz draftu (`key={supply-${draft.raw}}` oraz `key={schedule-${draft.raw}}`), natychmiastowo unieważniając nieaktualne wyniki symulacji.
+- Nienaruszanie dotychczasowych modeli: aktywne projekty v4/v5, format JSON i logika symulacji pozostają ściśle odizolowane i niezmienione.
+
+

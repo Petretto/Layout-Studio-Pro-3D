@@ -253,7 +253,7 @@ try{
   const open=async()=>{await send('Page.reload');await sleep(800);await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(b=>b.textContent.includes('Stanowiska v5')).click()`);await sleep(150);};
   await open();
   // Canonicalize the fresh legacy fixture through its existing reader before isolation checks.
-  if(process.argv.includes('--physical-buffer-run')||process.argv.includes('--buffer-editor'))await open();
+  if(process.argv.includes('--physical-buffer-run')||process.argv.includes('--buffer-editor')||process.argv.includes('--supply-editor'))await open();
   await sleep(1500);const legacy=await evaluate(`localStorage.getItem('layout-studio-stations-v5')`),legacy4=await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`);
   if(process.argv.includes('--subassembly-editor')){
     const panel='Partie podzespołów szkicu 6',before=JSON.stringify(await saved());
@@ -320,6 +320,40 @@ try{
     await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==before)throw new Error('Przywrócenie przed reload');
     await open();
     if(JSON.stringify(await saved())!==before||await evaluate(`document.querySelector('[aria-label="Bufor 1 wejście bez limitu"]').checked`)!==true)throw new Error('Reload nie odtwarza formularza buforów');
+  }
+  if(process.argv.includes('--supply-editor')){
+    const panel='Zaopatrzenie materiałowe montażu szkicu 6',before=JSON.stringify(await saved());
+    await click('Dodaj pozycję zaopatrzenia',panel);
+    await field('Pozycja zaopatrzenia 1 ID','SUP-QA-1');
+    await field('Pozycja zaopatrzenia 1 komponent','MAT-QA-1');
+    const stationId=(await saved()).stations[0].id;
+    await field('Pozycja zaopatrzenia 1 stanowisko',stationId);
+    await field('Pozycja zaopatrzenia 1 zapas początkowy','-5');
+    await click('Zapisz zaopatrzenie materiałowe',panel);
+    if(JSON.stringify(await saved())!==before||!await evaluate(`document.querySelector('[aria-label="${panel}"]').textContent.includes('nieujemna liczba')`))throw new Error('Błąd ujemnego zapasu nie został zablokowany');
+    await field('Pozycja zaopatrzenia 1 zapas początkowy','10');
+    await click('Dodaj przypisanie zużycia',panel);
+    const opId=(await saved()).operations[0].id;
+    await field('Zużycie 1 operacja',opId);
+    await field('Zużycie 1 zaopatrzenie','SUP-QA-1');
+    await field('Zużycie 1 ilość','2');
+    await field('Zużycie 1 źródło','Jawne zapotrzebowanie UI');
+    await click('Zapisz zaopatrzenie materiałowe',panel);
+    const expected=JSON.stringify(await saved());
+    const savedSupply=(await saved()).materialSupply;
+    if(!savedSupply||savedSupply.items[0].id!=='SUP-QA-1'||savedSupply.consumptions[0].quantity!==2)throw new Error('Nie zapisano zaopatrzenia');
+    await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==before)throw new Error('Cofnij zaopatrzenia zmienia projekt');
+    await click('Ponów dane szkicu',panel);if(JSON.stringify(await saved())!==expected)throw new Error('Ponów nie odtwarza zaopatrzenia');
+    await field('Zużycie 1 ilość','99');await click('Odrzuć zmiany zaopatrzenia',panel);
+    if(await evaluate(`document.querySelector('[aria-label="Zużycie 1 ilość"]').value`)!=='2')throw new Error('Odrzuć nie odświeża formularza zużycia');
+    await click('Usuń konfigurację zaopatrzenia',panel);if((await saved()).materialSupply)throw new Error('Nie usunięto konfiguracji zaopatrzenia');
+    await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==expected)throw new Error('Nie przywrócono zaopatrzenia');
+    await evaluate(`document.querySelector('[aria-label="${panel}"]').scrollIntoView()`);mkdirSync('outputs/qa',{recursive:true});
+    const shot=await send('Page.captureScreenshot',{format:'png'});
+    writeFileSync('outputs/qa/verify_3_5c2.png',Buffer.from(shot.data,'base64'));
+    await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==before)throw new Error('Przywrócenie przed reload');
+    await open();
+    if(JSON.stringify(await saved())!==before)throw new Error('Reload nie zachowuje stanu draftu');
   }
   if(process.argv.includes('--reverse-approach')){
     const panel='Transport montażu szkicu 6',before=JSON.stringify(await saved());
