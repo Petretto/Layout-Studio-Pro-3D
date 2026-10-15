@@ -3,6 +3,7 @@ import type {DomainProjectV6} from '../../core/domainProject';
 import type {WorkerScheduleResult, WorkerScheduleRun} from '../../core/workerSchedule';
 import {startScheduleTask, type ScheduleProgress} from '../../core/scheduleTask';
 import {matchingConcurrencyGroup} from '../../core/physicalConcurrency';
+import {calculateScheduleStateMetrics} from '../../core/scheduleStateMetrics';
 
 /** Inspect full operation spans, including pauses; transport is listed separately in the result. */
 function simultaneousPeriods(runs: readonly WorkerScheduleRun[]) {
@@ -71,6 +72,7 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
   const runs = result?.runs ?? [];
   const totalWait = runs.reduce((sum, run) => sum + run.waitSeconds, 0);
   const concurrentPeriods = simultaneousPeriods(runs);
+  const stateMetrics = result ? calculateScheduleStateMetrics(project, result) : null;
   return <div className="panel" aria-label="Harmonogram zespołu szkicu 6">
     <h3>Harmonogram zespołu — szkic 6</h3>
     <p className="muted">Podgląd wymaga zapisanego składu i wyborów operacji. Równoległość wymaga zapisanej grupy obejmującej wszystkie trwające czynności.</p>
@@ -95,8 +97,52 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
     {result && <div role="status" aria-label="Wynik harmonogramu szkicu 6">
       {result.transportMode==='just-in-time'&&<p aria-label="Tryb transportu wyniku">JUST IN TIME — symulacja procesu bez transportu; dostępność materiałów założona, fizyczne lokalizacje korpusów nie są obliczane.</p>}
       <p>{result.mode === 'calendar' ? 'Przebieg kalendarzowy' : 'Podgląd logiczny bez kalendarza'} · {result.jobs.length} szt. · {runs.length} wykonań · koniec ostatniej sztuki: {Math.max(...result.jobs.map(job => job.finish))} s · suma oczekiwania operacji: {totalWait} s.</p>
+      {stateMetrics && <div className="state-metrics-summary" aria-label="Podsumowanie stanów procesu i czasów trwania">
+        <h4>Stany procesu i czasy trwania</h4>
+        <div className="metrics">
+          <div className="metric">
+            <span>Czas partii (makespan)</span>
+            <strong>{stateMetrics.makespanSeconds} s</strong>
+            <small>Koniec ostatniej sztuki</small>
+          </div>
+          <div className="metric">
+            <span>Czas pracy operacji</span>
+            <strong>{stateMetrics.totalWorkSeconds} s</strong>
+            <small>Suma czasów trwania operacji</small>
+          </div>
+          <div className="metric">
+            <span>Czas oczekiwania</span>
+            <strong>{stateMetrics.totalWaitSeconds} s</strong>
+            <small>Suma opóźnień przed startem</small>
+          </div>
+          <div className="metric">
+            <span>Blokady i oczekiwanie</span>
+            <strong>{Math.round((stateMetrics.totalBlockedSeconds + stateMetrics.totalContinuationWaitSeconds) * 1000) / 1000} s</strong>
+            <small>Blokady wyjścia: {stateMetrics.totalBlockedSeconds} s · lokalne: {stateMetrics.totalContinuationWaitSeconds} s</small>
+          </div>
+          <div className="metric">
+            <span>Transport montażu</span>
+            <strong>{stateMetrics.transportMetrics.totalTransportDurationSeconds} s</strong>
+            <small>Ruchów: {stateMetrics.transportMetrics.totalMovementsCount} · przewozy: {stateMetrics.transportMetrics.transferTimeSeconds} s</small>
+          </div>
+        </div>
+        <div className="notice" aria-label="Zestawienie przyczyn oczekiwania">
+          <strong>Rozbicie przyczyn oczekiwania operacji (partycjonowane, suma: {stateMetrics.totalWaitSeconds} s):</strong>
+          <ul style={{margin: '6px 0 0 16px', padding: 0}}>
+            <li>Pracownicy (brak dostępności osób): <strong>{stateMetrics.waitBreakdownPartitioned.workers} s</strong>{stateMetrics.waitBreakdownPresence.workers !== stateMetrics.waitBreakdownPartitioned.workers && <span className="muted"> (wystąpiło przy {stateMetrics.waitBreakdownPresence.workers} s oczekiwań)</span>}</li>
+            <li>Materiały i podzespoły (brak zapasu/partii): <strong>{stateMetrics.waitBreakdownPartitioned.material} s</strong>{stateMetrics.waitBreakdownPresence.material !== stateMetrics.waitBreakdownPartitioned.material && <span className="muted"> (wystąpiło przy {stateMetrics.waitBreakdownPresence.material} s oczekiwań)</span>}</li>
+            <li>Transport montażu (dojazdy/dostępność wózków): <strong>{stateMetrics.waitBreakdownPartitioned.transport} s</strong>{stateMetrics.waitBreakdownPresence.transport !== stateMetrics.waitBreakdownPartitioned.transport && <span className="muted"> (wystąpiło przy {stateMetrics.waitBreakdownPresence.transport} s oczekiwań)</span>}</li>
+            <li>Bufory (brak miejsca na wyjściu/wejściu): <strong>{stateMetrics.waitBreakdownPartitioned.buffer} s</strong>{stateMetrics.waitBreakdownPresence.buffer !== stateMetrics.waitBreakdownPartitioned.buffer && <span className="muted"> (wystąpiło przy {stateMetrics.waitBreakdownPresence.buffer} s oczekiwań)</span>}</li>
+            <li>Stanowiska, korpusy i wyposażenie: <strong>{stateMetrics.waitBreakdownPartitioned.station} s</strong>{stateMetrics.waitBreakdownPresence.station !== stateMetrics.waitBreakdownPartitioned.station && <span className="muted"> (wystąpiło przy {stateMetrics.waitBreakdownPresence.station} s oczekiwań)</span>}</li>
+            <li>Kalendarz (brak wspólnego okna pracy): <strong>{stateMetrics.waitBreakdownPartitioned.calendar} s</strong>{stateMetrics.waitBreakdownPresence.calendar !== stateMetrics.waitBreakdownPartitioned.calendar && <span className="muted"> (wystąpiło przy {stateMetrics.waitBreakdownPresence.calendar} s oczekiwań)</span>}</li>
+          </ul>
+          {stateMetrics.transportMetrics.totalMovementsCount > 0 && <div style={{marginTop: '8px'}}>
+            <strong>Struktura transportu montażu:</strong> przewozy z ładunkiem: {stateMetrics.transportMetrics.transferTimeSeconds} s · dojazdy bez ładunku: {stateMetrics.transportMetrics.approachTimeSeconds} s · powroty bez ładunku: {stateMetrics.transportMetrics.returnTimeSeconds} s.
+          </div>}
+        </div>
+      </div>}
       <p className="muted">Przyczyna oczekiwania jest zapisana dla operacji, która musiała czekać. Przy kilku przyczynach w czasie oczekiwania pokazane są wszystkie.</p>
-      <div className="table-wrap"><table><thead><tr><th>Sztuka</th><th>Operacja</th><th>Stanowisko / kopia</th><th>Pracownicy</th><th>Gotowa [s]</th><th>Start [s]</th><th>Koniec [s]</th><th>Oczekiwanie [s]</th><th>Przyczyna</th></tr></thead>
+      <div className="table-wrap"><table><thead><tr><th>Sztuka</th><th>Operacja</th><th>Stanowisko / kopia</th><th>Pracownicy</th><th>Gotowa [s]</th><th>Start [s]</th><th>Koniec [s]</th><th>Czas pracy [s]</th><th>Oczekiwanie [s]</th><th>Blokada [s]</th><th>Przyczyna</th></tr></thead>
         <tbody>{runs.slice(0, 100).map(run => <tr key={`${run.job}:${run.operationId}`}>
           <td>{run.job}</td><td>{run.operationId}</td><td>{run.stationId} / {run.copy}</td>
           <td>{run.workerIds.join(', ')}
@@ -109,7 +155,10 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
             {run.selectionRouteId && <div>Planowana następna trasa: {run.selectionRouteId} · {run.selectionDistanceMm} mm</div>}
             {run.arrivalRouteId && <div>Wybrana trasa z poprzedniej operacji: {run.arrivalRouteId} · {run.arrivalDistanceMm} mm</div>}
           </td><td>{run.readySeconds}</td><td>{run.startSeconds}</td>
-          <td>{run.endSeconds}</td><td>{run.waitSeconds}</td>
+          <td>{run.endSeconds}</td>
+          <td>{Math.round((run.endSeconds - run.startSeconds) * 1000) / 1000}{run.pauses.length > 0 && <div><small>netto: {Math.round(run.workWindows.reduce((s, w) => s + (w.endSeconds - w.startSeconds), 0) * 1000) / 1000} s</small></div>}</td>
+          <td>{run.waitSeconds}</td>
+          <td>{run.blockedSeconds ? `${run.blockedSeconds} s` : run.continuationWaitSeconds !== undefined ? `${run.continuationWaitSeconds} s (lokalne)` : '—'}</td>
           <td>{run.waitCauses.length ? run.waitCauses.map(cause => causeLabel[cause]).join(', ') : '—'}
             {result.mode === 'calendar' && <div>Praca [s]: {run.workWindows.map(window => `${window.startSeconds}–${window.endSeconds}`).join(', ')}<br />
               Pauzy [s]: {run.pauses.length ? run.pauses.map(window => `${window.startSeconds}–${window.endSeconds}`).join(', ') : 'brak'}<br />
@@ -173,6 +222,38 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
           {(result.bodyEvents?.length ?? 0) > 500 && <p>Pokazano pierwsze 500 zdarzeń.</p>}
         </details>
       </div>}
+      {stateMetrics && <details aria-label="Inspekcja wykorzystania i stanów stanowisk"><summary>Stany i wykorzystanie stanowisk ({stateMetrics.stations.length})</summary>
+        <p className="muted">Zestawienie czasów przetwarzania, blokad po zakończeniu operacji (brak miejsca w buforze wyjściowym) oraz oczekiwania na lokalną kontynuację na tej samej kopii. Wskaźnik zajęcia uwzględnia łączny czas obecności korpusu na stanowisku w odniesieniu do czasu trwania partii.</p>
+        <div className="table-wrap"><table><thead><tr><th>Stanowisko / kopia</th><th>Operacje</th><th>Przetwarzanie [s]</th><th>Blokada wyjścia [s]</th><th>Oczekiwanie lokalne [s]</th><th>Łączne zajęcie [s]</th><th>Bezczynność [s]</th><th>Wskaźnik zajęcia</th><th>Wskaźnik pracy</th></tr></thead>
+          <tbody>{stateMetrics.stations.slice(0, 100).map(st => <tr key={`${st.stationId}:${st.copy}`}>
+            <td>{st.stationName ? `${st.stationName} (${st.stationId})` : st.stationId} / kopia {st.copy}</td>
+            <td>{st.operationsCount}</td>
+            <td>{st.processingTimeSeconds}</td>
+            <td>{st.blockedTimeSeconds}</td>
+            <td>{st.continuationWaitTimeSeconds}</td>
+            <td>{st.totalOccupiedTimeSeconds}</td>
+            <td>{st.idleTimeSeconds}</td>
+            <td>{(st.occupancyRatio * 100).toFixed(1)}%</td>
+            <td>{(st.processingRatio * 100).toFixed(1)}%</td>
+          </tr>)}</tbody></table></div>
+        {stateMetrics.stations.length > 100 && <p className="muted">Pokazano pierwsze 100 stanowisk.</p>}
+      </details>}
+      {stateMetrics && <details aria-label="Inspekcja aktywności i stanów pracowników"><summary>Stany i aktywność pracowników ({stateMetrics.workers.length})</summary>
+        <p className="muted">Zestawienie czasów montażu, transportu, przetrzymania w blokadzie bufora wyjściowego (polityka bbas ze wstrzymaniem operatora) oraz przerw kalendarzowych. Wskaźnik aktywności odnosi łączny czas zaangażowania do czasu trwania partii.</p>
+        <div className="table-wrap"><table><thead><tr><th>Pracownik</th><th>Operacje</th><th>Montaż [s]</th><th>Transport [s]</th><th>Zatrzymanie w blokadzie [s]</th><th>Pauzy [s]</th><th>Łączny czas aktywny [s]</th><th>Bezczynność [s]</th><th>Wskaźnik aktywności</th></tr></thead>
+          <tbody>{stateMetrics.workers.slice(0, 100).map(w => <tr key={w.workerId}>
+            <td>{w.workerName ? `${w.workerName} (${w.workerId})` : w.workerId}</td>
+            <td>{w.operationsCount}</td>
+            <td>{w.workTimeSeconds}</td>
+            <td>{w.transportTimeSeconds}</td>
+            <td>{w.heldBlockTimeSeconds}</td>
+            <td>{w.pauseTimeSeconds}</td>
+            <td>{w.totalActiveTimeSeconds}</td>
+            <td>{w.idleTimeSeconds}</td>
+            <td>{(w.activityRatio * 100).toFixed(1)}%</td>
+          </tr>)}</tbody></table></div>
+        {stateMetrics.workers.length > 100 && <p className="muted">Pokazano pierwszych 100 pracowników.</p>}
+      </details>}
     </div>}
   </div>;
 }

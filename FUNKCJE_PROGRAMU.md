@@ -325,4 +325,23 @@ Umożliwia pełną konfigurację dostępności materiałów i ich zużycia na li
 - integrację ze wspólną historią operacji Cofnij/Ponów, odrzucenie niezapisanych zmian pól oraz usunięcie całej konfiguracji zaopatrzenia;
 - natychmiastowe unieważnienie starego wyniku symulacji w panelu harmonogramu po zapisaniu zmian zaopatrzenia (remount panelu przez unikalny klucz `draft.raw`).
 
+### Prezentacja stanów procesu, czasów trwania, rozbicia oczekiwań i wykorzystania zasobów — 3.6 (2026-10-15)
+W panelu harmonogramu zespołu w module Stanowiska v5 (`DomainWorkerSchedulePanel.tsx`), na bazie modułu analitycznego `scheduleStateMetrics.ts`, wdrożono pełną prezentację stanów i czasów trwania procesu:
+- **Kafelki sumaryczne procesu**:
+  - Czas realizacji partii (*makespan* [s]) — czas zakończenia ostatniej operacji na ostatniej sztuce;
+  - Czas pracy operacji [s] — suma czasów trwania operacji w partii;
+  - Czas oczekiwania [s] — całkowity czas opóźnień przed startem operacji;
+  - Blokady i oczekiwanie lokalne [s] — suma czasów blokad wyjścia po zakończeniu obróbki (polityka `bbas`) oraz oczekiwania korpusu na kontynuację na tej samej kopii;
+  - Transport montażu [s] — łączny czas ruchów transportowych, liczba ruchów oraz suma czasów przewozów z ładunkiem (*transfer*).
+- **Ścisłe partycjonowane rozbicie przyczyn oczekiwania**:
+  - Klasyfikacja do 6 jednoznacznych kategorii: pracownicy (`workers`), materiały i podzespoły (`material`), transport montażu (`transport`), bufory wejściowe/wyjściowe (`buffer`), stanowiska i wyposażenie (`station`), kalendarz (`calendar`);
+  - Algorytm partycjonowania gwarantuje, że suma czasów cząstkowych jest dokładnie równa całkowitemu czasowi oczekiwania partii, eliminując sztuczne zawyżanie bilansu przy jednoczesnym wystąpieniu wielu przyczyn;
+  - Prezentacja czasu współwystępowania danej przyczyny (*presence*);
+  - Struktura transportu montażu z podziałem na przewozy ładunku, dojazdy bez ładunku i powroty wózków.
+- **Wzbogacona tabela wykonań**:
+  - Kolumny `Czas pracy [s]` (z prezentacją czasu netto i pauz kalendarzowych) oraz `Blokada [s]` (jawne rozróżnienie blokady wyjścia i lokalnego oczekiwania).
+- **Inspekcje stanów stanowisk i pracowników**:
+  - Stanowiska: czas przetwarzania, blokady wyjścia, oczekiwania lokalnego, łącznego zajęcia, bezczynności oraz wskaźniki zajęcia (% obecności korpusu) i przetwarzania (% faktycznej obróbki);
+  - Pracownicy: czas montażu, czas transportu, czas zatrzymania w blokadzie `bbas`, pauzy, łączny czas aktywny, bezczynność oraz wskaźnik aktywności (%).
+
 

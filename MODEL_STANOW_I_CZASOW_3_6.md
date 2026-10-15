@@ -49,8 +49,9 @@ Celem punktu 3.6 jest jednoznaczne wyodrębnienie i sklasyfikowanie stanów, w j
   - Obliczanie sumarycznych i jednostkowych czasów: praca, oczekiwania, blokady, transport.
   - Zestawienia dla całej partii, per stanowisko i per operator.
   - Testy jednostkowe/integracyjne w `tests/network.test.ts`.
-- **3.6b**: Prezentacja w interfejsie UI Studio (`DomainWorkerSchedulePanel.tsx`):
-  - Karta podsumowania stanów procesu i udziałów czasowych.
-  - Dedykowane kolumny w tabeli przebiegu z jawnym czasem trwania pracy, oczekiwania, blokady i transportu.
-  - Inspekcja obciążenia i stanów stanowisk oraz pracowników.
-  - Odbiór Edge CDP i aktualizacja dokumentacji.
+- **3.6b (2026-10-15)**: Prezentacja w interfejsie UI Studio (`DomainWorkerSchedulePanel.tsx`):
+  - Karta podsumowania stanów procesu i udziałów czasowych (`[aria-label="Podsumowanie stanów procesu i czasów trwania"]`).
+  - Rozbicie przyczyn oczekiwania bez podwójnego liczenia (`[aria-label="Zestawienie przyczyn oczekiwania"]`).
+  - Dedykowane kolumny w tabeli przebiegu z jawnym czasem trwania pracy i blokad (`Czas pracy [s]`, `Blokada [s]`).
+  - Inspekcja obciążenia i stanów stanowisk oraz pracowników (`[aria-label="Inspekcja wykorzystania i stanów stanowisk"]`, `[aria-label="Inspekcja aktywności i stanów pracowników"]`).
+  - Odbiór Edge CDP (`outputs/qa/verify_3_6b.png`, `outputs/qa/verify_3_6b_inspections.png`) i pełna regresja 266/266 PASS.

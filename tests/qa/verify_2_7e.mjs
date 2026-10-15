@@ -525,6 +525,34 @@ try{
     await evaluate(`const p=document.querySelector('[aria-label="Inspekcja buforów i transportu"]');p.open=true;p.scrollIntoView({block:'center'})`);
     mkdirSync('outputs/qa',{recursive:true});const shot=await send('Page.captureScreenshot',{format:'png'});
     writeFileSync(`outputs/qa/verify_${zero?'3_5b2c3':'3_5b2c2'}_${process.argv.includes('--buffer-released')?'released':'held'}.png`,Buffer.from(shot.data,'base64'));
+    if(process.argv.includes('--state-metrics')){
+      const summary=await evaluate(`document.querySelector('[aria-label="Podsumowanie stanów procesu i czasów trwania"]')?.textContent`);
+      if(!summary||!summary.includes('132 s')||!summary.includes('160 s')||!summary.includes('Transport montażu'))throw new Error('Brak podsumowania stanów procesu 3.6');
+      const waitBreakdown=await evaluate(`document.querySelector('[aria-label="Zestawienie przyczyn oczekiwania"]')?.textContent`);
+      if(!waitBreakdown||!waitBreakdown.includes('Bufory')||!waitBreakdown.includes('Transport montażu'))throw new Error('Brak zestawienia przyczyn oczekiwania 3.6');
+      const stationInspection=await evaluate(`(() => {
+        const el = document.querySelector('[aria-label="Inspekcja wykorzystania i stanów stanowisk"]');
+        if (!el) return null;
+        el.open = true;
+        return el.textContent;
+      })()`);
+      if(!stationInspection||!stationInspection.includes('ST-A')||!stationInspection.includes('ST-C')||!stationInspection.includes('%'))throw new Error('Brak inspekcji stanowisk 3.6');
+      const workerInspection=await evaluate(`(() => {
+        const el = document.querySelector('[aria-label="Inspekcja aktywności i stanów pracowników"]');
+        if (!el) return null;
+        el.open = true;
+        return el.textContent;
+      })()`);
+      if(!workerInspection||!workerInspection.includes('BUFFER-W')||!workerInspection.includes('BUFFER-T')||!workerInspection.includes('%'))throw new Error('Brak inspekcji pracowników 3.6');
+      const tableHeaders=await evaluate(`[...document.querySelectorAll('[aria-label="Wynik harmonogramu szkicu 6"] th')].map(th=>th.textContent).join('|')`);
+      if(!tableHeaders.includes('Czas pracy [s]')||!tableHeaders.includes('Blokada [s]'))throw new Error('Brak kolumn czasów i blokad w tabeli runs 3.6');
+      await evaluate(`document.querySelector('[aria-label="Podsumowanie stanów procesu i czasów trwania"]').scrollIntoView({block:'start'})`);
+      const shotMetrics=await send('Page.captureScreenshot',{format:'png'});
+      writeFileSync('outputs/qa/verify_3_6b.png',Buffer.from(shotMetrics.data,'base64'));
+      await evaluate(`document.querySelector('[aria-label="Inspekcja wykorzystania i stanów stanowisk"]').scrollIntoView({block:'start'})`);
+      const shotInspections=await send('Page.captureScreenshot',{format:'png'});
+      writeFileSync('outputs/qa/verify_3_6b_inspections.png',Buffer.from(shotInspections.data,'base64'));
+    }
     await check(label);const jit=await calculate();
     if(!jit?.includes('JUST IN TIME')||!jit.includes('koniec ostatniej sztuki: 130 s')||jit.includes('Osoby transportu:'))throw new Error('Błędny JIT z buforami');
     await check(label);if(await calculate()!==result)throw new Error('Wyłączenie JIT zmienia wynik fizyczny');
@@ -535,7 +563,7 @@ try{
       throw new Error('Zmiana 4/5 '+JSON.stringify({v5:keys(legacy,after5),v4:keys(legacy4,after4)}));
     }
     if((JSON.parse(await raw())).originalJson!==originalJson||errors.length)throw new Error('Zmiana źródła lub wyjątki '+errors.join('; '));
-    console.log('PASS '+(zero?'3.5b2c3':'3.5b2c2')+': fizyczny worker, bufor przed operacją, polityka operatora, dojazdy, JIT opt-in, reload i izolacja 4/5.');
+    console.log('PASS '+(process.argv.includes('--state-metrics')?'3.6b':zero?'3.5b2c3':'3.5b2c2')+': '+(process.argv.includes('--state-metrics')?'metryki stanów procesu, czasów trwania, rozbicia oczekiwań, wykorzystania stanowisk i pracowników w UI, ':'')+'fizyczny worker, bufor przed operacją, polityka operatora, dojazdy, JIT opt-in, reload i izolacja 4/5.');
   }else if(process.argv.includes('--jit-run')){
 
     const expected=JSON.stringify(await saved()),label='Symulacja bez transportu — just in time';
