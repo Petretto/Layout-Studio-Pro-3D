@@ -119,6 +119,26 @@ Weryfikacja:
   8. Odtworzenie stanu po przeładowaniu strony (`open()` / reload).
   9. Unieważnienie wyniku symulacji po zapisie modyfikacji zaopatrzenia.
   10. Izolacja źródeł 4/5 i brak wyjątków w konsoli.
-Całe zadanie 3.5 w trakcie. Następny krok: zbiorczy odbiór integracyjny buforów i zaopatrzenia. Postęp: cały plan 24/67 = 35,8%, pierwsze wydanie 24/65 = 36,9%. Vercel nie zweryfikowano.
+## 16. Zbiorczy odbiór i wdrożenie punktu 3.5 (2026-10-15)
+
+Punkt **3.5** planu rozwoju został w pełni zrealizowany i odebrany:
+- Wprowadzono model buforów o ograniczonej pojemności ze ścisłymi regułami blokowania stanowiska i wyposażenia (`bbas` zatrzymanie lub `bbas-worker-released` zwolnienie operatora).
+- Wprowadzono model zaopatrzenia materiałowego montażu z jawnym zapasem początkowym, harmonogramami dostaw (cyklicznymi i jawnymi) oraz atomowym pobieraniem materiałów przy faktycznym starcie operacji, bez modelowania czasu i rezerwacji operatorów magazynu.
+- Zaimplementowano atomowe przekazanie przy pojemności 0 na wejściu (bezpośredni start) i wyjściu (utrzymanie korpusu do wyjazdu).
+- Zaimplementowano lokalną kontynuację kolejnych operacji na tej samej kopii bez niepotrzebnych tranzytów przez bufory.
+- Udostępniono dwa pełne edytory formularzowe w Studio (`DomainBuffersEditor.tsx` oraz `DomainSupplyEditor.tsx`) powiązane ze wspólną historią operacji Cofnij/Ponów, walidacją w UI, odrzuceniem zmian, usuwaniem konfiguracji i unieważnianiem symulacji.
+
+Odbiór końcowy:
+- Backup: `backup/v0.4.0_odbior_3_5_20261015` (280 plików, zgodność SHA256).
+- Pełna regresja automatyczna: **263/263 PASS** (czas: 1,49 s).
+- Kompilacja TypeScript (`tsc --noEmit`) oraz build (`npm run build`): PASS, 0 błędów.
+- Test w przeglądarce Edge CDP: **PASS** dla połączonego scenariusza JIT, transportu fizycznego, buforów i zaopatrzenia oraz formularzy UI obu edytorów (`outputs/qa/verify_3_5c1.png`, `outputs/qa/verify_3_5c2.png`).
+- Zgodność wsteczna: izolacja projektów v4/v5 nienaruszona.
+- Rejestr ograniczeń: gałęzie/wielu kandydatów kopii z ograniczonymi buforami, partie podzespołów z buforami, ograniczony odbiór wyrobów końcowych oraz automatyczny powrót operatora po wcześniejszym zakończeniu profilu bbas pozostają jawnie zabezpieczone odmowami do kolejnych etapów.
+
+Status: **wdrożone**.
+Postęp planu (`scripts/plan_progress.mjs`): **cały plan: 25/67 = 37,3%**, **pierwsze wydanie: 25/65 = 38,5%**.
+Kolejny punkt: **3.6** — stany pracy, oczekiwania na materiał/operatora, blokady wyjścia i transportu wraz z czasami ich trwania.
+
 
 

@@ -289,17 +289,18 @@ try{
   }
   if(process.argv.includes('--buffer-editor')){
     const panel='Bufory stanowisk szkicu 6',before=JSON.stringify(await saved());
-    const hasBuffer=await evaluate(`!!document.querySelector('[aria-label="Bufor 1 stanowisko"]')`);
-    if(!hasBuffer){
+    const count=await evaluate(`document.querySelectorAll('[aria-label^="Bufor "][aria-label$=" stanowisko"]').length`);
+    if(!count){
       await click('Dodaj bufor stanowiska',panel);
       await field('Bufor 1 stanowisko','ST-A');
     }
     await click('Dodaj bufor stanowiska',panel);
-    await field('Bufor 3 stanowisko','ST-A');
-    await field('Bufor 3 kopia','1');
+    const addedIdx=await evaluate(`document.querySelectorAll('[aria-label^="Bufor "][aria-label$=" stanowisko"]').length`);
+    await field(`Bufor ${addedIdx} stanowisko`,'ST-A');
+    await field(`Bufor ${addedIdx} kopia`,'1');
     await click('Zapisz bufory stanowisk',panel);
     if(JSON.stringify(await saved())!==before||!await evaluate(`document.querySelector('[aria-label="${panel}"]').textContent.includes('powtórzona konfiguracja')`))throw new Error('Duplikat bufora nie zablokowany');
-    await click('Usuń bufor 3',panel);
+    await click(`Usuń bufor ${addedIdx}`,panel);
     const inputUnlimited=await evaluate(`document.querySelector('[aria-label="Bufor 1 wejście bez limitu"]').checked`);
     if(inputUnlimited)await check('Bufor 1 wejście bez limitu');
     await field('Bufor 1 pojemność wejściowa','2');
