@@ -12,6 +12,13 @@ import {reserveAssemblyMovement,finishAssemblyMovement} from '../src/core/assemb
 import {editDomainAssemblyTransport} from '../src/core/domainTransportEditing';
 import {validateAssemblyTransport,type AssemblyTransport} from '../src/core/assemblyTransport';
 import {createCartBook,startCartMovement,finishCartMovement,type CartMotionRoute} from '../src/core/transportState';
+import {
+  calculateScheduleStateMetrics,
+  calculateWaitBreakdown,
+  classifyWaitCause,
+  calculateRunDurations,
+  calculateTransportMetrics,
+} from '../src/core/scheduleStateMetrics';
 import {strict as assert} from 'node:assert';
 import {test} from 'node:test';
 import {DEFAULT_MOTOR_PROJECT as base} from '../src/core/models/defaultProjects';
@@ -4601,5 +4608,220 @@ test('3.5c2: integracja draft storage, historia Cofnij/Ponów i izolacja orygina
     assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY), raw);
   }
 });
+
+test('3.6a: obliczanie czasów trwania stanów, oczekiwań, blokad i ruchów transportowych dla symulacji', () => {
+  const project = materialScheduleFixture();
+  const result = scheduleWorkerRun(project, 1, 2);
+  const metrics = calculateScheduleStateMetrics(project, result);
+
+  assert.ok(metrics.makespanSeconds > 0);
+  assert.ok(metrics.totalWorkSeconds > 0);
+  assert.ok(metrics.totalWaitSeconds > 0);
+  assert.equal(metrics.runs.length, result.runs.length);
+
+  for (let i = 0; i < result.runs.length; i++) {
+    const run = result.runs[i];
+    const runDur = metrics.runs[i];
+    assert.equal(runDur.workDuration, run.endSeconds - run.startSeconds);
+    assert.equal(runDur.waitDuration, run.waitSeconds);
+    assert.equal(runDur.blockedDuration, run.blockedSeconds ?? 0);
+  }
+
+  assert.ok(metrics.stations.length >= project.stations.length);
+  for (const st of metrics.stations) {
+    assert.equal(st.totalOccupiedTimeSeconds, Math.round((st.processingTimeSeconds + st.blockedTimeSeconds + st.continuationWaitTimeSeconds) * 1000) / 1000);
+    assert.ok(st.occupancyRatio >= 0 && st.occupancyRatio <= 1);
+  }
+
+  assert.equal(metrics.workers.length, project.workers.length);
+  for (const w of metrics.workers) {
+    assert.equal(w.totalActiveTimeSeconds, Math.round((w.workTimeSeconds + w.heldBlockTimeSeconds + w.transportTimeSeconds) * 1000) / 1000);
+    assert.ok(w.activityRatio >= 0 && w.activityRatio <= 1);
+  }
+});
+
+test('3.6a: podział przyczyn oczekiwania zachowuje dokładną sumę całkowitego oczekiwania partii', () => {
+  const fakeRuns: WorkerScheduleRun[] = [
+    {
+      job: 1,
+      operationId: 'OP-1',
+      stationId: 'ST-A',
+      copy: 1,
+      workerIds: ['W1'],
+      readySeconds: 0,
+      startSeconds: 10,
+      endSeconds: 30,
+      waitSeconds: 10,
+      waitCauses: ['material', 'workers'],
+      reserveStartSeconds: 0,
+      reserveEndSeconds: 30,
+      workWindows: [],
+      pauses: [],
+    },
+    {
+      job: 1,
+      operationId: 'OP-2',
+      stationId: 'ST-B',
+      copy: 1,
+      workerIds: ['W2'],
+      readySeconds: 30,
+      startSeconds: 45,
+      endSeconds: 65,
+      waitSeconds: 15,
+      waitCauses: ['buffer'],
+      reserveStartSeconds: 30,
+      reserveEndSeconds: 65,
+      workWindows: [],
+      pauses: [],
+    },
+    {
+      job: 2,
+      operationId: 'OP-1',
+      stationId: 'ST-A',
+      copy: 1,
+      workerIds: ['W1'],
+      readySeconds: 20,
+      startSeconds: 35,
+      endSeconds: 55,
+      waitSeconds: 15,
+      waitCauses: ['transport', 'station', 'calendar'],
+      reserveStartSeconds: 20,
+      reserveEndSeconds: 55,
+      workWindows: [],
+      pauses: [],
+    },
+  ];
+
+  const breakdown = calculateWaitBreakdown(fakeRuns);
+  const totalWait = fakeRuns.reduce((sum, r) => sum + r.waitSeconds, 0); // 10 + 15 + 15 = 40
+  const partitionedSum = Object.values(breakdown.partitioned).reduce((sum, v) => sum + v, 0);
+
+  assert.equal(Math.round(partitionedSum * 1000) / 1000, totalWait);
+  assert.equal(breakdown.partitioned.material, 5); // 10 / 2
+  assert.equal(breakdown.partitioned.workers, 5); // 10 / 2
+  assert.equal(breakdown.partitioned.buffer, 15); // 15
+  assert.equal(breakdown.partitioned.transport, 5); // 15 / 3
+  assert.equal(breakdown.partitioned.station, 5); // 15 / 3
+  assert.equal(breakdown.partitioned.calendar, 5); // 15 / 3
+
+  assert.equal(breakdown.presence.material, 10);
+  assert.equal(breakdown.presence.workers, 10);
+  assert.equal(breakdown.presence.buffer, 15);
+  assert.equal(breakdown.presence.transport, 15);
+  assert.equal(breakdown.presence.station, 15);
+  assert.equal(breakdown.presence.calendar, 15);
+
+  assert.equal(classifyWaitCause('subassembly'), 'material');
+  assert.equal(classifyWaitCause('same-job'), 'station');
+  assert.equal(classifyWaitCause('equipment'), 'station');
+  assert.equal(classifyWaitCause('body'), 'station');
+});
+
+test('3.6a: metryki stanu stanowisk i pracowników rozróżniają blokady bbas, oczekiwanie lokalne i transport', () => {
+  const project = bufferedProcessFixture();
+  const syntheticRuns: WorkerScheduleRun[] = [
+    {
+      job: 1,
+      operationId: project.operations[0].id,
+      stationId: project.stations[0].id,
+      copy: 1,
+      workerIds: [project.workers[0].id],
+      readySeconds: 0,
+      startSeconds: 0,
+      endSeconds: 10,
+      stationReleaseSeconds: 16,
+      blockedSeconds: 6,
+      reserveStartSeconds: 0,
+      reserveEndSeconds: 16,
+      waitSeconds: 0,
+      waitCauses: [],
+      workWindows: [],
+      pauses: [],
+    },
+    {
+      job: 1,
+      operationId: project.operations[1].id,
+      stationId: project.stations[0].id,
+      copy: 1,
+      workerIds: [project.workers[0].id],
+      readySeconds: 10,
+      startSeconds: 16,
+      endSeconds: 26,
+      stationReleaseSeconds: 26,
+      continuationWaitSeconds: 6,
+      reserveStartSeconds: 16,
+      reserveEndSeconds: 26,
+      waitSeconds: 6,
+      waitCauses: ['station'],
+      workWindows: [],
+      pauses: [],
+    },
+  ];
+
+  const syntheticMovements: AssemblyTransportMovement[] = [
+    {
+      kind: 'empty',
+      purpose: 'approach',
+      routeId: 'ROUTE-APP',
+      workerIds: [project.workers[0].id],
+      equipmentIds: ['CART-1'],
+      startSeconds: 26,
+      endSeconds: 30,
+    },
+    {
+      kind: 'loaded',
+      purpose: 'transfer',
+      routeId: 'ROUTE-TRANS',
+      workerIds: [project.workers[0].id],
+      equipmentIds: ['CART-1'],
+      startSeconds: 30,
+      endSeconds: 35,
+    },
+    {
+      kind: 'empty',
+      purpose: 'return',
+      routeId: 'ROUTE-RET',
+      workerIds: [],
+      equipmentIds: ['CART-1'],
+      startSeconds: 35,
+      endSeconds: 40,
+    },
+  ];
+
+  const summary = calculateScheduleStateMetrics(project, {
+    jobs: [{id: 1, arrival: 0, starts: [0, 16], ends: [10, 26], finish: 35}],
+    runs: syntheticRuns,
+    mode: 'logical',
+    scheduleDuration: 40,
+    transportMovements: syntheticMovements,
+  });
+
+  assert.equal(summary.makespanSeconds, 40);
+  assert.equal(summary.totalWorkSeconds, 20);
+  assert.equal(summary.totalBlockedSeconds, 6);
+  assert.equal(summary.totalContinuationWaitSeconds, 6);
+
+  assert.equal(summary.transportMetrics.totalMovementsCount, 3);
+  assert.equal(summary.transportMetrics.approachTimeSeconds, 4);
+  assert.equal(summary.transportMetrics.transferTimeSeconds, 5);
+  assert.equal(summary.transportMetrics.returnTimeSeconds, 5);
+  assert.equal(summary.transportMetrics.totalTransportDurationSeconds, 14);
+
+  const w0 = summary.workers.find(w => w.workerId === project.workers[0].id)!;
+  assert.equal(w0.workTimeSeconds, 20);
+  assert.equal(w0.heldBlockTimeSeconds, 6);
+  assert.equal(w0.transportTimeSeconds, 9);
+  assert.equal(w0.totalActiveTimeSeconds, 35);
+  assert.equal(w0.idleTimeSeconds, 5);
+  assert.equal(w0.activityRatio, 0.875);
+
+  const st1 = summary.stations.find(s => s.stationId === project.stations[0].id && s.copy === 1)!;
+  assert.equal(st1.processingTimeSeconds, 20);
+  assert.equal(st1.blockedTimeSeconds, 6);
+  assert.equal(st1.continuationWaitTimeSeconds, 6);
+  assert.equal(st1.totalOccupiedTimeSeconds, 32);
+  assert.equal(st1.idleTimeSeconds, 8);
+});
+
 
 
