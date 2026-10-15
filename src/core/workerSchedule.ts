@@ -29,6 +29,7 @@ export interface WorkerScheduleRun {
   endSeconds: number;
   stationReleaseSeconds?: number;
   blockedSeconds?: number;
+  continuationWaitSeconds?: number;
   waitSeconds: number;
   waitCauses: readonly ('workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body' | 'transport' | 'subassembly' | 'material' | 'buffer')[];
   reserveStartSeconds: number;

@@ -17,21 +17,21 @@ import {createBufferBook,applyBufferEvent,bufferHasSpace,type BufferRef,type Buf
 import type {StationCandidate} from './stationRouting';
 import type {WorkerScheduleRun,WorkerScheduleResult} from './workerSchedule';
 
-export interface BufferedProcessEvent {job:number;atSeconds:number;kind:'input'|'output'|'handoff'|'blocked'|'released';stationId:string;copy:number}
-type Stage={job:number;step:number;ready:number;status:'outside'|'input'|'processing'|'blocked'|'output'|'moving'|'finished';run?:number;direct?:true;transport?:WorkerScheduleRun['transport'];causes:Set<WorkerScheduleRun['waitCauses'][number]>};
+export interface BufferedProcessEvent {job:number;atSeconds:number;kind:'input'|'output'|'handoff'|'blocked'|'released'|'local-wait'|'local-start';stationId:string;copy:number}
+type Stage={job:number;step:number;ready:number;status:'outside'|'input'|'processing'|'blocked'|'output'|'moving'|'finished'|'local';run?:number;direct?:true;transport?:WorkerScheduleRun['transport'];causes:Set<WorkerScheduleRun['waitCauses'][number]>};
 const copyKey=(ref:{stationId:string;copy:number})=>JSON.stringify([ref.stationId,ref.copy]);
 
 /** Bounded linear path. Physical transport and assumed JIT availability remain explicit separate modes. */
 export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,batch:number,onProgress?:(done:number,total:number)=>void,physicalInput?:{bodyInput?:BodyRunInput}):WorkerScheduleResult{
   const project=parseDomainProjectV6(JSON.stringify(input)),steps=topologicalSort(project.operations);
   const physical=physicalInput!==undefined;
-  if(physical&&(!project.assemblyTransport||project.operations.some(operation=>operation.physicalRole?.kind!=='body-work')))
+  if(physical&&project.operations.some(operation=>operation.physicalRole?.kind!=='body-work'))
     throw new Error('3.5b2c2: ograniczona pojemność buforów z fizycznym transportem wymaga jawnych ról korpusu i zasobów transportu montażu.');
   if(physical&&project.subassemblyFlow?.lots.length)throw new Error('3.5b2c2: bufory z partiami podzespołów wymagają dalszej integracji; nie pomijamy partii.');
   const bodyRun=physical?prepareBodyRun(project,batch,physicalInput.bodyInput):undefined;
   let bodyBook=bodyRun?.book;
   const bodyEvents:BodyEvent[]=[],transportMovements:AssemblyTransportMovement[]=[];
-  let carts=createCartBook(project,(physical?project.assemblyTransport!.carts:[]).map(({afterUnload,source,...cart})=>cart));
+  let carts=createCartBook(project,(physical?project.assemblyTransport?.carts??[]:[]).map(({afterUnload,source,...cart})=>cart));
   let devices:readonly TransportDeviceReservation[]=[];
   const returnLocks=new Set<string>(),returns=new Map<string,string>();
   const stock=physical&&project.materialSupply?.items.length?new MaterialStockRun(project):undefined;
@@ -59,12 +59,13 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
   const place=(step:number,side:'input'|'output')=>places.find(place=>copyKey(place)===copyKey(candidates[step])&&place.side===side)!;
   if(place(steps.length-1,'output').capacity!==null)throw new Error('3.5b2b: ograniczony bufor końcowy wymaga jawnego odbioru gotowych wyrobów; także w trybie JIT nie dopowiadamy wyjścia.');
   if(physical){
-    if(candidates.some((candidate,i)=>i&&copyKey(candidate)===copyKey(candidates[i-1])))throw new Error('3.5b2c2: kolejne operacje tej samej kopii wymagają lokalnego przekazania; ten zakres jeszcze nie jest podłączony.');
+    if(candidates.some((candidate,i)=>i&&copyKey(candidate)!==copyKey(candidates[i-1]))&&!project.assemblyTransport)throw new Error('3.5b2c4: bufory z fizycznym transportem między kopiami wymagają jawnych zasobów transportu montażu.');
     for(const id of bodyRun!.bodyByJob.values())if(!bodyAvailableAt(bodyBook!,id,candidates[0]))throw new Error('3.5b2c2: jawna lokalizacja początkowa korpusu musi wskazywać pierwszą kopię procesu.');
   }
-  const retainsWorkers=places.some(place=>place.side==='output'&&place.capacity!==null&&place.blockingPolicy==='bbas');
+  const localNext=(index:number)=>index<steps.length-1&&copyKey(candidates[index])===copyKey(candidates[index+1]);
+  const mayHoldWorkers=(index:number)=>!localNext(index)&&place(index,'output').capacity!==null&&place(index,'output').blockingPolicy==='bbas';
   operations.forEach((operation,i)=>{
-    if(retainsWorkers&&(operation.reserveFromSeconds!==0||operation.reserveUntilSeconds!==operation.durationSeconds))throw new Error('3.5b2b: polityka zatrzymania operatora wymaga w tym zakresie obecności przez całą każdą operację; częściowa obecność wymaga dalszej integracji.');
+    if(mayHoldWorkers(i)&&operation.reserveUntilSeconds!==operation.durationSeconds)throw new Error('3.5b2c4: polityka zatrzymania operatora wymaga obecności aż do końca operacji mogącej zablokować wyjście; częściowa obecność kończąca się wcześniej wymaga jawnej reguły powrotu osoby.');
     if(stock&&!stock.permits(steps[i].id,candidates[i].stationId))throw new Error('Zaopatrzenie: stanowisko zapasu nie pasuje do operacji.');
     if(project.resourceCalendars&&!project.resourceCalendars.stations[candidates[i].stationId])throw new Error('Stanowisko: brak jawnego kalendarza.');
   });
@@ -77,14 +78,15 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
   const push=(at:number,kind:'completion'|'release'|'wake',stage?:Stage,run?:number)=>{if(!Number.isFinite(at))throw new Error('Bufory: niepoprawny czas zdarzenia.');events.push({at,kind,stage,run,order:sequence++});};
   const token=(stage:Stage)=>physical?bodyRun!.bodyByJob.get(stage.job)!:`job:${stage.job}`;
   const log=(stage:Stage,kind:BufferedProcessEvent['kind'],now:number,step=stage.step)=>bufferEvents.push({job:stage.job,kind,atSeconds:now,stationId:candidates[step].stationId,copy:candidates[step].copy});
-  const release=(stage:Stage,now:number)=>{
+  const release=(stage:Stage,now:number,local=false)=>{
     const index=stage.run!,run=runs[index],id=`${run.job}:${run.operationId}`,reservation=book.reservations.find(reservation=>reservation.reservationId===id)!;
     if(reservation.releasedAtSeconds===undefined){
       if(held.has(index))book={...book,reservations:book.reservations.map(value=>value.reservationId===id?{...value,endSeconds:now}:value)};
       book=releaseWorkerTeam(book,id,now);run.reserveEndSeconds=now;
     }
-    active.delete(index);held.delete(index);run.stationReleaseSeconds=now;run.blockedSeconds=now-run.endSeconds;
-    log(stage,'released',now,stage.step-1);
+    active.delete(index);held.delete(index);run.stationReleaseSeconds=now;run.blockedSeconds=local?0:now-run.endSeconds;
+    if(local)run.continuationWaitSeconds=now-run.endSeconds;
+    log(stage,local?'local-start':'released',now,stage.step-1);
   };
   const deposit=(stage:Stage,side:'input'|'output',now:number,step=stage.step)=>{
     if(physical&&side==='output'){
@@ -155,6 +157,11 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
         const stage=event.stage!,old=stage.step;stage.step++;stage.ready=now;stage.causes=new Set();
         completed++;onProgress?.(completed,steps.length*batch);
         if(old===steps.length-1){deposit(stage,'output',now,old);release(stage,now);stage.status='finished';jobs[stage.job-1].finish=now;}
+        else if(localNext(old)){
+          stage.status='local';log(stage,'local-wait',now,old);
+          const run=runs[stage.run!],id=`${run.job}:${run.operationId}`;
+          if(book.reservations.find(reservation=>reservation.reservationId===id)!.releasedAtSeconds===undefined)book=releaseWorkerTeam(book,id,now);
+        }
         else if(place(old,'output').capacity!==0&&bufferHasSpace(buffers,ref(old,'output'))){deposit(stage,'output',now,old);release(stage,now);stage.status='output';}
         else{stage.status='blocked';stage.causes.add('buffer');log(stage,'blocked',now,old);
           if(place(old,'output').blockingPolicy==='bbas')held.add(stage.run!);
@@ -183,7 +190,7 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
           publish(dispatch,'return');returns.delete(id);changed=true;
         }catch(error){transportFailure=(error as Error).message;}
       }
-      for(const stage of [...stages].sort((a,b)=>(physical?Number(b.status==='output'||b.status==='blocked')-Number(a.status==='output'||a.status==='blocked'):0)||a.ready-b.ready||a.job-b.job)){
+      for(const stage of [...stages].sort((a,b)=>(physical?Number(b.status==='output'||b.status==='blocked'||b.status==='local')-Number(a.status==='output'||a.status==='blocked'||a.status==='local'):0)||a.ready-b.ready||a.job-b.job)){
         if(stage.ready>now||stage.status==='processing'||stage.status==='finished'||stage.status==='moving')continue;
         if(stage.status==='blocked'&&place(stage.step-1,'output').capacity!==0){
           if(bufferHasSpace(buffers,ref(stage.step-1,'output'))){deposit(stage,'output',now,stage.step-1);release(stage,now);stage.status='output';changed=true;}
@@ -224,8 +231,8 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
               if(!resourceReady)continue;
               const materialAt=stock?.earliest(steps[stage.step].id,arrival)??arrival;
               if(materialAt>arrival){stage.causes.add('material');wake(materialAt-duration);continue;}
-              const unsafe=new Set([...active].filter(index=>index!==own&&place(steps.findIndex(step=>step.id===runs[index].operationId),'output').capacity!==null&&place(steps.findIndex(step=>step.id===runs[index].operationId),'output').blockingPolicy==='bbas').flatMap(index=>[...runs[index].workerIds]));
-              const admission=planDirectOperation(project,operations[stage.step],target,arrival,dispatch.workers,unsafe);
+              const unsafe=new Set([...active].filter(index=>index!==own&&mayHoldWorkers(steps.findIndex(step=>step.id===runs[index].operationId))).flatMap(index=>[...runs[index].workerIds]));
+              const admission=planDirectOperation(project,operations[stage.step],target,arrival,dispatch.workers,unsafe,mayHoldWorkers(stage.step));
               if(!admission.choice){if(admission.cause)stage.causes.add(admission.cause);if(admission.retryAt!==undefined)wake(admission.retryAt-duration);continue;}
               directChoice=admission.choice;
             }
@@ -255,7 +262,7 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
           }catch(error){if(committing)throw error;transportFailure=(error as Error).message;stage.causes.add('transport');}
           continue;
         }
-        if(stage.status!=='input'&&inputPlace.capacity!==0){
+        if(stage.status!=='input'&&stage.status!=='local'&&inputPlace.capacity!==0){
           if(!bufferHasSpace(buffers,ref(stage.step,'input'))){stage.causes.add('buffer');continue;}
           if(stage.status==='output'){
             buffers=applyBufferEvent(buffers,{kind:'reserve',id:token(stage),to:ref(stage.step,'input'),atSeconds:now});
@@ -264,7 +271,7 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
           }else{deposit(stage,'input',now);if(stage.status==='blocked')release(stage,now);}
           stage.status='input';changed=true;
         }
-        const ignore=stage.status==='blocked'?stage.run:undefined;
+        const ignore=stage.status==='blocked'||stage.status==='local'?stage.run:undefined;
         if([...active].some(index=>index!==ignore&&copyKey(runs[index])===copyKey(target))){stage.causes.add('station');continue;}
         if([...active].some(index=>index!==ignore&&runs[index].equipmentIds?.some(id=>target.requiredEquipmentIds.includes(id)))){stage.causes.add('equipment');continue;}
         if(stock){const at=stock.earliest(steps[stage.step].id,now);if(at>now){stage.causes.add('material');wake(at);continue;}}
@@ -273,26 +280,29 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
           if(selected)return;
           if(workers.length<operation.workerCount){for(let i=from;i<=operation.eligibleWorkerIds.length-(operation.workerCount-workers.length);i++)choose([...workers,operation.eligibleWorkerIds[i]],i+1);return;}
           if(++combinations>10000)throw new Error('Bufory: zbyt wiele kombinacji pracowników.');
-          if([...active].some(index=>index!==ignore&&place(steps.findIndex(step=>step.id===runs[index].operationId),'output').capacity!==null&&place(steps.findIndex(step=>step.id===runs[index].operationId),'output').blockingPolicy==='bbas'&&runs[index].workerIds.some(id=>workers.includes(id)))){stage.causes.add('workers');return;}
+          if([...active].some(index=>index!==ignore&&mayHoldWorkers(steps.findIndex(step=>step.id===runs[index].operationId))&&runs[index].workerIds.some(id=>workers.includes(id)))){stage.causes.add('workers');return;}
           const windows=project.resourceCalendars?sharedAvailability(project.resourceCalendars,target.stationId,workers):[{startSeconds:now,endSeconds:now+operation.durationSeconds}];
           const next=windows.find(window=>window.endSeconds>now);if(!next)return;
           const start=Math.max(now,next.startSeconds),projection=projectWork(windows,start,operation.durationSeconds);if(!projection)return;
           if(start>now){stage.causes.add('calendar');wake(start);return;}
           const reserveStart=projection.atOffset(operation.reserveFromSeconds,false),reserveEnd=projection.atOffset(operation.reserveUntilSeconds,true);
-          const conflicts=book.reservations.filter(reservation=>reservation.startSeconds<reserveEnd&&reserveStart<reservation.endSeconds&&reservation.workerIds.some(id=>workers.includes(id)));
+          const conflicts=book.reservations.filter(reservation=>(mayHoldWorkers(stage.step)||reservation.startSeconds<reserveEnd)&&reserveStart<reservation.endSeconds&&reservation.workerIds.some(id=>workers.includes(id)));
           if(conflicts.length){stage.causes.add('workers');conflicts.forEach(conflict=>wake(conflict.endSeconds));return;}
           selected={workers,projection,from:reserveStart,until:reserveEnd};
         };
         choose([],0);if(!selected)continue;
         const chosen=selected as NonNullable<typeof selected>;
-        if(stage.status==='blocked')release(stage,now);
+        const local=stage.status==='local';
+        if(stage.status==='blocked'||local)release(stage,now,local);
         if(physical){
           const event={kind:'reserve' as const,bodyId:token(stage),atSeconds:now,operationId:steps[stage.step].id,endSeconds:chosen.projection.end,
             basis:profiles[stage.step].durationBasis==='measured'?'confirmed' as const:'assumed' as const};
-          const next=applyBufferedBodyEvent({bodies:bodyBook!,buffers},{...event,kind:inputPlace.capacity===0?'start-direct':'start-operation'});
+          const next=local?applyBufferedBodyEvent({bodies:bodyBook!,buffers},{...event,kind:'continue-operation',previousOperationId:steps[stage.step-1].id,location:target}):
+            applyBufferedBodyEvent({bodies:bodyBook!,buffers},{...event,kind:inputPlace.capacity===0?'start-direct':'start-operation'});
+          if(local)bodyEvents.push({kind:'release',bodyId:token(stage),atSeconds:now,operationId:steps[stage.step-1].id});
           bodyBook=next.bodies;buffers=next.buffers;bodyEvents.push(event);
         }else if(stage.status==='input'||stage.status==='output')buffers=applyBufferEvent(buffers,{kind:'remove',id:token(stage),atSeconds:now});
-        if(stage.status!=='input')log(stage,'handoff',now);
+        if(stage.status!=='input'&&!local)log(stage,'handoff',now);
         recordRun(stage,chosen,now);stock?.consume(stage.job,steps[stage.step].id,now);changed=true;
       }
     }

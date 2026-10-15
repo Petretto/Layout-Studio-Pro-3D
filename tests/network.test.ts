@@ -1,3 +1,4 @@
+import {planDirectOperation} from '../src/core/directHandoffPlan';
 import {applyBufferedBodyEvent,validateBufferedBodyBook,type BufferedBodyBook} from '../src/core/bufferedBodyState';
 import {reserveBufferedAssemblyMovement,finishBufferedAssemblyMovement} from '../src/core/bufferedAssemblyMovement';
 import {createBufferBook,applyBufferEvent,bufferLoad,bufferHasSpace,bufferCanAccept,outputBlock} from '../src/core/bufferState';
@@ -3799,7 +3800,7 @@ test('3.5b2b: kalendarz odbiorcy przesuwa przekazanie, częściowa obecność ni
   const result=scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'});
   assert.equal(result.runs[0].stationReleaseSeconds,25);assert.equal(result.runs[1].startSeconds,25);
   project.operations[0].staffing!.timeVariants[0].timeProfile.operatorPresence[0].endSeconds=5;
-  assert.throws(()=>scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'}),/obecności przez całą/);
+  assert.throws(()=>scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'}),/obecności aż do końca/);
 });
 
 
@@ -3815,10 +3816,11 @@ test('3.5b2b: nowe wykonanie nie zajmuje zablokowanej kopii ani zatrzymanego pra
 });
 
 
-test('3.5b2b: nie przypisuje przyszłej częściowej obecności, gdy operator może pozostać zablokowany',()=>{
+test('3.5b2b: przyszła częściowa obecność odbiorcy jest zgodna z blokadą innej osoby',()=>{
   const project=bufferedProcessFixture();
   project.operations[1].staffing!.timeVariants[0].timeProfile.operatorPresence[0].startSeconds=20;
-  assert.throws(()=>scheduleWorkerRun(project,1,2,undefined,undefined,{transportMode:'just-in-time'}),/częściowa obecność/);
+  const future=scheduleWorkerRun(project,1,2,undefined,undefined,{transportMode:'just-in-time'});
+  assertNoWorkerOverlap(future);assert.equal(future.jobs[1].finish,70);
   project.stationBuffers!.buffers[0].blockingPolicy='bbas-worker-released';
   const result=scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'});
   assert.equal(result.jobs[0].finish,40);
@@ -4301,4 +4303,94 @@ test('3.5b2c3: ułamkowe terminy gotowości nie powodują fikcyjnego postoju ani
     assert.ok(run.startSeconds>=ready);assert.equal(run.startSeconds,run.transport!.endSeconds);
     assert.ok(Math.abs(run.startSeconds-ready)<1e-10);assertNoWorkerOverlap(result);
   }
+});
+
+
+function localContinuationFixture(batch=2){
+  const {project,input}=bufferedPhysicalFixture(batch),first=project.operations[0],last=project.operations[1],local=structuredClone(first);
+  local.id='LOCAL-B';local.name='Lokalna druga operacja';local.sequenceNumber=2;local.predecessorIds=[first.id];
+  local.staffing!.timeVariants[0].timeProfile={durationSeconds:6,durationBasis:'assumed',manualWork:[],machineRun:[],operatorPresence:[{startSeconds:2,endSeconds:6,basis:'assumed'}]};
+  first.staffing!.timeVariants[0].timeProfile.operatorPresence=[{startSeconds:0,endSeconds:5,basis:'assumed'}];
+  last.staffing!.timeVariants[0].timeProfile.operatorPresence=[{startSeconds:0,endSeconds:5,basis:'assumed'}];
+  last.predecessorIds=[local.id];last.sequenceNumber=3;
+  project.operations.splice(1,0,local);project.stations.find(s=>s.id==='ST-A')!.operationIds.push(local.id);
+  project.equipment.find(e=>e.id==='EQ-A')!.capableOperationIds!.push(local.id);
+  project.stationRouting!.operations.push({operationId:local.id,candidates:[{stationId:'ST-A',copy:1,requiredEquipmentIds:['EQ-A']}]});
+  project.workerRunSelection!.operations.push({operationId:local.id,workerCount:1,eligibleWorkerIds:[project.workers[1].id]});
+  project.stationBuffers!.buffers[0].inputCapacity=1;project.stationBuffers!.buffers[0].outputCapacity=0;
+  return {project,input};
+}
+
+test('3.5b2c4: korpus przechodzi lokalnie bez buforów, zachowuje stanowisko i wyposażenie, osoby według profili',()=>{
+  const {project,input}=localContinuationFixture(),first=project.operations[0].id;
+  const supply=materialScheduleFixture().materialSupply!;
+  project.materialSupply={...supply,items:supply.items.map(item=>({...item,initialStock:0,schedule:{kind:'explicit-deliveries',deliveries:[{deliveryTimeSeconds:25,quantity:2}]}})),
+    consumptions:[{operationId:'LOCAL-B',supplyId:supply.items[0].id,quantity:1,source:'Jawny materiał operacji lokalnej'}]};
+  const before=JSON.stringify({project,input}),result=scheduleWorkerRun(project,1,2,input);
+  const a=result.runs.find(r=>r.job===1&&r.operationId===first)!,b=result.runs.find(r=>r.job===1&&r.operationId==='LOCAL-B')!;
+  assert.deepEqual([a.startSeconds,a.endSeconds,a.stationReleaseSeconds,a.continuationWaitSeconds,a.blockedSeconds],[0,10,25,15,0]);
+  assert.equal(a.reserveEndSeconds,5);assert.deepEqual([b.startSeconds,b.endSeconds,b.reserveStartSeconds,b.reserveEndSeconds],[25,31,27,31]);
+  assert.equal(result.runs.find(r=>r.job===2&&r.operationId===first)!.startSeconds,31);
+  assert.equal(result.jobs[1].finish,93);assertNoWorkerOverlap(result);
+  assert.ok(!result.bufferEvents!.some(e=>e.job===1&&e.stationId==='ST-A'&&(e.kind==='output'||e.kind==='input'&&e.atSeconds>0)));
+  assert.ok(!result.bodyEvents!.some(e=>e.kind==='start-transfer'&&e.atSeconds<31));
+  let bodies=createBodyBook(project,input.bodies,0);for(const event of result.bodyEvents!)bodies=applyBodyEvent(bodies,event);
+  assert.deepEqual(bodies,result.bodyBook);assert.equal(JSON.stringify({project,input}),before);
+  const replies:ScheduleReply[]=[];executeScheduleRequest({project,batch:2,arrivalIntervalSeconds:1},r=>replies.push(r));
+  assert.deepEqual((replies.find(r=>r.kind==='result') as {result:unknown}).result,result);
+});
+
+test('3.5b2c4: lokalny przebieg bez trasy i zestawu transportowego działa fizycznie oraz w JIT',()=>{
+  const {project,input}=localContinuationFixture();
+  const last=project.operations.pop()!;project.stations.find(s=>s.id==='ST-C')!.operationIds=[];
+  project.workerRunSelection!.operations=project.workerRunSelection!.operations.filter(o=>o.operationId!==last.id);
+  project.stationRouting!.operations=project.stationRouting!.operations.filter(o=>o.operationId!==last.id);
+  project.stationRouting!.routes=[];delete project.assemblyTransport;
+  project.stationBuffers!.buffers[0].outputCapacity=null;
+  const physical=scheduleWorkerRun(project,1,2,input),jit=scheduleWorkerRun(project,1,2,input,undefined,{transportMode:'just-in-time'});
+  assert.deepEqual(physical.jobs,jit.jobs);assert.equal(physical.jobs[1].finish,32);
+  assert.equal(physical.bodyEvents!.filter(e=>e.kind==='start-transfer'||e.kind==='finish-transfer').length,0);
+  assert.equal(physical.transportMovements!.length,0);assert.equal(physical.cartBook!.carts.length,0);
+  assert.ok(physical.bodyBook!.bodies.every(b=>b.location.kind==='station'&&b.location.stationId==='ST-A'));
+  assertNoWorkerOverlap(physical);assertNoWorkerOverlap(jit);
+});
+
+test('3.5b2c4: późniejsza obecność przy bbas kończy się dopiero po rzeczywistym zwolnieniu',()=>{
+  const {project,input}=bufferedPhysicalFixture(5);
+  project.operations[0].staffing!.timeVariants[0].timeProfile.operatorPresence=[{startSeconds:5,endSeconds:10,basis:'assumed'}];
+  const result=scheduleWorkerRun(project,1,5,input),blocked=result.runs.find(r=>r.operationId===project.operations[0].id&&r.blockedSeconds!>0)!;
+  assert.ok(blocked.reserveStartSeconds>blocked.startSeconds);assert.equal(blocked.reserveEndSeconds,blocked.stationReleaseSeconds);
+  assertNoWorkerOverlap(result);
+  project.operations[0].staffing!.timeVariants[0].timeProfile.operatorPresence[0].endSeconds=8;
+  assert.throws(()=>scheduleWorkerRun(project,1,5,input),/obecności aż do końca/);
+});
+
+
+test('3.5b2c4: możliwa przyszła blokada nie przejmuje już obiecanej obecności tej samej osoby',()=>{
+  const {project,input}=zeroBufferFixture(2),shared=project.workers[0].id;
+  project.workerRunSelection!.operations[0].eligibleWorkerIds=[shared];project.workerRunSelection!.operations[1].eligibleWorkerIds=[shared];
+  project.operations[1].staffing!.timeVariants[0].timeProfile.operatorPresence=[{startSeconds:20,endSeconds:30,basis:'assumed'}];
+  const result=scheduleWorkerRun(project,1,2,input);
+  const receiver=result.runs.find(r=>r.job===1&&r.operationId===project.operations[1].id)!,second=result.runs.find(r=>r.job===2&&r.operationId===project.operations[0].id)!;
+  assert.deepEqual([receiver.startSeconds,receiver.reserveStartSeconds,receiver.reserveEndSeconds],[12,32,42]);
+  assert.equal(second.startSeconds,42);assertNoWorkerOverlap(result);
+  const plan=createWorkerRunPlan(project,project.workerRunSelection!.teamWorkerIds,project.workerRunSelection!.operations);
+  const book=reserveWorkerTeam(createWorkerReservationBook(project.workers.map(w=>w.id)),{reservationId:'FUTURE',workerIds:[shared],startSeconds:40,endSeconds:50});
+  const candidate=project.stationRouting!.operations[0].candidates[0];
+  const protectedPlan=planDirectOperation(project,plan.operations[0],candidate,10,book,new Set(),true);
+  assert.equal(protectedPlan.choice,undefined);assert.equal(protectedPlan.retryAt,50);
+  assert.ok(planDirectOperation(project,plan.operations[0],candidate,10,book,new Set(),false).choice);
+});
+
+test('3.5b2c4: błędna lokalna kontynuacja nie zwalnia korpusu ani nie zmienia lokalizacji',()=>{
+  const {project,input}=localContinuationFixture(1),initial={bodies:createBodyBook(project,input.bodies,0),buffers:createBufferBook(project)};
+  const reserved={...initial,bodies:applyBodyEvent(initial.bodies,{kind:'reserve',bodyId:input.bodies[0].id,atSeconds:0,operationId:project.operations[0].id,endSeconds:10,basis:'assumed'})};
+  const event={kind:'continue-operation' as const,bodyId:input.bodies[0].id,atSeconds:10,previousOperationId:project.operations[0].id,operationId:'LOCAL-B',location:{stationId:'ST-A',copy:1},endSeconds:16,basis:'assumed' as const};
+  const before=JSON.stringify(reserved);
+  assert.throws(()=>applyBufferedBodyEvent(reserved,{...event,atSeconds:5}),/przed końcem/);
+  assert.throws(()=>applyBufferedBodyEvent(reserved,{...event,location:{stationId:'ST-C',copy:1}}),/tej samej kopii/);
+  assert.throws(()=>applyBufferedBodyEvent(reserved,{...event,operationId:'UNKNOWN'}),/nieznana operacja/);
+  assert.equal(JSON.stringify(reserved),before);
+  const continued=applyBufferedBodyEvent(reserved,event);assert.equal(continued.buffers.tokens.length,0);
+  assert.deepEqual(continued.bodies.bodies[0].location,reserved.bodies.bodies[0].location);
 });

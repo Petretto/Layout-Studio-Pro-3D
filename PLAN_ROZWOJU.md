@@ -44,7 +44,7 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 3.5b2c3: cały plan 24/67 = **35,8%**; pierwsze wydanie 24/65 = **36,9%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po 3.5b2c4: cały plan 24/67 = **35,8%**; pierwsze wydanie 24/65 = **36,9%**. Weryfikacja: `node scripts/plan_progress.mjs`.
 
 Stan historyczny po 3.1c: cały plan 21/67 = **31,3%**. Pierwsze wydanie (etapy 1–7) 21/65 = **32,3%**. Etap 8 dotyczy kolejnej wersji. Obliczenia: `node scripts/plan_progress.mjs`; źródłem są tabele statusów tego pliku. Po 3.2a ukończony główny licznik pozostaje taki sam, bo 3.2 nie jest jeszcze odebrane.
 
@@ -76,6 +76,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+3.5b2c4 / część 3.5 (2026-10-15): zakończony zakres — zatwierdzona lokalna kontynuacja na tej samej kopii bez buforów/ruchu, utrzymanie stanowiska/wyposażenia, osoby według profili, osobny czas oczekiwania. Późniejsza obecność przy bbas i ochrona przyszłych rezerwacji, bez domyślnego powrotu nieobecnej osoby. Backup 278 zgodnych SHA256, celowane 44/44, jedna okresowa pełna regresja 257/257, typecheck/build i Edge worker/material/JIT/reload/izolacja PASS. Schemat bez zmian, zakres liniowy z ograniczonymi buforami. Następny 3.5c1 — formularz buforów i historia/zapis. Pozostałe granice w modelu/raporcie. Całe 3.5 w trakcie, postęp 35,8% / 36,9%. Vercel nie zweryfikowano.
 
 3.5b2c3 / część 3.5 (2026-10-15): zakończony zakres — fizyczne wejście/wyjście 0: przyszły przydział operacji przed wyjazdem, start dokładnie przy przyjeździe, korpus przy wyjściu 0 blokuje źródło do wyjazdu. Osoby/wyposażenie/materiały i kalendarze chronią przyszły odbiór; brak fikcyjnego składowania. Backup 277 SHA256, celowane 75/75, po dopracowaniu 38/38, końcowe nowe scenariusze 11/11 PASS, typecheck/build i Edge obu polityk/JIT/reload/izolacji PASS. Bez pełnej regresji i zmiany schematu. Następny 3.5b2c4 — lokalne przekazania i dalsze profile; pozostałe granice w modelu/raporcie 3.5. Całe 3.5 w trakcie, postęp 35,8% / 36,9%. Vercel nie zweryfikowano.
 
@@ -678,3 +680,5 @@ Ten dokument jest głównym rejestrem przyszłych prac. Historyczne raporty pozo
 | 2026-10-15 | 3.5 | kontynuacja — 3.5b2c2 zakres zakończony | Fizyczny harmonogram dodatnich buforów, zestawy/dojazdy/powroty i zaopatrzenie, osobne przyjazdy/starty. Backup 277 SHA256, pełna 239/240 i poprawiony podzbiór 29/29; finalne 9/9, build i Edge obu polityk/JIT/reload PASS. Całość w trakcie, kolejny 3.5b2c3; postęp 35,8% / 36,9%. |
 
 | 2026-10-15 | 3.5 | kontynuacja — 3.5b2c3 zakres zakończony | Wejście/wyjście 0, rezerwacja przyszłego odbioru przed wyjazdem, przyjazd=start, brak składowania i utrzymane blokady źródła. Backup 277 SHA256, celowane 75/75, finalne bufory 38/38, nowe 11/11, build i Edge obu polityk/JIT/reload PASS. Całość w trakcie, kolejny 3.5b2c4; postęp 35,8% / 36,9%. |
+
+| 2026-10-15 | 3.5 | kontynuacja — 3.5b2c4 zakres zakończony | Zatwierdzone pozostanie korpusu na kopii do lokalnej operacji, zachowane zasoby, jawne profile i czas lokalnego oczekiwania. Backup 278 SHA256, celowane 44/44, okresowa pełna 257/257, build i Edge PASS. Całość w trakcie, kolejny 3.5c1 formularz buforów; postęp 35,8% / 36,9%. |

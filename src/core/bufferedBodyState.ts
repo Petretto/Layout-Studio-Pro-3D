@@ -1,5 +1,6 @@
 import {applyBodyEvent, type BodyBook, type BodyTimeBasis} from './bodyState';
 import {applyBufferEvent, bufferLoad, type BufferBook, type BufferRef} from './bufferState';
+import type {StationCopyRef} from './stationRouting';
 
 /** Run-time overlay: a buffer side refines the body's station location, never replaces it. */
 export interface BufferedBodyBook {bodies: BodyBook; buffers: BufferBook}
@@ -11,6 +12,7 @@ export type BufferedBodyEvent =
   | {kind: 'depart-from-operation'; bodyId: string; atSeconds: number; operationId: string; to: BufferRef; endSeconds: number; basis: BodyTimeBasis}
   | {kind: 'depart-direct'; bodyId: string; atSeconds: number; releaseOperationId?: string; to: BufferRef; endSeconds: number; basis: BodyTimeBasis}
   | {kind: 'arrive-direct' | 'start-direct'; bodyId: string; atSeconds: number; operationId: string; endSeconds: number; basis: BodyTimeBasis}
+  | {kind: 'continue-operation'; bodyId:string; atSeconds:number; previousOperationId:string; operationId:string; location:StationCopyRef; endSeconds:number; basis:BodyTimeBasis}
   | {kind: 'arrive'; bodyId: string; atSeconds: number}
   | {kind: 'start-operation'; bodyId: string; atSeconds: number; operationId: string; endSeconds: number; basis: BodyTimeBasis};
 const sameCopy = (a: {stationId: string; copy: number}, b: {stationId: string; copy: number}) =>
@@ -59,6 +61,13 @@ export function applyBufferedBodyEvent(book: BufferedBodyBook, event: BufferedBo
   const base = {bodyId: event.bodyId, atSeconds: event.atSeconds};
   const bufferBase = {id: event.bodyId, atSeconds: event.atSeconds};
   switch (event.kind) {
+    case 'continue-operation':
+      if (token || body.status!=='reserved' || body.additionalReservations?.length || body.location.kind!=='station' || !sameCopy(body.location,event.location))
+        throw new Error('Kontynuacja wymaga jednego zajętego korpusu na tej samej kopii, poza buforem.');
+      bodies=applyBodyEvent(bodies,{...base,kind:'release',operationId:event.previousOperationId});
+      bodies=applyBodyEvent(bodies,{...base,kind:'reserve',operationId:event.operationId,endSeconds:event.endSeconds,basis:event.basis});
+      buffers={...buffers,atSeconds:event.atSeconds};
+      break;
     case 'depart-from-operation':
     case 'depart-direct': {
       const place=buffers.places.find(place=>sameCopy(place,event.to)&&place.side===event.to.side);

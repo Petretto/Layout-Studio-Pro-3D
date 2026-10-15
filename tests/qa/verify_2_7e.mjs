@@ -208,6 +208,24 @@ if(process.argv.includes('--physical-buffer-run')){
  p.bodyRunInput={bodies:Array.from({length:4},(_,i)=>({id:`UI-BODY-${i+1}`,productId:p.product.id,location:{kind:'station',stationId:'ST-A',copy:1}})),
    jobs:Array.from({length:4},(_,i)=>({job:i+1,bodyId:`UI-BODY-${i+1}`}))};
 }
+if(process.argv.includes('--local-buffer-run')){
+ const p=draft.project,first=p.operations[0],last=p.operations[1],local=structuredClone(first);
+ local.id='OP-LOCAL';local.name='Lokalna operacja UI';local.sequenceNumber=2;local.predecessorIds=[first.id];
+ local.staffing.timeVariants[0].timeProfile={durationSeconds:6,durationBasis:'assumed',manualWork:[],machineRun:[],operatorPresence:[{startSeconds:2,endSeconds:6,basis:'assumed'}]};
+ first.staffing.timeVariants[0].timeProfile.operatorPresence=[{startSeconds:0,endSeconds:5,basis:'assumed'}];
+ last.staffing.timeVariants[0].timeProfile.operatorPresence=[{startSeconds:0,endSeconds:5,basis:'assumed'}];
+ last.predecessorIds=[local.id];last.sequenceNumber=3;p.operations.splice(1,0,local);
+ p.stations.find(s=>s.id==='ST-A').operationIds.push(local.id);
+ p.equipment.push({id:'QA-LOCAL-EQ',name:'Wyposażenie operacji lokalnych UI',stationId:'ST-A',capableOperationIds:[first.id,local.id]});
+ p.stationRouting.equipmentPlacements.push({equipmentId:'QA-LOCAL-EQ',stationId:'ST-A',copy:1});
+ p.stationRouting.operations[0].candidates[0].requiredEquipmentIds=['QA-LOCAL-EQ'];
+ p.stationRouting.operations.push({operationId:local.id,candidates:[{stationId:'ST-A',copy:1,requiredEquipmentIds:['QA-LOCAL-EQ']}]});
+ p.workerRunSelection.operations.push({operationId:local.id,workerCount:1,eligibleWorkerIds:['BUFFER-W']});
+ p.stationBuffers.buffers[0].inputCapacity=1;p.stationBuffers.buffers[0].outputCapacity=0;
+ p.bodyRunInput.bodies=p.bodyRunInput.bodies.slice(0,2);p.bodyRunInput.jobs=p.bodyRunInput.jobs.slice(0,2);
+ p.materialSupply={items:[{id:'LOCAL-SUPPLY',componentId:'LOCAL-MAT',targetStationId:'ST-A',initialStock:0,unit:'szt.',schedule:{kind:'explicit-deliveries',deliveries:[{deliveryTimeSeconds:25,quantity:2}]},source:'Jawne dane testowe UI'}],
+  consumptions:[{operationId:local.id,supplyId:'LOCAL-SUPPLY',quantity:1,source:'Jawne pobranie operacji lokalnej'}]};
+}
 const userData=mkdtempSync(join(tmpdir(),'layout-body-qa-'));
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(PORT)},stdio:'ignore'});
 const browser=spawn('C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',[
@@ -386,7 +404,37 @@ try{
     await open();if(JSON.stringify(await saved())!==edited)throw new Error('Odczyt zmienił wymagania');
     console.log('PASS 3.4i: edycja zestawu, odmowy, Cofnij/Ponów, odrzucenie, usuwanie i odczyt.');
   }
-  if(process.argv.includes('--physical-buffer-run')){
+  if(process.argv.includes('--local-buffer-run')){
+    const expected=JSON.stringify(await saved()),label='Symulacja bez transportu — just in time';
+    const calculate=async()=>{
+      await field('Liczba sztuk szkicu 6',2);await field('Odstęp przybycia szkicu 6 [s]',1);
+      await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');
+      for(let i=0;i<100;i++){if(await evaluate(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"], [aria-label="Harmonogram zespołu szkicu 6"] [role="alert"]')`))break;await sleep(50);}
+      return evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')?.textContent??null`);
+    };
+    if(!await evaluate(`!!document.querySelector('[aria-label="${label}"]')`))throw new Error(await evaluate(`document.body.innerText.slice(-6000)`));
+    if(await evaluate(`document.querySelector('[aria-label="${label}"]').checked`))throw new Error('JIT domyślnie włączony');
+    const result=await calculate();
+    if(!result?.includes('koniec ostatniej sztuki: 93 s')||!result.includes('Przekazanie do kolejnej operacji: 25 s · oczekiwanie lokalne: 15 s')||result.includes('undefined'))throw new Error('Błędna kontynuacja lokalna '+result);
+    if(!result.includes('Rezerwacja osób [s]: 0–5')||!result.includes('Rezerwacja osób [s]: 27–31'))throw new Error('Błędne profile obecności');
+    const inspection=await evaluate(`document.querySelector('[aria-label="Inspekcja buforów i transportu"]').textContent`);
+    if(!inspection.includes('Korpus pozostaje na stanowisku')||!inspection.includes('Kontynuacja na tej samej kopii'))throw new Error('Brak inspekcji lokalnego oczekiwania');
+    const movements=await evaluate(`document.querySelector('[aria-label="Inspekcja ruchów transportu montażu"]').textContent`);
+    if(!movements.includes('31–33')||!movements.includes('52–54')||!movements.includes('Ruchy transportu montażu (3)'))throw new Error('Błędne fizyczne ruchy po lokalnej operacji');
+    const stock=await evaluate(`document.querySelector('[aria-label="Inspekcja zapasów materiałowych"]').textContent`);
+    if(!stock.includes('Pobranie przez 1:OP-LOCAL')||!stock.includes('25 s'))throw new Error('Brak pobrania przy lokalnym starcie');
+    await evaluate(`const p=document.querySelector('[aria-label="Inspekcja buforów i transportu"]');p.open=true;p.scrollIntoView({block:'center'})`);
+    mkdirSync('outputs/qa',{recursive:true});const shot=await send('Page.captureScreenshot',{format:'png'});
+    writeFileSync('outputs/qa/verify_3_5b2c4_local.png',Buffer.from(shot.data,'base64'));
+    await check(label);const jit=await calculate();
+    if(!jit?.includes('JUST IN TIME')||!jit.includes('koniec ostatniej sztuki: 76 s')||jit.includes('Osoby transportu:'))throw new Error('Błędny lokalny JIT');
+    await check(label);if(await calculate()!==result)throw new Error('OFF nie odtwarza lokalnego wyniku');
+    await open();if(JSON.stringify(await saved())!==expected||await calculate()!==result)throw new Error('Reload zmienia lokalny wynik/zapis');
+    if(legacy!==await evaluate(`localStorage.getItem('layout-studio-stations-v5')`)||legacy4!==await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`))throw new Error('Zmiana 4/5');
+    if((JSON.parse(await raw())).originalJson!==originalJson||errors.length)throw new Error('Zmiana źródła lub wyjątki '+errors.join('; '));
+    console.log('PASS 3.5b2c4: lokalny korpus/wyposażenie, profile, pobranie, fizyczny transport po kontynuacji, JIT, reload i izolacja 4/5.');
+  }else if(process.argv.includes('--physical-buffer-run')){
+
     const expected=JSON.stringify(await saved()),label='Symulacja bez transportu — just in time';
     const calculate=async()=>{
       await field('Liczba sztuk szkicu 6',4);await field('Odstęp przybycia szkicu 6 [s]',1);

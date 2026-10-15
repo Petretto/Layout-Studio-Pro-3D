@@ -12,7 +12,7 @@ export interface BufferedOperationChoice {
 /** Exact arrival admission. A later window only suggests a new departure, never an arrival wait.
  * Unknown worker blocking ends are excluded by the caller; all failed choices remain immutable. */
 export function planDirectOperation(project:DomainProjectV6,operation:PlannedWorkerOperation,target:StationCandidate,
-  at:number,book:WorkerReservationBook,blockedWorkers:ReadonlySet<string>):{choice?:BufferedOperationChoice;retryAt?:number;cause?:'calendar'|'workers'} {
+  at:number,book:WorkerReservationBook,blockedWorkers:ReadonlySet<string>,mayHoldWorkers=false):{choice?:BufferedOperationChoice;retryAt?:number;cause?:'calendar'|'workers'} {
   let choice:BufferedOperationChoice|undefined,retryAt=Infinity,cause:'calendar'|'workers'|undefined,combinations=0;
   const choose=(workers:string[],from:number)=>{
     if(choice)return;
@@ -29,7 +29,8 @@ export function planDirectOperation(project:DomainProjectV6,operation:PlannedWor
     const projection=projectWork(windows,at,operation.durationSeconds);
     if(!projection)return;
     const start=projection.atOffset(operation.reserveFromSeconds,false),end=projection.atOffset(operation.reserveUntilSeconds,true);
-    const conflicts=book.reservations.filter(reservation=>reservation.startSeconds<end&&start<reservation.endSeconds&&reservation.workerIds.some(id=>workers.includes(id)));
+    // A possible unknown hold must not grow into an already promised future presence.
+    const conflicts=book.reservations.filter(reservation=>(mayHoldWorkers||reservation.startSeconds<end)&&start<reservation.endSeconds&&reservation.workerIds.some(id=>workers.includes(id)));
     if(conflicts.length){retryAt=Math.min(retryAt,Math.max(...conflicts.map(conflict=>conflict.endSeconds)));cause='workers';return;}
     choice={workers,projection,from:start,until:end};
   };

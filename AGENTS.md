@@ -133,3 +133,12 @@ Do not invoke every skill for every task.
 ## Buffer scope and transport — user decisions 2026-10-14
 - copy=null applies the declared capacity separately to each copy, not as one shared station pool. Overlapping all-copy and individual-copy declarations require explicit correction.
 - Reserve destination buffer space before transport departure. Capacity 0 means direct handoff to a ready operation, without waiting in that buffer.
+
+
+## Same-copy continuation — user decision 2026-10-15
+- For consecutive operations on the same station copy, the body stays on that copy. Buffers apply when leaving for another copy.
+- The station and previous equipment remain occupied until the next local operation actually starts. Do not invent an intermediate body move or a buffer deposit.
+- Worker presence still follows the explicit profile; local continuation waiting is distinct from an output-buffer blockage.
+- Current verified implementation scope is the buffered linear scheduler (one explicit candidate per operation); broader routing remains subject to its recorded limitations.
+
+Latest periodic full regression: 257/257 PASS in 3.5b2c4 (2026-10-15), followed by build and UI PASS. Use the scoped-test policy until the next justified integration/periodic checkpoint; evidence in WERYFIKACJA_BUFOROW_I_ZAOPATRZENIA_3_5.md.
