@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ProjectData } from '../../core/models/types';
-import { moveOperation } from '../../core/editing';
+import { moveOperation, updateProcess } from '../../core/editing';
 import { OperationInspector } from './OperationInspector';
 import { effectiveCycle } from '../../core/resources';
 import { fmt, formatTimeValue, formatTimeWithUnit } from './Fields';
@@ -40,10 +40,11 @@ export function BalancingBoard({ project: p, change }: { project: ProjectData; c
             <div className="balance-stack">
               {ws.assignedStepIds.map(id => {
                 const s = p.processSteps.find(step => step.id === id)!;
-                return <button key={id} draggable aria-label={`Edytuj ${id} na ${ws.id}`} aria-pressed={selected === id} className="operation-segment" title={`${id}: ${s.name} — ${formatTimeWithUnit(s.standardTimeSeconds, unit)}`}
+                const isStepLocked = Boolean(s.lockedWorkstation);
+                return <button key={id} draggable aria-label={`Edytuj ${id} na ${ws.id}`} aria-pressed={selected === id} className="operation-segment" title={`${id}: ${s.name} — ${formatTimeWithUnit(s.standardTimeSeconds, unit)}${isStepLocked ? ` [ZABLOKOWANA NA ${s.assignedWorkstationId ?? ws.id}]` : ''}`}
                   style={{ height: `${s.standardTimeSeconds / (ws.baseCycleSeconds??ws.cycleTimeSeconds) * effectiveCycle(ws) / max * 300 * scale}px`, background: colors[p.processSteps.indexOf(s) % colors.length] }}
                   onDragStart={e => { dragging.current = id; e.dataTransfer.setData('text/plain', id); e.dataTransfer.effectAllowed = 'move'; setSelected(id); }} onDragEnd={() => { setHover(null); dragging.current = ''; }} onClick={() => { setSelected(id); setTarget(String(ws.sequenceIndex)); }}>
-                  {id} · {formatTimeWithUnit(s.standardTimeSeconds, unit)}
+                  {isStepLocked ? '🔒 ' : ''}{id} · {formatTimeWithUnit(s.standardTimeSeconds, unit)}
                 </button>;
               })}
             </div>
@@ -57,12 +58,33 @@ export function BalancingBoard({ project: p, change }: { project: ProjectData; c
     </div>
     <div className="panel">
       <div className="toolbar">
-        <label className="field">Operacja do przeniesienia<select value={selected} onChange={e => setSelected(e.target.value)}><option value="">Wybierz operację</option>{p.processSteps.map(s => <option key={s.id} value={s.id}>{s.id} — {s.name}</option>)}</select></label>
+        <label className="field">Operacja do przeniesienia<select value={selected} onChange={e => setSelected(e.target.value)}><option value="">Wybierz operację</option>{p.processSteps.map(s => <option key={s.id} value={s.id}>{s.id} — {s.name}{s.lockedWorkstation ? ' 🔒' : ''}</option>)}</select></label>
         <label className="field">Stanowisko docelowe<select value={target} onChange={e => setTarget(e.target.value)}>{b.workstations.map(ws => <option key={ws.id} value={ws.sequenceIndex}>{ws.id}</option>)}<option value={b.workstations.length + 1}>Nowe stanowisko na końcu</option></select></label>
         <button disabled={!current} onClick={() => move(selected, Number(target))}>Przenieś operację</button>
+        {current && (
+          <button
+            onClick={() => {
+              const isLocked = Boolean(current.lockedWorkstation);
+              const targetWsId = current.assignedWorkstationId ?? b.workstations.find(w => w.assignedStepIds.includes(current.id))?.id ?? `WS-${target}`;
+              const nextSteps = p.processSteps.map(s => s.id === current.id ? {
+                ...s,
+                lockedWorkstation: !isLocked,
+                assignedWorkstationId: !isLocked ? targetWsId : s.assignedWorkstationId,
+              } : s);
+              try {
+                change(updateProcess(p, nextSteps));
+                setMessage(!isLocked ? `Zablokowano ${current.id} na ${targetWsId}. Automatyczny bilans utrzyma ten przydział.` : `Odblokowano przydział ${current.id}.`);
+              } catch (err) {
+                setMessage(`Błąd blokady: ${(err as Error).message}`);
+              }
+            }}
+          >
+            {current.lockedWorkstation ? `Odblokuj przydział (${current.assignedWorkstationId ?? 'WS'})` : `Zablokuj na ${b.workstations.find(w => w.assignedStepIds.includes(current.id))?.id ?? `WS-${target}`}`}
+          </button>
+        )}
       </div>
-      <p className="muted">Dla bardzo krótkich operacji użyj listy wyboru. Puste stanowisko jest usuwane automatycznie. Przestawienie operacji nie usuwa jej materiałów.</p>
-      {current && <OperationInspector key={`${current.id}/${current.name}/${current.standardTimeSeconds}/${current.vaTimeSeconds}`} project={p} step={current} change={change} report={setMessage} />}
+      <p className="muted">Dla bardzo krótkich operacji użyj listy wyboru. Puste stanowisko jest usuwane automatycznie. Przestawienie operacji nie usuwa jej materiałów. Zablokowanie operacji (🔒) unieruchamia jej przydział przed heurystykami RPW/LCR.</p>
+      {current && <OperationInspector key={`${current.id}/${current.name}/${current.standardTimeSeconds}/${current.vaTimeSeconds}/${current.lockedWorkstation}/${current.assignedWorkstationId}`} project={p} step={current} change={change} report={setMessage} />}
     </div>
     <div className="panel" aria-label="Oddzielne obciążenie stanowisk, maszyn i operatorów">
       <h3>Oddzielne obciążenie stanowisk, maszyn i operatorów oraz mianowniki wskaźników</h3>

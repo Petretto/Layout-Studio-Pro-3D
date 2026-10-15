@@ -12,6 +12,8 @@ export function processErrors(steps:ProcessStep[]):string[] {
     if(!finite(s.vaTimeSeconds)||!finite(s.nvaTimeSeconds)||Math.abs(s.vaTimeSeconds+s.nvaTimeSeconds-s.standardTimeSeconds)>0.02)errors.push(`${s.id}: VA + NVA musi być równe czasowi standardowemu.`);
     if(Array.isArray(s.predecessorIds)&&new Set(s.predecessorIds).size!==s.predecessorIds.length)errors.push(`${s.id}: powtórzony poprzednik.`);
     if(!Array.isArray(s.predecessorIds))errors.push(`${s.id}: poprzednicy muszą być listą.`);
+    if(s.lockedWorkstation!==undefined&&typeof s.lockedWorkstation!=='boolean')errors.push(`${s.id}: pole lockedWorkstation musi być wartością logiczną.`);
+    if(s.lockedWorkstation&&(!s.assignedWorkstationId||!(/^WS-\d+$/.test(s.assignedWorkstationId)||/^ST-/.test(s.assignedWorkstationId))))errors.push(`${s.id}: zablokowana operacja wymaga poprawnego identyfikatora stanowiska (np. WS-1).`);
   }
   for(const s of steps)for(const id of s.predecessorIds??[]){
     if(!ids.has(id))errors.push(`${s.id}: nie istnieje poprzednik ${id}.`);

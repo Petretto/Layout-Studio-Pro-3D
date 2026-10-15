@@ -7,11 +7,14 @@ export function OperationInspector({ project, step, change, report }: {
   project: ProjectData; step: ProcessStep; change: (p: ProjectData) => void; report: (message: string) => void;
 }) {
   const unit = project.timeUnit ?? 's';
+  const currentStation = step.assignedWorkstationId ?? (project.balancing?.workstations.find(w => w.assignedStepIds.includes(step.id))?.id ?? 'WS-1');
   const [name, setName] = useState(step.name);
   const [time, setTime] = useState(String(fromSeconds(step.standardTimeSeconds, unit)));
   const [va, setVa] = useState(String(fromSeconds(step.vaTimeSeconds, unit)));
   const [pred, setPred] = useState(step.predecessorIds.join(', '));
   const [succ, setSucc] = useState(successorsOf(project.processSteps, step.id).join(', '));
+  const [locked, setLocked] = useState(Boolean(step.lockedWorkstation));
+  const [lockedStation, setLockedStation] = useState(currentStation);
 
   useEffect(() => {
     setName(step.name);
@@ -19,7 +22,9 @@ export function OperationInspector({ project, step, change, report }: {
     setVa(String(Number(fromSeconds(step.vaTimeSeconds, unit).toFixed(6))));
     setPred(step.predecessorIds.join(', '));
     setSucc(successorsOf(project.processSteps, step.id).join(', '));
-  }, [step, project.processSteps, unit]);
+    setLocked(Boolean(step.lockedWorkstation));
+    setLockedStation(step.assignedWorkstationId ?? (project.balancing?.workstations.find(w => w.assignedStepIds.includes(step.id))?.id ?? 'WS-1'));
+  }, [step, project.processSteps, project.balancing, unit]);
 
   const materials = project.bom.filter(b => b.associatedProcessStepId === step.id);
 
@@ -30,9 +35,9 @@ export function OperationInspector({ project, step, change, report }: {
       try {
         const secTime = toSeconds(Number(time), unit);
         const secVa = toSeconds(Number(va), unit);
-        const edited = editOperation(project, step.id, name, secTime, secVa);
+        const edited = editOperation(project, step.id, name, secTime, secVa, locked, locked ? lockedStation : (step.assignedWorkstationId ?? lockedStation));
         change(updateProcess(edited, setOperationLinks(edited.processSteps, step.id, pred.split(/[,;]/).map(x => x.trim()).filter(Boolean), succ.split(/[,;]/).map(x => x.trim()).filter(Boolean))));
-        report('Zapisano operację. Bilans i symulacja korzystają z nowych czasów.');
+        report(locked ? `Zapisano operację (przydział zablokowany na ${lockedStation}).` : 'Zapisano operację. Bilans i symulacja korzystają z nowych czasów.');
       }
       catch (error) { report((error as Error).message); }
     }}>
@@ -46,6 +51,32 @@ export function OperationInspector({ project, step, change, report }: {
       <p>NVA: {formatTimeWithUnit(toSeconds(Math.max(0, Number(time) - Number(va)), unit), unit)}. Zmiana czasu zachowuje udział VA.</p>
       <label className="field">Poprzednicy (ID)<input value={pred} onChange={e => setPred(e.target.value)} /></label>
       <label className="field">Następnicy (ID)<input value={succ} onChange={e => setSucc(e.target.value)} /></label>
+      <div className="field-checkbox" style={{ marginTop: '0.5rem', marginBottom: '0.5rem' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={locked}
+            onChange={e => setLocked(e.target.checked)}
+          />
+          <span><strong>Zablokuj przydział do stanowiska</strong> (chroni przed automatycznym przebalansowaniem)</span>
+        </label>
+      </div>
+      {locked && (
+        <label className="field">
+          Stanowisko zablokowane
+          <select
+            value={lockedStation}
+            onChange={e => setLockedStation(e.target.value)}
+          >
+            {(project.balancing?.workstations ?? []).map(ws => (
+              <option key={ws.id} value={ws.id}>{ws.id} — {ws.name}</option>
+            ))}
+            {project.balancing?.workstations && !project.balancing.workstations.some(w => w.id === lockedStation) && (
+              <option value={lockedStation}>{lockedStation}</option>
+            )}
+          </select>
+        </label>
+      )}
       <button className="primary" type="submit">Zapisz operację</button>
     </form>
     <h3>Materiały operacji ({materials.length})</h3>

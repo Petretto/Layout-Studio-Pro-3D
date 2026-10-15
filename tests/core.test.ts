@@ -31,6 +31,88 @@ test('RPW i LCR zachowują zależności i nie gubią operacji',()=>{for(const a 
 test('operacja dłuższa niż cel nie znika i jest oznaczona',()=>{const r=runLineBalancing([step('1',25),step('2',5,['1'])],10);assert.equal(r.workstations[0].isBottleneck,true);assert.equal(r.actualWorkstationsCount,2);assert.ok(r.lineEfficiencyPercent<=100);});
 test('pusty proces daje zero stacji i brak sztucznej sprawności',()=>{const r=runLineBalancing([],10);assert.equal(r.actualWorkstationsCount,0);assert.equal(r.lineEfficiencyPercent,0);assert.throws(()=>runLineBalancing([],0));});
 test('bilans ręczny sprawdza kolejność i luki',()=>{const s=[{...step('1',5),assignedWorkstationId:'WS-2'},{...step('2',5,['1']),assignedWorkstationId:'WS-1'}];assert.throws(()=>runLineBalancing(s,10,'Manual'),/poprzednik/);s[0].assignedWorkstationId='WS-1';assert.equal(runLineBalancing(s,10,'Manual').actualWorkstationsCount,1);s[1].assignedWorkstationId='WS-3';assert.throws(()=>runLineBalancing(s,10,'Manual'),/przypisz|luk/);});
+test('4.2: blokowanie przydziału operacji przed automatycznym balansowaniem (RPW i LCR)', () => {
+  for (const algo of ['RPW', 'LCR'] as const) {
+    const steps: ProcessStep[] = [
+      step('1', 4),
+      { ...step('2', 6, ['1']), lockedWorkstation: true, assignedWorkstationId: 'WS-2' },
+      step('3', 5, ['2']),
+      step('4', 5, ['3']),
+    ];
+    const res = runLineBalancing(steps, 10, algo);
+    assert.equal(res.actualWorkstationsCount, 3);
+    assert.deepEqual(res.workstations[0].assignedStepIds, ['1']);
+    assert.deepEqual(res.workstations[1].assignedStepIds, ['2']);
+    assert.deepEqual(res.workstations[2].assignedStepIds, ['3', '4']);
+    assert.equal(res.workstations[1].id, 'WS-2');
+  }
+
+  {
+    const steps: ProcessStep[] = [
+      step('1', 3),
+      { ...step('2', 4, ['1']), lockedWorkstation: true, assignedWorkstationId: 'WS-1' },
+      step('3', 3, ['2']),
+    ];
+    const res = runLineBalancing(steps, 10, 'RPW');
+    assert.equal(res.actualWorkstationsCount, 1);
+    assert.deepEqual(res.workstations[0].assignedStepIds, ['1', '2', '3']);
+    assert.equal(res.workstations[0].isBottleneck, false);
+  }
+
+  {
+    const steps: ProcessStep[] = [
+      { ...step('1', 5), lockedWorkstation: true, assignedWorkstationId: 'WS-2' },
+      { ...step('2', 5, ['1']), lockedWorkstation: true, assignedWorkstationId: 'WS-1' },
+    ];
+    assert.throws(
+      () => runLineBalancing(steps, 10, 'RPW'),
+      /poprzednik 1 jest zablokowany na późniejszym stanowisku/
+    );
+  }
+
+  // Scenario 4: Station index > steps.length and gap in locked stations are rejected
+  {
+    assert.throws(
+      () => runLineBalancing([
+        { ...step('1', 5), lockedWorkstation: true, assignedWorkstationId: 'WS-3' },
+        step('2', 5, ['1']),
+      ], 10, 'RPW'),
+      /zablokowany przydział wymaga numeru stanowiska 1–2/
+    );
+
+    const stepsWithGap: ProcessStep[] = [
+      { ...step('1', 5), lockedWorkstation: true, assignedWorkstationId: 'WS-1' },
+      { ...step('2', 5, ['1']), lockedWorkstation: true, assignedWorkstationId: 'WS-3' },
+      { ...step('3', 5, ['2']), lockedWorkstation: true, assignedWorkstationId: 'WS-3' },
+    ];
+    assert.throws(
+      () => runLineBalancing(stepsWithGap, 10, 'RPW'),
+      /Brak operacji dla stanowiska WS-2|bez luk/
+    );
+  }
+
+  {
+    const steps: ProcessStep[] = [
+      step('1', 5),
+      { ...step('2', 15, ['1']), lockedWorkstation: true, assignedWorkstationId: 'WS-2' },
+      step('3', 5, ['2']),
+    ];
+    const res = runLineBalancing(steps, 10, 'RPW');
+    assert.equal(res.actualWorkstationsCount, 3);
+    assert.equal(res.workstations[1].isBottleneck, true);
+    assert.equal(res.workstations[1].cycleTimeSeconds, 15);
+    assert.deepEqual(res.workstations[1].assignedStepIds, ['2']);
+  }
+
+  {
+    const p = structuredClone(motor);
+    const updated = editOperation(p, '1', '1 zmiana', 80, 64, true, 'WS-1');
+    assert.equal(updated.processSteps.find(s => s.id === '1')!.lockedWorkstation, true);
+    assert.equal(updated.processSteps.find(s => s.id === '1')!.assignedWorkstationId, 'WS-1');
+    const derived = derive(updated);
+    assert.ok(derived.project.balancing?.workstations[0].assignedStepIds.includes('1'));
+  }
+});
 test('sortowanie topologiczne dla złączenia gałęzi',()=>{assert.deepEqual(topologicalSort([step('4',1,['2','3']),step('3',1,['1']),step('1',1),step('2',1,['1'])]).map(s=>s.id),['1','2','3','4']);});
 test('symulacja kolejki używa czasów stacji',()=>{const jobs=simulate([10,20],10,3);assert.deepEqual(jobs.map(j=>j.finish),[30,50,70]);assert.deepEqual(jobs[2].starts,[20,50]);assert.deepEqual(simulationAt(jobs,30),{completed:1,wip:2,throughput:120});assert.equal(simulationAt(jobs,70).wip,0);assert.throws(()=>simulate([0],1,3));});
 test('symulacja pojedynczej stacji i wolnych przybyć',()=>{assert.deepEqual(simulate([5],10,3).map(j=>j.finish),[5,15,25]);assert.equal(simulate([.25],.25,10000).at(-1)!.finish,2500);});

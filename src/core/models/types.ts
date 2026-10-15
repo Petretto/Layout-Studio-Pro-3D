@@ -28,6 +28,7 @@ export interface ProcessStep {
   sequenceNumber: number;
   predecessorIds: string[];
   assignedWorkstationId?: string;
+  lockedWorkstation?: boolean;
 }
 
 export interface BOMComponent {

@@ -25,15 +25,19 @@ export function updateProcess(p: ProjectData, steps: ProcessStep[]): ProjectData
   if (errors.length) throw new Error(errors.join('\n'));
   if (p.algorithm === 'Manual') {
     runLineBalancing(steps, calculateTaktTime(p.demand).taktTimeSeconds, 'Manual');
+  } else if (steps.some(s => s.lockedWorkstation)) {
+    runLineBalancing(steps, calculateTaktTime(p.demand).taktTimeSeconds, p.algorithm ?? 'RPW');
   }
   return { ...p, processSteps: steps };
 }
 
-export function editOperation(p: ProjectData, id: string, name: string, time: number, va: number) {
+export function editOperation(p: ProjectData, id: string, name: string, time: number, va: number, lockedWorkstation?: boolean, assignedWorkstationId?: string) {
   if (!p.processSteps.some(s => s.id === id)) throw new Error('Operacja już nie istnieje.');
   return updateProcess(p, p.processSteps.map(s => s.id === id ? {
     ...s, name: name.trim(), standardTimeSeconds: time, vaTimeSeconds: va,
     nvaTimeSeconds: Number((time - va).toFixed(6)),
+    ...(lockedWorkstation !== undefined ? { lockedWorkstation } : {}),
+    ...(assignedWorkstationId !== undefined ? { assignedWorkstationId } : {}),
   } : s));
 }
 

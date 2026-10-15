@@ -44,9 +44,9 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 3.8: cały plan 28/67 = **41,8%**; pierwsze wydanie 28/65 = **43,1%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po 4.2: cały plan 31/67 = **46,3%**; pierwsze wydanie 31/65 = **47,7%**; Etap 4: 2/7 = **28,6%**. Weryfikacja: `node scripts/plan_progress.mjs`.
 
-Stan historyczny po 3.7: cały plan 27/67 = **40,3%**; pierwsze wydanie 27/65 = **41,5%**.
+Stan historyczny po 4.1: cały plan 30/67 = **44,8%**; pierwsze wydanie 30/65 = **46,2%**.
 
 ## Hosting i synchronizacja
 
@@ -69,7 +69,7 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 1 | Stabilizacja i bezpieczeństwo projektu | wdrożone | Punkt wyjścia 0.4.0 |
 | 2 | Model procesu i zasobów | w trakcie | Fundament etapu 1 |
 | 3 | Symulacja powiązana z layoutem | wdrożone | Etap 2; podstawowe trasy i punkty transportowe |
-| 4 | Balansowanie i porównywanie wariantów | nierozpoczęte | Etapy 2–3 |
+| 4 | Balansowanie i porównywanie wariantów | w trakcie | Etapy 2–3 |
 | 5 | Edytor hali i spójny interfejs | w trakcie | Stabilny model danych; podstawowe poprawki UX od etapu 1 |
 | 6 | Biblioteka wyposażenia i 3D | nierozpoczęte | Etapy 3 i 5 |
 | 7 | Walidacja różnych procesów i przygotowanie komercyjne | nierozpoczęte | Etapy 1–6; zbieranie danych od początku |
@@ -77,7 +77,9 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
-4.2 (2026-10-16): nierozpoczęte — umożliwić blokowanie przydziałów przed automatycznym balansowaniem.
+4.3 (2026-10-16): nierozpoczęte — uwzględniać wymagania wyposażenia i kompetencji oraz wskazywać brak wykonalnego przydziału.
+
+4.2 (2026-10-16): wdrożone — umożliwić blokowanie przydziałów przed automatycznym balansowaniem. Rozszerzenie modelu operacji (`ProcessStep.lockedWorkstation`) oraz algorytmu bilansowania (`src/core/algorithms/lineBalancingEngine.ts`) dla heurystyk RPW i LCR. Zapewniono stabilne utrzymanie operacji zablokowanych na przypisanych stanowiskach (`assignedWorkstationId`), dopakowywanie operacji swobodnych wokół nich z zachowaniem czasu taktu i relacji pierwszeństwa, tranzytywną kontrolę kolejności stacji (blokada zablokowanego poprzednika na późniejszej stacji) oraz wymóg ciągłości numeracji stacji (odrzucenie luk). W UI Studio (`BalancingBoard.tsx` i `OperationInspector.tsx`): oznaczanie zablokowanych operacji symbolem 🔒 na wykresie Yamazumi i liście rozwijanej, szybki przycisk akcji w toolbarze oraz checkbox i selektor stacji docelowej w formularzu edycyjnym operacji. Backup `backup/v0.4.0_przed_4_2_20261016` (164 pliki z SHA256). Testy jednostkowe 35/35 PASS (`tests/core.test.ts`), pełna regresja 283/283 PASS, kompilacja/build PASS, test Edge CDP zrzut `outputs/qa/verify_4_2.png` (94 662 bajty). Raport: `RAPORT_BLOKOWANIA_PRZYDZIALOW_4_2.md`. Następny punkt: 4.3 — wymagania wyposażenia i kompetencji. Postęp: cały plan 31/67 = 46,3%, pierwsze wydanie 31/65 = 47,7%, Etap 4: 2/7 = 28,6%. Vercel nie zweryfikowano.
 
 4.1 (2026-10-16): wdrożone — pokazywać oddzielnie obciążenie stanowisk, maszyn i operatorów oraz objaśnić mianowniki wskaźników. Moduł obliczeniowy `src/core/workloadBalancing.ts` rozdzielający statyczne obciążenie stanowisk, maszyn i operatorów, z uwzględnieniem liczby kopii, obsady i profili technologicznych. Jawna prezentacja mianowników ($K \cdot T_{\text{takt}}$ oraz $(O \cdot K) \cdot T_{\text{takt}}$), formuł i opisów w dedykowanej tabeli widoku bilansowania `BalancingBoard.tsx`. W dynamicznym harmonogramie symulacji partii (`scheduleStateMetrics.ts` oraz `DomainWorkerSchedulePanel.tsx`): wdrożenie `EquipmentStateMetrics` (czas pracy technologicznej, transport, bezczynność, stopień wykorzystania) oraz wzbogacenie metryk stanowisk i pracowników o ścisłe bazy mianownika (makespan) i wzory obliczeniowe. Backup `backup/v0.4.0_przed_4_1_20261016` (162 pliki z SHA256). Pełna regresja 282/282 PASS, build/typecheck PASS, test Edge CDP zrzut `outputs/qa/verify_4_1.png` (111 505 bajtów). Raport: `RAPORT_OBCIAZENIA_I_MIANOWNIKOW_4_1.md`. Następny punkt: 4.2 — umożliwić blokowanie przydziałów przed automatycznym balansowaniem. Postęp: cały plan 30/67 = 44,8%, pierwsze wydanie 30/65 = 46,2%, Etap 4: 1/7 = 14,3%. Vercel nie zweryfikowano.
 
@@ -439,7 +441,7 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | ID | Krok / oczekiwany rezultat | Status |
 | --- | --- | --- |
 | 4.1 | Pokazywać oddzielnie obciążenie stanowisk, maszyn i operatorów oraz objaśnić mianowniki wskaźników. | wdrożone |
-| 4.2 | Umożliwić blokowanie przydziałów przed automatycznym balansowaniem. | nierozpoczęte |
+| 4.2 | Umożliwić blokowanie przydziałów przed automatycznym balansowaniem. | wdrożone |
 | 4.3 | Uwzględniać wymagania wyposażenia i kompetencji oraz wskazywać brak wykonalnego przydziału. | nierozpoczęte |
 | 4.4 | Wyjaśniać przyczynę ograniczenia przepustowości: obróbka, obsada, transport, blokada lub brak materiału. | nierozpoczęte |
 | 4.5 | Porównywać zapisane warianty przy tych samych warunkach eksperymentu: bazowy, dodatkowy pracownik, dodatkowe stanowisko, zmieniony layout. | nierozpoczęte |

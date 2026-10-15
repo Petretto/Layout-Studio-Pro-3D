@@ -119,13 +119,21 @@ BOM nie steruje dostępnością zapasu w symulacji. Nie ma milk-run, dostaw ani 
 
 RPW: priorytet czasu operacji i jej unikalnych następników. LCR: priorytet najdłuższych dostępnych operacji. Operacje są niepodzielne; zbyt długa operacja nie znika, tylko otrzymuje oznaczenie przekroczenia. Algorytmy respektują zależności, nie gwarantują optimum.
 
+Blokowanie przydziałów przed automatycznym balansowaniem (punkt 4.2):
+- Każda operacja może mieć zablokowany przydział do określonego stanowiska (`lockedWorkstation: true`, `assignedWorkstationId: 'WS-k'`).
+- Na wykresie Yamazumi operacje zablokowane są oznaczone ikoną kłódki `🔒` bezpośrednio na klocku operacji oraz na liście rozwijanej panelu przydziałów.
+- Szybki przycisk w toolbarze (`Zablokuj na WS-X` / `Odblokuj przydział`) oraz checkbox z selektorem stanowiska w `OperationInspector` pozwalają wygodnie blokować i odblokowywać operacje w locie.
+- Heurystyki RPW i LCR utrzymują operacje zablokowane na ich docelowych stanowiskach, a pozostałe operacje swobodne dopakowują optymalnie wokół nich z zachowaniem czasu taktu i relacji pierwszeństwa.
+- Weryfikacja spójności: zablokowanie poprzednika na późniejszym stanowisku niż następnik lub powstanie luki w numeracji stanowisk jest natychmiast wykrywane i blokowane jawnym błędem.
+
 Manual: numery stacji od 1 bez luk; poprzednik nie może być przypisany do późniejszego numeru stacji. Numeracja stacji jest porządkiem technologicznym, a nie pozycją w hali. „Każda operacja osobno” tworzy przydział topologiczny i zachowuje widoczność gałęzi.
 
 Yamazumi:
 - segmenty operacji, przeciąganie między stacjami lub do nowej stacji, alternatywa przez listy;
 - automatyczna kompakcja pustych stacji, zachowanie BOM, blokada złych zależności;
 - inspektor operacji, regulacja skali, linia celu, obciążenie i przekroczenia;
-- wysokość słupka = odstęp zdolności; segmenty proporcjonalnie skalowane, etykiety pokazują bazowe czasy.
+- wysokość słupka = odstęp zdolności; segmenty proporcjonalnie skalowane, etykiety pokazują bazowe czasy;
+- wyróżnienie operacji zablokowanych (🔒) z ochroną przed automatycznym przestawieniem przez RPW/LCR.
 
 Zasoby każdej grupy:
 - operatorzy na jedną kopię: 1–20;
