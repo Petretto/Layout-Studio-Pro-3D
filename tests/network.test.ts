@@ -25,6 +25,13 @@ import {
   ProcessStallError,
   type ProcessStallDiagnostic,
 } from '../src/core/processStallDetection';
+import {
+  calculateGanttTimeGrid,
+  buildOperationsGantt,
+  buildStationsGantt,
+  buildWorkersGantt,
+  buildScheduleGanttChart,
+} from '../src/core/scheduleGantt';
 import {strict as assert} from 'node:assert';
 import {test} from 'node:test';
 import {DEFAULT_MOTOR_PROJECT as base} from '../src/core/models/defaultProjects';
@@ -4945,6 +4952,171 @@ test('3.7a: serializacja diagnozy przez ciąg tekstowy (postMessage workera) zac
   assert.deepEqual(parsedFromError, diagnostic);
 });
 
+test('3.8a: calculateGanttTimeGrid wyznacza czytelne podziałki czasu dla różnych długości partii', () => {
+  const zeroGrid = calculateGanttTimeGrid(0);
+  assert.ok(zeroGrid.majorStep >= 1);
+  assert.deepEqual(zeroGrid.majorTicks, [0]);
 
+  const grid45 = calculateGanttTimeGrid(45);
+  assert.equal(grid45.majorStep, 5);
+  assert.equal(grid45.minorStep, 1);
+  assert.ok(grid45.majorTicks.includes(0));
+  assert.ok(grid45.majorTicks.includes(45));
 
+  const grid120 = calculateGanttTimeGrid(120);
+  assert.equal(grid120.majorStep, 10);
+  assert.equal(grid120.minorStep, 2);
+  assert.ok(grid120.majorTicks.includes(0));
+  assert.ok(grid120.majorTicks.includes(120));
+});
 
+test('3.8a: buildOperationsGantt generuje wiersze operacji ze stanami oczekiwania, pracy, blokady i pauzy', () => {
+  const project = bufferedProcessFixture();
+  const runs: WorkerScheduleRun[] = [
+    {
+      job: 1,
+      operationId: project.operations[0].id,
+      stationId: project.stations[0].id,
+      copy: 1,
+      workerIds: [project.workers[0].id],
+      readySeconds: 0,
+      startSeconds: 5,
+      endSeconds: 15,
+      stationReleaseSeconds: 20,
+      blockedSeconds: 5,
+      reserveStartSeconds: 5,
+      reserveEndSeconds: 20,
+      waitSeconds: 5,
+      waitCauses: ['workers'],
+      workWindows: [{startSeconds: 5, endSeconds: 15}],
+      pauses: [],
+    },
+    {
+      job: 1,
+      operationId: project.operations[1].id,
+      stationId: project.stations[0].id,
+      copy: 1,
+      workerIds: [project.workers[0].id],
+      readySeconds: 15,
+      startSeconds: 20,
+      endSeconds: 30,
+      stationReleaseSeconds: 30,
+      continuationWaitSeconds: 5,
+      reserveStartSeconds: 20,
+      reserveEndSeconds: 30,
+      waitSeconds: 5,
+      waitCauses: ['station'],
+      workWindows: [{startSeconds: 20, endSeconds: 25}, {startSeconds: 27, endSeconds: 30}],
+      pauses: [{startSeconds: 25, endSeconds: 27}],
+    },
+  ];
+
+  const result: WorkerScheduleResult = {
+    jobs: [{id: 1, arrival: 0, starts: [5, 20], ends: [15, 30], finish: 30}],
+    runs,
+    mode: 'calendar',
+    scheduleDuration: 30,
+  };
+
+  const rows = buildOperationsGantt(project, result);
+  assert.equal(rows.length, 2);
+
+  // Row 1: OP-0
+  const row1 = rows[0];
+  assert.equal(row1.category, 'operation');
+  assert.equal(row1.targetJob, 1);
+  assert.equal(row1.targetObjectId, project.operations[0].id);
+  assert.equal(row1.bars.length, 3); // wait, work, blocked
+  assert.equal(row1.bars[0].kind, 'wait');
+  assert.equal(row1.bars[0].startSeconds, 0);
+  assert.equal(row1.bars[0].endSeconds, 5);
+  assert.equal(row1.bars[1].kind, 'work');
+  assert.equal(row1.bars[1].startSeconds, 5);
+  assert.equal(row1.bars[1].endSeconds, 15);
+  assert.equal(row1.bars[2].kind, 'blocked');
+  assert.equal(row1.bars[2].startSeconds, 15);
+  assert.equal(row1.bars[2].endSeconds, 20);
+
+  // Row 2: OP-1
+  const row2 = rows[1];
+  assert.equal(row2.bars.length, 5); // wait, work1, pause, work2, local-wait
+  assert.ok(row2.bars.some(b => b.kind === 'pause' && b.startSeconds === 25 && b.endSeconds === 27));
+  assert.ok(row2.bars.some(b => b.kind === 'local-wait' && b.startSeconds === 30 && b.endSeconds === 35));
+});
+
+test('3.8a: buildStationsGantt i buildWorkersGantt poprawnie mapują stany na zasoby i ruchy transportu', () => {
+  const project = bufferedProcessFixture();
+  const runs: WorkerScheduleRun[] = [
+    {
+      job: 1,
+      operationId: project.operations[0].id,
+      stationId: project.stations[0].id,
+      copy: 1,
+      workerIds: [project.workers[0].id],
+      readySeconds: 0,
+      startSeconds: 0,
+      endSeconds: 10,
+      stationReleaseSeconds: 15,
+      blockedSeconds: 5,
+      reserveStartSeconds: 0,
+      reserveEndSeconds: 15,
+      waitSeconds: 0,
+      waitCauses: [],
+      workWindows: [{startSeconds: 0, endSeconds: 10}],
+      pauses: [],
+    },
+  ];
+
+  const movements = [
+    {
+      kind: 'loaded' as const,
+      purpose: 'transfer' as const,
+      routeId: 'ROUTE-1-2',
+      workerIds: [project.workers[0].id],
+      equipmentIds: ['CART-1'],
+      startSeconds: 15,
+      endSeconds: 20,
+    },
+  ];
+
+  const result: WorkerScheduleResult = {
+    jobs: [{id: 1, arrival: 0, starts: [0], ends: [10], finish: 20}],
+    runs,
+    mode: 'logical',
+    scheduleDuration: 20,
+    transportMovements: movements,
+  };
+
+  // Stations Gantt
+  const stationRows = buildStationsGantt(project, result);
+  const stRow = stationRows.find(r => r.targetObjectId === project.stations[0].id && r.targetCopy === 1);
+  assert.ok(stRow);
+  assert.equal(stRow.category, 'station');
+  assert.ok(stRow.bars.some(b => b.kind === 'work' && b.startSeconds === 0 && b.endSeconds === 10));
+  assert.ok(stRow.bars.some(b => b.kind === 'blocked' && b.startSeconds === 10 && b.endSeconds === 15));
+
+  // Workers Gantt
+  const workerRows = buildWorkersGantt(project, result);
+  const wRow = workerRows.find(r => r.targetObjectId === project.workers[0].id);
+  assert.ok(wRow);
+  assert.equal(wRow.category, 'worker');
+  assert.ok(wRow.bars.some(b => b.kind === 'work' && b.startSeconds === 0 && b.endSeconds === 10));
+  // Under bbas default policy, worker is held in blockage:
+  assert.ok(wRow.bars.some(b => b.kind === 'blocked' && b.startSeconds === 10 && b.endSeconds === 15));
+  // Worker has transfer movement:
+  assert.ok(wRow.bars.some(b => b.kind === 'transport-transfer' && b.startSeconds === 15 && b.endSeconds === 20));
+
+  // Complete Gantt Chart model builder
+  const chartOps = buildScheduleGanttChart(project, result, 'operations');
+  assert.equal(chartOps.viewMode, 'operations');
+  assert.equal(chartOps.totalDurationSeconds, 20);
+  assert.ok(chartOps.rows.length > 0);
+
+  const chartStations = buildScheduleGanttChart(project, result, 'stations');
+  assert.equal(chartStations.viewMode, 'stations');
+  assert.ok(chartStations.rows.length > 0);
+
+  const chartWorkers = buildScheduleGanttChart(project, result, 'workers');
+  assert.equal(chartWorkers.viewMode, 'workers');
+  assert.ok(chartWorkers.rows.length > 0);
+});

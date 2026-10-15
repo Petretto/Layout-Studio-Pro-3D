@@ -363,5 +363,18 @@ W silnikach symulacji (`bufferedProcessSchedule.ts`, `workerSchedule.ts`) oraz w
 - **Bezpieczeństwo na granicy Web Worker**:
   - Diagnostyka przekazywana w ustrukturyzowanej formie lub jako bezpieczny znacznik tekstowy `[PROCESS_STALL_DIAGNOSTIC]...` odporny na serializację w wątkach roboczych przeglądarki.
 
-
-
+### Wykres Gantta operacji, stanowisk i pracowników — 3.8 (2026-10-15)
+W panelu harmonogramu zespołu (`DomainWorkerSchedulePanel.tsx`), na bazie dedykowanego modułu analitycznego `scheduleGantt.ts` oraz komponentu `ScheduleGanttChart.tsx`, wdrożono interaktywny wykres Gantta prezentujący przebieg symulacji w trzech perspektywach:
+- **Trzy perspektywy widoku (`GanttViewMode`)**:
+  - **Operacje w partii** — każdy wiersz odpowiada wykonaniu konkretnej operacji na określonej sztuce (`Sztuka X — Operacja Y na ST / k.Z`). Paski pokazują czas oczekiwania przed startem (`wait`), okna pracy netto (`work`), przerwy kalendarzowe (`pause`), blokadę wyjścia (`blocked`) oraz oczekiwanie na lokalną kontynuację (`local-wait`);
+  - **Stanowiska i kopie** — każdy wiersz odpowiada fizycznej kopii stacji (`ST-... / kopia K`). Prezentuje zadania obróbcze, wyprzedzające rezerwacje celu transportu przed przyjazdem (`reserve`), blokady stacji po pracy oraz oczekiwanie korpusu na kontynuację;
+  - **Pracownicy** — każdy wiersz odpowiada zadeklarowanemu pracownikowi (`W-...`). Prezentuje wykonywane czynności montażowe, przetrzymanie w blokadzie stacji (polityka `bbas`), ruchy transportu montażu (przewozy z ładunkiem oraz dojazdy/powroty bez ładunku) oraz przerwy kalendarzowe.
+- **Sterowanie osią czasu i nawigacją**:
+  - Automatyczne wyznaczanie podziałki czasu (`calculateGanttTimeGrid`) z czytelnymi krokami głównymi i podrzędnymi;
+  - Wybór skali osi czasu (75%, 100%, 150%, 200%, 300%) z horyzontalnym przewijaniem i stałą kolumną nagłówków;
+  - Wyszukiwarka filtrująca wiersze według nazwy lub identyfikatora;
+  - Czytelna legenda kolorystyczna stanów procesu.
+- **Dwukierunkowe przejście do odpowiedniego obiektu**:
+  - Kliknięcie słupka lub nagłówka wiersza na wykresie Gantta zaznacza obiekt, wyświetla baner wybranego obiektu i podświetla powiązany wiersz w tabeli wykonań (`.selected-row`);
+  - W przypadku wyboru stanowiska lub pracownika automatycznie rozwija odpowiednią sekcję inspekcji stanów (`open=true`) i podświetla wiersz danego zasobu;
+  - Kliknięcie dowolnego wiersza w tabeli wykonań, tabeli stanowisk lub tabeli pracowników natychmiast synchronizuje zaznaczenie i podświetla odpowiadające mu słupki na wykresie Gantta.

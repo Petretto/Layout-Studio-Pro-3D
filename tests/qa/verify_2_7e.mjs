@@ -580,6 +580,44 @@ try{
       const shotInspections=await send('Page.captureScreenshot',{format:'png'});
       writeFileSync('outputs/qa/verify_3_6b_inspections.png',Buffer.from(shotInspections.data,'base64'));
     }
+    if(process.argv.includes('--gantt-chart')){
+      const ganttEl=await evaluate(`!!document.querySelector('[aria-label="Wykres Gantta harmonogramu"]')`);
+      if(!ganttEl)throw new Error('Brak kontenera wykresu Gantta harmonogramu 3.8');
+      const legendEl=await evaluate(`!!document.querySelector('[aria-label="Legenda stanów wykresu Gantta"]')`);
+      if(!legendEl)throw new Error('Brak legendy stanów wykresu Gantta 3.8');
+      const opsCount=await evaluate(`document.querySelectorAll('.gantt-row-lane').length`);
+      if(opsCount<4)throw new Error('Zbyt mało wierszy operacji na wykresie Gantta: '+opsCount);
+
+      // Test switching to Stations view
+      await evaluate(`[...document.querySelectorAll('.gantt-view-switch button')].find(b=>b.textContent.includes('Stanowiska'))?.click()`);
+      await sleep(100);
+      const stCount=await evaluate(`document.querySelectorAll('.gantt-row-lane').length`);
+      if(stCount<2)throw new Error('Brak pasów stanowisk na wykresie Gantta: '+stCount);
+
+      // Test switching to Workers view
+      await evaluate(`[...document.querySelectorAll('.gantt-view-switch button')].find(b=>b.textContent.includes('Pracownicy'))?.click()`);
+      await sleep(100);
+      const wCount=await evaluate(`document.querySelectorAll('.gantt-row-lane').length`);
+      if(wCount<2)throw new Error('Brak pasów pracowników na wykresie Gantta: '+wCount);
+
+      // Test switching back to Operations view
+      await evaluate(`[...document.querySelectorAll('.gantt-view-switch button')].find(b=>b.textContent.includes('Operacje'))?.click()`);
+      await sleep(100);
+
+      // Click first bar to verify selection and navigation to object
+      await evaluate(`document.querySelector('.gantt-bar')?.click()`);
+      await sleep(100);
+      const hasBanner=await evaluate(`!!document.querySelector('.gantt-selection-banner')`);
+      if(!hasBanner)throw new Error('Brak banera wybranego obiektu po kliknięciu słupka Gantta');
+      const hasSelectedRow=await evaluate(`!!document.querySelector('.studio tr.selected-row')`);
+      if(!hasSelectedRow)throw new Error('Brak wyróżnienia powiązanego wiersza w tabeli wykonań po kliknięciu Gantta');
+
+      await evaluate(`document.querySelector('[aria-label="Wykres Gantta harmonogramu"]').scrollIntoView({block:'start'})`);
+      const shotGantt=await send('Page.captureScreenshot',{format:'png'});
+      mkdirSync('outputs/qa',{recursive:true});
+      writeFileSync('outputs/qa/verify_3_8.png',Buffer.from(shotGantt.data,'base64'));
+      console.log('PASS 3.8: interaktywny wykres Gantta (operacje, stanowiska, pracownicy), legenda stanów, podświetlenie i przejście do obiektu.');
+    }
     await check(label);const jit=await calculate();
     if(!jit?.includes('JUST IN TIME')||!jit.includes('koniec ostatniej sztuki: 130 s')||jit.includes('Osoby transportu:'))throw new Error('Błędny JIT z buforami');
     await check(label);if(await calculate()!==result)throw new Error('Wyłączenie JIT zmienia wynik fizyczny');

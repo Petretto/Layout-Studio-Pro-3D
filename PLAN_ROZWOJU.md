@@ -44,9 +44,9 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 3.7: cały plan 27/67 = **40,3%**; pierwsze wydanie 27/65 = **41,5%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po 3.8: cały plan 28/67 = **41,8%**; pierwsze wydanie 28/65 = **43,1%**. Weryfikacja: `node scripts/plan_progress.mjs`.
 
-Stan historyczny po 3.6: cały plan 26/67 = **38,8%**; pierwsze wydanie 26/65 = **40,0%**.
+Stan historyczny po 3.7: cały plan 27/67 = **40,3%**; pierwsze wydanie 27/65 = **41,5%**.
 
 ## Hosting i synchronizacja
 
@@ -77,7 +77,9 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
-3.8 (2026-10-15): nierozpoczęte — wykres Gantta operacji, stanowisk i pracowników oraz przejście z wyniku do odpowiedniego obiektu.
+3.9 (2026-10-15): nierozpoczęte — sprawdzić wyniki na ręcznie policzonych scenariuszach i większych partiach; zapisać pomiary czasu obliczeń i responsywności UI.
+
+3.8 (2026-10-15): wdrożone — wykres Gantta operacji, stanowisk i pracowników oraz przejście z wyniku do odpowiedniego obiektu. Moduł analityczny osi czasu i bloków zdarzeń (`src/core/scheduleGantt.ts`), interaktywny komponent wykresu Gantta z trzema perspektywami widoku w UI Studio (`ScheduleGanttChart.tsx`), podświetlanie i dwukierunkowe przejście do obiektu (operacja, stanowisko, pracownik), automatyczne rozwijanie inspekcji i synchronizacja z tabelami. Backup `backup/v0.4.0_przed_3_8_20261015` (286 plików z SHA256). Pełna regresja 273/273 PASS, typecheck/build PASS, Edge CDP UI PASS (`outputs/qa/verify_3_8.png`, proces JIT/transport/bufory/zaopatrzenie/reload i izolacja 4/5). Dokumentacja: `MODEL_GANTTA_3_8.md`, `WERYFIKACJA_GANTTA_3_8.md`. Następny punkt: 3.9 — sprawdzenie wyników na ręcznie policzonych scenariuszach i większych partiach. Postęp: cały plan 28/67 = 41,8%, pierwsze wydanie 28/65 = 43,1%, Etap 3: 9/10 = 90,0%. Vercel nie zweryfikowano.
 
 3.7 (2026-10-15): wdrożone — wykrywanie zatrzymania lub zakleszczenia procesu i przedstawianie jego przyczyny zamiast pozornego zakończenia symulacji. Kompletny moduł diagnostyczny `src/core/processStallDetection.ts` zintegrowany z silnikami symulacji `bufferedProcessSchedule.ts` i `workerSchedule.ts`. Precyzyjna klasyfikacja przyczyn (`worker-deadlock`, `buffer-deadlock`, `material-starvation`, `calendar-exhaustion`, `transport-deadlock`, `subassembly-starvation`, `process-stall`), dedykowane rekomendacje inżynierskie oraz inspekcja zablokowanych stanowisk/korpusów i wstrzymanych operacji. W panelu harmonogramu Studio (`DomainWorkerSchedulePanel.tsx` oraz `studio.css`) wdrożono ostrzegawczą kartę diagnostyczną z czasem zatrzymania, ramką rekomendacji, tabelą zablokowanych stacji i tabelą operacji. Bezpieczna serializacja przez granicę Web Worker. Backup `backup/v0.4.0_przed_3_7a_20261015` (283 zgodne SHA256). Testy celowane i pełna regresja 270/270 PASS, typecheck/build PASS, Edge CDP UI PASS (`outputs/qa/verify_3_7.png`, proces JIT/transport/bufory/zaopatrzenie/reload i izolacja 4/5). Dokumentacja: `MODEL_ZAKLESZCZEN_3_7.md`, `WERYFIKACJA_ZAKLESZCZEN_3_7.md`. Następny punkt: 3.8 — wykres Gantta operacji, stanowisk i pracowników. Postęp: cały plan 27/67 = 40,3%, pierwsze wydanie 27/65 = 41,5%, Etap 3: 8/10 = 80,0%. Vercel nie zweryfikowano.
 
@@ -422,7 +424,7 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 3.5 | Wprowadzić bufory o ograniczonej pojemności oraz jednoznaczne reguły blokowania i zwalniania stanowiska. Dla zaopatrzenia montażu uwzględniać zapas, zużycie, ilość i częstotliwość dostaw materiału potrzebną do płynnej produkcji, bez czasu/rezerwacji operatorów magazynu. | wdrożone |
 | 3.6 | Pokazywać stany pracy, oczekiwania na materiał/operatora, blokady wyjścia i transportu wraz z czasami ich trwania. | wdrożone |
 | 3.7 | Wykrywać zatrzymanie lub zakleszczenie procesu i przedstawiać jego przyczynę zamiast pozornego zakończenia symulacji. | wdrożone |
-| 3.8 | Dodać wykres Gantta operacji, stanowisk i pracowników oraz przejście z wyniku do odpowiedniego obiektu. | nierozpoczęte |
+| 3.8 | Dodać wykres Gantta operacji, stanowisk i pracowników oraz przejście z wyniku do odpowiedniego obiektu. | wdrożone |
 | 3.9 | Sprawdzić wyniki na ręcznie policzonych scenariuszach i większych partiach; zapisać pomiary czasu obliczeń i responsywności UI. | nierozpoczęte |
 | 3.10 | Rozszerzyć wybór szybkości odtwarzania symulacji ponad obecne 100× dla długich procesów. Przy wysokich mnożnikach zachować dokładny czas symulowany, kolejność zdarzeń, pauzę i możliwość inspekcji; wynik obliczeń nie może zależeć od prędkości odtwarzania. | wdrożone |
 

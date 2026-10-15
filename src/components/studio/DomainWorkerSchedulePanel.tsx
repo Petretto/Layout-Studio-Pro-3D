@@ -5,6 +5,8 @@ import {startScheduleTask, type ScheduleProgress} from '../../core/scheduleTask'
 import {matchingConcurrencyGroup} from '../../core/physicalConcurrency';
 import {calculateScheduleStateMetrics} from '../../core/scheduleStateMetrics';
 import {parseProcessStallDiagnostic} from '../../core/processStallDetection';
+import {ScheduleGanttChart} from './ScheduleGanttChart';
+import type {GanttSelectionTarget} from '../../core/scheduleGantt';
 
 /** Inspect full operation spans, including pauses; transport is listed separately in the result. */
 function simultaneousPeriods(runs: readonly WorkerScheduleRun[]) {
@@ -46,16 +48,18 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
   const [arrivalInterval, setArrivalInterval] = useState('');
   const [justInTime,setJustInTime]=useState(false);
   const [result, setResult] = useState<WorkerScheduleResult | null>(null);
+  const [selectedTarget, setSelectedTarget] = useState<GanttSelectionTarget | null>(null);
   const [error, setError] = useState('');
   const stallDiagnostic = useMemo(() => parseProcessStallDiagnostic(error), [error]);
   const [progress, setProgress] = useState<ScheduleProgress | null>(null);
   const [message, setMessage] = useState('');
   const cancelRef = useRef<(() => void) | null>(null);
   useEffect(() => () => {cancelRef.current?.();}, []);
-  const cancel = () => {cancelRef.current?.();cancelRef.current = null;setProgress(null);setMessage('Anulowano obliczenia.');};
+  const cancel = () => {cancelRef.current?.();cancelRef.current = null;setProgress(null);setMessage('Anulowano obliczenia.');setSelectedTarget(null);};
   const calculate = () => {
     cancelRef.current?.();
     setResult(null);
+    setSelectedTarget(null);
     setError('');
     setMessage('');
     try {
@@ -224,8 +228,26 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
         </div>
       </div>}
       <p className="muted">Przyczyna oczekiwania jest zapisana dla operacji, która musiała czekać. Przy kilku przyczynach w czasie oczekiwania pokazane są wszystkie.</p>
+      {/* Wykres Gantta — 3.8 */}
+      <ScheduleGanttChart
+        project={project}
+        result={result}
+        selectedTarget={selectedTarget}
+        onSelectTarget={setSelectedTarget}
+      />
+
       <div className="table-wrap"><table><thead><tr><th>Sztuka</th><th>Operacja</th><th>Stanowisko / kopia</th><th>Pracownicy</th><th>Gotowa [s]</th><th>Start [s]</th><th>Koniec [s]</th><th>Czas pracy [s]</th><th>Oczekiwanie [s]</th><th>Blokada [s]</th><th>Przyczyna</th></tr></thead>
-        <tbody>{runs.slice(0, 100).map(run => <tr key={`${run.job}:${run.operationId}`}>
+        <tbody>{runs.slice(0, 100).map(run => {
+          const isRunSelected = selectedTarget?.category === 'operation' &&
+            selectedTarget.id === run.operationId &&
+            (selectedTarget.job === undefined || selectedTarget.job === run.job);
+          return <tr
+            key={`${run.job}:${run.operationId}`}
+            className={isRunSelected ? 'selected-row' : ''}
+            style={{cursor: 'pointer'}}
+            onClick={() => setSelectedTarget({category: 'operation', id: run.operationId, job: run.job, copy: run.copy})}
+            title="Kliknij, aby podświetlić operację na wykresie Gantta"
+          >
           <td>{run.job}</td><td>{run.operationId}</td><td>{run.stationId} / {run.copy}</td>
           <td>{run.workerIds.join(', ')}
             {run.stationReleaseSeconds!==undefined&&<div>{run.continuationWaitSeconds!==undefined?`Przekazanie do kolejnej operacji: ${run.stationReleaseSeconds} s · oczekiwanie lokalne: ${run.continuationWaitSeconds} s`:`Zwolnienie stanowiska: ${run.stationReleaseSeconds} s · blokada po pracy: ${run.blockedSeconds} s`}</div>}
@@ -246,7 +268,7 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
               Pauzy [s]: {run.pauses.length ? run.pauses.map(window => `${window.startSeconds}–${window.endSeconds}`).join(', ') : 'brak'}<br />
               Rezerwacja osób [s]: {run.reserveStartSeconds}–{run.reserveEndSeconds}</div>}
           </td>
-        </tr>)}</tbody></table></div>
+        </tr>;})}</tbody></table></div>
       {runs.length > 100 && <p className="muted">Tabela pokazuje pierwsze 100 z {runs.length} wykonań. Podsumowanie obejmuje całą partię.</p>}
       <details aria-label="Inspekcja równoległości przebiegu"><summary>Równoległość na jednej sztuce ({concurrentPeriods.length} przedziałów)</summary>
         <p className="muted">Przedziały od startu do końca operacji obejmują także pauzy. Cały zestaw porównano z jedną zapisaną grupą. Dopuszczenie nie znosi zależności ani wyłączności zasobów; transport i rezerwacje przed startem pokazano w tabeli przebiegu.</p>
@@ -304,36 +326,57 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
           {(result.bodyEvents?.length ?? 0) > 500 && <p>Pokazano pierwsze 500 zdarzeń.</p>}
         </details>
       </div>}
-      {stateMetrics && <details aria-label="Inspekcja wykorzystania i stanów stanowisk"><summary>Stany i wykorzystanie stanowisk ({stateMetrics.stations.length})</summary>
+      {stateMetrics && <details aria-label="Inspekcja wykorzystania i stanów stanowisk" open={selectedTarget?.category === 'station' ? true : undefined}><summary>Stany i wykorzystanie stanowisk ({stateMetrics.stations.length})</summary>
         <p className="muted">Zestawienie czasów przetwarzania, blokad po zakończeniu operacji (brak miejsca w buforze wyjściowym) oraz oczekiwania na lokalną kontynuację na tej samej kopii. Wskaźnik zajęcia uwzględnia łączny czas obecności korpusu na stanowisku w odniesieniu do czasu trwania partii.</p>
         <div className="table-wrap"><table><thead><tr><th>Stanowisko / kopia</th><th>Operacje</th><th>Przetwarzanie [s]</th><th>Blokada wyjścia [s]</th><th>Oczekiwanie lokalne [s]</th><th>Łączne zajęcie [s]</th><th>Bezczynność [s]</th><th>Wskaźnik zajęcia</th><th>Wskaźnik pracy</th></tr></thead>
-          <tbody>{stateMetrics.stations.slice(0, 100).map(st => <tr key={`${st.stationId}:${st.copy}`}>
-            <td>{st.stationName ? `${st.stationName} (${st.stationId})` : st.stationId} / kopia {st.copy}</td>
-            <td>{st.operationsCount}</td>
-            <td>{st.processingTimeSeconds}</td>
-            <td>{st.blockedTimeSeconds}</td>
-            <td>{st.continuationWaitTimeSeconds}</td>
-            <td>{st.totalOccupiedTimeSeconds}</td>
-            <td>{st.idleTimeSeconds}</td>
-            <td>{(st.occupancyRatio * 100).toFixed(1)}%</td>
-            <td>{(st.processingRatio * 100).toFixed(1)}%</td>
-          </tr>)}</tbody></table></div>
+          <tbody>{stateMetrics.stations.slice(0, 100).map(st => {
+            const isStationSelected = selectedTarget?.category === 'station' &&
+              selectedTarget.id === st.stationId &&
+              (selectedTarget.copy === undefined || selectedTarget.copy === st.copy);
+            return <tr
+              key={`${st.stationId}:${st.copy}`}
+              className={isStationSelected ? 'selected-row' : ''}
+              style={{cursor: 'pointer'}}
+              onClick={() => setSelectedTarget({category: 'station', id: st.stationId, copy: st.copy})}
+              title="Kliknij, aby podświetlić stanowisko na wykresie Gantta"
+            >
+              <td>{st.stationName ? `${st.stationName} (${st.stationId})` : st.stationId} / kopia {st.copy}</td>
+              <td>{st.operationsCount}</td>
+              <td>{st.processingTimeSeconds}</td>
+              <td>{st.blockedTimeSeconds}</td>
+              <td>{st.continuationWaitTimeSeconds}</td>
+              <td>{st.totalOccupiedTimeSeconds}</td>
+              <td>{st.idleTimeSeconds}</td>
+              <td>{(st.occupancyRatio * 100).toFixed(1)}%</td>
+              <td>{(st.processingRatio * 100).toFixed(1)}%</td>
+            </tr>;
+          })}</tbody></table></div>
         {stateMetrics.stations.length > 100 && <p className="muted">Pokazano pierwsze 100 stanowisk.</p>}
       </details>}
-      {stateMetrics && <details aria-label="Inspekcja aktywności i stanów pracowników"><summary>Stany i aktywność pracowników ({stateMetrics.workers.length})</summary>
+      {stateMetrics && <details aria-label="Inspekcja aktywności i stanów pracowników" open={selectedTarget?.category === 'worker' ? true : undefined}><summary>Stany i aktywność pracowników ({stateMetrics.workers.length})</summary>
         <p className="muted">Zestawienie czasów montażu, transportu, przetrzymania w blokadzie bufora wyjściowego (polityka bbas ze wstrzymaniem operatora) oraz przerw kalendarzowych. Wskaźnik aktywności odnosi łączny czas zaangażowania do czasu trwania partii.</p>
         <div className="table-wrap"><table><thead><tr><th>Pracownik</th><th>Operacje</th><th>Montaż [s]</th><th>Transport [s]</th><th>Zatrzymanie w blokadzie [s]</th><th>Pauzy [s]</th><th>Łączny czas aktywny [s]</th><th>Bezczynność [s]</th><th>Wskaźnik aktywności</th></tr></thead>
-          <tbody>{stateMetrics.workers.slice(0, 100).map(w => <tr key={w.workerId}>
-            <td>{w.workerName ? `${w.workerName} (${w.workerId})` : w.workerId}</td>
-            <td>{w.operationsCount}</td>
-            <td>{w.workTimeSeconds}</td>
-            <td>{w.transportTimeSeconds}</td>
-            <td>{w.heldBlockTimeSeconds}</td>
-            <td>{w.pauseTimeSeconds}</td>
-            <td>{w.totalActiveTimeSeconds}</td>
-            <td>{w.idleTimeSeconds}</td>
-            <td>{(w.activityRatio * 100).toFixed(1)}%</td>
-          </tr>)}</tbody></table></div>
+          <tbody>{stateMetrics.workers.slice(0, 100).map(w => {
+            const isWorkerSelected = selectedTarget?.category === 'worker' &&
+              selectedTarget.id === w.workerId;
+            return <tr
+              key={w.workerId}
+              className={isWorkerSelected ? 'selected-row' : ''}
+              style={{cursor: 'pointer'}}
+              onClick={() => setSelectedTarget({category: 'worker', id: w.workerId})}
+              title="Kliknij, aby podświetlić pracownika na wykresie Gantta"
+            >
+              <td>{w.workerName ? `${w.workerName} (${w.workerId})` : w.workerId}</td>
+              <td>{w.operationsCount}</td>
+              <td>{w.workTimeSeconds}</td>
+              <td>{w.transportTimeSeconds}</td>
+              <td>{w.heldBlockTimeSeconds}</td>
+              <td>{w.pauseTimeSeconds}</td>
+              <td>{w.totalActiveTimeSeconds}</td>
+              <td>{w.idleTimeSeconds}</td>
+              <td>{(w.activityRatio * 100).toFixed(1)}%</td>
+            </tr>;
+          })}</tbody></table></div>
         {stateMetrics.workers.length > 100 && <p className="muted">Pokazano pierwszych 100 pracowników.</p>}
       </details>}
     </div>}
