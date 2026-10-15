@@ -5120,3 +5120,289 @@ test('3.8a: buildStationsGantt i buildWorkersGantt poprawnie mapują stany na za
   assert.equal(chartWorkers.viewMode, 'workers');
   assert.ok(chartWorkers.rows.length > 0);
 });
+
+// ============================================================================
+// ITEM 3.9: SPRAWDZENIE WYNIKÓW NA RĘCZNIE POLICZONYCH SCENARIUSZACH,
+// WIĘKSZYCH PARTIACH I POMIARY CZASU OBLICZEŃ ORAZ RESPONSYWNOŚCI UI
+// ============================================================================
+
+test('3.9: scenariusz 1 — analityczne czasy transportu, przesunięcie o delta t i niezmiennik translacji obiektów 3D', () => {
+  // Scenariusz analityczny bazowy:
+  // OP-A na ST-A: czas trwania = 10 s (założony)
+  // Przewóz ST-A -> ST-C: czas trwania = 2 s (założony)
+  // OP-C na ST-C: czas trwania = 30 s (założony)
+  // Partia 1 sztuka.
+  //
+  // Ręczne wyliczenie:
+  // - OP-A: start = 0 s, koniec = 10 s, zwolnienie stacji = 10 s
+  // - Transport ST-A -> ST-C: odjazd = 10 s, przyjazd = 12 s (czas = 2 s)
+  // - OP-C: start = 12 s, koniec = 12 + 30 = 42 s
+  // - Makespan całkowity = 42 s.
+  const {project, input} = bufferedPhysicalFixture(1);
+  const route = project.stationRouting!.routes.find(r => r.id === 'R-A')!;
+  assert.equal(route.transportTime!.durationSeconds, 2);
+
+  const baselineResult = scheduleWorkerRun(structuredClone(project), 1, 1, structuredClone(input));
+  assert.equal(baselineResult.jobs[0].finish, 42);
+  const baseRuns = baselineResult.runs;
+  assert.equal(baseRuns[0].startSeconds, 0);
+  assert.equal(baseRuns[0].endSeconds, 10);
+  assert.equal(baseRuns[1].transport!.startSeconds, 10);
+  assert.equal(baseRuns[1].transport!.endSeconds, 12);
+  assert.equal(baseRuns[1].startSeconds, 12);
+  assert.equal(baseRuns[1].endSeconds, 42);
+
+  // Wariant 1B: Zmiana trasy transportowej — wydłużenie czasu przewozu o delta t = 13 s (z 2 s do 15 s).
+  // Ręczne wyliczenie analityczne:
+  // - OP-A: [0 s, 10 s]
+  // - Transport: odjazd = 10 s, przyjazd = 10 + 15 = 25 s
+  // - OP-C: start = 25 s, koniec = 25 + 30 = 55 s
+  // - Makespan = 55 s (dokładnie 42 + 13 = 55 s)
+  const modifiedRouteProject = structuredClone(project);
+  const modRoute = modifiedRouteProject.stationRouting!.routes.find(r => r.id === 'R-A')!;
+  modRoute.transportTime = {durationSeconds: 15, basis: 'assumed', source: 'Jawny test analityczny delta t'};
+  // Aktualizacja kalendarza powiązanego wózka/przenośnika dla dłuższego ruchu
+  const deltaTResult = scheduleWorkerRun(modifiedRouteProject, 1, 1, structuredClone(input));
+  assert.equal(deltaTResult.jobs[0].finish, 55, 'Makespan musi wzrosnąć dokładnie o delta t = 13 s');
+  const deltaRuns = deltaTResult.runs;
+  assert.equal(deltaRuns[1].transport!.startSeconds, 10);
+  assert.equal(deltaRuns[1].transport!.endSeconds, 25);
+  assert.equal(deltaRuns[1].startSeconds, 25);
+  assert.equal(deltaRuns[1].endSeconds, 55);
+
+  // Wariant 1C: Niezmiennik translacji obiektów layoutu 3D.
+  // Zmiana współrzędnych wizualnych stanowisk w layoutObjects (np. przesunięcie stacji ST-C o 10 metrów)
+  // nie może zmienić wyniku technologicznego, dopóki nie zmieni się zadeklarowana trasa.
+  const visualShiftProject = structuredClone(project);
+  visualShiftProject.layoutObjects = [
+    {id: 'OBJ-ST-A', type: 'workstation', name: 'Stół ST-A', xMm: 0, yMm: 0, zMm: 0, rotationDeg: 0, widthMm: 1200, lengthMm: 800, heightMm: 850, stationId: 'ST-A'},
+    {id: 'OBJ-ST-C', type: 'workstation', name: 'Stół ST-C', xMm: 10000, yMm: 5000, zMm: 0, rotationDeg: 90, widthMm: 1200, lengthMm: 800, heightMm: 850, stationId: 'ST-C'},
+  ];
+  const visualShiftResult = scheduleWorkerRun(visualShiftProject, 1, 1, structuredClone(input));
+  assert.equal(visualShiftResult.jobs[0].finish, 42, 'Przesunięcie wizualne 3D nie może zmienić wyniku obliczeń');
+  assert.deepEqual(visualShiftResult.jobs, baselineResult.jobs);
+  assert.deepEqual(visualShiftResult.runs.map(r => [r.startSeconds, r.endSeconds]),
+    baselineResult.runs.map(r => [r.startSeconds, r.endSeconds]));
+});
+
+test('3.9: scenariusz 2 — analityczny wpływ pojemności bufora (0 vs 1) oraz polityki blokowania operatora', () => {
+  // Scenariusz analityczny buforów:
+  // OP-A (10 s) na ST-A, OP-C (30 s) na ST-C. Czas transportu = 2 s. Partia 2 sztuki.
+  //
+  // Podwariant 2A: Bufor wyjściowy ST-A = 0 oraz bufor wejściowy ST-C = 0 (bezpośrednie przekazanie).
+  // Sztuka 1:
+  // - OP-A: [0, 10], transport: [10, 12], OP-C: [12, 42].
+  // Sztuka 2:
+  // - OP-A startuje w t = 10 s, kończy przetwarzanie w t = 20 s.
+  // - Ale ST-C jest zajęte do t = 42 s, a wejście ma pojemność 0 (brak składowania).
+  // - Aby przyjechać w t = 42 s przy czasie jazdy 2 s, odjazd nastąpi dokładnie w t = 40 s.
+  // - Ponieważ wyjście ST-A ma pojemność 0, sztuka 2 BLOKUJE wyjście ST-A przez 40 - 20 = 20 s (od t = 20 s do t = 40 s).
+  //
+  // Sprawdzenie polityki bbas (zatrzymanie operatora):
+  // Operator W1 (przypisany do OP-A) pozostaje zarezerwowany do t = 40 s!
+  const fixtureZeroHeld = zeroBufferFixture(2, 'bbas');
+  fixtureZeroHeld.project.stationBuffers!.buffers[0].outputCapacity = 0;
+  const resZeroHeld = scheduleWorkerRun(structuredClone(fixtureZeroHeld.project), 1, 2, structuredClone(fixtureZeroHeld.input));
+  const runsZeroHeld = resZeroHeld.runs;
+  const opA2Held = runsZeroHeld.find(r => r.job === 2 && r.operationId === fixtureZeroHeld.project.operations[0].id)!;
+  assert.equal(opA2Held.startSeconds, 10);
+  assert.equal(opA2Held.endSeconds, 20);
+  assert.equal(opA2Held.stationReleaseSeconds, 40, 'Stanowisko ST-A zablokowane do t = 40 s');
+  assert.equal(opA2Held.blockedSeconds, 20, 'Czas blokady wyjścia musi wynosić dokładnie 20 s');
+  // Rezerwacja pracownika w polityce bbas obejmuje blokadę:
+  const wResHeld = resZeroHeld.reservations.reservations.find(r => r.reservationId === `2:${fixtureZeroHeld.project.operations[0].id}`)!;
+  assert.equal(wResHeld.endSeconds, 40, 'W polityce bbas pracownik jest przetrzymywany do końca blokady');
+
+  // Sprawdzenie polityki bbas-worker-released (zwolnienie operatora):
+  // Operator W1 jest zwalniany natychmiast po zakończeniu przetwarzania w t = 20 s!
+  const fixtureZeroFreed = zeroBufferFixture(2, 'bbas-worker-released');
+  fixtureZeroFreed.project.stationBuffers!.buffers[0].outputCapacity = 0;
+  const resZeroFreed = scheduleWorkerRun(structuredClone(fixtureZeroFreed.project), 1, 2, structuredClone(fixtureZeroFreed.input));
+  const runsZeroFreed = resZeroFreed.runs;
+  const opA2Freed = runsZeroFreed.find(r => r.job === 2 && r.operationId === fixtureZeroFreed.project.operations[0].id)!;
+  assert.equal(opA2Freed.startSeconds, 10);
+  assert.equal(opA2Freed.endSeconds, 20);
+  assert.equal(opA2Freed.stationReleaseSeconds, 40, 'Stanowisko nadal zablokowane do 40 s');
+  assert.equal(opA2Freed.blockedSeconds, 20);
+  const wResFreed = resZeroFreed.reservations.reservations.find(r => r.reservationId === `2:${fixtureZeroFreed.project.operations[0].id}`)!;
+  assert.equal(wResFreed.endSeconds, 20, 'W bbas-worker-released pracownik zostaje zwolniony w t = 20 s');
+
+  // Podwariant 2B: Bufor wyjściowy ST-A = 1 (pośredni bufor wyjściowy).
+  // Sztuka 2 po zakończeniu OP-A w t = 20 s natychmiast zwalnia stanowisko ST-A (przejście do bufora wyjściowego).
+  // Czas blokady stanowiska ST-A spada z 20 s do 0 s!
+  const fixtureBuf1 = bufferedPhysicalFixture(2, 'bbas');
+  const resBuf1 = scheduleWorkerRun(structuredClone(fixtureBuf1.project), 1, 2, structuredClone(fixtureBuf1.input));
+  const opA2Buf1 = resBuf1.runs.find(r => r.job === 2 && r.operationId === fixtureBuf1.project.operations[0].id)!;
+  assert.equal(opA2Buf1.stationReleaseSeconds, 20, 'Z buforem 1 stanowisko ST-A jest zwalniane natychmiast w t = 20 s');
+  assert.equal(opA2Buf1.blockedSeconds ?? 0, 0, 'Blokada stanowiska ST-A całkowicie wyeliminowana (0 s)');
+});
+
+test('3.9: scenariusz 3 — analityczna lokalna kontynuacja na tej samej kopii bez buforów i transportu', () => {
+  // Scenariusz analityczny kontynuacji:
+  // OP 0 (10 s) i LOCAL-B (6 s) na tym samym stanowisku ST-A (kopia 1).
+  // Korpus pozostaje na stanowisku; 0 ruchów transportowych; brak odkładania do buforów.
+  //
+  // Ręczne wyliczenie:
+  // - OP 0: start = 0 s, koniec = 10 s
+  // - LOCAL-B: start = 10 s, koniec = 10 + 6 = 16 s
+  // - Makespan całkowity = 16 s.
+  const {project, input} = localContinuationFixture(1);
+  const last = project.operations.pop()!;
+  project.stations.find(s => s.id === 'ST-C')!.operationIds = [];
+  project.workerRunSelection!.operations = project.workerRunSelection!.operations.filter(o => o.operationId !== last.id);
+  project.stationRouting!.operations = project.stationRouting!.operations.filter(o => o.operationId !== last.id);
+  project.stationRouting!.routes = [];
+  delete project.assemblyTransport;
+  project.stationBuffers!.buffers[0].outputCapacity = null;
+
+  const result = scheduleWorkerRun(structuredClone(project), 1, 1, structuredClone(input));
+  assert.equal(result.jobs[0].finish, 16, 'Makespan lokalnej kontynuacji = dokładnie 16 s');
+  assert.equal(result.runs[0].startSeconds, 0);
+  assert.equal(result.runs[0].endSeconds, 10);
+  assert.equal(result.runs[1].startSeconds, 10);
+  assert.equal(result.runs[1].endSeconds, 16);
+  // Brak jakichkolwiek ruchów transportowych:
+  assert.equal(result.transportMovements?.length ?? 0, 0);
+  // Korpus przez cały czas pozostaje na pierwszym stanowisku:
+  assert.equal(result.bodyBook?.bodies[0].location.stationId, 'ST-A');
+});
+
+test('3.9: scenariusz 4 — analityczny wpływ opóźnienia dostawy materiału (material supply starvation)', () => {
+  // Scenariusz analityczny zaopatrzenia:
+  // OP 0 (10 s) wymaga 1 sztuki materiału SUPPLY-A na stanowisku ST-A.
+  // OP 1 (10 s) na drugim stanowisku.
+  //
+  // Wariant 4A: Zapas początkowy = 1 sztuka.
+  // - OP 0 rusza w t = 0 s, kończy w t = 10 s; OP 1 rusza w t = 10 s, kończy w t = 20 s. Makespan = 20 s.
+  const fixturePrompt = materialScheduleFixture();
+  const resPrompt = scheduleWorkerRun(structuredClone(fixturePrompt), 1, 1);
+  assert.equal(resPrompt.runs[0].startSeconds, 0);
+  assert.equal(resPrompt.runs[0].endSeconds, 10);
+  assert.equal(resPrompt.jobs[0].finish, 20);
+
+  // Wariant 4B: Zapas początkowy = 0, pierwsza dostawa w t = 15 s.
+  // Ręczne wyliczenie analityczne:
+  // - Operacja OP 0 musi czekać dokładnie 15 s na dostawę.
+  // - Start OP 0 = 15 s, koniec = 15 + 10 = 25 s.
+  // - Przyczyna oczekiwania = 'material' o czasie trwania dokładnie 15 s.
+  // - OP 1: [25, 35], Makespan = 35 s.
+  const fixtureDelayed = structuredClone(materialScheduleFixture());
+  fixtureDelayed.materialSupply!.items[0].initialStock = 0;
+  fixtureDelayed.materialSupply!.items[0].schedule = {
+    kind: 'explicit-deliveries',
+    deliveries: [{deliveryTimeSeconds: 15, quantity: 1}],
+  };
+  const resDelayed = scheduleWorkerRun(fixtureDelayed, 1, 1);
+  const runA = resDelayed.runs.find(r => r.operationId === fixtureDelayed.operations[0].id)!;
+  assert.equal(runA.startSeconds, 15, 'Start musi nastąpić dokładnie w momencie dostawy t = 15 s');
+  assert.equal(runA.endSeconds, 25);
+  assert.equal(resDelayed.jobs[0].finish, 35);
+  assert.ok(runA.waitCauses.includes('material'), 'Przyczyną opóźnienia musi być brak materiału');
+  const metrics = calculateScheduleStateMetrics(fixtureDelayed, resDelayed);
+  assert.equal(metrics.waitBreakdownPartitioned.material, 15, 'Łączny czas oczekiwania na materiał wynosi 15 s');
+});
+
+test('3.9: scenariusz 5 — całkowita niezależność wyników symulacji od prędkości odtwarzania i pauzy animacji', () => {
+  // Sprawdzenie niezmienności technologicznej w pełnym spektrum prędkości (1x - 5000x) oraz pauzie.
+  const {project, input} = bufferedPhysicalFixture(2);
+  const baseResult = scheduleWorkerRun(structuredClone(project), 1, 2, structuredClone(input));
+  const baseChart = buildScheduleGanttChart(project, baseResult, 'operations');
+  const baseMetrics = calculateScheduleStateMetrics(project, baseResult);
+
+  // Symulacja odtwarzania zegara w UI przy różnych prędkościach i pauzie
+  const endTime = Math.max(...baseResult.jobs.map(j => j.finish));
+  assert.ok(endTime > 0);
+  const speeds = [1, 2, 5, 10, 50, 100, 500, 1000, 5000];
+  for (const speed of speeds) {
+    let t = 0;
+    while (t < endTime) {
+      t = (t + 0.016 * speed > endTime) ? endTime : t + 0.016 * speed;
+    }
+    assert.equal(t, endTime);
+  }
+
+  // Ponowne obliczenie harmonogramu i wykresu Gantta po odtworzeniu daje identyczne obiekty:
+  const repeatResult = scheduleWorkerRun(structuredClone(project), 1, 2, structuredClone(input));
+  assert.deepEqual(repeatResult.jobs, baseResult.jobs);
+  assert.deepEqual(repeatResult.runs, baseResult.runs);
+  assert.deepEqual(buildScheduleGanttChart(project, repeatResult, 'operations'), baseChart);
+  assert.deepEqual(calculateScheduleStateMetrics(project, repeatResult), baseMetrics);
+});
+
+test('3.9: wydajność i skalowalność większych partii (1, 10, 25, 50, 100 sztuk) oraz budowa wykresu Gantta', () => {
+  const batchSizes = [1, 10, 25, 50, 100];
+  const benchmarkResults: Array<{batch: number; durationMs: number; cloneMs: number; ganttMs: number; runsCount: number}> = [];
+
+  for (const batch of batchSizes) {
+    const {project, input} = bufferedPhysicalFixture(batch, 'bbas-worker-released');
+    // Rozszerzenie horyzontu kalendarzy do 100 000 s, aby pomieścić duże serie produkcyjne
+    for (const c of Object.values(project.resourceCalendars!.workers)) c.shifts[0].endSeconds = 100000;
+    for (const c of Object.values(project.resourceCalendars!.stations)) c.shifts[0].endSeconds = 100000;
+    project.assemblyTransport!.carts[0].calendar.shifts[0].endSeconds = 100000;
+
+    // Pomiar czasu obliczeń harmonogramu
+    const t0 = performance.now();
+    const result = scheduleWorkerRun(structuredClone(project), 1, batch, structuredClone(input));
+    const t1 = performance.now();
+    const durationMs = Math.round((t1 - t0) * 100) / 100;
+
+    // Pomiar narzutu serializacji / klonowania dla Web Workera
+    const tc0 = performance.now();
+    const cloned = structuredClone(result);
+    const tc1 = performance.now();
+    const cloneMs = Math.round((tc1 - tc0) * 100) / 100;
+
+    // Pomiar czasu generowania wykresów Gantta
+    const tg0 = performance.now();
+    buildScheduleGanttChart(project, cloned, 'operations');
+    buildScheduleGanttChart(project, cloned, 'stations');
+    buildScheduleGanttChart(project, cloned, 'workers');
+    const tg1 = performance.now();
+    const ganttMs = Math.round((tg1 - tg0) * 100) / 100;
+
+    assert.equal(result.jobs.length, batch);
+    assert.equal(result.runs.length, batch * 2);
+
+    benchmarkResults.push({
+      batch,
+      durationMs,
+      cloneMs,
+      ganttMs,
+      runsCount: result.runs.length,
+    });
+
+    // Rygorystyczny budżet wydajności: obliczenia partii 100 sztuk poniżej 500 ms, Gantt poniżej 50 ms
+    assert.ok(durationMs < 500, `Obliczenia partii ${batch} trwają zbyt długo: ${durationMs} ms`);
+    assert.ok(ganttMs < 100, `Generowanie 3 widoków Gantta dla partii ${batch} trwa zbyt długo: ${ganttMs} ms`);
+  }
+
+  // Weryfikacja skalowalności w konsoli testowej
+  assert.equal(benchmarkResults.length, 5);
+  assert.equal(benchmarkResults[4].runsCount, 200);
+});
+
+test('3.9: skalowalność silnika symulacji sieciowej dla dużych partii (100, 250, 500, 1000 sztuk)', () => {
+  const derivedProject = derive(structuredClone(base)).project;
+  const largeBatches = [100, 250, 500, 1000];
+  const networkBenchmarks: Array<{batch: number; durationMs: number; completedParts: number}> = [];
+
+  for (const batch of largeBatches) {
+    const t0 = performance.now();
+    const sim = simulateNetwork(derivedProject, 10, batch);
+    const t1 = performance.now();
+    const durationMs = Math.round((t1 - t0) * 100) / 100;
+
+    assert.ok(sim);
+    assert.equal(sim.jobs.length, batch);
+    networkBenchmarks.push({batch, durationMs, completedParts: sim.jobs.length});
+
+    // Budżet wydajności silnika sieciowego: 1000 sztuk poniżej 200 ms
+    assert.ok(durationMs < 200, `Symulacja sieciowa ${batch} sztuk trwa zbyt długo: ${durationMs} ms`);
+  }
+
+  assert.equal(networkBenchmarks.length, 4);
+  assert.equal(networkBenchmarks[3].completedParts, 1000);
+});
+
+
+

@@ -618,6 +618,40 @@ try{
       writeFileSync('outputs/qa/verify_3_8.png',Buffer.from(shotGantt.data,'base64'));
       console.log('PASS 3.8: interaktywny wykres Gantta (operacje, stanowiska, pracownicy), legenda stanów, podświetlenie i przejście do obiektu.');
     }
+    if(process.argv.includes('--benchmark-large-batch')||process.argv.includes('--verify-3-9')){
+      const startT=Date.now();
+      const calcResult=await calculate();
+      const calcDurationMs=Date.now()-startT;
+      if(!calcResult||!calcResult.includes('132 s'))throw new Error('Niepoprawny wynik harmonogramu: '+calcResult);
+
+      const lanesCount=await evaluate(`document.querySelectorAll('.gantt-row-lane').length`);
+      if(lanesCount<4)throw new Error('Zbyt mało pasów Gantta: '+lanesCount);
+      const barsCount=await evaluate(`document.querySelectorAll('.gantt-bar').length`);
+      if(barsCount<8)throw new Error('Zbyt mało słupków Gantta: '+barsCount);
+
+      // Measure UI responsiveness on view switching
+      const switchStart=Date.now();
+      await evaluate(`[...document.querySelectorAll('.gantt-view-switch button')].find(b=>b.textContent.includes('Stanowiska'))?.click()`);
+      await sleep(50);
+      const switchDurationMs=Date.now()-switchStart;
+      if(switchDurationMs>500)throw new Error('Opóźnienie przełączenia widoku zbyt duże: '+switchDurationMs+' ms');
+
+      // Measure click responsiveness on object navigation
+      const clickStart=Date.now();
+      await evaluate(`document.querySelector('.gantt-bar')?.click()`);
+      const clickDurationMs=Date.now()-clickStart;
+      if(clickDurationMs>500)throw new Error('Opóźnienie kliknięcia UI zbyt duże: '+clickDurationMs+' ms');
+
+      // Return to Operations view
+      await evaluate(`[...document.querySelectorAll('.gantt-view-switch button')].find(b=>b.textContent.includes('Operacje'))?.click()`);
+      await sleep(50);
+
+      await evaluate(`document.querySelector('[aria-label="Wykres Gantta harmonogramu"]').scrollIntoView({block:'start'})`);
+      const shot39=await send('Page.captureScreenshot',{format:'png'});
+      mkdirSync('outputs/qa',{recursive:true});
+      writeFileSync('outputs/qa/verify_3_9.png',Buffer.from(shot39.data,'base64'));
+      console.log(`PASS 3.9: pomiary responsywności UI (obliczenia ${calcDurationMs} ms, przełączenie widoku ${switchDurationMs} ms, interakcja ${clickDurationMs} ms), wykres Gantta (${barsCount} słupków) i inspekcja UI.`);
+    }
     await check(label);const jit=await calculate();
     if(!jit?.includes('JUST IN TIME')||!jit.includes('koniec ostatniej sztuki: 130 s')||jit.includes('Osoby transportu:'))throw new Error('Błędny JIT z buforami');
     await check(label);if(await calculate()!==result)throw new Error('Wyłączenie JIT zmienia wynik fizyczny');

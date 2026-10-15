@@ -68,7 +68,7 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | --- | --- | --- | --- |
 | 1 | Stabilizacja i bezpieczeństwo projektu | wdrożone | Punkt wyjścia 0.4.0 |
 | 2 | Model procesu i zasobów | w trakcie | Fundament etapu 1 |
-| 3 | Symulacja powiązana z layoutem | w trakcie | Etap 2; podstawowe trasy i punkty transportowe |
+| 3 | Symulacja powiązana z layoutem | wdrożone | Etap 2; podstawowe trasy i punkty transportowe |
 | 4 | Balansowanie i porównywanie wariantów | nierozpoczęte | Etapy 2–3 |
 | 5 | Edytor hali i spójny interfejs | w trakcie | Stabilny model danych; podstawowe poprawki UX od etapu 1 |
 | 6 | Biblioteka wyposażenia i 3D | nierozpoczęte | Etapy 3 i 5 |
@@ -77,7 +77,9 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
-3.9 (2026-10-15): nierozpoczęte — sprawdzić wyniki na ręcznie policzonych scenariuszach i większych partiach; zapisać pomiary czasu obliczeń i responsywności UI.
+4.1 (2026-10-16): nierozpoczęte — pokazywać oddzielnie obciążenie stanowisk, maszyn i operatorów oraz objaśnić mianowniki wskaźników.
+
+3.9 (2026-10-16): wdrożone — sprawdzenie wyników na ręcznie policzonych scenariuszach i większych partiach oraz pomiary czasu obliczeń i responsywności UI. Formalny odbiór i zamknięcie Etapu 3 (10/10 = 100,0% wdrożone). Weryfikacja 5 precyzyjnych scenariuszy matematycznych (dokładność 1 ms): 1) czasy transportu, wydłużenie o delta t i niezmiennik translacji obiektów 3D; 2) wpływ pojemności buforów (0 vs 1) oraz polityk blokowania operatora (bbas vs bbas-worker-released); 3) lokalna kontynuacja na tej samej kopii bez ruchu i buforów; 4) zaopatrzenie materiałowe i opóźnienie dostaw; 5) pełna niezależność obliczeń od prędkości animacji (1x–5000x) i pauzy. Pomiary skalowalności: harmonogram z buforami dla partii 100 sztuk (200 operacji) w 258 ms (klonowanie Web Workera 2,5 ms, Gantt 28 ms); symulacja sieciowa 1000 sztuk w 52 ms; test Edge CDP responsywności UI: obliczenia 296 ms, zmiana widoku 68 ms, kliknięcie 4 ms (zrzut `outputs/qa/verify_3_9.png`). Raport: `WERYFIKACJA_SKALOWALNOSCI_I_DOKLADNOSCI_3_9.md`. Backup `backup/v0.4.0_przed_3_9_20261015` (290 plików z SHA256). Pełna regresja 280/280 PASS, build/typecheck PASS. Następny punkt: 4.1 (Etap 4) — oddzielne obciążenie stanowisk, maszyn i operatorów oraz mianowniki wskaźników. Postęp: cały plan 29/67 = 43,3%, pierwsze wydanie 29/65 = 44,6%, Etap 3: 10/10 = 100,0%. Vercel nie zweryfikowano.
 
 3.8 (2026-10-15): wdrożone — wykres Gantta operacji, stanowisk i pracowników oraz przejście z wyniku do odpowiedniego obiektu. Moduł analityczny osi czasu i bloków zdarzeń (`src/core/scheduleGantt.ts`), interaktywny komponent wykresu Gantta z trzema perspektywami widoku w UI Studio (`ScheduleGanttChart.tsx`), podświetlanie i dwukierunkowe przejście do obiektu (operacja, stanowisko, pracownik), automatyczne rozwijanie inspekcji i synchronizacja z tabelami. Backup `backup/v0.4.0_przed_3_8_20261015` (286 plików z SHA256). Pełna regresja 273/273 PASS, typecheck/build PASS, Edge CDP UI PASS (`outputs/qa/verify_3_8.png`, proces JIT/transport/bufory/zaopatrzenie/reload i izolacja 4/5). Dokumentacja: `MODEL_GANTTA_3_8.md`, `WERYFIKACJA_GANTTA_3_8.md`. Następny punkt: 3.9 — sprawdzenie wyników na ręcznie policzonych scenariuszach i większych partiach. Postęp: cały plan 28/67 = 41,8%, pierwsze wydanie 28/65 = 43,1%, Etap 3: 9/10 = 90,0%. Vercel nie zweryfikowano.
 
@@ -425,7 +427,7 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 3.6 | Pokazywać stany pracy, oczekiwania na materiał/operatora, blokady wyjścia i transportu wraz z czasami ich trwania. | wdrożone |
 | 3.7 | Wykrywać zatrzymanie lub zakleszczenie procesu i przedstawiać jego przyczynę zamiast pozornego zakończenia symulacji. | wdrożone |
 | 3.8 | Dodać wykres Gantta operacji, stanowisk i pracowników oraz przejście z wyniku do odpowiedniego obiektu. | wdrożone |
-| 3.9 | Sprawdzić wyniki na ręcznie policzonych scenariuszach i większych partiach; zapisać pomiary czasu obliczeń i responsywności UI. | nierozpoczęte |
+| 3.9 | Sprawdzić wyniki na ręcznie policzonych scenariuszach i większych partiach; zapisać pomiary czasu obliczeń i responsywności UI. | wdrożone |
 | 3.10 | Rozszerzyć wybór szybkości odtwarzania symulacji ponad obecne 100× dla długich procesów. Przy wysokich mnożnikach zachować dokładny czas symulowany, kolejność zdarzeń, pauzę i możliwość inspekcji; wynik obliczeń nie może zależeć od prędkości odtwarzania. | wdrożone |
 
 **Odbiór etapu:** wyniki prostych scenariuszy zgadzają się z obliczeniami ręcznymi. Wpływ zmiany trasy i pojemności bufora można wyjaśnić harmonogramem. Przesunięcie obiektu wpływa na czas tylko wtedy, gdy zmienia modelowaną trasę lub inne jawne ograniczenie. Animacja nie wpływa na wynik obliczeń.

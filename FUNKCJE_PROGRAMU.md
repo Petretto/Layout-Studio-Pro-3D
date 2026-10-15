@@ -378,3 +378,19 @@ W panelu harmonogramu zespołu (`DomainWorkerSchedulePanel.tsx`), na bazie dedyk
   - Kliknięcie słupka lub nagłówka wiersza na wykresie Gantta zaznacza obiekt, wyświetla baner wybranego obiektu i podświetla powiązany wiersz w tabeli wykonań (`.selected-row`);
   - W przypadku wyboru stanowiska lub pracownika automatycznie rozwija odpowiednią sekcję inspekcji stanów (`open=true`) i podświetla wiersz danego zasobu;
   - Kliknięcie dowolnego wiersza w tabeli wykonań, tabeli stanowisk lub tabeli pracowników natychmiast synchronizuje zaznaczenie i podświetla odpowiadające mu słupki na wykresie Gantta.
+
+### Dokładność analityczna, skalowalność i responsywność UI — 3.9 (2026-10-16)
+W ramach zamknięcia Etapu 3 zrealizowano kompleksowy audyt i zautomatyzowane testy weryfikacyjne:
+- **Matematyczna zgodność z ręcznymi wyliczeniami analitycznymi (dokładność 1 ms)**:
+  - Potwierdzono, że zmiana trasy lub prędkości transportu przesuwa starty i zakończenia odbiorcy dokładnie o $\Delta t$ czasu przejazdu;
+  - Potwierdzono, że zmiana współrzędnych wizualnych 3D w `layoutObjects` bez modyfikacji zadeklarowanej trasy daje bajtowo identyczny wynik (model wizualny 3D nie steruje wynikiem technologicznym);
+  - Potwierdzono, że wyzerowanie pojemności buforów wywołuje bezpośrednie przekazanie i wyliczalną blokadę wyjścia z właściwym przetrzymaniem lub zwolnieniem operatora (`bbas` vs `bbas-worker-released`), a zwiększenie bufora do 1 uwalnia blokadę stanowiska;
+  - Potwierdzono, że lokalna kontynuacja na tej samej kopii realizuje się bez ruchu transportowego i bez bufora, zachowując korpus na stanowisku;
+  - Potwierdzono, że opóźnienie dostaw materiałów wstrzymuje operację dokładnie o brakujący czas z poprawną atrybucją przyczyny (`material`);
+  - Potwierdzono, że prędkość odtwarzania w UI (1×–5000×) oraz pauza animacji nie mają najmniejszego wpływu na wynik obliczeń symulacyjnych i wykres Gantta.
+- **Weryfikacja skalowalności dla dużych partii**:
+  - Algorytm harmonogramu szkicu 6 oblicza partię 100 sztuk (200 operacji i dziesiątki zdarzeń transportowych) w czasie poniżej 300 ms, z narzutem serializacji Web Workera 2,5 ms i czasem generowania 3 widoków Gantta poniżej 30 ms;
+  - Dyskretny silnik symulacji sieciowej wykonuje partię 1000 sztuk (6000 zdarzeń) w zaledwie 52 ms;
+  - W przeglądarce Edge (CDP) zweryfikowano płynność przełączania widoków Gantta (68 ms) oraz kliknięcia/nawigacji do obiektów (4 ms), bez zamrażania wątku interfejsu (zrzut `outputs/qa/verify_3_9.png`).
+- **Formalny odbiór Etapu 3**: Wszystkie kryteria etapu zostały spełnione; Etap 3 osiągnął status **wdrożone (10/10 = 100,0%)**.
+
