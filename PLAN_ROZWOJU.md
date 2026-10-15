@@ -1,7 +1,7 @@
 # Plan rozwoju i rejestr postępu aplikacji
 
 Data utworzenia: 2026-09-29  
-Ostatnia aktualizacja: 2026-10-14
+Ostatnia aktualizacja: 2026-10-15
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
 Przykładowy przypadek testowy: niepełny proces Eko; odbiór uniwersalności wymaga także niezależnych procesów.
 
@@ -44,7 +44,7 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 3.5b2c1: cały plan 24/67 = **35,8%**; pierwsze wydanie 24/65 = **36,9%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po 3.5b2c2: cały plan 24/67 = **35,8%**; pierwsze wydanie 24/65 = **36,9%**. Weryfikacja: `node scripts/plan_progress.mjs`.
 
 Stan historyczny po 3.1c: cały plan 21/67 = **31,3%**. Pierwsze wydanie (etapy 1–7) 21/65 = **32,3%**. Etap 8 dotyczy kolejnej wersji. Obliczenia: `node scripts/plan_progress.mjs`; źródłem są tabele statusów tego pliku. Po 3.2a ukończony główny licznik pozostaje taki sam, bo 3.2 nie jest jeszcze odebrane.
 
@@ -76,6 +76,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+3.5b2c2 / część 3.5 (2026-10-15): zakończony zakres — aktywny harmonogram fizyczny z dodatnimi/nieograniczonymi buforami: jeden ciąg na korpusie/jedna kopia operacji. Przyjazd przed gotowością operacji, atomowy korpus/bufor, blokady i polityki osób, zestawy z kolejnymi dojazdami, powroty, przenośniki i zaopatrzenie. Backup 277 zgodnych SHA256. Pełna integracyjna regresja 239/240 (jedna odmowa tekstowa), po poprawce wyłącznie 29/29 celowanych; finalne nowe scenariusze 9/9, typecheck/build i Edge obu polityk/JIT/reload/izolacji PASS. Nie raportujemy pełnego 241/241 jako wykonanego. Bez zmiany zapisu; Vercel nie zweryfikowano. Następny 3.5b2c3 — wspólny przydział przekazania przy pojemności 0 i dalsze profile; pozostałe granice opisane w modelu/raporcie 3.5. Całe 3.5 w trakcie, postęp 35,8% / 36,9%.
 
 3.5b2c1 / część 3.5 (2026-10-14): zakończony zakres wewnętrzny — atomowe przejścia korpus/bufor i adapter pojedynczego przewozu wózka/osoby, rezerwacja celu przed wyjazdem i ochrona nowszych rejestrów. Backup 275 zgodnych SHA256, końcowy podzbiór 23/23 PASS, typecheck/build PASS. Aktywny harmonogram/UI/zapis bez zmian; bez pełnej regresji i UI. Następny 3.5b2c2 — integracja kolejki fizycznej i wspólny przydział przekazania przy pojemności 0. Całe 3.5 w trakcie; postęp 35,8% / 36,9%. Raport 3.5. Vercel nie zweryfikowano.
 
@@ -670,3 +672,5 @@ Ten dokument jest głównym rejestrem przyszłych prac. Historyczne raporty pozo
 | 2026-10-14 | 3.5 | kontynuacja — 3.5b2b pierwszy zakres zakończony | JIT z buforami, koniec pracy/zwolnienie i dwie polityki osób, worker/inspekcja. Celowane 5 PASS, jedna pełna 224/224, potem tylko podzbiór buforów, finalnie 8/8 po poprawce, build i Edge obu polityk. Backup 273 zgodne SHA256. Tryb fizyczny i dalsze zakresy nadal w trakcie; postęp 35,8% / 36,9%. |
 
 | 2026-10-14 | 3.5 | kontynuacja — 3.5b2c1 zakres wewnętrzny zakończony | Atomowy rejestr korpus/bufor i adapter pojedynczego przewozu. Backup 275 SHA256, 23/23 celowanych, build PASS. Bez aktywacji harmonogramu/UI, kolejny 3.5b2c2; całość w trakcie. Postęp 35,8% / 36,9%. |
+
+| 2026-10-15 | 3.5 | kontynuacja — 3.5b2c2 zakres zakończony | Fizyczny harmonogram dodatnich buforów, zestawy/dojazdy/powroty i zaopatrzenie, osobne przyjazdy/starty. Backup 277 SHA256, pełna 239/240 i poprawiony podzbiór 29/29; finalne 9/9, build i Edge obu polityk/JIT/reload PASS. Całość w trakcie, kolejny 3.5b2c3; postęp 35,8% / 36,9%. |

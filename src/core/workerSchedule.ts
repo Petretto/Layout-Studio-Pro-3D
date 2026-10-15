@@ -644,8 +644,9 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
   if (!Number.isFinite(arrivalIntervalSeconds) || arrivalIntervalSeconds <= 0 || !Number.isSafeInteger(batch) || batch < 1 || batch > 10000) {
     throw new Error('Partia: 1–10000; jawny odstęp przybycia musi być dodatni.');
   }
-  if(options.transportMode==='just-in-time'&&project.stationBuffers?.buffers.some(buffer=>buffer.inputCapacity!=null||buffer.outputCapacity!=null)) {
-    return scheduleBufferedProcess(project,arrivalIntervalSeconds,batch,onProgress);
+  if(options.transportMode!==undefined&&options.transportMode!=='configured'&&options.transportMode!=='just-in-time')throw new Error('Nieznany tryb transportu symulacji.');
+  if(project.stationBuffers?.buffers.some(buffer=>buffer.inputCapacity!=null||buffer.outputCapacity!=null)) {
+    return scheduleBufferedProcess(project,arrivalIntervalSeconds,batch,onProgress,options.transportMode==='just-in-time'?undefined:{bodyInput});
   }
   if (!project.subassemblyFlow || options.transportMode === 'just-in-time') {
     return scheduleWorkerRunFixed(project, arrivalIntervalSeconds, batch, bodyInput, onProgress, options);

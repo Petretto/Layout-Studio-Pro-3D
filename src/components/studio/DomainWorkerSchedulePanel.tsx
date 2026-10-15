@@ -139,8 +139,8 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
         {result.transportMovements.length>100&&<p>Pokazano pierwsze 100 ruchów.</p>}
         <p>Końcowe położenie wózków: {result.cartBook?.carts.map(c=>`${c.equipmentId}: ${c.location?`${c.location.stationId} / ${c.location.copy}`:'w ruchu'}`).join('; ')||'brak zadeklarowanych wózków'}.</p>
       </details>}
-      {result.bufferBook&&<details aria-label="Inspekcja buforów procesu JIT"><summary>Bufory i zwalnianie stanowisk</summary>
-        <p>Podgląd logiczny JIT: jeden ciąg operacji i jedna kopia dla każdej operacji, bez fizycznego transportu. Zakończenie pracy i zwolnienie stanowiska są odrębne. Pojemność 0 wymaga gotowej operacji do przekazania bez oczekiwania.</p>
+      {result.bufferBook&&<details aria-label={result.transportMode==='just-in-time'?'Inspekcja buforów procesu JIT':'Inspekcja buforów i transportu'}><summary>Bufory i zwalnianie stanowisk</summary>
+        <p>{result.transportMode==='just-in-time'?'Podgląd logiczny JIT: jeden ciąg operacji i jedna kopia dla każdej operacji, bez fizycznego transportu. Pojemność 0 wymaga gotowej operacji do przekazania bez oczekiwania.':'Przebieg fizyczny: jeden ciąg operacji i jedna kopia dla każdej operacji. Miejsce docelowe jest rezerwowane przed wyjazdem, a wejście zwalnia się przy starcie operacji. Bezpośrednie przekazanie przy pojemności 0 nie jest jeszcze obsługiwane.'} Zakończenie pracy i zwolnienie stanowiska są odrębne.</p>
         <ol>{result.bufferEvents?.slice(0,500).map((event,index)=><li key={index}>{event.atSeconds} s · sztuka {event.job} · {event.stationId} / {event.copy} · {event.kind==='blocked'?'Blokada po zakończeniu':event.kind==='released'?'Zwolnienie stanowiska':event.kind==='handoff'?'Przekazanie bez transportu':event.kind==='input'?'Bufor wejściowy':'Bufor wyjściowy'}</li>)}</ol>
         {(result.bufferEvents?.length??0)>500&&<p>Pokazano pierwsze 500 zdarzeń.</p>}
       </details>}
