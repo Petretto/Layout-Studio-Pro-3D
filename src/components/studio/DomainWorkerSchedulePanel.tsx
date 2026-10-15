@@ -1,9 +1,10 @@
-import {useState, useRef, useEffect} from 'react';
+import {useState, useRef, useEffect, useMemo} from 'react';
 import type {DomainProjectV6} from '../../core/domainProject';
 import type {WorkerScheduleResult, WorkerScheduleRun} from '../../core/workerSchedule';
 import {startScheduleTask, type ScheduleProgress} from '../../core/scheduleTask';
 import {matchingConcurrencyGroup} from '../../core/physicalConcurrency';
 import {calculateScheduleStateMetrics} from '../../core/scheduleStateMetrics';
+import {parseProcessStallDiagnostic} from '../../core/processStallDetection';
 
 /** Inspect full operation spans, including pauses; transport is listed separately in the result. */
 function simultaneousPeriods(runs: readonly WorkerScheduleRun[]) {
@@ -46,6 +47,7 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
   const [justInTime,setJustInTime]=useState(false);
   const [result, setResult] = useState<WorkerScheduleResult | null>(null);
   const [error, setError] = useState('');
+  const stallDiagnostic = useMemo(() => parseProcessStallDiagnostic(error), [error]);
   const [progress, setProgress] = useState<ScheduleProgress | null>(null);
   const [message, setMessage] = useState('');
   const cancelRef = useRef<(() => void) | null>(null);
@@ -93,7 +95,87 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
       {progress && <button onClick={cancel}>Anuluj obliczenia szkicu 6</button>}</div>
     {progress && <div role="status" aria-label="Postęp obliczeń szkicu 6"><progress max={progress.total} value={progress.completed} /> {progress.completed} / {progress.total} zakończonych operacji. Obliczenia w tle.</div>}
     {message && <p role="status">{message}</p>}
-    {error && <p className="error" role="alert">Nie obliczono harmonogramu: {error}</p>}
+    {error && (stallDiagnostic ? (
+      <div className="process-stall-diagnostic" role="alert" aria-label="Diagnostyka zatrzymania lub zakleszczenia procesu">
+        <h3>⛔ {stallDiagnostic.title} <small style={{fontSize: '12px', color: '#fca5a5', fontWeight: 500}}>(chwila zatrzymania: {stallDiagnostic.atSeconds} s)</small></h3>
+        <p className="stall-summary"><strong>Przyczyna zatrzymania:</strong> {stallDiagnostic.summary}</p>
+        <div className="stall-recommendation">
+          <strong>💡 Zalecenie rozwiązania:</strong> {stallDiagnostic.recommendation}
+        </div>
+        {stallDiagnostic.blockedStations.length > 0 && (
+          <div className="stall-section" aria-label="Zablokowane stanowiska">
+            <h4>Zablokowane stanowiska i zasoby ({stallDiagnostic.blockedStations.length})</h4>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Stanowisko</th>
+                    <th>Kopia</th>
+                    <th>Blokująca sztuka</th>
+                    <th>Blokująca operacja</th>
+                    <th>Przetrzymywany operator (bbas)</th>
+                    <th>Czeka na zwolnienie</th>
+                    <th>Polityka bufora</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stallDiagnostic.blockedStations.map((b, idx) => (
+                    <tr key={`${b.stationId}-${b.copy}-${idx}`}>
+                      <td>{b.stationName} <small>{b.stationId}</small></td>
+                      <td>{b.copy}</td>
+                      <td>{b.blockedByJob !== undefined ? `Sztuka ${b.blockedByJob}` : '—'}</td>
+                      <td>{b.blockedByOperationId || '—'}</td>
+                      <td>{b.holdingWorkerIds?.length ? b.holdingWorkerIds.join(', ') : 'brak'}</td>
+                      <td>{b.waitingForStationId || 'kolejnego stanowiska'}</td>
+                      <td><code>{b.blockingPolicy || 'bbas'}</code></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        {stallDiagnostic.stalledOperations.length > 0 && (
+          <div className="stall-section" aria-label="Wstrzymane operacje">
+            <h4>Wstrzymane operacje ({stallDiagnostic.stalledOperations.length})</h4>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Sztuka</th>
+                    <th>Operacja</th>
+                    <th>Stanowisko</th>
+                    <th>Status</th>
+                    <th>Przyczyny wstrzymania</th>
+                    <th>Szczegóły brakującego zasobu</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stallDiagnostic.stalledOperations.map((op, idx) => (
+                    <tr key={`${op.job}-${op.operationId}-${idx}`}>
+                      <td>Sztuka {op.job}</td>
+                      <td>{op.operationName} <small>{op.operationId}</small></td>
+                      <td>{op.stationId} (kopia {op.copy})</td>
+                      <td>
+                        <span className={`stall-badge ${op.status === 'blocked' ? 'danger' : 'warn'}`}>
+                          {op.status === 'blocked' ? 'Zablokowane wyjście' :
+                           op.status === 'local-wait' ? 'Oczekiwanie lokalne' :
+                           op.status === 'transport-wait' ? 'Oczekiwanie na transport' : 'Oczekiwanie na zasoby'}
+                        </span>
+                      </td>
+                      <td>{op.waitCauses.length ? op.waitCauses.join(', ') : 'brak'}</td>
+                      <td>{op.missingResourceExplanation}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    ) : (
+      <p className="error" role="alert">Nie obliczono harmonogramu: {error}</p>
+    ))}
     {result && <div role="status" aria-label="Wynik harmonogramu szkicu 6">
       {result.transportMode==='just-in-time'&&<p aria-label="Tryb transportu wyniku">JUST IN TIME — symulacja procesu bez transportu; dostępność materiałów założona, fizyczne lokalizacje korpusów nie są obliczane.</p>}
       <p>{result.mode === 'calendar' ? 'Przebieg kalendarzowy' : 'Podgląd logiczny bez kalendarza'} · {result.jobs.length} szt. · {runs.length} wykonań · koniec ostatniej sztuki: {Math.max(...result.jobs.map(job => job.finish))} s · suma oczekiwania operacji: {totalWait} s.</p>

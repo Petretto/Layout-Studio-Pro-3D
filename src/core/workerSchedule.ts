@@ -17,6 +17,7 @@ import {prepareBodyRun, type BodyRunInput} from './bodyRunInput';
 import {applyBodyEvent, bodyAllowsOperation, type BodyBook, type BodyEvent} from './bodyState';
 import {matchingConcurrencyGroup} from './physicalConcurrency';
 import {resolveTransportTime,type TransportBreakdown,type ResolvedTransportTime} from './transportTime';
+import {ProcessStallError, diagnoseUnbufferedProcessStall} from './processStallDetection';
 
 export interface WorkerScheduleRun {
   job: number;
@@ -250,9 +251,11 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   const runs: WorkerScheduleRun[] = [];
   let completed = 0;
   jobs.forEach((job, i) => events.push({kind: 'arrival', at: job.arrival, job: i}));
+  let currentSimulationTime = 0;
 
   while (events.length) {
     const now = events.peek().at;
+    currentSimulationTime = now;
     if (!Number.isFinite(now)) throw new Error('Harmonogram przekroczył poprawny zakres czasu.');
     if(completed < steps.length * batch)stockRun?.advance(now);
     while (events.length && events.peek().at === now) {
@@ -433,11 +436,11 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
                 const windows = calendars ? sharedAvailability(calendars, stationId, workerIds) :
                   [{startSeconds: probe, endSeconds: probe + operation.durationSeconds}];
                 const window = windows.find(window => window.endSeconds > probe);
-                if (!window) return;
+                if (!window) { if (calendars) calendarWait = true; return; }
                 const start = Math.max(probe, window.startSeconds);
                 if (start > probe) futureWaitCauses.add('calendar');
                 const projected = projectWork(windows, start, operation.durationSeconds);
-                if (!projected) return;
+                if (!projected) { if (calendars) calendarWait = true; return; }
                 const reserveStart = projected.atOffset(operation.reserveFromSeconds, false);
                 const reserveEnd = projected.atOffset(operation.reserveUntilSeconds, true);
                 if (![reserveStart, reserveEnd, projected.end].every(Number.isFinite)) throw new Error('Harmonogram przekroczył poprawny zakres czasu.');
@@ -449,7 +452,16 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
                   probe = start + Math.max(...conflicts.map(conflict => conflict.endSeconds - reserveStart));
                   continue;
                 }
-                const materialStart = stockRun?.earliest(step.id,start) ?? start;
+                let materialStart = start;
+                if (stockRun) {
+                  try {
+                    materialStart = stockRun.earliest(step.id, start);
+                  } catch {
+                    futureWaitCauses.add('material');
+                    task.causes.add('material');
+                    return;
+                  }
+                }
                 if(materialStart > start){futureWaitCauses.add('material');probe=materialStart;continue;}
                 if (start > arrival) calendarWait = true;
                 if (!selected || start < selected.projected.workWindows[0].startSeconds) {
@@ -465,14 +477,15 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
             const windows = calendars ? sharedAvailability(calendars, stationId, workerIds) :
               [{startSeconds: now, endSeconds: logicalEnd}];
             const next = windows.find(window => window.endSeconds > now);
-            if (!next) return;
+            if (!next) { if (calendars) calendarWait = true; return; }
             if (next.startSeconds > now) {
               const future = projectWork(windows, next.startSeconds, operation.durationSeconds);
               if (future) { calendarWait = true; wakeAt(next.startSeconds, now); }
+              else if (calendars) calendarWait = true;
               return;
             }
             const projected = projectWork(windows, now, operation.durationSeconds);
-            if (!projected) return;
+            if (!projected) { if (calendars) calendarWait = true; return; }
             const reserveStart = projected.atOffset(operation.reserveFromSeconds, false);
             const reserveEnd = projected.atOffset(operation.reserveUntilSeconds, true);
             if (![reserveStart, reserveEnd, projected.end].every(Number.isFinite)) {
@@ -487,7 +500,15 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
                 Math.max(now, conflict.endSeconds - operation.reserveFromSeconds), now));
               return;
             }
-            const materialStart = stockRun?.earliest(step.id,now) ?? now;
+            let materialStart = now;
+            if (stockRun) {
+              try {
+                materialStart = stockRun.earliest(step.id, now);
+              } catch {
+                task.causes.add('material');
+                return;
+              }
+            }
             if(materialStart > now){task.causes.add('material');wakeAt(materialStart,now);return;}
             selected = {workerIds, projected, reserveStart, reserveEnd, candidate, departure};
           };
@@ -626,7 +647,18 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   }
   if (completed !== steps.length * batch || waiting.length ||
       book.reservations.some(item => item.releasedAtSeconds !== item.endSeconds)) {
-    throw new Error('Harmonogram nie zakończył wszystkich operacji lub rezerwacji; sprawdź jawne okna kalendarzy.');
+    throw new ProcessStallError(diagnoseUnbufferedProcessStall({
+      now: currentSimulationTime,
+      completed,
+      total: steps.length * batch,
+      waiting,
+      steps,
+      project: checked,
+      book,
+      stockRun,
+      lotRun,
+      candidateOf: (stepId) => candidatesByOperation.get(stepId)![0],
+    }));
   }
   if(lotRun?.lots.some(lot=>lot.status!=='consumed'))throw new Error('Podzespoły: nie zakończono wszystkich pobrań; sprawdź zależności i przypisania partii.');
   jobs.forEach(job => { job.finish = Math.max(...job.ends); });

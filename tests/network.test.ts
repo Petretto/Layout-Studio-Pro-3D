@@ -19,6 +19,12 @@ import {
   calculateRunDurations,
   calculateTransportMetrics,
 } from '../src/core/scheduleStateMetrics';
+import {
+  parseProcessStallDiagnostic,
+  formatProcessStallMessage,
+  ProcessStallError,
+  type ProcessStallDiagnostic,
+} from '../src/core/processStallDetection';
 import {strict as assert} from 'node:assert';
 import {test} from 'node:test';
 import {DEFAULT_MOTOR_PROJECT as base} from '../src/core/models/defaultProjects';
@@ -4822,6 +4828,123 @@ test('3.6a: metryki stanu stanowisk i pracowników rozróżniają blokady bbas, 
   assert.equal(st1.totalOccupiedTimeSeconds, 32);
   assert.equal(st1.idleTimeSeconds, 8);
 });
+
+test('3.7a: zakleszczenie operatora w blokadzie bufora (bbas) zwraca ustrukturyzowaną diagnozę z zablokowaną stacją i zaleceniem', () => {
+  const project = bufferedProcessFixture();
+  project.workerRunSelection!.operations[1].eligibleWorkerIds = [project.workers[0].id];
+  let caughtError: unknown;
+  try {
+    scheduleWorkerRun(project, 1, 2, undefined, undefined, {transportMode: 'just-in-time'});
+  } catch (err) {
+    caughtError = err;
+  }
+  assert.ok(caughtError instanceof Error);
+  const diag = parseProcessStallDiagnostic(caughtError);
+  assert.ok(diag, 'Diagnoza powinna zostać pomyślnie sparsowana z błędu');
+  assert.equal(diag.type, 'worker-deadlock');
+  assert.ok(diag.title.includes('Zakleszczenie operatora'));
+  assert.ok(diag.summary.includes('ST-A'));
+  assert.ok(diag.summary.includes(project.workers[0].id));
+  assert.ok(diag.recommendation.includes('bbas-worker-released'));
+  assert.ok(diag.blockedStations.length > 0);
+  assert.equal(diag.blockedStations[0].stationId, 'ST-A');
+  assert.ok(diag.blockedStations[0].holdingWorkerIds.includes(project.workers[0].id));
+  assert.ok(diag.stalledOperations.length > 0);
+  assert.ok(diag.stalledOperations.some(op => op.status === 'blocked'));
+});
+
+test('3.7a: wyczerpanie dostaw zaopatrzenia materiałowego zwraca diagnozę braku materiału ze stacją i zaleceniem', () => {
+  const project = materialScheduleFixture();
+  // Reduce deliveries so batch 3 cannot complete
+  project.materialSupply!.items[0].initialStock = 1;
+  project.materialSupply!.items[0].schedule = {kind: 'explicit-deliveries', deliveries: [{deliveryTimeSeconds: 20, quantity: 1}]};
+  let caughtError: unknown;
+  try {
+    scheduleWorkerRun(project, 1, 3);
+  } catch (err) {
+    caughtError = err;
+  }
+  assert.ok(caughtError instanceof Error);
+  const diag = parseProcessStallDiagnostic(caughtError);
+  assert.ok(diag, 'Diagnoza braku materiału powinna zostać sparsowana');
+  assert.equal(diag.type, 'material-starvation');
+  assert.ok(diag.title.includes('braku materiału'));
+  assert.ok(diag.recommendation.includes('harmonogram'));
+  assert.ok(diag.stalledOperations.some(op => op.waitCauses.includes('material')));
+});
+
+test('3.7a: zbyt krótki kalendarz roboczy zwraca diagnozę wygaśnięcia okien kalendarza', () => {
+  const project = structuredClone(materialScheduleFixture());
+  delete project.materialSupply;
+  project.resourceCalendars = {
+    stations: {
+      'ST-A': {shifts: [{startSeconds: 0, endSeconds: 200, basis: 'assumed'}], breaks: []},
+      'ST-B': {shifts: [{startSeconds: 0, endSeconds: 200, basis: 'assumed'}], breaks: []},
+      'ST-C': {shifts: [{startSeconds: 0, endSeconds: 200, basis: 'assumed'}], breaks: []},
+    },
+    workers: {
+      'W-A': {shifts: [{startSeconds: 0, endSeconds: 5, basis: 'assumed'}], breaks: []},
+      'W-B': {shifts: [{startSeconds: 0, endSeconds: 5, basis: 'assumed'}], breaks: []},
+    },
+  };
+  let caughtError: unknown;
+  try {
+    scheduleWorkerRun(project, 1, 2);
+  } catch (err) {
+    caughtError = err;
+  }
+  assert.ok(caughtError instanceof Error);
+  const diag = parseProcessStallDiagnostic(caughtError);
+  assert.ok(diag, 'Diagnoza wygaśnięcia okien kalendarza powinna zostać sparsowana');
+  assert.equal(diag.type, 'calendar-exhaustion');
+  assert.ok(diag.title.includes('kalendarza'));
+  assert.ok(diag.recommendation.includes('godziny zmian') || diag.recommendation.includes('kalendarz'));
+  assert.ok(diag.stalledOperations.some(op => op.waitCauses.includes('calendar')));
+});
+
+test('3.7a: serializacja diagnozy przez ciąg tekstowy (postMessage workera) zachowuje pełne szczegóły', () => {
+  const diagnostic: ProcessStallDiagnostic = {
+    type: 'worker-deadlock',
+    atSeconds: 42,
+    title: 'Testowe zakleszczenie',
+    summary: 'Szczegółowy opis problemu',
+    stalledOperations: [
+      {
+        job: 1,
+        operationId: 'OP-1',
+        operationName: 'Montaż A',
+        stationId: 'ST-1',
+        copy: 1,
+        status: 'blocked',
+        waitCauses: ['buffer', 'workers'],
+        missingResourceExplanation: 'Brak operatora W1',
+      },
+    ],
+    blockedStations: [
+      {
+        stationId: 'ST-1',
+        stationName: 'Stanowisko 1',
+        copy: 1,
+        holdingWorkerIds: ['W1'],
+        waitingForStationId: 'ST-2',
+        blockingPolicy: 'bbas',
+      },
+    ],
+    recommendation: 'Zmień politykę blokowania na bbas-worker-released',
+  };
+
+  const formatted = formatProcessStallMessage(diagnostic);
+  assert.ok(formatted.includes('Zatrzymanie lub zakleszczenie procesu'));
+  assert.ok(formatted.includes('Testowe zakleszczenie'));
+
+  const parsed = parseProcessStallDiagnostic(formatted);
+  assert.deepEqual(parsed, diagnostic);
+
+  const errorObj = new ProcessStallError(diagnostic);
+  const parsedFromError = parseProcessStallDiagnostic(errorObj);
+  assert.deepEqual(parsedFromError, diagnostic);
+});
+
 
 
 

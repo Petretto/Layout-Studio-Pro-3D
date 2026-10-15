@@ -197,7 +197,13 @@ if(process.argv.includes('--physical-buffer-run')){
  for(const [id,name] of [['BUFFER-W','Osoba odbiorcy UI'],['BUFFER-T','Osoba transportu montażowego UI']]){
    p.workers.push({id,name});p.resourceCalendars.workers[id]=structuredClone(p.resourceCalendars.workers.W);
  }
- p.workerRunSelection.teamWorkerIds.push('BUFFER-W');p.workerRunSelection.operations[1].eligibleWorkerIds=['BUFFER-W'];
+ if(process.argv.includes('--stall-diagnostic')){
+  p.workerRunSelection.operations[1].eligibleWorkerIds=['W'];
+  p.bodyRunInput.bodies=p.bodyRunInput.bodies.slice(0,2);
+  p.bodyRunInput.jobs=p.bodyRunInput.jobs.slice(0,2);
+ }else{
+  p.workerRunSelection.teamWorkerIds.push('BUFFER-W');p.workerRunSelection.operations[1].eligibleWorkerIds=['BUFFER-W'];
+ }
  p.operations[1].staffing.timeVariants[0].timeProfile=structuredClone(p.operations[1].staffing.timeVariants[0].timeProfile);
  const profile=p.operations[1].staffing.timeVariants[0].timeProfile;profile.durationSeconds=30;profile.operatorPresence=[{startSeconds:0,endSeconds:30,basis:'assumed'}];
  p.assemblyTransport.routes[0].alternatives[0].workerIds=['BUFFER-T'];
@@ -514,6 +520,27 @@ try{
     if(await evaluate(`document.querySelector('[aria-label="${label}"]').checked`))throw new Error('JIT domyślnie włączony');
     const zero=process.argv.includes('--physical-buffer-zero');
     const result=await calculate();
+    if(process.argv.includes('--stall-diagnostic')){
+      const diagEl=await evaluate(`!!document.querySelector('[aria-label="Diagnostyka zatrzymania lub zakleszczenia procesu"]')`);
+      if(!diagEl)throw new Error('Brak kontenera diagnostyki zatrzymania lub zakleszczenia procesu');
+      const diagTitle=await evaluate(`document.querySelector('[aria-label="Diagnostyka zatrzymania lub zakleszczenia procesu"] h3')?.textContent`);
+      if(!diagTitle||!diagTitle.includes('Zakleszczenie operatora'))throw new Error('Błędny tytuł diagnozy: '+diagTitle);
+      const summary=await evaluate(`document.querySelector('.stall-summary')?.textContent`);
+      if(!summary||!summary.includes('ST-A'))throw new Error('Brak stacji ST-A w podsumowaniu diagnozy: '+summary);
+      const rec=await evaluate(`document.querySelector('.stall-recommendation')?.textContent`);
+      if(!rec||!rec.includes('bbas-worker-released'))throw new Error('Brak zalecenia bbas-worker-released: '+rec);
+      const blockedSt=await evaluate(`document.querySelector('[aria-label="Zablokowane stanowiska"]')?.textContent`);
+      if(!blockedSt||!blockedSt.includes('ST-A'))throw new Error('Brak zablokowanego stanowiska ST-A w tabeli: '+blockedSt);
+      const stalledOps=await evaluate(`document.querySelector('[aria-label="Wstrzymane operacje"]')?.textContent`);
+      if(!stalledOps||!stalledOps.includes('Sztuka'))throw new Error('Brak wstrzymanych operacji w tabeli: '+stalledOps);
+
+      await evaluate(`document.querySelector('[aria-label="Diagnostyka zatrzymania lub zakleszczenia procesu"]').scrollIntoView({block:'start'})`);
+      const shotDiag=await send('Page.captureScreenshot',{format:'png'});
+      mkdirSync('outputs/qa',{recursive:true});
+      writeFileSync('outputs/qa/verify_3_7.png',Buffer.from(shotDiag.data,'base64'));
+
+      console.log('PASS 3.7: ustrukturyzowana diagnoza zatrzymania i zakleszczenia procesu, zalecenie, tabele zablokowanych stacji i wstrzymanych operacji w UI.');
+    }else{
     if(!result?.includes('koniec ostatniej sztuki: 132 s')||result.includes('JUST IN TIME')||!result.includes(`Zwolnienie stanowiska: ${zero?40:47} s`)||!result.includes(`blokada po pracy: ${zero?20:7} s`))throw new Error('Błędny przebieg fizyczny buforów '+result);
     const reservation=zero?(process.argv.includes('--buffer-released')?'10–20':'10–40'):(process.argv.includes('--buffer-released')?'30–40':'30–47');
     if(!result.includes(reservation)||!result.includes('Osoby transportu: BUFFER-T'))throw new Error('Błędne rezerwacje osoby/transportu');
@@ -564,6 +591,7 @@ try{
     }
     if((JSON.parse(await raw())).originalJson!==originalJson||errors.length)throw new Error('Zmiana źródła lub wyjątki '+errors.join('; '));
     console.log('PASS '+(process.argv.includes('--state-metrics')?'3.6b':zero?'3.5b2c3':'3.5b2c2')+': '+(process.argv.includes('--state-metrics')?'metryki stanów procesu, czasów trwania, rozbicia oczekiwań, wykorzystania stanowisk i pracowników w UI, ':'')+'fizyczny worker, bufor przed operacją, polityka operatora, dojazdy, JIT opt-in, reload i izolacja 4/5.');
+   }
   }else if(process.argv.includes('--jit-run')){
 
     const expected=JSON.stringify(await saved()),label='Symulacja bez transportu — just in time';

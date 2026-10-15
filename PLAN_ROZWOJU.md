@@ -44,9 +44,9 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 3.6: cały plan 26/67 = **38,8%**; pierwsze wydanie 26/65 = **40,0%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po 3.7: cały plan 27/67 = **40,3%**; pierwsze wydanie 27/65 = **41,5%**. Weryfikacja: `node scripts/plan_progress.mjs`.
 
-Stan historyczny po 3.1c: cały plan 21/67 = **31,3%**. Pierwsze wydanie (etapy 1–7) 21/65 = **32,3%**. Etap 8 dotyczy kolejnej wersji. Obliczenia: `node scripts/plan_progress.mjs`; źródłem są tabele statusów tego pliku. Po 3.2a ukończony główny licznik pozostaje taki sam, bo 3.2 nie jest jeszcze odebrane.
+Stan historyczny po 3.6: cały plan 26/67 = **38,8%**; pierwsze wydanie 26/65 = **40,0%**.
 
 ## Hosting i synchronizacja
 
@@ -76,6 +76,10 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+3.8 (2026-10-15): nierozpoczęte — wykres Gantta operacji, stanowisk i pracowników oraz przejście z wyniku do odpowiedniego obiektu.
+
+3.7 (2026-10-15): wdrożone — wykrywanie zatrzymania lub zakleszczenia procesu i przedstawianie jego przyczyny zamiast pozornego zakończenia symulacji. Kompletny moduł diagnostyczny `src/core/processStallDetection.ts` zintegrowany z silnikami symulacji `bufferedProcessSchedule.ts` i `workerSchedule.ts`. Precyzyjna klasyfikacja przyczyn (`worker-deadlock`, `buffer-deadlock`, `material-starvation`, `calendar-exhaustion`, `transport-deadlock`, `subassembly-starvation`, `process-stall`), dedykowane rekomendacje inżynierskie oraz inspekcja zablokowanych stanowisk/korpusów i wstrzymanych operacji. W panelu harmonogramu Studio (`DomainWorkerSchedulePanel.tsx` oraz `studio.css`) wdrożono ostrzegawczą kartę diagnostyczną z czasem zatrzymania, ramką rekomendacji, tabelą zablokowanych stacji i tabelą operacji. Bezpieczna serializacja przez granicę Web Worker. Backup `backup/v0.4.0_przed_3_7a_20261015` (283 zgodne SHA256). Testy celowane i pełna regresja 270/270 PASS, typecheck/build PASS, Edge CDP UI PASS (`outputs/qa/verify_3_7.png`, proces JIT/transport/bufory/zaopatrzenie/reload i izolacja 4/5). Dokumentacja: `MODEL_ZAKLESZCZEN_3_7.md`, `WERYFIKACJA_ZAKLESZCZEN_3_7.md`. Następny punkt: 3.8 — wykres Gantta operacji, stanowisk i pracowników. Postęp: cały plan 27/67 = 40,3%, pierwsze wydanie 27/65 = 41,5%, Etap 3: 8/10 = 80,0%. Vercel nie zweryfikowano.
 
 3.6 (2026-10-15): wdrożone — stany pracy, oczekiwania na materiał/operatora, blokady wyjścia i transportu wraz z czasami ich trwania w odrębnym harmonogramie szkicu 6. Kompletny zakres analityczny (3.6a) i prezentacyjny w UI Studio (3.6b): moduł `src/core/scheduleStateMetrics.ts` oblicza czasy realizacji partii, czasy pracy brutto/netto, ścisłe partycjonowane rozbicie przyczyn oczekiwania bez podwójnego naliczania (`workers`, `material`, `transport`, `buffer`, `station`, `calendar`), blokady po pracy i oczekiwanie lokalne na tej samej kopii, strukturę czasów transportu (przewozy, dojazdy, powroty) oraz obciążenie i wskaźniki zajęcia/aktywności per stanowisko/kopia i per pracownik (z uwzględnieniem zatrzymania w blokadzie bbas). Panel `DomainWorkerSchedulePanel.tsx` prezentuje kafelki sumaryczne, zestawienie przyczyn oczekiwań, wzbogaconą tabelę wykonań (kolumny czasu pracy i blokad) oraz rozwijane inspekcje stanów stanowisk i pracowników. Backup `backup/v0.4.0_przed_3_6b_20261015` (283 zgodne SHA256). Pełna regresja 266/266 PASS, typecheck/build PASS, Edge CDP UI PASS (`outputs/qa/verify_3_6b.png`, `outputs/qa/verify_3_6b_inspections.png`, JIT, transport, reload i izolacja 4/5). Następny punkt: 3.7 — wykrywanie zatrzymania lub zakleszczenia procesu i przedstawianie jego przyczyny zamiast pozornego zakończenia symulacji. Postęp: cały plan 26/67 = 38,8%, pierwsze wydanie 26/65 = 40,0%. Vercel nie zweryfikowano.
 
@@ -417,7 +421,7 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 3.4.4 | Dodać edytor i inspekcję; odebrać historię, zapis/odczyt i dwa niezależne procesy w UI. Kontrakt urządzeń/tras odebrany w 3.4j, formularz partii i pełny odbiór w 3.4m3. | wdrożone |
 | 3.5 | Wprowadzić bufory o ograniczonej pojemności oraz jednoznaczne reguły blokowania i zwalniania stanowiska. Dla zaopatrzenia montażu uwzględniać zapas, zużycie, ilość i częstotliwość dostaw materiału potrzebną do płynnej produkcji, bez czasu/rezerwacji operatorów magazynu. | wdrożone |
 | 3.6 | Pokazywać stany pracy, oczekiwania na materiał/operatora, blokady wyjścia i transportu wraz z czasami ich trwania. | wdrożone |
-| 3.7 | Wykrywać zatrzymanie lub zakleszczenie procesu i przedstawiać jego przyczynę zamiast pozornego zakończenia symulacji. | nierozpoczęte |
+| 3.7 | Wykrywać zatrzymanie lub zakleszczenie procesu i przedstawiać jego przyczynę zamiast pozornego zakończenia symulacji. | wdrożone |
 | 3.8 | Dodać wykres Gantta operacji, stanowisk i pracowników oraz przejście z wyniku do odpowiedniego obiektu. | nierozpoczęte |
 | 3.9 | Sprawdzić wyniki na ręcznie policzonych scenariuszach i większych partiach; zapisać pomiary czasu obliczeń i responsywności UI. | nierozpoczęte |
 | 3.10 | Rozszerzyć wybór szybkości odtwarzania symulacji ponad obecne 100× dla długich procesów. Przy wysokich mnożnikach zachować dokładny czas symulowany, kolejność zdarzeń, pauzę i możliwość inspekcji; wynik obliczeń nie może zależeć od prędkości odtwarzania. | wdrożone |

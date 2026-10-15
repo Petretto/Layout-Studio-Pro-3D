@@ -16,6 +16,7 @@ import {createWorkerReservationBook,reserveWorkerTeam,releaseWorkerTeam} from '.
 import {createBufferBook,applyBufferEvent,bufferHasSpace,type BufferRef,type BufferBook} from './bufferState';
 import type {StationCandidate} from './stationRouting';
 import type {WorkerScheduleRun,WorkerScheduleResult} from './workerSchedule';
+import {ProcessStallError, diagnoseBufferedProcessStall} from './processStallDetection';
 
 export interface BufferedProcessEvent {job:number;atSeconds:number;kind:'input'|'output'|'handoff'|'blocked'|'released'|'local-wait'|'local-start';stationId:string;copy:number}
 type Stage={job:number;step:number;ready:number;status:'outside'|'input'|'processing'|'blocked'|'output'|'moving'|'finished'|'local';run?:number;direct?:true;transport?:WorkerScheduleRun['transport'];causes:Set<WorkerScheduleRun['waitCauses'][number]>};
@@ -115,8 +116,10 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
     push(end,'completion',stage,runIndex);if(chosen.until<end)push(chosen.until,'release',stage,runIndex);
   };
   onProgress?.(0,steps.length*batch);
+  let currentSimulationTime = 0;
+  let transportFailure: string | null = null;
   while(events.length){
-    events.sort((a,b)=>a.at-b.at||a.order-b.order);const now=events[0].at;
+    events.sort((a,b)=>a.at-b.at||a.order-b.order);const now=events[0].at;currentSimulationTime=now;
     if(completed<steps.length*batch)stock?.advance(now);
     while(events.length&&events[0].at===now){
       const event=events.shift()!;
@@ -177,7 +180,7 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
         equipmentIds:dispatch.equipmentIds,startSeconds:dispatch.startSeconds,endSeconds:dispatch.endSeconds});
       events.push({kind:'transport',at:dispatch.endSeconds,order:sequence++,dispatch,purpose,stage});
     };
-    let transportFailure='';
+    transportFailure=null;
     let changed=true;
     while(changed){
       changed=false;
@@ -229,7 +232,11 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
                 }
               }
               if(!resourceReady)continue;
-              const materialAt=stock?.earliest(steps[stage.step].id,arrival)??arrival;
+              let materialAt=arrival;
+              if(stock){
+                try{materialAt=stock.earliest(steps[stage.step].id,arrival);}
+                catch{stage.causes.add('material');continue;}
+              }
               if(materialAt>arrival){stage.causes.add('material');wake(materialAt-duration);continue;}
               const unsafe=new Set([...active].filter(index=>index!==own&&mayHoldWorkers(steps.findIndex(step=>step.id===runs[index].operationId))).flatMap(index=>[...runs[index].workerIds]));
               const admission=planDirectOperation(project,operations[stage.step],target,arrival,dispatch.workers,unsafe,mayHoldWorkers(stage.step));
@@ -274,7 +281,10 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
         const ignore=stage.status==='blocked'||stage.status==='local'?stage.run:undefined;
         if([...active].some(index=>index!==ignore&&copyKey(runs[index])===copyKey(target))){stage.causes.add('station');continue;}
         if([...active].some(index=>index!==ignore&&runs[index].equipmentIds?.some(id=>target.requiredEquipmentIds.includes(id)))){stage.causes.add('equipment');continue;}
-        if(stock){const at=stock.earliest(steps[stage.step].id,now);if(at>now){stage.causes.add('material');wake(at);continue;}}
+        if(stock){
+          try{const at=stock.earliest(steps[stage.step].id,now);if(at>now){stage.causes.add('material');wake(at);continue;}}
+          catch{stage.causes.add('material');continue;}
+        }
         const operation=operations[stage.step];let selected:BufferedOperationChoice|undefined,combinations=0;
         const choose=(workers:string[],from:number)=>{
           if(selected)return;
@@ -307,10 +317,21 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
       }
     }
     wakes.forEach(at=>push(at,'wake'));
-    if(!events.length&&(returns.size||stages.some(stage=>stage.status!=='finished'))&&transportFailure)
-      throw new Error(`Bufory: zakleszczenie lub brak wykonalnego transportu. ${transportFailure}`);
+    if(!events.length&&(returns.size||stages.some(stage=>stage.status!=='finished'))&&transportFailure){
+      throw new ProcessStallError(diagnoseBufferedProcessStall({
+        now,stages,steps,project,buffers,bodyBook,stock,book,transportFailure,
+        activeRunsCount:active.size,returnsCount:returns.size,returnLocksCount:returnLocks.size,
+        mayHoldWorkers,targetOf:(idx)=>candidates[idx]
+      }));
+    }
   }
-  if(returns.size||returnLocks.size||stages.some(stage=>stage.status!=='finished')||active.size||book.reservations.some(reservation=>reservation.releasedAtSeconds===undefined))throw new Error('Bufory: zakleszczenie lub brak okna pracowników/kalendarzy; nie ukończono całego przebiegu.');
+  if(returns.size||returnLocks.size||stages.some(stage=>stage.status!=='finished')||active.size||book.reservations.some(reservation=>reservation.releasedAtSeconds===undefined)){
+    throw new ProcessStallError(diagnoseBufferedProcessStall({
+      now:currentSimulationTime,stages,steps,project,buffers,bodyBook,stock,book,transportFailure,
+      activeRunsCount:active.size,returnsCount:returns.size,returnLocksCount:returnLocks.size,
+      mayHoldWorkers,targetOf:(idx)=>candidates[idx]
+    }));
+  }
   return {mode:project.resourceCalendars?'calendar':'logical',...(!physical?{transportMode:'just-in-time' as const}:{}),jobs,runs,reservations:book,operationIds:steps.map(step=>step.id),bufferBook:buffers,bufferEvents,
     ...(physical?{bodyBook,bodyEvents,cartBook:carts,transportMovements,transportReservations:devices}:{}),
     ...(stock?{materialStocks:stock.stocks,materialEvents:stock.events}: {})};

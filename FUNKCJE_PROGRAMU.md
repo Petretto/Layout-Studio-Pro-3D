@@ -344,4 +344,24 @@ W panelu harmonogramu zespołu w module Stanowiska v5 (`DomainWorkerSchedulePane
   - Stanowiska: czas przetwarzania, blokady wyjścia, oczekiwania lokalnego, łącznego zajęcia, bezczynności oraz wskaźniki zajęcia (% obecności korpusu) i przetwarzania (% faktycznej obróbki);
   - Pracownicy: czas montażu, czas transportu, czas zatrzymania w blokadzie `bbas`, pauzy, łączny czas aktywny, bezczynność oraz wskaźnik aktywności (%).
 
+### Wykrywanie zatrzymań i zakleszczeń procesu — 3.7 (2026-10-15)
+W silnikach symulacji (`bufferedProcessSchedule.ts`, `workerSchedule.ts`) oraz w interfejsie użytkownika (`DomainWorkerSchedulePanel.tsx`) zaimplementowano moduł diagnostyki zatrzymań i zakleszczeń procesu (`processStallDetection.ts`), zapobiegający pozornemu zakończeniu symulacji lub prezentowaniu niepełnych wyników przy zablokowaniu przepływu:
+- **Jednoznaczna typologia zatrzymań (`ProcessStallType`)**:
+  - `worker-deadlock` — zakleszczenie wzajemne operatora przetrzymywanego na zablokowanym stanowisku w polityce `bbas`, podczas gdy inna stacja wymaga go do podjęcia pracy;
+  - `buffer-deadlock` — zablokowanie przepływu z powodu wysycenia zadeklarowanej pojemności bufora wyjściowego lub docelowego bufora wejściowego;
+  - `material-starvation` — zatrzymanie procesu z powodu wyczerpania zadeklarowanego zaopatrzenia materiałowego (zapasu początkowego i harmonogramu dostaw);
+  - `calendar-exhaustion` — wygaśnięcie okien pracy w kalendarzu roboczym stanowisk lub przypisanego zespołu;
+  - `transport-deadlock` — brak możliwości realizacji przewozów międzyoperacyjnych (brak wolnych wózków, personelu transportowego lub zablokowane trasy);
+  - `subassembly-starvation` — brak ukończenia pobrania zadeklarowanej partii podzespołu;
+  - `process-stall` — ogólne zatrzymanie symulacji przy wyczerpaniu kolejki zdarzeń.
+- **Konkretne rekomendacje naprawcze**:
+  - Każdy zidentyfikowany typ zatrzymania generuje dedykowane zalecenie inżynierskie (np. zmiana polityki bufora na `bbas-worker-released`, dodanie dostaw w harmonogramie zaopatrzenia, poszerzenie okien kalendarza zmian lub zwiększenie pojemności buforów).
+- **Szczegółowa inspekcja stanu zatrzymania w UI**:
+  - Karta diagnostyczna w panelu harmonogramu z ostrzegawczym wyróżnieniem typu zatrzymania, dokładnym czasem wystąpienia w symulacji [s], ramką z podsumowaniem i rekomendacją;
+  - Tabela zablokowanych stanowisk i korpusów: identyfikator stacji i kopii, zablokowana sztuka/operacja, przetrzymywani pracownicy, oczekiwanie na zwolnienie stacji docelowej oraz aktywna polityka blokowania;
+  - Tabela wstrzymanych operacji: numer sztuki, nazwa operacji, stacja i kopia, stan zadania (`waiting`, `blocked`, `local-wait`), przyczyny oczekiwania oraz szczegółowe wyjaśnienie brakującego zasobu.
+- **Bezpieczeństwo na granicy Web Worker**:
+  - Diagnostyka przekazywana w ustrukturyzowanej formie lub jako bezpieczny znacznik tekstowy `[PROCESS_STALL_DIAGNOSTIC]...` odporny na serializację w wątkach roboczych przeglądarki.
+
+
 
