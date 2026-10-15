@@ -204,6 +204,7 @@ if(process.argv.includes('--physical-buffer-run')){
  p.assemblyTransport.emptyRoutes.forEach(route=>route.workerAssignment={workerIds:['BUFFER-T'],source:'Jawny test transportu UI'});
  p.stationBuffers={buffers:[{stationId:'ST-A',copy:1,inputCapacity:null,outputCapacity:1,blockingPolicy:process.argv.includes('--buffer-released')?'bbas-worker-released':'bbas'},
    {stationId:'ST-C',copy:1,inputCapacity:1,outputCapacity:null}]};
+ if(process.argv.includes('--physical-buffer-zero')){p.stationBuffers.buffers[0].outputCapacity=0;p.stationBuffers.buffers[1].inputCapacity=0;}
  p.bodyRunInput={bodies:Array.from({length:4},(_,i)=>({id:`UI-BODY-${i+1}`,productId:p.product.id,location:{kind:'station',stationId:'ST-A',copy:1}})),
    jobs:Array.from({length:4},(_,i)=>({job:i+1,bodyId:`UI-BODY-${i+1}`}))};
 }
@@ -394,17 +395,19 @@ try{
       return evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')?.textContent??null`);
     };
     if(await evaluate(`document.querySelector('[aria-label="${label}"]').checked`))throw new Error('JIT domyślnie włączony');
+    const zero=process.argv.includes('--physical-buffer-zero');
     const result=await calculate();
-    if(!result?.includes('koniec ostatniej sztuki: 132 s')||result.includes('JUST IN TIME')||!result.includes('Zwolnienie stanowiska: 47 s')||!result.includes('blokada po pracy: 7 s'))throw new Error('Błędny przebieg fizyczny buforów '+result);
-    const reservation=process.argv.includes('--buffer-released')?'30–40':'30–47';
+    if(!result?.includes('koniec ostatniej sztuki: 132 s')||result.includes('JUST IN TIME')||!result.includes(`Zwolnienie stanowiska: ${zero?40:47} s`)||!result.includes(`blokada po pracy: ${zero?20:7} s`))throw new Error('Błędny przebieg fizyczny buforów '+result);
+    const reservation=zero?(process.argv.includes('--buffer-released')?'10–20':'10–40'):(process.argv.includes('--buffer-released')?'30–40':'30–47');
     if(!result.includes(reservation)||!result.includes('Osoby transportu: BUFFER-T'))throw new Error('Błędne rezerwacje osoby/transportu');
     const inspection=await evaluate(`document.querySelector('[aria-label="Inspekcja buforów i transportu"]').textContent`);
     if(!inspection.includes('Przebieg fizyczny')||!inspection.includes('Blokada po zakończeniu')||inspection.includes('Podgląd logiczny JIT'))throw new Error('Błędny opis buforów');
     const movements=await evaluate(`document.querySelector('[aria-label="Inspekcja ruchów transportu montażu"]').textContent`);
-    if(!movements.includes('25–27')||!movements.includes('Przewóz korpusu')||!movements.includes('Dojazd bez ładunku'))throw new Error('Brak rzeczywistych przejazdów');
+    if(!movements.includes(zero?'40–42':'25–27')||!movements.includes('Przewóz korpusu')||!movements.includes('Dojazd bez ładunku'))throw new Error('Brak rzeczywistych przejazdów');
+    if(zero&&(!inspection.includes('Przekazanie bez oczekiwania')||inspection.includes('12 s · sztuka 1 · ST-C / 1 · Bufor wejściowy')))throw new Error('Wejście zero ma oczekiwanie w buforze');
     await evaluate(`const p=document.querySelector('[aria-label="Inspekcja buforów i transportu"]');p.open=true;p.scrollIntoView({block:'center'})`);
     mkdirSync('outputs/qa',{recursive:true});const shot=await send('Page.captureScreenshot',{format:'png'});
-    writeFileSync(`outputs/qa/verify_3_5b2c2_${process.argv.includes('--buffer-released')?'released':'held'}.png`,Buffer.from(shot.data,'base64'));
+    writeFileSync(`outputs/qa/verify_${zero?'3_5b2c3':'3_5b2c2'}_${process.argv.includes('--buffer-released')?'released':'held'}.png`,Buffer.from(shot.data,'base64'));
     await check(label);const jit=await calculate();
     if(!jit?.includes('JUST IN TIME')||!jit.includes('koniec ostatniej sztuki: 130 s')||jit.includes('Osoby transportu:'))throw new Error('Błędny JIT z buforami');
     await check(label);if(await calculate()!==result)throw new Error('Wyłączenie JIT zmienia wynik fizyczny');
@@ -415,7 +418,7 @@ try{
       throw new Error('Zmiana 4/5 '+JSON.stringify({v5:keys(legacy,after5),v4:keys(legacy4,after4)}));
     }
     if((JSON.parse(await raw())).originalJson!==originalJson||errors.length)throw new Error('Zmiana źródła lub wyjątki '+errors.join('; '));
-    console.log('PASS 3.5b2c2: fizyczny worker, bufor przed operacją, polityka operatora, dojazdy, JIT opt-in, reload i izolacja 4/5.');
+    console.log('PASS '+(zero?'3.5b2c3':'3.5b2c2')+': fizyczny worker, bufor przed operacją, polityka operatora, dojazdy, JIT opt-in, reload i izolacja 4/5.');
   }else if(process.argv.includes('--jit-run')){
 
     const expected=JSON.stringify(await saved()),label='Symulacja bez transportu — just in time';

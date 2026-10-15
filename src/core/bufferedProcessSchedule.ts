@@ -1,3 +1,4 @@
+import {planDirectOperation,type BufferedOperationChoice} from './directHandoffPlan';
 import {prepareBodyRun,type BodyRunInput} from './bodyRunInput';
 import {bodyAvailableAt,type BodyEvent} from './bodyState';
 import {applyBufferedBodyEvent} from './bufferedBodyState';
@@ -17,7 +18,7 @@ import type {StationCandidate} from './stationRouting';
 import type {WorkerScheduleRun,WorkerScheduleResult} from './workerSchedule';
 
 export interface BufferedProcessEvent {job:number;atSeconds:number;kind:'input'|'output'|'handoff'|'blocked'|'released';stationId:string;copy:number}
-type Stage={job:number;step:number;ready:number;status:'outside'|'input'|'processing'|'blocked'|'output'|'moving'|'finished';run?:number;transport?:WorkerScheduleRun['transport'];causes:Set<WorkerScheduleRun['waitCauses'][number]>};
+type Stage={job:number;step:number;ready:number;status:'outside'|'input'|'processing'|'blocked'|'output'|'moving'|'finished';run?:number;direct?:true;transport?:WorkerScheduleRun['transport'];causes:Set<WorkerScheduleRun['waitCauses'][number]>};
 const copyKey=(ref:{stationId:string;copy:number})=>JSON.stringify([ref.stationId,ref.copy]);
 
 /** Bounded linear path. Physical transport and assumed JIT availability remain explicit separate modes. */
@@ -58,7 +59,6 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
   const place=(step:number,side:'input'|'output')=>places.find(place=>copyKey(place)===copyKey(candidates[step])&&place.side===side)!;
   if(place(steps.length-1,'output').capacity!==null)throw new Error('3.5b2b: ograniczony bufor końcowy wymaga jawnego odbioru gotowych wyrobów; także w trybie JIT nie dopowiadamy wyjścia.');
   if(physical){
-    if(places.some(place=>place.capacity===0))throw new Error('3.5b2c2: fizyczny transport przy pojemności 0 wymaga wspólnego przydziału gotowej operacji; ten zakres jeszcze nie jest podłączony.');
     if(candidates.some((candidate,i)=>i&&copyKey(candidate)===copyKey(candidates[i-1])))throw new Error('3.5b2c2: kolejne operacje tej samej kopii wymagają lokalnego przekazania; ten zakres jeszcze nie jest podłączony.');
     for(const id of bodyRun!.bodyByJob.values())if(!bodyAvailableAt(bodyBook!,id,candidates[0]))throw new Error('3.5b2c2: jawna lokalizacja początkowa korpusu musi wskazywać pierwszą kopię procesu.');
   }
@@ -97,6 +97,21 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
     }
     log(stage,side,now,step);
   };
+  const recordRun=(stage:Stage,chosen:BufferedOperationChoice,start:number,holdFrom?:number)=>{
+    const runIndex=runs.length,id=`${stage.job}:${steps[stage.step].id}`,target=candidates[stage.step];
+    book=reserveWorkerTeam(book,{reservationId:id,workerIds:chosen.workers,startSeconds:chosen.from,endSeconds:chosen.until});
+    stock?.reserve(stage.job,steps[stage.step].id,start);
+    const end=chosen.projection.end;
+    runs.push({job:stage.job,operationId:steps[stage.step].id,stationId:target.stationId,copy:target.copy,workerIds:chosen.workers,
+      equipmentIds:target.requiredEquipmentIds,readySeconds:stage.ready,startSeconds:start,endSeconds:end,
+      waitSeconds:start-stage.ready-(stage.transport?stage.transport.endSeconds-stage.transport.startSeconds:0),
+      waitCauses:[...stage.causes],reserveStartSeconds:chosen.from,reserveEndSeconds:chosen.until,workWindows:chosen.projection.workWindows,pauses:chosen.projection.pauses,
+      ...(holdFrom!==undefined?{stationReserveStartSeconds:holdFrom}:{}),
+      ...(physical?{bodyId:token(stage),...(stage.transport?{transport:stage.transport}:{})}:{})});
+    stage.transport=undefined;stage.run=runIndex;stage.status='processing';active.add(runIndex);
+    jobs[stage.job-1].starts[stage.step]=start;jobs[stage.job-1].ends[stage.step]=end;
+    push(end,'completion',stage,runIndex);if(chosen.until<end)push(chosen.until,'release',stage,runIndex);
+  };
   onProgress?.(0,steps.length*batch);
   while(events.length){
     events.sort((a,b)=>a.at-b.at||a.order-b.order);const now=events[0].at;
@@ -120,9 +135,19 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
         }
         if(dispatch.workerIds.length)book=releaseWorkerTeam(book,dispatch.reservationId,now);
         if(event.purpose==='transfer'){
-          const stage=event.stage!,next=applyBufferedBodyEvent({bodies:bodyBook!,buffers},{kind:'arrive',bodyId:token(stage),atSeconds:now});
-          bodyBook=next.bodies;buffers=next.buffers;bodyEvents.push({kind:'finish-transfer',bodyId:token(stage),atSeconds:now});
-          stage.status='input';log(stage,'input',now);
+          const stage=event.stage!;
+          if(stage.direct){
+            const run=runs[stage.run!],basis=profiles[stage.step].durationBasis==='measured'?'confirmed' as const:'assumed' as const;
+            const next=applyBufferedBodyEvent({bodies:bodyBook!,buffers},{kind:'arrive-direct',bodyId:token(stage),atSeconds:now,
+              operationId:run.operationId,endSeconds:run.endSeconds,basis});
+            bodyBook=next.bodies;buffers=next.buffers;
+            bodyEvents.push({kind:'finish-transfer',bodyId:token(stage),atSeconds:now},{kind:'reserve',bodyId:token(stage),atSeconds:now,operationId:run.operationId,endSeconds:run.endSeconds,basis});
+            stock?.consume(stage.job,run.operationId,now);stage.direct=undefined;stage.status='processing';log(stage,'handoff',now);
+          }else{
+            const next=applyBufferedBodyEvent({bodies:bodyBook!,buffers},{kind:'arrive',bodyId:token(stage),atSeconds:now});
+            bodyBook=next.bodies;buffers=next.buffers;bodyEvents.push({kind:'finish-transfer',bodyId:token(stage),atSeconds:now});
+            stage.status='input';log(stage,'input',now);
+          }
         }
       }else if(event.kind==='release'){
         const run=runs[event.run!];book=releaseWorkerTeam(book,`${run.job}:${run.operationId}`,now);
@@ -158,36 +183,76 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
           publish(dispatch,'return');returns.delete(id);changed=true;
         }catch(error){transportFailure=(error as Error).message;}
       }
-      for(const stage of [...stages].sort((a,b)=>(physical?Number(b.status==='output')-Number(a.status==='output'):0)||a.ready-b.ready||a.job-b.job)){
+      for(const stage of [...stages].sort((a,b)=>(physical?Number(b.status==='output'||b.status==='blocked')-Number(a.status==='output'||a.status==='blocked'):0)||a.ready-b.ready||a.job-b.job)){
         if(stage.ready>now||stage.status==='processing'||stage.status==='finished'||stage.status==='moving')continue;
         if(stage.status==='blocked'&&place(stage.step-1,'output').capacity!==0){
           if(bufferHasSpace(buffers,ref(stage.step-1,'output'))){deposit(stage,'output',now,stage.step-1);release(stage,now);stage.status='output';changed=true;}
           else continue;
         }
         const target=candidates[stage.step],inputPlace=place(stage.step,'input');
-        if(physical&&stage.status==='output'){
-          if(!bufferHasSpace(buffers,ref(stage.step,'input'))){stage.causes.add('buffer');continue;}
+        if(physical&&(stage.status==='output'||stage.status==='blocked')){
+          const fromOperation=stage.status==='blocked',direct=inputPlace.capacity===0,own=fromOperation?stage.run:undefined;
+          if(!direct&&!bufferHasSpace(buffers,ref(stage.step,'input'))){stage.causes.add('buffer');continue;}
           const route=project.stationRouting?.routes.find(route=>copyKey(route.from)===copyKey(candidates[stage.step-1])&&copyKey(route.to)===copyKey(target));
           if(!route||!resolveTransportTime(route))throw new Error('Transport buforów: brak jawnej trasy i czasu pomiędzy kopiami.');
-          const blocked=heldWorkers(),rules=project.assemblyTransport!;
+          const blocked=new Set([...held].filter(index=>index!==own).flatMap(index=>[...runs[index].workerIds])),allHeld=heldWorkers(),rules=project.assemblyTransport!;
           // Unknown blocking ends must never be treated as finite available worker windows.
           const availableProject={...project,assemblyTransport:{...rules,
             routes:rules.routes.map(rule=>({...rule,alternatives:rule.alternatives.filter(alt=>!alt.workerIds.some(id=>blocked.has(id)))})),
-            emptyRoutes:rules.emptyRoutes.filter(route=>!route.workerAssignment?.workerIds.some(id=>blocked.has(id)))}};
+            emptyRoutes:rules.emptyRoutes.filter(route=>!route.workerAssignment?.workerIds.some(id=>allHeld.has(id)))}};
+          let committing=false;
           try{
             const planned=previewAssemblyDispatch(availableProject,route.id,carts,book,devices,now,`transfer:${stage.job}:${stage.step}:${now}`,now,returnLocks);
-            const dispatch=planned.prefix??planned;
+            let dispatch=planned.prefix??planned;
             if(dispatch.startSeconds>now){wake(dispatch.startSeconds);dispatch.waitCauses.forEach(cause=>stage.causes.add(cause));continue;}
             if(planned.prefix){publish(dispatch,'approach');stage.causes.add('transport');changed=true;continue;}
-            const timing=resolveTransportTime(route)!;
-            let next=applyBufferedBodyEvent({bodies:bodyBook!,buffers},{kind:'reserve-input',bodyId:token(stage),atSeconds:now,to:ref(stage.step,'input')});
-            next=applyBufferedBodyEvent(next,{kind:'depart',bodyId:token(stage),atSeconds:now,endSeconds:dispatch.endSeconds,basis:timing.basis==='measured'?'confirmed':'assumed'});
+            let directChoice:BufferedOperationChoice|undefined;
+            if(direct){
+              const arrival=dispatch.endSeconds,duration=arrival-now;
+              let resourceReady=true;
+              for(const index of active){
+                if(index===own)continue;
+                const run=runs[index],sameStation=copyKey(run)===copyKey(target),sameEquipment=run.equipmentIds?.some(id=>target.requiredEquipmentIds.includes(id));
+                if(!sameStation&&!sameEquipment)continue;
+                // Only an unlimited output guarantees release at the recorded processing end.
+                const guaranteed=place(steps.findIndex(step=>step.id===run.operationId),'output').capacity===null;
+                if(!guaranteed||run.endSeconds>arrival){
+                  stage.causes.add(sameStation?'station':'equipment');resourceReady=false;
+                  if(guaranteed)wake(run.endSeconds-duration);
+                }
+              }
+              if(!resourceReady)continue;
+              const materialAt=stock?.earliest(steps[stage.step].id,arrival)??arrival;
+              if(materialAt>arrival){stage.causes.add('material');wake(materialAt-duration);continue;}
+              const unsafe=new Set([...active].filter(index=>index!==own&&place(steps.findIndex(step=>step.id===runs[index].operationId),'output').capacity!==null&&place(steps.findIndex(step=>step.id===runs[index].operationId),'output').blockingPolicy==='bbas').flatMap(index=>[...runs[index].workerIds]));
+              const admission=planDirectOperation(project,operations[stage.step],target,arrival,dispatch.workers,unsafe);
+              if(!admission.choice){if(admission.cause)stage.causes.add(admission.cause);if(admission.retryAt!==undefined)wake(admission.retryAt-duration);continue;}
+              directChoice=admission.choice;
+            }
+            const timing=resolveTransportTime(route)!,basis=timing.basis==='measured'?'confirmed' as const:'assumed' as const;
+            let next;
+            if(direct)next=applyBufferedBodyEvent({bodies:bodyBook!,buffers},{kind:'depart-direct',bodyId:token(stage),atSeconds:now,
+              to:ref(stage.step,'input'),endSeconds:dispatch.endSeconds,basis,...(fromOperation?{releaseOperationId:steps[stage.step-1].id}:{})});
+            else if(fromOperation)next=applyBufferedBodyEvent({bodies:bodyBook!,buffers},{kind:'depart-from-operation',bodyId:token(stage),atSeconds:now,
+              operationId:steps[stage.step-1].id,to:ref(stage.step,'input'),endSeconds:dispatch.endSeconds,basis});
+            else{
+              next=applyBufferedBodyEvent({bodies:bodyBook!,buffers},{kind:'reserve-input',bodyId:token(stage),atSeconds:now,to:ref(stage.step,'input')});
+              next=applyBufferedBodyEvent(next,{kind:'depart',bodyId:token(stage),atSeconds:now,endSeconds:dispatch.endSeconds,basis});
+            }
+            committing=true;
+            if(fromOperation){
+              release(stage,now);
+              dispatch={...dispatch,workers:{...dispatch.workers,reservations:dispatch.workers.reservations.map(value=>book.reservations.find(old=>old.reservationId===value.reservationId)??value)}};
+              bodyEvents.push({kind:'release',bodyId:token(stage),atSeconds:now,operationId:steps[stage.step-1].id});
+            }
             bodyBook=next.bodies;buffers=next.buffers;
             bodyEvents.push({kind:'start-transfer',bodyId:token(stage),atSeconds:now,to:{stationId:target.stationId,copy:target.copy},endSeconds:dispatch.endSeconds,basis:timing.basis==='measured'?'confirmed':'assumed'});
             stage.transport={routeId:route.id,startSeconds:now,endSeconds:dispatch.endSeconds,basis:timing.basis,breakdown:timing.breakdown,
               workerIds:dispatch.workerIds,equipmentIds:dispatch.equipmentIds};
-            publish(dispatch,'transfer',stage);stage.status='moving';changed=true;
-          }catch(error){transportFailure=(error as Error).message;stage.causes.add('transport');}
+            publish(dispatch,'transfer',stage);
+            if(directChoice){recordRun(stage,directChoice,dispatch.endSeconds,dispatch.endSeconds);stage.direct=true;}
+            stage.status='moving';changed=true;
+          }catch(error){if(committing)throw error;transportFailure=(error as Error).message;stage.causes.add('transport');}
           continue;
         }
         if(stage.status!=='input'&&inputPlace.capacity!==0){
@@ -203,7 +268,7 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
         if([...active].some(index=>index!==ignore&&copyKey(runs[index])===copyKey(target))){stage.causes.add('station');continue;}
         if([...active].some(index=>index!==ignore&&runs[index].equipmentIds?.some(id=>target.requiredEquipmentIds.includes(id)))){stage.causes.add('equipment');continue;}
         if(stock){const at=stock.earliest(steps[stage.step].id,now);if(at>now){stage.causes.add('material');wake(at);continue;}}
-        const operation=operations[stage.step];let selected:{workers:string[];projection:NonNullable<ReturnType<typeof projectWork>>;from:number;until:number}|undefined,combinations=0;
+        const operation=operations[stage.step];let selected:BufferedOperationChoice|undefined,combinations=0;
         const choose=(workers:string[],from:number)=>{
           if(selected)return;
           if(workers.length<operation.workerCount){for(let i=from;i<=operation.eligibleWorkerIds.length-(operation.workerCount-workers.length);i++)choose([...workers,operation.eligibleWorkerIds[i]],i+1);return;}
@@ -224,22 +289,11 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
         if(physical){
           const event={kind:'reserve' as const,bodyId:token(stage),atSeconds:now,operationId:steps[stage.step].id,endSeconds:chosen.projection.end,
             basis:profiles[stage.step].durationBasis==='measured'?'confirmed' as const:'assumed' as const};
-          const next=applyBufferedBodyEvent({bodies:bodyBook!,buffers},{...event,kind:'start-operation'});
+          const next=applyBufferedBodyEvent({bodies:bodyBook!,buffers},{...event,kind:inputPlace.capacity===0?'start-direct':'start-operation'});
           bodyBook=next.bodies;buffers=next.buffers;bodyEvents.push(event);
         }else if(stage.status==='input'||stage.status==='output')buffers=applyBufferEvent(buffers,{kind:'remove',id:token(stage),atSeconds:now});
-        stock?.reserve(stage.job,steps[stage.step].id,now);stock?.consume(stage.job,steps[stage.step].id,now);
         if(stage.status!=='input')log(stage,'handoff',now);
-        const runIndex=runs.length,id=`${stage.job}:${steps[stage.step].id}`;
-        book=reserveWorkerTeam(book,{reservationId:id,workerIds:chosen.workers,startSeconds:chosen.from,endSeconds:chosen.until});
-        const end=chosen.projection.end;
-        runs.push({job:stage.job,operationId:steps[stage.step].id,stationId:target.stationId,copy:target.copy,workerIds:chosen.workers,
-          equipmentIds:target.requiredEquipmentIds,readySeconds:stage.ready,startSeconds:now,endSeconds:end,waitSeconds:now-stage.ready-(stage.transport?stage.transport.endSeconds-stage.transport.startSeconds:0),
-          waitCauses:[...stage.causes],reserveStartSeconds:chosen.from,reserveEndSeconds:chosen.until,workWindows:chosen.projection.workWindows,pauses:chosen.projection.pauses,
-          ...(physical?{bodyId:token(stage),...(stage.transport?{transport:stage.transport}:{})}:{})});
-        stage.transport=undefined;
-        stage.run=runIndex;stage.status='processing';active.add(runIndex);changed=true;
-        jobs[stage.job-1].starts[stage.step]=now;jobs[stage.job-1].ends[stage.step]=end;
-        push(end,'completion',stage,runIndex);if(chosen.until<end)push(chosen.until,'release',stage,runIndex);
+        recordRun(stage,chosen,now);stock?.consume(stage.job,steps[stage.step].id,now);changed=true;
       }
     }
     wakes.forEach(at=>push(at,'wake'));
