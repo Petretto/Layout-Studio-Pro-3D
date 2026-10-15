@@ -135,3 +135,17 @@ Osoba jest rezerwowana według profilu i nie otrzymuje dodatkowej pracy z samego
 Zastąpiono globalny wymóg pełnej obecności wszystkich operacji warunkiem dotyczącym tylko wykonania mogącego zablokować wyjście z zatrzymaniem osoby. W takim wykonaniu osoba musi być obecna do końca przetwarzania, ale może rozpocząć obecność później. Operacje lokalne wewnątrz tego samego stanowiska, operacje ze zwolnieniem osoby i nieograniczonym wyjściem zachowują także wcześniejszy koniec obecności. Nadal nie zakładamy automatycznego powrotu osoby po wcześniejszym zakończeniu jej obecności do późniejszej blokady bbas.
 Późniejsza/future obecność jest chroniona w obu ścieżkach przydziału (start na miejscu i wspólne planowanie przyjazdu do wejścia 0). Jeśli nowe wykonanie mogłoby zatrzymać osobę na nieznany czas, nie wolno go uruchomić przed już obiecaną późniejszą obecnością tej osoby, nawet gdy sam czas pracy mieściłby się przed obietnicą. Aktywna potencjalna blokada nie jest traktowana jak pewne przyszłe zwolnienie. Dopuszczamy konserwatywne oczekiwanie; nie deklarujemy optymalności kolejki.
 Schematy projektu i zapis bez zmian. Lokalny zakres dotyczy silnika buforów uruchamianego przy ograniczonych pojemnościach; wcześniejsze ścieżki bez takich limitów pozostają bez przepisywania w tym pakiecie. Nadal poza odbiorem: gałęzie/wiele kandydatów kopii, partie podzespołów z buforami, ograniczony końcowy odbiór wyrobów oraz powrót osoby po przedwcześnie kończącym się profilu bbas. Główne 3.5 jest w trakcie. Następny 3.5c1 — formularz jawnych pojemności i polityk z historią oraz zapisem, bez rozszerzania zakresu silnika.
+
+
+## 14. 3.5c1 — edytor buforów w UI Studio (2026-10-15)
+Wprowadzono formularz `DomainBuffersEditor.tsx` wbudowany w panel Szkicu 6 (`DomainDraftPanel.tsx`), powiązany ze wspólną historią operacji Cofnij/Ponów, bezpośrednią walidacją i zapisem w `localStorage` pod kluczem szkicu 6.
+Edytor umożliwia:
+- Konfigurację buforów stanowisk: wybór stanowiska z listy istniejących w projekcie, wybór zakresu kopii („Wszystkie kopie osobno (copy=null)” lub konkretna kopia `1..parallelStations`).
+- Jawne deklarowanie pojemności wejściowej i wyjściowej: przełącznik „Bez limitu (nieskończona)” oraz pole liczbowe dla pojemności skończonej ($\ge 0$, w tym 0 dla bezpośredniego przekazania/utrzymania korpusu).
+- Wybór reguły blokowania wyjścia (`blockingPolicy`): `bbas` (zatrzymanie operatora na stanowisku do zwolnienia wyjścia) lub `bbas-worker-released` (zwolnienie operatora po zakończeniu przetwarzania).
+- Walidację spójności: wykrywanie i odrzucanie duplikatów konfiguracji dla tej samej stacji i kopii, nakładających się deklaracji wszystkich i konkretnych kopii, ujemnych lub nieliczbowych pojemności oraz nieznanych stanowisk. Błędy walidacji są prezentowane w UI i uniemożliwiają zapis uszkodzonych danych.
+- Bezpieczeństwo danych: odrzucenie niezapisanych zmian przywraca stan do poprzednio zapisanego kontraktu; przycisk „Usuń konfigurację buforów” pozwala jawnie usunąć deklarację buforów (`stationBuffers: undefined`).
+- Integrację z symulacją: każda zmiana i zapis buforów automatycznie unieważnia stary wynik symulacji harmonogramu zespołu (remount panelu harmonogramu przez zmianę klucza draftu).
+- Nienaruszanie dotychczasowych modeli: aktywne projekty v4/v5, format JSON i logika symulacji pozostają ściśle odizolowane i niezmienione.
+Kolejny pakiet: 3.5c2 — formularz zaopatrzenia materiałowego montażu w UI.
+

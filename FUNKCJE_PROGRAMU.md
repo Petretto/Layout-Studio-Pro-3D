@@ -299,3 +299,17 @@ W fizycznym przebiegu pojedynczego ciągu korpusu wejście 0 oznacza start opera
 
 ### Kontynuacja na tej samej kopii i późniejsza obecność — 3.5b2c4 (2026-10-15)
 W liniowym harmonogramie z ograniczonymi buforami kolejne operacje tej samej kopii pozostawiają korpus na stanowisku. Stanowisko i wyposażenie nie mogą być przejęte do startu kolejnej lokalnej operacji; osoba działa według jawnego profilu. Lokalne oczekiwanie ma osobny czas i inspekcję, bez fikcyjnej trasy ani pobytu w buforach. Bufor wyjściowy działa po ostatniej lokalnej operacji przed wyjazdem do innej kopii. Proces całkowicie lokalny nie potrzebuje zestawu transportowego. Polityka zatrzymania operatora dopuszcza późniejsze rozpoczęcie jego obecności, pod warunkiem obecności do końca operacji mogącej zablokować wyjście. Przyszłe rezerwacje są chronione przed nieznanym wydłużeniem blokady. Formularz buforów pozostaje kolejnym 3.5c1; szersze gałęzie/kopie i przepływ podzespołów z buforami nadal nie są obsługiwane.
+
+
+### Formularz buforów stanowisk — 3.5c1 (2026-10-15)
+W module Stanowiska v5 w Szkicu 6 dodano panel „Bufory stanowisk — pojemności i reguły blokowania” (`DomainBuffersEditor.tsx`).
+Umożliwia konfigurację buforów wejściowych i wyjściowych stanowisk:
+- wybór stanowiska z listy istniejących w projekcie;
+- wybór zakresu kopii: wszystkie kopie osobno (`copy=null`) lub konkretna kopia `1..parallelStations`;
+- deklarację pojemności wejściowej i wyjściowej: opcja „Bez limitu (nieskończona)” lub wartość liczbowa $\ge 0$ (w tym 0 na wejściu dla bezpośredniego przekazania oraz 0 na wyjściu dla zatrzymania korpusu na stanowisku do wyjazdu);
+- wybór reguły blokowania wyjścia z polityką operatora: `bbas` (zatrzymanie operatora) lub `bbas-worker-released` (zwolnienie operatora po zakończeniu przetwarzania);
+- walidację spójności: wykrywanie duplikatów konfiguracji dla tej samej stacji i kopii, nakładających się reguł wszystkich i konkretnych kopii, ujemnych pojemności oraz nieznanych stacji;
+- integrację ze wspólną historią Cofnij/Ponów, odrzucenie niezapisanych zmian pól oraz usunięcie całej konfiguracji buforów;
+- natychmiastowe unieważnienie starego wyniku symulacji w panelu harmonogramu po zapisaniu zmian.
+Kolejny krok to formularz zaopatrzenia materiałowego montażu w 3.5c2.
+

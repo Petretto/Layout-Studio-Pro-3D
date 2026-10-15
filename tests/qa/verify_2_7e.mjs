@@ -253,7 +253,7 @@ try{
   const open=async()=>{await send('Page.reload');await sleep(800);await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(b=>b.textContent.includes('Stanowiska v5')).click()`);await sleep(150);};
   await open();
   // Canonicalize the fresh legacy fixture through its existing reader before isolation checks.
-  if(process.argv.includes('--physical-buffer-run'))await open();
+  if(process.argv.includes('--physical-buffer-run')||process.argv.includes('--buffer-editor'))await open();
   await sleep(1500);const legacy=await evaluate(`localStorage.getItem('layout-studio-stations-v5')`),legacy4=await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`);
   if(process.argv.includes('--subassembly-editor')){
     const panel='Partie podzespołów szkicu 6',before=JSON.stringify(await saved());
@@ -286,6 +286,40 @@ try{
     const shot=await send('Page.captureScreenshot',{format:'png'});
     writeFileSync(`outputs/qa/verify_3_4m3_${process.argv.includes('--subassembly-new')?'new':'existing'}.png`,Buffer.from(shot.data,'base64'));
     await open();if(JSON.stringify(await saved())!==expected||await evaluate(`document.querySelector('[aria-label="Partia 1 ilość wytworzona"]').value`)!=='2')throw new Error('Reload nie odtwarza formularza');
+  }
+  if(process.argv.includes('--buffer-editor')){
+    const panel='Bufory stanowisk szkicu 6',before=JSON.stringify(await saved());
+    const hasBuffer=await evaluate(`!!document.querySelector('[aria-label="Bufor 1 stanowisko"]')`);
+    if(!hasBuffer){
+      await click('Dodaj bufor stanowiska',panel);
+      await field('Bufor 1 stanowisko','ST-A');
+    }
+    await click('Dodaj bufor stanowiska',panel);
+    await field('Bufor 3 stanowisko','ST-A');
+    await field('Bufor 3 kopia','1');
+    await click('Zapisz bufory stanowisk',panel);
+    if(JSON.stringify(await saved())!==before||!await evaluate(`document.querySelector('[aria-label="${panel}"]').textContent.includes('powtórzona konfiguracja')`))throw new Error('Duplikat bufora nie zablokowany');
+    await click('Usuń bufor 3',panel);
+    const inputUnlimited=await evaluate(`document.querySelector('[aria-label="Bufor 1 wejście bez limitu"]').checked`);
+    if(inputUnlimited)await check('Bufor 1 wejście bez limitu');
+    await field('Bufor 1 pojemność wejściowa','2');
+    await field('Bufor 1 polityka operatora','bbas-worker-released');
+    await click('Zapisz bufory stanowisk',panel);
+    const expected=JSON.stringify(await saved());
+    const savedBuffers=(await saved()).stationBuffers?.buffers;
+    if(!savedBuffers||savedBuffers[0].inputCapacity!==2||savedBuffers[0].blockingPolicy!=='bbas-worker-released')throw new Error('Nie zapisano buforów');
+    await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==before)throw new Error('Cofnij buforów zmienia projekt');
+    await click('Ponów dane szkicu',panel);if(JSON.stringify(await saved())!==expected)throw new Error('Ponów nie odtwarza buforów');
+    await field('Bufor 1 pojemność wejściowa','99');await click('Odrzuć zmiany buforów',panel);
+    if(await evaluate(`document.querySelector('[aria-label="Bufor 1 pojemność wejściowa"]').value`)!=='2')throw new Error('Odrzuć nie odświeża formularza');
+    await click('Usuń konfigurację buforów',panel);if((await saved()).stationBuffers)throw new Error('Nie usunięto konfiguracji buforów');
+    await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==expected)throw new Error('Nie przywrócono buforów');
+    await evaluate(`document.querySelector('[aria-label="${panel}"]').scrollIntoView()`);mkdirSync('outputs/qa',{recursive:true});
+    const shot=await send('Page.captureScreenshot',{format:'png'});
+    writeFileSync('outputs/qa/verify_3_5c1.png',Buffer.from(shot.data,'base64'));
+    await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==before)throw new Error('Przywrócenie przed reload');
+    await open();
+    if(JSON.stringify(await saved())!==before||await evaluate(`document.querySelector('[aria-label="Bufor 1 wejście bez limitu"]').checked`)!==true)throw new Error('Reload nie odtwarza formularza buforów');
   }
   if(process.argv.includes('--reverse-approach')){
     const panel='Transport montażu szkicu 6',before=JSON.stringify(await saved());
@@ -529,9 +563,16 @@ try{
       await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==expected)throw new Error('Cofnij zmiany po symulacji nie przywraca danych');
       await check(label);if(await calculate()!==jit)throw new Error('Wynik po Cofnij partii nie jest odtwarzalny');
     }
+    if(process.argv.includes('--buffer-editor')){
+      const panel='Bufory stanowisk szkicu 6';
+      await check('Bufor 1 wejście bez limitu');await field('Bufor 1 pojemność wejściowa','5');await click('Zapisz bufory stanowisk',panel);
+      if(await enabled()||await evaluate(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`))throw new Error('Zapis buforów zachował nieaktualny wynik/tryb JIT');
+      await click('Cofnij dane szkicu',panel);if(JSON.stringify(await saved())!==expected)throw new Error('Cofnij buforów po symulacji nie przywraca danych');
+      await check(label);if(await calculate()!==jit)throw new Error('Wynik po Cofnij buforów nie jest odtwarzalny');
+    }
     if(legacy!==await evaluate(`localStorage.getItem('layout-studio-stations-v5')`)||legacy4!==await evaluate(`JSON.stringify(JSON.parse(localStorage.getItem('layout-studio-v3')).project)`))throw new Error('Zmiana 4/5');
     if((JSON.parse(await raw())).originalJson!==originalJson||errors.length)throw new Error('Zmiana źródła lub wyjątki');
-    console.log(`PASS ${process.argv.includes('--buffer-run')?'3.5b2b':process.argv.includes('--supply-run')?'3.5b1':process.argv.includes('--supply-guard')?'3.5a1':process.argv.includes('--subassembly-contract')?process.argv.includes('--subassembly-editor')?'3.4m3':process.argv.includes('--subassembly-copies')?'3.4m2b':'3.4m2':'3.4l'}: JIT opt-in, worker, czas procesu, powrót do konfiguracji, reload i izolacja 4/5.`);
+    console.log(`PASS ${process.argv.includes('--buffer-editor')?'3.5c1':process.argv.includes('--buffer-run')?'3.5b2b':process.argv.includes('--supply-run')?'3.5b1':process.argv.includes('--supply-guard')?'3.5a1':process.argv.includes('--subassembly-contract')?process.argv.includes('--subassembly-editor')?'3.4m3':process.argv.includes('--subassembly-copies')?'3.4m2b':'3.4m2':'3.4l'}: JIT opt-in, worker, czas procesu, powrót do konfiguracji, reload i izolacja 4/5.`);
   }else if(process.argv.includes('--transport-run')||process.argv.includes('--cart-run')){
     const expected=JSON.stringify(await saved());
     const calculate=async()=>{

@@ -66,3 +66,31 @@ Scenariusz syntetyczny: A i B na ST-A, potem C na ST-C. A=10 s, osoba A 0–5 s;
 Proces całkowicie lokalny, bez assemblyTransport i tras: dwie sztuki kończą w 32 s, zero fizycznych ruchów, to samo w JIT. Profil bbas rozpoczynający obecność później jest rezerwowany od jawnego offsetu do rzeczywistego zwolnienia blokady; profil kończący ją przed końcem potencjalnie blokującej operacji nadal odmawia. Wspólna osoba: przyszła obecność odbiorcy 32–42 s nie zostaje przejęta przez montaż z możliwym nieznanym końcem blokady — druga operacja A zaczyna dopiero w 42 s. Bezpośredni planner również odmawia potencjalnej blokady przed już obiecaną obecnością 40–50 s i wskazuje 50 s jako późniejszą gotowość. Błędna kopia kontynuacji, przedwczesne zwolnienie i nieznana operacja nie publikują połowy przejścia ani nie zmieniają wejściowego rejestru.
 Edge CDP: `node tests/qa/verify_2_7e.mjs --cart-run --physical-buffer-run --local-buffer-run`: PASS. Rzeczywisty worker, lokalne oczekiwanie 15 s i właściwe oznaczenia w tabeli/inspekcji, osoby 0–5 i 27–31 s, pobranie materiału dopiero dla OP-LOCAL w 25 s, dokładnie trzy ruchy urządzenia po lokalnych operacjach, brak undefined w przedziałach, wynik fizyczny 93 s / JIT 76 s. JIT domyślnie OFF, przełączanie i ponowne OFF odtwarzają wynik, reload nie zmienia wyniku/zapisu, źródła 4/5 oraz originalJson zachowane, brak wyjątków. Początkowy fixture UI nie miał jawnego stationId wyposażenia; aplikacja poprawnie chroniła niepoprawny szkic przed odczytem. Uzupełniono fixture i ponowiono wyłącznie odbiór UI. Zrzut `outputs/qa/verify_3_5b2c4_local.png`, wizualny odbiór PASS. Brak zmiany formularzy/persistence — nie dodawano powtórzonych testów Cofnij/Ponów.
 3.5b2c4 zakończony w zakresie silnika liniowego z buforami. Gałęzie/kandydaci kopii, podzespoły i ograniczony odbiór końcowy nadal wymagają dalszej integracji, bez pozornego wyniku. Następny 3.5c1 — formularz buforów. Całe 3.5 w trakcie, postęp 24/67 = 35,8%, pierwsze wydanie 24/65 = 36,9%. Git push nie potwierdza wdrożenia Vercel; nie zweryfikowano go w tym kroku.
+
+
+## 3.5c1 — 2026-10-15
+Backup `backup/v0.4.0_przed_3_5c1_20261015`: 278 plików, niezależna kontrola SHA256 PASS (278/278 plików zgodnych). Skills layout-implementation i layout-verification; ryzyko Terra/Sol (UI formularza, walidacja, wspólna historia i unieważnienie symulacji).
+Wdrożono komponent `DomainBuffersEditor.tsx` i wpięto do `DomainDraftPanel.tsx`:
+- Konfiguracja pojemności wejściowej i wyjściowej dla stanowisk z jawnym wyborem „Bez limitu (nieskończona)” lub wartości liczbowej $\ge 0$ (0 na wejściu = bezpośredni odbiór, 0 na wyjściu = utrzymanie korpusu na stanowisku do wyjazdu).
+- Wybór zakresu kopii: „Wszystkie kopie osobno (copy=null)” lub konkretna kopia `1..parallelStations`.
+- Wybór reguły blokowania wyjścia (`blockingPolicy`): `bbas` (zatrzymanie operatora) lub `bbas-worker-released` (zwolnienie operatora).
+- Walidacja z blokadą zapisu: uniemożliwia zapisanie duplikatów konfiguracji dla tej samej stacji i kopii (`powtórzona konfiguracja`), nakładających się deklaracji wszystkich i pojedynczych kopii, ujemnych/nieliczbowych pojemności oraz nieznanych stanowisk.
+- Integracja ze wspólną historią: operacje Cofnij/Ponów, odrzucenie niezapisanych zmian przyciskiem „Odrzuć zmiany buforów”, jawne usunięcie deklaracji przyciskiem „Usuń konfigurację buforów”.
+- Natychmiastowe unieważnienie starego wyniku symulacji w `DomainWorkerSchedulePanel`: zmiana i zapis buforów aktualizuje `draft.raw`, co remountuje panel harmonogramu i czyści stary wynik.
+
+Weryfikacja:
+- Nowe testy jednostkowe/integracyjne w `tests/network.test.ts`: 3/3 PASS (edycja i usuwanie konfiguracji bez mutacji projektu, odmowy walidatora, integracja ze storage draftu, historia Cofnij/Ponów i odporność na uszkodzony zapis).
+- Celowany zestaw testów buforów 3.5: **66/66 PASS**.
+- Kompilacja TypeScript (`tsc --noEmit`) oraz pełny build (`npm run build`): PASS, bez błędów typowania i ostrzeżeń.
+- Test przeglądarkowy Edge CDP (`tests/qa/verify_2_7e.mjs --jit-run --cart-run --buffer-run --buffer-editor`): PASS. Przetestowano:
+  1. Dodanie bufora, edycję wejścia/wyjścia, wybór polityki.
+  2. Blokadę duplikatu stacji i kopii (`powtórzona konfiguracja dla ST-A:1`).
+  3. Zapis do `localStorage`, operacje Cofnij i Ponów.
+  4. Odrzucenie niezapisanych zmian pól.
+  5. Usunięcie konfiguracji buforów i jej przywrócenie przez Cofnij.
+  6. Zrzut ekranu do `outputs/qa/verify_3_5c1.png`, wizualny odbiór PASS.
+  7. Odtworzenie stanu po przeładowaniu strony (`open()` / reload).
+  8. Unieważnienie wyniku symulacji po zapisie modyfikacji bufora.
+  9. Izolacja źródeł 4/5 i brak wyjątków w konsoli.
+Całe zadanie 3.5 w trakcie. Kolejny pakiet: 3.5c2 — formularz zaopatrzenia materiałowego montażu w UI. Postęp: cały plan 24/67 = 35,8%, pierwsze wydanie 24/65 = 36,9%. Vercel nie zweryfikowano.
+

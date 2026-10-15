@@ -6,7 +6,7 @@ import {MaterialStockRun} from '../src/core/materialStock';
 import {editDomainSubassemblyFlow} from '../src/core/domainSubassemblyEditing';
 import type {SubassemblyFlow} from '../src/core/subassemblyFlow';
 import {editDomainStationBuffers, editDomainMaterialSupply} from '../src/core/domainBuffersEditing';
-import type {StationBuffersV6} from '../src/core/stationBuffers';
+import {validateStationBuffers, type StationBuffersV6} from '../src/core/stationBuffers';
 import type {MaterialSupplyV6} from '../src/core/materialSupply';
 import {reserveAssemblyMovement,finishAssemblyMovement} from '../src/core/assemblyMovement';
 import {editDomainAssemblyTransport} from '../src/core/domainTransportEditing';
@@ -4394,3 +4394,70 @@ test('3.5b2c4: błędna lokalna kontynuacja nie zwalnia korpusu ani nie zmienia 
   const continued=applyBufferedBodyEvent(reserved,event);assert.equal(continued.buffers.tokens.length,0);
   assert.deepEqual(continued.bodies.bodies[0].location,reserved.bodies.bodies[0].location);
 });
+
+test('3.5c1: edycja buforów zapisuje jawne pojemności i polityki bbas bez mutacji projektu, a undefined usuwa konfigurację',()=>{
+  const project=bufferedProcessFixture();
+  const buffers:StationBuffersV6={buffers:[
+    {stationId:'ST-A',copy:null,inputCapacity:2,outputCapacity:0,blockingPolicy:'bbas'},
+    {stationId:'ST-C',copy:1,inputCapacity:null,outputCapacity:null,blockingPolicy:'bbas-worker-released'}
+  ]};
+  const before=JSON.stringify(project);
+  const edited=editDomainStationBuffers(project,buffers);
+  assert.equal(JSON.stringify(project),before);
+  assert.deepEqual(parseDomainProjectV6(JSON.stringify(edited)).stationBuffers,buffers);
+  const removed=editDomainStationBuffers(edited,undefined);
+  assert.equal(removed.stationBuffers,undefined);
+  assert.equal(JSON.stringify(project),before);
+});
+
+test('3.5c1: walidator buforów odrzuca nieznane stanowiska, błędne kopie, duplikaty klucza i ujemne wartości',()=>{
+  const project=bufferedProcessFixture();
+  const valid:StationBuffersV6={buffers:[
+    {stationId:'ST-A',copy:null,inputCapacity:1,outputCapacity:1,blockingPolicy:'bbas'}
+  ]};
+  assert.deepEqual(validateStationBuffers(project,valid),valid);
+  assert.throws(()=>validateStationBuffers(project,{buffers:[{stationId:'UNKNOWN',copy:null,inputCapacity:1,outputCapacity:1}]}),/nieznane stanowisko/);
+  assert.throws(()=>validateStationBuffers(project,{buffers:[{stationId:'ST-A',copy:null,inputCapacity:-1,outputCapacity:1}]}),/nieujemną liczbą/);
+  assert.throws(()=>validateStationBuffers(project,{buffers:[{stationId:'ST-A',copy:null,inputCapacity:1,outputCapacity:1.5}]}),/nieujemną liczbą/);
+  assert.throws(()=>validateStationBuffers(project,{buffers:[{stationId:'ST-A',copy:99,inputCapacity:1,outputCapacity:1}]}),/poza zakresem/);
+  assert.throws(()=>validateStationBuffers(project,{buffers:[
+    {stationId:'ST-A',copy:null,inputCapacity:1,outputCapacity:1},
+    {stationId:'ST-A',copy:null,inputCapacity:2,outputCapacity:2}
+  ]}),/powtórzona konfiguracja/);
+  assert.throws(()=>validateStationBuffers(project,{buffers:[
+    {stationId:'ST-A',copy:null,inputCapacity:1,outputCapacity:1,blockingPolicy:'unknown' as unknown as 'bbas'}
+  ]}),/nieznana reguła/);
+});
+
+test('3.5c1: integracja draft storage, historia Cofnij/Ponów i izolacja oryginalnych źródeł 4/5',()=>{
+  const project=bufferedProcessFixture();
+  const buffers:StationBuffersV6={buffers:[
+    {stationId:'ST-A',copy:null,inputCapacity:0,outputCapacity:1,blockingPolicy:'bbas-worker-released'}
+  ]};
+  const edited=editDomainStationBuffers(project,buffers);
+  for(const originalJson of [JSON.stringify(derive(parseProject(JSON.stringify(base))).project),readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8')]){
+    const storage=new DraftStorage(),initial=saveDomainDraft(storage,{project,originalJson},null);
+    const written=saveDomainDraft(storage,{project:edited,originalJson},initial.raw),reopened=readDomainDraft(storage);
+    assert.equal(reopened.status,'valid');
+    if(reopened.status==='valid'){
+      assert.equal(reopened.saved.originalJson,originalJson);
+      assert.deepEqual(reopened.saved.project.stationBuffers,buffers);
+    }
+    const invalid=structuredClone(edited);
+    invalid.stationBuffers!.buffers[0].inputCapacity=-5;
+    assert.throws(()=>saveDomainDraft(storage,{project:invalid,originalJson},written.raw));
+    assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),written.raw);
+    const undone=saveDomainDraft(storage,{project,originalJson},written.raw);
+    const old=readDomainDraft(storage);
+    assert.equal(old.status,'valid');
+    if(old.status==='valid')assert.equal(old.saved.project.stationBuffers?.buffers[0]?.inputCapacity, project.stationBuffers?.buffers[0]?.inputCapacity ?? null);
+    saveDomainDraft(storage,{project:edited,originalJson},undone.raw);
+    const corrupt=JSON.parse(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY)!);
+    corrupt.project.stationBuffers.buffers[0].stationId='NONEXISTENT';
+    const raw=JSON.stringify(corrupt);
+    storage.setItem(DOMAIN_DRAFT_STORAGE_KEY,raw);
+    assert.equal(readDomainDraft(storage).status,'corrupt');
+    assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),raw);
+  }
+});
+
