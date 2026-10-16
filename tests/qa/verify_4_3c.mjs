@@ -4,6 +4,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {deepStrictEqual, strictEqual, ok} from 'node:assert';
 const PORT=5244, CDP=9384, key='layout-studio-domain-v6-draft-v1';
+const throughput=process.argv.includes('--throughput');
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const source=JSON.parse(readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8'));
 source.name='Bilans zasobów — jawny test syntetyczny';source.algorithm='Manual';source.layoutObjects=[];source.bom=[];
@@ -64,7 +65,21 @@ try{
   deepStrictEqual(applied.stations.map(s=>s.id),original.stations.map(s=>s.id));deepStrictEqual(applied.equipment,original.equipment);
   deepStrictEqual(applied.stationRouting.routes,original.stationRouting.routes);deepStrictEqual(applied.layoutObjects,original.layoutObjects);
   await click('Cofnij dane szkicu');deepStrictEqual(await saved(),original);await click('Ponów dane szkicu');deepStrictEqual(await saved(),applied);
-  await toggle('Symulacja bez transportu — just in time');await field('Odstęp przybycia szkicu 6 [s]','1');await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');await until(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`);
+  await toggle('Symulacja bez transportu — just in time');await field('Odstęp przybycia szkicu 6 [s]','1');
+  if(throughput)await field('Liczba sztuk szkicu 6','3');
+  await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');await until(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`);
+  if(throughput){
+    const explanation=await evaluate(`document.querySelector('[aria-label="Wyjaśnienie ograniczeń przepustowości"]').textContent`);
+    ok(explanation.includes('Horyzont: 0–60 s')&&explanation.includes('3 ukończonych sztuk'),'Błędny horyzont wyjaśnienia');
+    ok(explanation.includes('JIT:')&&explanation.includes('bez podziału na przyczyny'),'Brak opisu założeń');
+    strictEqual(await evaluate(`document.querySelectorAll('[aria-label="Wyjaśnienie ograniczeń przepustowości"] details').length`),7);
+    await evaluate(`document.querySelector('[aria-label="Ograniczenie processing"]').open=true`);
+    ok(await evaluate(`document.querySelector('[aria-label="Ograniczenie processing"]').textContent.includes('Źródło czasu operacji: założenie')`),'Brak rozróżnienia czasu założonego');
+    await click('Pokaż wykonanie 1 · QA-A','Ograniczenie processing');
+    ok(await evaluate(`document.querySelector('[aria-label="Wybrany obiekt harmonogramu"]').textContent.includes('QA-A')`),'Brak przejścia na Gantta');
+    await evaluate(`document.querySelector('[aria-label="Ograniczenie processing"]').open=false;document.querySelector('[aria-label="Wyjaśnienie ograniczeń przepustowości"]').scrollIntoView({block:'start'})`);
+    mkdirSync('outputs/qa',{recursive:true});writeFileSync('outputs/qa/verify_4_4.png',Buffer.from((await send('Page.captureScreenshot',{format:'png'})).data,'base64'));
+  }
   // A fresh proposal must clear the previous schedule on approval, even if assignments match.
   await field('Limit obciążenia kopii szkicu 6 [s/szt.]','10');await field('Algorytm bilansu szkicu 6','LCR');await click('Oblicz propozycję bilansu szkicu 6');
   ok((await text()).includes('LCR'));await toggle('Akceptuję przydziały i ograniczenie dopuszczeń szkicu 6');await click('Zatwierdź przydziały bilansu szkicu 6');
@@ -72,11 +87,21 @@ try{
   await open();deepStrictEqual(await saved(),applied,'Reload zmienił przydziały');
   await field('Limit obciążenia kopii szkicu 6 [s/szt.]','10');await click('Oblicz propozycję bilansu szkicu 6');
   await evaluate(`document.querySelector('[aria-label="${panel}"]').scrollIntoView({block:'start'})`);
-  mkdirSync('outputs/qa',{recursive:true});writeFileSync('outputs/qa/verify_4_3c.png',Buffer.from((await send('Page.captureScreenshot',{format:'png'})).data,'base64'));
+  if(!throughput){mkdirSync('outputs/qa',{recursive:true});writeFileSync('outputs/qa/verify_4_3c.png',Buffer.from((await send('Page.captureScreenshot',{format:'png'})).data,'base64'));}
   // A separate one-person choice cannot cover the complementary two-skill requirement.
   const insufficient=structuredClone(original);insufficient.operations[0].staffing.timeVariants.push({workerCount:1,timeProfile:structuredClone(profile)});insufficient.workerRunSelection.operations[0].workerCount=1;
   await evaluate(`localStorage.setItem(${JSON.stringify(key)},${JSON.stringify(JSON.stringify({...draft,project:insufficient}))})`);await open();
   await field('Limit obciążenia kopii szkicu 6 [s/szt.]','100');await click('Oblicz propozycję bilansu szkicu 6');ok((await text()).includes('brak wykonalnej obsady'),'Brak odmowy kompetencji');
+  if(throughput){
+    const supplied=structuredClone(applied);
+    supplied.materialSupply={items:[{id:'SUP',componentId:'PART',targetStationId:'ST-1',initialStock:0,unit:'szt.',schedule:{kind:'explicit-deliveries',deliveries:[{deliveryTimeSeconds:15,quantity:1}]},source:'Syntetyczny test opóźnienia dostawy'}],consumptions:[{operationId:'QA-A',supplyId:'SUP',quantity:1,source:'Jawny test pobrania'}]};
+    await evaluate(`localStorage.setItem(${JSON.stringify(key)},${JSON.stringify(JSON.stringify({...draft,project:supplied}))})`);await open();
+    await field('Odstęp przybycia szkicu 6 [s]','1');await click('Oblicz harmonogram szkicu 6','Harmonogram zespołu szkicu 6');await until(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`);
+    const material=await evaluate(`document.querySelector('[aria-label="Ograniczenie material"]').textContent`);
+    ok(material.includes('15 s')&&material.includes('QA-A'),'Brak dowodu opóźnienia materiałowego');
+    await open();ok(!await evaluate(`!!document.querySelector('[aria-label="Wyjaśnienie ograniczeń przepustowości"]')`),'Wyjaśnienie przetrwało reload bez nowego przebiegu');
+    console.log('PASS 4.4 UI: 3 sztuki/60 s, 7 kategorii, JIT, dowody i Gantt, rzeczywista dostawa 15 s, reload usuwa wyjaśnienie; izolacja zapisu przez test 4.3c.');
+  }
   strictEqual(await evaluate(`localStorage.getItem('layout-studio-stations-v5')`),legacy);deepStrictEqual(await evaluate(`JSON.parse(localStorage.getItem('layout-studio-v3')).project`),legacy4);
   strictEqual(await evaluate(`JSON.parse(localStorage.getItem(${JSON.stringify(key)})).originalJson`),originalJson);ok(!errors.length,errors.join('; '));
   console.log('PASS 4.3c UI: RPW/LCR, brak przydziału i kompetencji, wyposażenie, przegląd, przydziały, historia, worker/JIT, unieważnienie, reload, izolacja 4/5 i oryginału.');

@@ -44,7 +44,9 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 4.3: cały plan 32/67 = **47,8%**; pierwsze wydanie 32/65 = **49,2%**; Etap 4: 3/7 = **42,9%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po 4.4: cały plan 33/67 = **49,3%**; pierwsze wydanie 33/65 = **50,8%**; Etap 4: 4/7 = **57,1%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+
+Stan historyczny po 4.3: cały plan 32/67 = **47,8%**; pierwsze wydanie 32/65 = **49,2%**.
 
 Stan historyczny po 4.2: cały plan 31/67 = **46,3%**; pierwsze wydanie 31/65 = **47,7%**.
 
@@ -79,7 +81,9 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
-4.4 (2026-10-16): nierozpoczęte — wyjaśniać przyczynę ograniczenia przepustowości: obróbka, obsada, transport, blokada lub brak materiału.
+4.4 (2026-10-16): wdrożone w zakresie harmonogramu szkicu 6 — `throughputExplanation.ts` i panel dowodów ograniczeń: praca netto, obsada, transport, blokady/bufory i materiał/podzespoły oraz osobno kalendarz i pozostałe ograniczenia. Powiązanie dowodu ze sztuką/operacją/kopią i przejście do wykonania na Gantcie, źródło czasu pomiar/założenie, unia pracy na kopii bez podwójnego naliczania, brak arbitralnego podziału oczekiwań mieszanych, jawne założenia JIT. Starszy równy podział oznaczono jako umowną agregację. Brak twierdzenia o jednej głównej przyczynie ani przewidywanym zysku bez porównania przebiegów. Backup `backup/v0.4.0_przed_4_4_20261016` (304 pliki z SHA256). Celowane 22/22 PASS (4 nowe), typecheck/build PASS, Edge CDP UI PASS (`tests/qa/verify_4_3c.mjs --throughput`, `outputs/qa/verify_4_4.png`, 3 sztuki/60 s, JIT, Gantt, dostawa i oczekiwanie 15 s, reload i izolacja 4/5). Bez zmiany schematu, harmonogramu i zapisu; bez pełnej regresji, ostatnia 296/296 w 4.3c. Raport `WERYFIKACJA_OGRANICZEN_PRZEPUSTOWOSCI_4_4.md`. Postęp 33/67 = 49,3%, pierwsze wydanie 33/65 = 50,8%. Vercel nie zweryfikowano.
+
+4.5 (2026-10-16): nierozpoczęte — porównanie zapisanych wariantów przy tych samych warunkach eksperymentu.
 
 4.3 / 4.3c (2026-10-16): wdrożone w zakresie szkicu 6 — bilans statyczny na istniejących, jawnie dopuszczonych kopiach (decyzja użytkownika). `domainBalancing.ts`: priorytety RPW/LCR, limit sumy czasów wybranych wariantów na kopię, jawne wyposażenie, uzupełniające się kompetencje obsady, blokady stanowisk, kolejność ręcznego rejestru i miejsca zaopatrzenia. Ograniczone przeszukiwanie z powrotem: osobne wyniki braku przydziału dla statycznych ograniczeń i limitu 20000 prób. `DomainBalancingPanel.tsx`: podgląd z trwałymi ID i pochodzeniem czasu, jawne zatwierdzenie ograniczenia dopuszczeń do pokazanych kopii, wspólna historia i unieważnienie harmonogramu. Zapis zachowuje puste stanowiska, ID, geometrię, wyposażenie i trasy; nie tworzy nowych stanowisk ani nie nadaje kompetencji. Poprawiono wyprowadzanie przypisań na potrzeby walidacji blokad i respektowanie blokady stanowiska w harmonogramach szkicu. Backup `backup/v0.4.0_przed_4_3c_20261016` (301 plików z SHA256). Celowane 59/59 PASS (7 nowych); okresowa pełna regresja 296/296 PASS po trzech pakietach i integracji, typecheck/build PASS, Edge CDP UI PASS (`tests/qa/verify_4_3c.mjs`, `outputs/qa/verify_4_3c.png`, RPW/LCR, historia, zapis/reload, worker/JIT, izolacja 4/5 i oryginału). Bilans nie stanowi dowodu przepustowości ani dynamicznej wykonalności: weryfikuje ją harmonogram. Aktywny bilans starszych projektów 4/5 pozostaje niezależny. Kontrakt i ograniczenia: `MODEL_KOMPETENCJI_I_PRZYDZIALOW_4_3.md`. Następny punkt 4.4. Postęp 32/67 = 47,8%, pierwsze wydanie 32/65 = 49,2%. Vercel nie zweryfikowano.
 
@@ -453,7 +457,7 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 4.1 | Pokazywać oddzielnie obciążenie stanowisk, maszyn i operatorów oraz objaśnić mianowniki wskaźników. | wdrożone |
 | 4.2 | Umożliwić blokowanie przydziałów przed automatycznym balansowaniem. | wdrożone |
 | 4.3 | Uwzględniać wymagania wyposażenia i kompetencji oraz wskazywać brak wykonalnego przydziału. | wdrożone |
-| 4.4 | Wyjaśniać przyczynę ograniczenia przepustowości: obróbka, obsada, transport, blokada lub brak materiału. | nierozpoczęte |
+| 4.4 | Wyjaśniać przyczynę ograniczenia przepustowości: obróbka, obsada, transport, blokada lub brak materiału. | wdrożone |
 | 4.5 | Porównywać zapisane warianty przy tych samych warunkach eksperymentu: bazowy, dodatkowy pracownik, dodatkowe stanowisko, zmieniony layout. | nierozpoczęte |
 | 4.6 | Zestawiać wydajność, czas przejścia, WIP, obsadę, powierzchnię i koszty przy jawnych stawkach oraz założeniach. | nierozpoczęte |
 | 4.7 | Proponować zmiany wraz z uzasadnieniem i wynikiem sprawdzenia w symulacji; bez deklaracji gwarantowanego optimum. | nierozpoczęte |

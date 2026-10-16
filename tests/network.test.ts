@@ -1,4 +1,5 @@
 import {planDirectOperation} from '../src/core/directHandoffPlan';
+import {explainThroughput} from '../src/core/throughputExplanation';
 import {proposeDomainBalance, applyDomainBalance} from '../src/core/domainBalancing';
 import {assertCompetentTeamExists, teamCoversCompetencies, type CompetencyRequirements} from '../src/core/competencies';
 import {editDomainCompetencies} from '../src/core/domainCompetencyEditing';
@@ -1117,6 +1118,51 @@ function competencyFixture(project: ReturnType<typeof stationChoiceFixture>): Co
     workers:project.workers.slice(0,2).map((worker,index)=>({workerId:worker.id,competencyIds:[index?'C-B':'C-A']})),
     operations:[{operationId:project.operations[0].id,requiredCompetencyIds:['C-A','C-B']}]};
 }
+
+test('4.4: wyjaśnienia rozdzielają pojedyncze przyczyny od mieszanych bez dzielenia czasu',()=>{
+  const result=scheduleWorkerRun(stationChoiceFixture(),1,1,undefined,undefined,{transportMode:'just-in-time'});
+  const run=result.runs[0];run.waitSeconds=12;run.waitCauses=['workers','material'];
+  result.runs[1].waitSeconds=7;result.runs[1].waitCauses=['workers'];
+  const before=JSON.stringify(result),report=explainThroughput(result);
+  const workers=report.signals.find(s=>s.category==='workers')!,material=report.signals.find(s=>s.category==='material')!;
+  assert.equal(report.mixedWaitSeconds,12);assert.equal(workers.singleCauseWaitSeconds,7);
+  assert.equal(material.singleCauseWaitSeconds,0);assert.equal(workers.mixedWaitCount,1);assert.equal(material.mixedWaitCount,1);
+  assert.equal(workers.evidence.find(e=>e.mixed)!.seconds,12);assert.equal(JSON.stringify(result),before);
+});
+
+test('4.4: wspólna praca na kopii jest liczona unią przedziałów, pauzy i blokady oddzielnie',()=>{
+  const result=scheduleWorkerRun(stationChoiceFixture(),1,1,undefined,undefined,{transportMode:'just-in-time'});
+  const [a,b]=result.runs;a.stationId=b.stationId='ST-A';a.copy=b.copy=1;
+  a.workWindows=[{startSeconds:0,endSeconds:5},{startSeconds:8,endSeconds:10}];
+  b.workWindows=[{startSeconds:3,endSeconds:9}];
+  a.pauses=[{startSeconds:5,endSeconds:8}];a.blockedSeconds=4;b.continuationWaitSeconds=2;
+  const report=explainThroughput(result);
+  assert.equal(report.processingByCopy[0].seconds,10);
+  assert.equal(report.signals.find(s=>s.category==='processing')!.workSeconds,13);
+  assert.equal(report.signals.find(s=>s.category==='blocking')!.workSeconds,4);
+  assert.equal(report.signals.find(s=>s.category==='calendar')!.workSeconds,3);
+  assert.equal(report.signals.find(s=>s.category==='other')!.workSeconds,2);
+});
+
+test('4.4: rzeczywiste zaopatrzenie, blokowanie i transport mają dowody z przebiegów',()=>{
+  const supplied=scheduleWorkerRun(materialScheduleFixture(),1,2),material=explainThroughput(supplied).signals.find(s=>s.category==='material')!;
+  assert.ok(material.evidence.length>0);assert.ok(material.singleCauseWaitSeconds>0||material.mixedWaitCount>0);
+  const buffered=scheduleWorkerRun(bufferedProcessFixture(),1,3,undefined,undefined,{transportMode:'just-in-time'});
+  assert.equal(explainThroughput(buffered).signals.find(s=>s.category==='blocking')!.workSeconds,10);
+  const {project,input}=bufferedPhysicalFixture(1),physical=scheduleWorkerRun(project,1,1,input);
+  const report=explainThroughput(physical);
+  const expected=physical.transportMovements!.reduce((sum,m)=>sum+m.endSeconds-m.startSeconds,0);
+  assert.equal(report.transportSeconds,expected);assert.equal(report.transportCount,physical.transportMovements!.length);
+});
+
+test('4.4: brak przyczyn, JIT, brak ruchów i remis kopii nie tworzą fikcyjnej przyczyny',()=>{
+  const result=scheduleWorkerRun(stationChoiceFixture(),1,1,undefined,undefined,{transportMode:'just-in-time'});
+  result.runs[0].waitSeconds=9;result.runs[0].waitCauses=[];
+  const report=explainThroughput(result);
+  assert.equal(report.unclassifiedWaitSeconds,9);assert.equal(report.transportSeconds,0);assert.equal(report.mixedWaitSeconds,0);
+  assert.ok(report.signals.every(s=>s.singleCauseWaitSeconds===0));
+  assert.equal(report.processingByCopy.length,2);assert.equal(report.processingByCopy[0].seconds,report.processingByCopy[1].seconds);
+});
 
 test('4.3c: bilans używa trwałych dopuszczeń i wyposażenia, zatwierdzenie chroni tożsamości i źródło',()=>{
   for(const algorithm of ['RPW','LCR'] as const){

@@ -6,6 +6,7 @@ import {matchingConcurrencyGroup} from '../../core/physicalConcurrency';
 import {calculateScheduleStateMetrics} from '../../core/scheduleStateMetrics';
 import {parseProcessStallDiagnostic} from '../../core/processStallDetection';
 import {ScheduleGanttChart} from './ScheduleGanttChart';
+import {ThroughputExplanationPanel} from './ThroughputExplanationPanel';
 import type {GanttSelectionTarget} from '../../core/scheduleGantt';
 
 /** Inspect full operation spans, including pauses; transport is listed separately in the result. */
@@ -213,7 +214,8 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
           </div>
         </div>
         <div className="notice" aria-label="Zestawienie przyczyn oczekiwania">
-          <strong>Rozbicie przyczyn oczekiwania operacji (partycjonowane, suma: {stateMetrics.totalWaitSeconds} s):</strong>
+          <strong>Pomocniczy równy podział oczekiwań z zapisanymi przyczynami:</strong>
+          <p className="muted">Przy kilku przyczynach czas dzielony jest po równo. To umowna agregacja, nie zmierzony czas poszczególnych przyczyn. Dowody bez takiego podziału znajdują się w wyjaśnieniach ograniczeń poniżej.</p>
           <ul style={{margin: '6px 0 0 16px', padding: 0}}>
             <li>Pracownicy (brak dostępności osób): <strong>{stateMetrics.waitBreakdownPartitioned.workers} s</strong>{stateMetrics.waitBreakdownPresence.workers !== stateMetrics.waitBreakdownPartitioned.workers && <span className="muted"> (wystąpiło przy {stateMetrics.waitBreakdownPresence.workers} s oczekiwań)</span>}</li>
             <li>Materiały i podzespoły (brak zapasu/partii): <strong>{stateMetrics.waitBreakdownPartitioned.material} s</strong>{stateMetrics.waitBreakdownPresence.material !== stateMetrics.waitBreakdownPartitioned.material && <span className="muted"> (wystąpiło przy {stateMetrics.waitBreakdownPresence.material} s oczekiwań)</span>}</li>
@@ -228,6 +230,10 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
         </div>
       </div>}
       <p className="muted">Przyczyna oczekiwania jest zapisana dla operacji, która musiała czekać. Przy kilku przyczynach w czasie oczekiwania pokazane są wszystkie.</p>
+      <ThroughputExplanationPanel project={project} result={result} onSelectOperation={(id, job) => {
+        setSelectedTarget({category:'operation',id,job});
+        requestAnimationFrame(() => document.querySelector('[aria-label="Wykres Gantta harmonogramu"]')?.scrollIntoView({block:'start'}));
+      }} />
       {/* Wykres Gantta — 3.8 */}
       <ScheduleGanttChart
         project={project}
