@@ -1,5 +1,18 @@
 import {planDirectOperation} from '../src/core/directHandoffPlan';
 import {explainThroughput} from '../src/core/throughputExplanation';
+import {
+  DOMAIN_VARIANTS_STORAGE_KEY,
+  buildVariantComparisonReport,
+  compareDomainVariants,
+  deleteDomainVariant,
+  inspectVariantFactors,
+  prepareVariantForDraftRestore,
+  readDomainVariants,
+  replaceDomainVariants,
+  saveDomainVariant,
+  summarizeStaticVariant,
+  type SavedDomainVariant,
+} from '../src/core/domainVariantComparison';
 import {proposeDomainBalance, applyDomainBalance} from '../src/core/domainBalancing';
 import {assertCompetentTeamExists, teamCoversCompetencies, type CompetencyRequirements} from '../src/core/competencies';
 import {editDomainCompetencies} from '../src/core/domainCompetencyEditing';
@@ -1118,6 +1131,273 @@ function competencyFixture(project: ReturnType<typeof stationChoiceFixture>): Co
     workers:project.workers.slice(0,2).map((worker,index)=>({workerId:worker.id,competencyIds:[index?'C-B':'C-A']})),
     operations:[{operationId:project.operations[0].id,requiredCompetencyIds:['C-A','C-B']}]};
 }
+
+function variantComparisonFixture() {
+  const originalJson = JSON.stringify(derive({...base, schemaVersion: 4, bom: []}).project);
+  const baseProject = stationChoiceFixture();
+  // Baseline: 1 worker in team (W-A), op0 = 10s on ST-A:1, op1 = 20s (10s operator + 10s machine) on ST-C:1, route R-A-C = 2000 mm / 6 s
+  baseProject.product = {id: 'PROD-1', name: 'Wyrób porównawczy'};
+  baseProject.operations[0].physicalRole = {kind: 'body-work'};
+  baseProject.operations[1].physicalRole = {kind: 'body-work'};
+  baseProject.operations[1].staffing = {
+    requiredWorkers: 1,
+    timeVariants: [{
+      workerCount: 1,
+      timeProfile: {
+        durationSeconds: 20,
+        durationBasis: 'assumed',
+        manualWork: [{startSeconds: 0, endSeconds: 10, basis: 'assumed'}],
+        machineRun: [{startSeconds: 10, endSeconds: 20, basis: 'assumed'}],
+        operatorPresence: [{startSeconds: 0, endSeconds: 10, basis: 'assumed'}],
+      },
+    }],
+  };
+  baseProject.equipment = [{id: 'EQ-A', name: 'A', stationId: 'ST-A', capableOperationIds: [baseProject.operations[0].id]}];
+  baseProject.stationRouting = {
+    selectionRule: 'earliest-start-then-shortest-route',
+    equipmentPlacements: [{equipmentId: 'EQ-A', stationId: 'ST-A', copy: 1}],
+    operations: [
+      {operationId: baseProject.operations[0].id, candidates: [{stationId: 'ST-A', copy: 1, requiredEquipmentIds: ['EQ-A']}]},
+      {operationId: baseProject.operations[1].id, candidates: [{stationId: 'ST-C', copy: 1, requiredEquipmentIds: []}]},
+    ],
+    routes: [{
+      id: 'R-A-C',
+      from: {stationId: 'ST-A', copy: 1},
+      to: {stationId: 'ST-C', copy: 1},
+      distanceMm: 2000,
+      basis: 'confirmed',
+      source: 'Syntetyczna trasa bazowa',
+      transportTime: {durationSeconds: 6, basis: 'assumed', source: 'Syntetyczny czas transportu bazowego'},
+    }],
+  };
+  baseProject.workerRunSelection = {
+    teamWorkerIds: ['W-A'],
+    operations: baseProject.operations.map(op => ({operationId: op.id, workerCount: 1, eligibleWorkerIds: ['W-A']})),
+  };
+  baseProject.bodyRunInput = {
+    bodies: [1, 2].map(i => ({id: `B-${i}`, productId: 'PROD-1', location: {kind: 'station' as const, stationId: 'ST-A', copy: 1}})),
+    jobs: [1, 2].map(job => ({job, bodyId: `B-${job}`})),
+  };
+
+  // Variant 2: Additional worker (+W-B in active team and eligible workers; stations and layout unchanged)
+  const workerProject = structuredClone(baseProject);
+  workerProject.workerRunSelection = {
+    teamWorkerIds: ['W-A', 'W-B'],
+    operations: workerProject.operations.map(op => ({operationId: op.id, workerCount: 1, eligibleWorkerIds: ['W-A', 'W-B']})),
+  };
+
+  // Variant 3: Additional station copy (ST-C parallelStations: 1 -> 2 with candidate ST-C/2; workers and shared layout unchanged)
+  const stationProject = structuredClone(baseProject);
+  stationProject.stationSettings['ST-C'].parallelStations = 2;
+  stationProject.stationRouting!.operations[1].candidates.push({stationId: 'ST-C', copy: 2, requiredEquipmentIds: []});
+  stationProject.stationRouting!.routes.push({
+    id: 'R-A-C2',
+    from: {stationId: 'ST-A', copy: 1},
+    to: {stationId: 'ST-C', copy: 2},
+    distanceMm: 2000,
+    basis: 'confirmed',
+    source: 'Syntetyczna trasa do drugiej kopii ST-C',
+    transportTime: {durationSeconds: 6, basis: 'assumed', source: 'Syntetyczny czas transportu bazowego'},
+  });
+
+  // Variant 4: Changed layout (shorter route R-A-C: 2000 mm / 6 s -> 800 mm / 2 s, targetLayoutType Linear; workers and stations unchanged)
+  const layoutProject = structuredClone(baseProject);
+  layoutProject.targetLayoutType = 'Linear';
+  layoutProject.stationRouting!.routes[0].distanceMm = 800;
+  layoutProject.stationRouting!.routes[0].transportTime = {durationSeconds: 2, basis: 'assumed', source: 'Syntetyczny skrócony layout'};
+
+  const variants: SavedDomainVariant[] = [
+    {id: 'VAR-BASE', name: '1. Bazowy', category: 'baseline', at: '2026-10-16T12:00:00Z', sourceSchemaVersion: 4, originalJson, project: baseProject},
+    {id: 'VAR-WORKER', name: '2. Dodatkowy pracownik', category: 'additional-worker', at: '2026-10-16T12:01:00Z', sourceSchemaVersion: 4, originalJson, project: workerProject},
+    {id: 'VAR-STATION', name: '3. Dodatkowe stanowisko', category: 'additional-station', at: '2026-10-16T12:02:00Z', sourceSchemaVersion: 4, originalJson, project: stationProject},
+    {id: 'VAR-LAYOUT', name: '4. Zmieniony layout', category: 'changed-layout', at: '2026-10-16T12:03:00Z', sourceSchemaVersion: 4, originalJson, project: layoutProject},
+  ];
+  return {originalJson, variants};
+}
+
+test('4.5: porównanie 4 wariantów (bazowy, dodatkowy pracownik, dodatkowe stanowisko, zmieniony layout) przy tych samych warunkach eksperymentu', () => {
+  const {variants} = variantComparisonFixture();
+  const snapshot = JSON.stringify(variants);
+
+  // 1. Porównanie w trybie skonfigurowanym (z fizycznym transportem i korpusami) dla 2 sztuk, odstęp 1 s
+  const configuredReport = compareDomainVariants(variants, 'VAR-BASE', {
+    batch: 2,
+    arrivalIntervalSeconds: 1,
+    transportMode: 'configured',
+  });
+  assert.equal(configuredReport.rows.length, 4);
+  const [baseRow, workerRow, stationRow, layoutRow] = configuredReport.rows;
+
+  // Kontrola czynników i szacunków statycznych (dodatkowy pracownik nie dzieli czasu operacji!)
+  assert.deepEqual(baseRow.factorDiff.changedDimensions, []);
+  assert.deepEqual(workerRow.factorDiff.changedDimensions, ['workers']);
+  assert.deepEqual(workerRow.factorDiff.comparabilityWarnings, []);
+  assert.equal(baseRow.staticSummary.selectedWorkContentSeconds, 30);
+  assert.equal(workerRow.staticSummary.selectedWorkContentSeconds, 30);
+  assert.equal(workerRow.staticSummary.teamWorkersCount, 2);
+
+  assert.deepEqual(stationRow.factorDiff.changedDimensions, ['stations']);
+  assert.deepEqual(stationRow.factorDiff.comparabilityWarnings, []);
+  assert.equal(stationRow.staticSummary.totalCopiesCount, baseRow.staticSummary.totalCopiesCount + 1);
+
+  assert.deepEqual(layoutRow.factorDiff.changedDimensions, ['layout']);
+  assert.deepEqual(layoutRow.factorDiff.comparabilityWarnings, []);
+  assert.equal(layoutRow.staticSummary.totalRouteDistanceMm, 800);
+  assert.equal(baseRow.staticSummary.totalRouteDistanceMm, 2000);
+
+  // Wyniki dynamiczne w trybie skonfigurowanym:
+  assert.equal(baseRow.dynamic.status, 'completed');
+  assert.equal(workerRow.dynamic.status, 'completed');
+  assert.equal(stationRow.dynamic.status, 'completed');
+  assert.equal(layoutRow.dynamic.status, 'completed');
+  if (baseRow.dynamic.status === 'completed' && workerRow.dynamic.status === 'completed' &&
+      stationRow.dynamic.status === 'completed' && layoutRow.dynamic.status === 'completed') {
+    assert.equal(baseRow.dynamic.deltaMakespanSeconds, 0);
+    // Dodatkowy pracownik skraca czas realizacji partii i zmniejsza oczekiwanie na obsadę
+    assert.ok(workerRow.dynamic.makespanSeconds < baseRow.dynamic.makespanSeconds);
+    assert.equal(workerRow.dynamic.deltaMakespanSeconds, workerRow.dynamic.makespanSeconds - baseRow.dynamic.makespanSeconds);
+    assert.ok(workerRow.dynamic.throughputPerHour > baseRow.dynamic.throughputPerHour);
+    // Dodatkowe stanowisko równoległe (ST-C/2) skraca czas realizacji partii
+    assert.ok(stationRow.dynamic.makespanSeconds < baseRow.dynamic.makespanSeconds);
+    assert.ok(stationRow.dynamic.throughputPerHour > baseRow.dynamic.throughputPerHour);
+    // Zmieniony layout skraca czas ruchów transportowych (12 s -> 4 s dla 2 sztuk) i makespan
+    assert.equal(baseRow.dynamic.transportMovementsSeconds, 12);
+    assert.equal(layoutRow.dynamic.transportMovementsSeconds, 4);
+    assert.ok(layoutRow.dynamic.makespanSeconds < baseRow.dynamic.makespanSeconds);
+  }
+
+  // 2. Porównanie w trybie JIT (pominięcie transportu i lokalizacji korpusów)
+  const jitReport = compareDomainVariants(variants, 'VAR-BASE', {
+    batch: 2,
+    arrivalIntervalSeconds: 1,
+    transportMode: 'just-in-time',
+  });
+  const [jitBase, jitWorker, jitStation, jitLayout] = jitReport.rows;
+  if (jitBase.dynamic.status === 'completed' && jitWorker.dynamic.status === 'completed' &&
+      jitStation.dynamic.status === 'completed' && jitLayout.dynamic.status === 'completed') {
+    assert.equal(jitBase.dynamic.transportMovementsSeconds, 0);
+    assert.equal(jitLayout.dynamic.transportMovementsSeconds, 0);
+    assert.ok(jitWorker.dynamic.makespanSeconds < jitBase.dynamic.makespanSeconds);
+    assert.ok(jitStation.dynamic.makespanSeconds < jitBase.dynamic.makespanSeconds);
+    // W JIT sama zmiana długości/czasu trasy nie zmienia wyniku procesowego
+    assert.equal(jitLayout.dynamic.makespanSeconds, jitBase.dynamic.makespanSeconds);
+    assert.ok(jitBase.dynamic.assumptions.some(a => a.includes('JIT')));
+  }
+
+  assert.equal(JSON.stringify(variants), snapshot);
+});
+
+test('4.5: kontrola warunków eksperymentu wykrywa zmiany wieloczynnikowe i zachowuje nierozdzielanie oczekiwań mieszanych', () => {
+  const {variants} = variantComparisonFixture();
+  const baseVariant = variants[0];
+  const mixedFactor = structuredClone(variants[1]); // oznaczony jako additional-worker
+  mixedFactor.project.targetLayoutType = 'Linear'; // zmieniono też layout
+  const diffMixed = inspectVariantFactors(baseVariant.project, mixedFactor.project, 'additional-worker', false);
+  assert.deepEqual(diffMixed.changedDimensions, ['workers', 'layout']);
+  assert.ok(diffMixed.comparabilityWarnings.some(w => w.includes('Poza deklarowanym czynnikiem')));
+
+  const unchanged = structuredClone(baseVariant);
+  unchanged.id = 'VAR-SAME';
+  unchanged.category = 'changed-layout';
+  const diffSame = inspectVariantFactors(baseVariant.project, unchanged.project, 'changed-layout', false);
+  assert.ok(diffSame.comparabilityWarnings.some(w => w.includes('identyczne dane')));
+
+  const alteredProcess = structuredClone(baseVariant);
+  alteredProcess.id = 'VAR-PROC';
+  alteredProcess.project.operations[0].staffing!.timeVariants[0].timeProfile.durationSeconds = 15;
+  const diffProc = inspectVariantFactors(baseVariant.project, alteredProcess.project, 'additional-worker', false);
+  assert.ok(diffProc.changedDimensions.includes('process'));
+  assert.ok(diffProc.comparabilityWarnings.some(w => w.includes('definicję procesu')));
+
+  // Sprawdzenie braku dzielenia oczekiwań mieszanych oraz obsługi odmowy jednego z wariantów
+  const baseResult = scheduleWorkerRun(baseVariant.project, 1, 1, undefined, undefined, {transportMode: 'just-in-time'});
+  const workerResult = scheduleWorkerRun(variants[1].project, 1, 1, undefined, undefined, {transportMode: 'just-in-time'});
+  workerResult.runs[0].waitSeconds = 14;
+  workerResult.runs[0].waitCauses = ['workers', 'material'];
+  workerResult.runs[1].waitSeconds = 5;
+  workerResult.runs[1].waitCauses = ['workers'];
+
+  const outcomes = new Map([
+    [baseVariant.id, {status: 'completed' as const, result: baseResult}],
+    [variants[1].id, {status: 'completed' as const, result: workerResult}],
+    [variants[2].id, {status: 'error' as const, error: 'Syntetyczna odmowa harmonogramu'}],
+  ]);
+  const report = buildVariantComparisonReport(variants.slice(0, 3), baseVariant.id, {
+    batch: 1,
+    arrivalIntervalSeconds: 1,
+    transportMode: 'just-in-time',
+  }, outcomes);
+  const rowWorker = report.rows[1];
+  assert.equal(rowWorker.dynamic.status, 'completed');
+  if (rowWorker.dynamic.status === 'completed') {
+    assert.equal(rowWorker.dynamic.mixedWaitSeconds, 14);
+    assert.equal(rowWorker.dynamic.singleCauseWaitSeconds.workers, 5);
+    assert.equal(rowWorker.dynamic.singleCauseWaitSeconds.material, 0);
+    assert.equal(rowWorker.dynamic.singleCauseWaitSeconds.totalSingleCause, 5);
+  }
+  assert.deepEqual(report.rows[2].dynamic, {status: 'error', error: 'Syntetyczna odmowa harmonogramu'});
+});
+
+test('4.5: izolowany zapis biblioteki wariantów szkicu 6, odzyskiwanie, przywracanie i ochrona źródeł 4/5', () => {
+  const {originalJson, variants} = variantComparisonFixture();
+  const storage = new DraftStorage();
+  storage.setItem('layout-studio-v3', 'active-v4');
+  storage.setItem('layout-studio-scenarios-v3', 'legacy-scenarios');
+  storage.setItem('layout-studio-stations-v5', 'active-v5');
+  storage.setItem(DOMAIN_DRAFT_STORAGE_KEY, 'active-draft-v6');
+
+  assert.equal(readDomainVariants(storage).status, 'empty');
+  const saved1 = saveDomainVariant(storage, {
+    id: 'V-1',
+    name: 'Bazowy',
+    category: 'baseline',
+    originalJson,
+    project: variants[0].project,
+    at: '2026-10-16T12:00:00Z',
+  }, null);
+  const saved2 = saveDomainVariant(storage, {
+    id: 'V-2',
+    name: 'Dodatkowy pracownik',
+    category: 'additional-worker',
+    originalJson,
+    project: variants[1].project,
+    at: '2026-10-16T12:05:00Z',
+  }, saved1.raw);
+  assert.equal(saved2.saved.variants.length, 2);
+
+  // Ochrona współbieżności, duplikatów ID i obcego źródła
+  assert.throws(() => saveDomainVariant(storage, {
+    id: 'V-3', name: 'Konflikt', category: 'changed-layout', originalJson, project: variants[3].project,
+  }, 'stale-raw'), /zmieniła się/);
+  assert.throws(() => saveDomainVariant(storage, {
+    id: 'V-1', name: 'Powtórzone ID', category: 'changed-layout', originalJson, project: variants[3].project,
+  }, saved2.raw), /już istnieje/);
+  const otherOriginal = readFileSync('tests/qa/Eko_D5_actual_export_v5.json', 'utf8');
+  assert.throws(() => saveDomainVariant(storage, {
+    id: 'V-FOREIGN', name: 'Inne źródło', category: 'baseline', originalJson: otherOriginal, project: variants[0].project,
+  }, saved2.raw), /innego projektu źródłowego/);
+  assert.throws(() => prepareVariantForDraftRestore(saved2.variant, otherOriginal), /innego źródła/);
+  assert.deepEqual(prepareVariantForDraftRestore(saved2.variant, originalJson), variants[1].project);
+
+  // Usuwanie wariantu
+  const afterDelete = deleteDomainVariant(storage, 'V-1', saved2.raw);
+  assert.equal(afterDelete.saved.variants.length, 1);
+  assert.equal(afterDelete.saved.variants[0].id, 'V-2');
+
+  // Ochrona uszkodzonego zapisu i jawne zastąpienie po pobraniu kopii
+  storage.setItem(DOMAIN_VARIANTS_STORAGE_KEY, '{"corrupt":true}');
+  const corrupt = readDomainVariants(storage);
+  assert.equal(corrupt.status, 'corrupt');
+  assert.equal(storage.getItem(DOMAIN_VARIANTS_STORAGE_KEY), '{"corrupt":true}');
+  const recovered = replaceDomainVariants(storage, [], '{"corrupt":true}');
+  assert.equal(recovered.saved.variants.length, 0);
+
+  // Nienaruszone klucze 4, 5, scenariuszy v3 i aktywnego szkicu 6
+  assert.equal(storage.getItem('layout-studio-v3'), 'active-v4');
+  assert.equal(storage.getItem('layout-studio-scenarios-v3'), 'legacy-scenarios');
+  assert.equal(storage.getItem('layout-studio-stations-v5'), 'active-v5');
+  assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY), 'active-draft-v6');
+});
 
 test('4.4: wyjaśnienia rozdzielają pojedyncze przyczyny od mieszanych bez dzielenia czasu',()=>{
   const result=scheduleWorkerRun(stationChoiceFixture(),1,1,undefined,undefined,{transportMode:'just-in-time'});

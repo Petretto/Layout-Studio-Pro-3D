@@ -426,4 +426,21 @@ W ramach rozpoczęcia Etapu 4 wdrożono precyzyjne rozdzielenie i objaśnienie w
   - Testy jednostkowe `calculateStaticWorkload` i `calculateScheduleStateMetrics` w `tests/network.test.ts` potwierdziły poprawność matematyczną formuł i mianowników;
   - Weryfikacja Edge CDP w `tests/qa/verify_4_1.mjs` potwierdziła poprawne renderowanie tabeli i etykiet (zrzut `outputs/qa/verify_4_1.png`).
 
+### Bilansowanie z uwzględnieniem kompetencji, wyposażenia i dopuszczonych kopii — 4.3 (2026-10-16)
+W szkicu 6 (`DomainCompetencyEditor.tsx`, `DomainBalancingPanel.tsx`, `src/core/competencies.ts`, `src/core/domainBalancing.ts`) wdrożono jawny kontrakt kompetencji oraz wspomagane bilansowanie na istniejących kopiach stanowisk:
+- Kompetencje członków rzeczywiście wybranej obsady operacji mogą się uzupełniać (każda wymagana kompetencja operacji musi wystąpić u co najmniej jednej osoby z wybranego podzespołu, nie wystarczy pokrycie przez całą listę dopuszczonych osób).
+- Propozycja bilansu (`RPW` / `LCR`) działa na istniejących, jawnie dopuszczonych kopiach stanowisk z weryfikacją wyposażenia, blokad stanowisk (`lockedWorkstation`) i wykonalnej obsady, bez dzielenia czasu operacji przez liczbę pracowników i bez tworzenia nowych stanowisk.
+- Zatwierdzenie po przeglądzie zawęża dopuszczenia do wskazanych kopii z zachowaniem trwałych ID, geometrii, tras oraz historii `Cofnij / Ponów`. Szczegóły: `MODEL_KOMPETENCJI_I_PRZYDZIALOW_4_3.md`, `WERYFIKACJA_KOMPETENCJI_I_BILANSU_4_3.md`.
 
+### Wyjaśnianie ograniczeń przepustowości na podstawie harmonogramu — 4.4 (2026-10-16)
+W panelu harmonogramu szkicu 6 (`ThroughputExplanationPanel.tsx`, `src/core/throughputExplanation.ts`) wdrożono wyjaśnianie ograniczeń przepustowości na podstawie dowodów z gotowego przebiegu:
+- Siedem grup obserwacji: praca technologiczna na kopiach (unia `workWindows`), obsada i dostępność pracowników, transport międzyoperacyjny, blokady wyjścia i bufory, dostępność materiałów i podzespołów, kalendarze zmian/przerw oraz pozostałe ograniczenia.
+- Czas oczekiwania jednoprzyczynowego jest prezentowany oddzielnie od czasu oczekiwań mieszanych (`mixedWaitSeconds`), bez arbitralnego dzielenia oczekiwań wieloprzyczynowych na poszczególne przyczyny i bez ogłaszania największej sumy jako dowiedzionej głównej przyczyny.
+- Każdy dowód wskazuje sztukę, operację, kopię stanowiska, źródło czasu (`measured / assumed`) i umożliwia bezpośrednie przejście do odpowiedniego wykonania na wykresie Gantta. Szczegóły: `WERYFIKACJA_OGRANICZEN_PRZEPUSTOWOSCI_4_4.md`.
+
+### Porównywanie zapisanych wariantów przy tych samych warunkach eksperymentu — 4.5 (2026-10-16)
+W szkicu 6 (`DomainVariantComparisonPanel.tsx`, `src/core/domainVariantComparison.ts`) wdrożono bibliotekę zapisanych wariantów (`layout-studio-domain-v6-variants-v1`, maks. 20 wariantów) oraz ich porównanie eksperymentalne:
+- Zapisywanie nazwanych migawek szkicu 6 w kategoriach: **wariant bazowy** (`baseline`), **dodatkowy pracownik** (`additional-worker`), **dodatkowe stanowisko** (`additional-station`) oraz **zmieniony layout** (`changed-layout`), z możliwością wczytania wariantu z powrotem do aktywnego szkicu 6 (`Cofnij / Ponów`), eksportu JSON i odzyskiwania uszkodzonej biblioteki.
+- Uruchamianie porównania wybranych wariantów w tle (`schedule.worker.ts`) przy dokładnie tych samych, jawnie wybranych warunkach eksperymentu: liczbie sztuk (`batch`), odstępie przybycia (`arrivalIntervalSeconds`) i trybie transportu (`configured` lub `just-in-time`).
+- Kontrola zmienionego czynnika względem wariantu bazowego (`process`, `workers`, `stations`, `layout`) z jawnymi ostrzeżeniami przy zmianach wieloczynnikowych lub zmianie definicji procesu/popytu.
+- Oddzielenie szacunku statycznego (zasoby, kopie, suma wybranych czasów operacji `[s/szt.]` bez dzielenia czasu przez liczbę osób, długość tras) od wyników dynamicznych harmonogramu (*makespan* i $\Delta$ względem bazy, średnia przepustowość `[szt./h]` i $\Delta$, średni czas przejścia sztuki, praca netto, najdłużej pracująca kopia liczona unią przedziałów, oczekiwania jednoprzyczynowe, oddzielne oczekiwania mieszane bez dzielenia czasu, blokady wyjścia, ruchy transportowe oraz jawne założenia przebiegu). Szczegóły: `WERYFIKACJA_POROWNANIA_WARIANTOW_4_5.md`.

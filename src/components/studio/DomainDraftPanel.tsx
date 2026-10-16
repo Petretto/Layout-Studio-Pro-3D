@@ -15,6 +15,7 @@ import {download} from '../../core/project';
 import {DomainPeopleEditor} from './DomainPeopleEditor';
 import {DomainCompetencyEditor} from './DomainCompetencyEditor';
 import {DomainBalancingPanel} from './DomainBalancingPanel';
+import {DomainVariantComparisonPanel} from './DomainVariantComparisonPanel';
 import {editDomainCompetencies} from '../../core/domainCompetencyEditing';
 import {DomainProductEditor} from './DomainProductEditor';
 import {DomainEquipmentEditor} from './DomainEquipmentEditor';
@@ -255,6 +256,11 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
       canUndo={past.length > 0} canRedo={future.length > 0} />}
     {draft.status === 'valid' && <DomainWorkerSchedulePanel key={`schedule-${draft.raw}`} project={draft.saved.project} />}
+    {draft.status === 'valid' && <DomainVariantComparisonPanel key={`variants-${draft.saved.originalJson}`}
+      project={draft.saved.project} originalJson={draft.saved.originalJson}
+      onRestoreVariant={(next, name) => applyDraftChange(() => next, `Wczytano wariant „${name}” do szkicu 6.`)}
+      onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
+      canUndo={past.length > 0} canRedo={future.length > 0} />}
     {preview && <div className="panel">
       <h3>Podgląd źródła v{preview.sourceSchemaVersion}</h3>
       <p>{preview.stationProject.processSteps.length} operacji · {preview.stationProject.stations.length} stanowisk · {preview.stationProject.bom.length} pozycji BOM · {preview.visualBindings.length} obiektów geometrii.</p>
