@@ -1,4 +1,5 @@
 import {planDirectOperation} from '../src/core/directHandoffPlan';
+import {proposeDomainBalance, applyDomainBalance} from '../src/core/domainBalancing';
 import {assertCompetentTeamExists, teamCoversCompetencies, type CompetencyRequirements} from '../src/core/competencies';
 import {editDomainCompetencies} from '../src/core/domainCompetencyEditing';
 import {applyBufferedBodyEvent,validateBufferedBodyBook,type BufferedBodyBook} from '../src/core/bufferedBodyState';
@@ -1116,6 +1117,114 @@ function competencyFixture(project: ReturnType<typeof stationChoiceFixture>): Co
     workers:project.workers.slice(0,2).map((worker,index)=>({workerId:worker.id,competencyIds:[index?'C-B':'C-A']})),
     operations:[{operationId:project.operations[0].id,requiredCompetencyIds:['C-A','C-B']}]};
 }
+
+test('4.3c: bilans używa trwałych dopuszczeń i wyposażenia, zatwierdzenie chroni tożsamości i źródło',()=>{
+  for(const algorithm of ['RPW','LCR'] as const){
+    const project=stationChoiceFixture(),before=JSON.stringify(project);
+    project.competencyRequirements=competencyFixture(project);project.competencyRequirements.workers[1].competencyIds=['C-A','C-B'];
+    const source=JSON.stringify(project),proposal=proposeDomainBalance(project,10,algorithm);
+    assert.equal(proposal.kind,'proposal');if(proposal.kind!=='proposal')throw new Error('Brak propozycji');
+    assert.deepEqual(proposal.assignments.map(a=>[a.stationId,a.copy,a.requiredEquipmentIds]),[['ST-A',1,['EQ-A']],['ST-C',1,[]]]);
+    assert.equal(JSON.stringify(project),source);
+    const applied=applyDomainBalance(project,proposal);
+    assert.deepEqual(applied.stations.map(s=>s.id),project.stations.map(s=>s.id));
+    assert.equal(applied.stations.find(s=>s.id==='ST-B')!.operationIds.length,0);
+    assert.deepEqual(applied.equipment,project.equipment);assert.deepEqual(applied.layoutObjects,project.layoutObjects);
+    assert.deepEqual(applied.stationRouting!.routes,project.stationRouting!.routes);
+    assert.deepEqual(applied.stationRouting!.equipmentPlacements,project.stationRouting!.equipmentPlacements);
+    assert.ok(applied.stationRouting!.operations.every(o=>o.candidates.length===1));
+    const runs=scheduleWorkerRun(applied,1,1,undefined,undefined,{transportMode:'just-in-time'});
+    assert.deepEqual(runs.runs[0].workerIds,['W-B']);assert.deepEqual(runs.runs[0].equipmentIds,['EQ-A']);assertNoWorkerOverlap(runs);
+    assert.deepEqual(parseDomainProjectV6(JSON.stringify(applied)),applied);
+    assert.notEqual(before,source);
+  }
+});
+
+test('4.3c: powrót po nietrafionej kopii odnajduje przydział i respektuje zależności',()=>{
+  const project=stationChoiceFixture(),[a,b]=project.operations;
+  b.predecessorIds=[];
+  project.stationRouting!.operations=[{operationId:a.id,candidates:[{stationId:'ST-A',copy:1,requiredEquipmentIds:[]},{stationId:'ST-B',copy:1,requiredEquipmentIds:[]}]},
+    {operationId:b.id,candidates:[{stationId:'ST-A',copy:1,requiredEquipmentIds:[]}]}];
+  const result=proposeDomainBalance(project,10,'RPW');assert.equal(result.kind,'proposal');
+  if(result.kind==='proposal')assert.deepEqual(result.assignments.map(a=>a.stationId),['ST-B','ST-A']);
+  b.predecessorIds=[a.id];
+  const impossible=proposeDomainBalance(project,10,'RPW');assert.equal(impossible.kind,'infeasible');
+  // Increasing the explicit static limit permits both operations on A in predecessor order.
+  const possible=proposeDomainBalance(project,20,'LCR');assert.equal(possible.kind,'proposal');
+  if(possible.kind==='proposal')assert.deepEqual(possible.assignments.map(a=>a.stationId),['ST-A','ST-A']);
+});
+
+test('4.3c: blokada stanowiska, osobne kopie i jawny czas wariantu bez dzielenia przez osoby',()=>{
+  const project=stationChoiceFixture(),[a,b]=project.operations;
+  project.algorithm='Manual';a.lockedWorkstation=true;
+  const profile=structuredClone(a.staffing!.timeVariants[0].timeProfile);
+  profile.durationSeconds=12;profile.operatorPresence[0].endSeconds=12;
+  a.staffing!.timeVariants.push({workerCount:2,timeProfile:profile});project.workerRunSelection!.operations[0].workerCount=2;
+  assert.equal(proposeDomainBalance(project,10,'RPW').kind,'infeasible');
+  project.stationSettings['ST-A'].parallelStations=2;
+  b.predecessorIds=[];
+  project.stationRouting!.operations[0].candidates.push({stationId:'ST-A',copy:2,requiredEquipmentIds:[]});
+  project.stationRouting!.operations[1].candidates=[{stationId:'ST-A',copy:1,requiredEquipmentIds:[]},{stationId:'ST-A',copy:2,requiredEquipmentIds:[]}];
+  const result=proposeDomainBalance(project,12,'LCR');assert.equal(result.kind,'proposal');
+  if(result.kind==='proposal'){
+    assert.ok(result.assignments.every(item=>item.stationId==='ST-A'));
+    assert.deepEqual(result.loads.map(item=>item.seconds).sort((a,b)=>a-b),[10,12]);
+    assert.equal(result.assignments.find(item=>item.operationId===a.id)!.durationSeconds,12);
+  }
+});
+
+test('4.3c: braki wyposażenia, dopuszczeń i kompetencji nie dają pozornego bilansu',()=>{
+  const project=stationChoiceFixture();
+  project.competencyRequirements=competencyFixture(project);
+  assert.throws(()=>proposeDomainBalance(project,100,'RPW'),/brak wykonalnej obsady/);
+  delete project.competencyRequirements;
+  const missing=structuredClone(project);missing.stationRouting!.operations.pop();
+  assert.throws(()=>proposeDomainBalance(missing,100,'RPW'),/brak jawnych dopuszczeń/);
+  project.equipment[0].capableOperationIds=[project.operations[1].id];
+  assert.throws(()=>proposeDomainBalance(project,100,'RPW'),/możliwości wykonania/);
+  const noRouting=stationChoiceFixture();delete noRouting.stationRouting;
+  assert.throws(()=>proposeDomainBalance(noRouting,100,'RPW'),/jawne dopuszczenia/);
+});
+
+test('4.3c: harmonogramy utrzymują blokadę stanowiska bez drugiego zapisanego przypisania',()=>{
+  const project=stationChoiceFixture();project.algorithm='Manual';project.operations[0].lockedWorkstation=true;
+  project.resourceCalendars!.stations['ST-A'].shifts[0].startSeconds=30;
+  const result=scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'});
+  assert.equal(result.runs[0].stationId,'ST-A');assert.equal(result.runs[0].startSeconds,30);
+  assert.ok(project.operations.every(operation=>!('assignedWorkstationId' in operation)));
+  const buffered=bufferedProcessFixture();buffered.algorithm='Manual';buffered.operations[0].lockedWorkstation=true;
+  const baseline=scheduleWorkerRun(buffered,1,2,undefined,undefined,{transportMode:'just-in-time'});
+  assert.ok(baseline.runs.filter(run=>run.operationId===buffered.operations[0].id).every(run=>run.stationId==='ST-A'));assertNoWorkerOverlap(baseline);
+});
+
+test('4.3c: nieaktualna lub zmieniona propozycja nie nadpisuje danych; zapis zachowuje oryginał',()=>{
+  const project=stationChoiceFixture(),proposal=proposeDomainBalance(project,10,'RPW');
+  if(proposal.kind!=='proposal')throw new Error('Brak propozycji');
+  const modified=structuredClone(project);modified.name='Zmiana';const before=JSON.stringify(modified);
+  assert.throws(()=>applyDomainBalance(modified,proposal),/nieaktualny/);assert.equal(JSON.stringify(modified),before);
+  const tampered=structuredClone(proposal);tampered.assignments[0].requiredEquipmentIds=[];
+  assert.throws(()=>applyDomainBalance(project,tampered),/została zmieniona/);
+  const original=JSON.stringify(derive({...base,schemaVersion:4,bom:[]}).project);
+  const values=new Map<string,string>(),storage={getItem:(key:string)=>values.get(key)??null,setItem:(key:string,value:string)=>{values.set(key,value);}};
+  const previous=saveDomainDraft(storage,{originalJson:original,project},null);
+  const applied=applyDomainBalance(project,proposal);saveDomainDraft(storage,{originalJson:original,project:applied},previous.raw);
+  const read=readDomainDraft(storage);assert.equal(read.status,'valid');
+  if(read.status==='valid'){assert.deepEqual(read.saved.project,applied);assert.equal(read.saved.originalJson,original);}
+});
+
+test('4.3c: limit przeszukiwania nie oznacza niewykonalności, zaopatrzenie nie jest przenoszone',()=>{
+  const project=stationChoiceFixture();
+  const template=project.operations[0];
+  project.operations=Array.from({length:16},(_,i)=>({...structuredClone(template),id:`BAL-${i}`,name:`${i}`,sequenceNumber:i+1,predecessorIds:[]}));
+  project.stations.forEach(s=>s.operationIds=[]);project.stations[0].operationIds=project.operations.map(o=>o.id);
+  project.equipment=[];project.stationRouting={selectionRule:'earliest-start-then-shortest-route',equipmentPlacements:[],routes:[],operations:project.operations.map(o=>({operationId:o.id,candidates:project.stations.slice(0,2).map(s=>({stationId:s.id,copy:1,requiredEquipmentIds:[]}))}))};
+  project.workerRunSelection!.operations=project.operations.map(o=>({operationId:o.id,workerCount:1,eligibleWorkerIds:['W-A','W-B']}));
+  assert.equal(proposeDomainBalance(project,79,'RPW').kind,'limit');
+  const supplied=materialScheduleFixture();
+  const [a,b]=supplied.operations;
+  supplied.stationRouting={selectionRule:'earliest-start-then-shortest-route',equipmentPlacements:[],routes:[],operations:[{operationId:a.id,candidates:[{stationId:'ST-C',copy:1,requiredEquipmentIds:[]}]},{operationId:b.id,candidates:[{stationId:'ST-C',copy:1,requiredEquipmentIds:[]}]}]};
+  assert.equal(proposeDomainBalance(supplied,100,'RPW').kind,'infeasible');
+});
 
 test('4.3a: kompetencje uzupełniają się w rzeczywistej obsadzie, nie w całej liście dopuszczeń',()=>{
   const project=stationChoiceFixture();project.competencyRequirements=competencyFixture(project);

@@ -1,6 +1,34 @@
 # Kompetencje i wykonalność przydziału — 4.3
 
-Data: 2026-10-16. Status 4.3: **w trakcie**. Pakiety 4.3a (rdzeń) i 4.3b (formularz kompetencji szkicu 6) zakończone.
+Data: 2026-10-16. Status 4.3: **wdrożone w opisanym zakresie szkicu 6**. Pakiety 4.3a (rdzeń), 4.3b (formularz) i 4.3c (bilans z dopuszczeniami) zakończone. Historia odbiorów poniżej zachowana.
+
+## Odbiór 4.3c — bilans z dopuszczeniami
+
+Decyzja użytkownika 2026-10-16: bilansowanie dotyczy wyłącznie istniejących, jawnie dopuszczonych kopii stanowisk; bez generowania nowych stanowisk.
+
+`proposeDomainBalance` w `src/core/domainBalancing.ts` tworzy przejściową propozycję. Nie zmienia projektu. Wymaga pełnych dopuszczeń `stationRouting` i wyboru wariantu obsady dla wszystkich operacji. Wymagane wyposażenie i jego możliwości/kopia są walidowane przez istniejący kontrakt dopuszczeń. `createWorkerRunPlan` sprawdza pokrycie kompetencji przez obsadę dokładnej wybranej liczebności. Blokada stanowiska ogranicza wybór do jego trwałego ID; nie blokuje konkretnej kopii. Jawne miejsca zaopatrzenia nie są przenoszone wraz z operacją.
+
+Użytkownik podaje dodatni limit sumy czasów technologicznych na kopię na jedną sztukę. Czas pochodzi z wybranego wariantu obsady, nie z podzielenia przez liczbę osób; UI pokazuje liczbę osób i pochodzenie czasu (pomiar/założenie). To statyczna suma pracy, nie wyliczenie odstępu wyjścia, obciążenia kalendarzowego lub przepustowości. Jawna równoległość wewnątrz kopii może oznaczać, że taki konserwatywny bilans nie znajdzie przydziału, mimo że proces da się zaplanować w czasie.
+
+Operacje gotowe według grafu mają priorytet RPW (suma czasu operacji i unikalnych następców) lub LCR (czas operacji). Wybór dopuszczonych kopii preferuje mniejsze już przydzielone obciążenie; remisy rozstrzygają trwałe ID/kopia. Powrót po nietrafionym przydziale przeszukuje alternatywy. Przypisania zachowują kolejność stanowisk wymaganą przez istniejący walidator ręcznego rejestru; indeks służy wyłącznie sprawdzeniu tej kolejności, nigdy ustalaniu tożsamości. Układ z powrotem do wcześniejszego stanowiska może pozostać poprawny dla dynamicznego routingu, ale nie jest obsługiwany przez tę propozycję ręcznego bilansu.
+
+Wyniki są rozdzielone: propozycja przydziału, brak przydziału spełniającego zadane **statyczne** ograniczenia, albo limit 20000 prób z nierozstrzygniętą wykonalnością. Brak kompetentnej obsady, jawnych dopuszczeń lub poprawnych referencji wyposażenia daje komunikat wymagający korekty danych. Żaden z komunikatów o statycznym bilansie nie jest dowodem globalnej niewykonalności procesu.
+
+`applyDomainBalance` wymaga zgodności bieżącego projektu z dokładną migawką wejścia i ponownie wylicza przydział, odrzucając zmienione/nieaktualne propozycje. Zapis wymaga zaznaczenia przeglądu w UI. Aktualizuje grupy operacji istniejących stanowisk, ustawia ręczne przypisanie oraz zawęża dopuszczenia każdej operacji do pokazanej kopii z jej oryginalnym wyposażeniem. Alternatywy są przywracalne przez wspólne Cofnij/Ponów. Nie ma nowego pola schematu: wynik używa dotychczasowych `stations` i `stationRouting`. Trasy, umiejscowienie wyposażenia, jego ID, geometria i puste stanowiska pozostają zachowane. Odczyt/zapis i źródła 4/5 nie zmieniają modelu; starszy aktywny bilans 4/5 nie jest potajemnie łączony ze szkicem.
+
+Ujawniony przez test blokad problem walidacji rozwiązano przez `domainOperationOrder`: tymczasowe wskaźniki przypisań dla wspólnej kontroli grafu pochodzą z rejestru stanowisk; nie trafiają do zapisu operacji. Harmonogram zwykły, buforowy i wybór kopii odbiorców podzespołów respektują zablokowane ID stanowiska. Planowanie w czasie nadal kontroluje osoby, kalendarze, fizyczne trasy/korpusy, bufory i materiał. Po przyjęciu bilansu wymagany jest nowy przebieg harmonogramu; samo zatwierdzenie nie przenosi fizycznego korpusu ani zasobów.
+
+Backup przed zmianami: `backup/v0.4.0_przed_4_3c_20261016` — 301 plików i manifest SHA256.
+
+Weryfikacja:
+
+- Celowane `node scripts/test.mjs --suite=network '--test-name-pattern=4\.3c|4\.3a|2\.6c|3\.5b2'`: **59/59 PASS**, w tym 7 nowych testów 4.3c. Testy obejmują trwałe ID, wyposażenie/kompetencje, powrót po nietrafionej kopii, poprzedników, blokady, osobne kopie, jawny czas wariantu, brak dopuszczeń, zaopatrzenie, limit poszukiwania, ochronę nieaktualnej/zmienionej propozycji i zapis/odczyt z oryginałem. Pierwsze 5/6 ujawniło problem walidacji blokady w szkicu; po poprawce i dodaniu regresji harmonogramów wskazany podzbiór 59/59.
+- Pełna regresja `node scripts/test.mjs --suite=all`: **296/296 PASS**. Uzasadnienie: trzeci pakiet od pełnego odbioru 4.2 i integracja bilansu z wyborem kopii oraz blokadami harmonogramów.
+- `npm.cmd run build`: **PASS**, TypeScript/Vite; ostrzeżenie o chunku ponad 500 kB.
+- `node tests/qa/verify_4_3c.mjs`: **Edge CDP UI PASS** — RPW/LCR, jawny limit i odmowa przy zbyt małym limicie, wyposażenie i pochodzenie czasu, podgląd bez mutacji, zatwierdzenie po przeglądzie, zachowanie ID/pustego stanowiska/wyposażenia/geometrii/tras, Cofnij/Ponów, rzeczywisty Web Worker w JIT, unieważnienie wyniku, zapis/reload, odmowa kompetencji, izolacja projektów 4/5 i dokładnego tekstu oryginału. Testowe czasy/role/nazwy są jawnie syntetyczne.
+- Zrzut `outputs/qa/verify_4_3c.png` obejrzano: tabela przydziałów, czasów/pochodzenia i obciążeń oraz informacja o zawężeniu dopuszczeń i przycisk zatwierdzenia są czytelne.
+
+Vercel nie zweryfikowano. Odbiór 4.3 dotyczy funkcji i ograniczeń powyżej, a nie optymalizacji dynamicznej przepustowości ani automatycznego tworzenia stanowisk. Następny punkt planu: 4.4.
 
 ## Decyzja użytkownika i kontrakt
 
@@ -16,12 +44,12 @@ To opcjonalne rozszerzenie szkicu 6. Dotychczasowe szkice bez kontraktu zachowuj
 
 `teamCoversCompetencies` filtruje każdą rzeczywiście rozważaną obsadę przed kalendarzami/rezerwacjami w `workerSchedule.ts`, `bufferedProcessSchedule.ts` i `directHandoffPlan.ts`. Dotyczy to także JIT i odbioru przy pojemności 0. Obowiązują dotychczasowe kalendarze, rezerwacje osób, stałe wyposażenie i jawne dopuszczenia kopii. Statyczne pokrycie kompetencji nie dowodzi dostępności czasowej ani globalnej wykonalności procesu. Ten kontrakt opisuje operacje, nie wprowadza kompetencji obsługi transportu bez osobnych jawnych danych.
 
-## Dalsze pakiety
+## Dalsze pakiety — stan historyczny po 4.3a/4.3b
 
 - **4.3b — zakończony:** edytor słownika, kompetencji osób i wymagań operacji; historia, unieważnienie wyniku, czytelna diagnostyka, zapis/reload i odbiór UI. Dowody poniżej.
 - **4.3c:** integracja bilansu z dopuszczeniami kopii, wymaganiami wyposażenia i kompetencji. `runLineBalancing` przyjmuje tylko operacje, cel i algorytm; nie ma rejestru osób/wyposażenia. `runStationBalancing` chroni tożsamości zapisanych stanowisk i odmawia nieuzgodnionego przegrupowania. Integracja musi rozdzielić propozycję przydziału, kontrolę wykonalności i zatwierdzenie tożsamości. Nie mapować stanowisk po indeksach; nie przedstawiać niepowodzenia heurystyki jako dowodu braku rozwiązania.
 
-Całe 4.3 pozostaje otwarte; 4.3a nie rozszerza automatycznego bilansowania ani formularzy.
+Na tym historycznym etapie całe 4.3 pozostawało otwarte; sam pakiet 4.3a nie rozszerzał automatycznego bilansowania ani formularzy. Aktualny odbiór 4.3c opisano na początku dokumentu.
 
 ## Weryfikacja 4.3b — formularz
 

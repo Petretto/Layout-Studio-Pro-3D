@@ -4,8 +4,7 @@ import {MaterialStockRun, type MaterialStock, type MaterialStockEvent} from './m
 import {SubassemblyRun, type SubassemblyLotState, type SubassemblyEvent} from './subassemblyState';
 import {previewAssemblyDispatch,previewEmptyDispatch,type AssemblyDispatch,type TransportDeviceReservation} from './assemblyDispatch';
 import {createCartBook,finishCartMovement,startCartMovement,type CartBook,type CartMotionRoute} from './transportState';
-import {parseDomainProjectV6, type DomainProjectV6} from './domainProject';
-import {topologicalSort} from './validation';
+import {parseDomainProjectV6, domainOperationOrder, type DomainProjectV6} from './domainProject';
 import {createWorkerRunPlan} from './workerRunPlan';
 import {teamCoversCompetencies} from './competencies';
 import {sharedAvailability, type CalendarWindow} from './resourceCalendar';
@@ -157,7 +156,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   };
   if (!checked.workerRunSelection) throw new Error('Brak zapisanego wyboru składu przebiegu.');
   const domainOperations = new Map(checked.operations.map(operation => [operation.id, operation]));
-  const steps = topologicalSort(checked.operations).map(operation => domainOperations.get(operation.id)!);
+  const steps = domainOperationOrder(checked).map(operation => domainOperations.get(operation.id)!);
   if (!steps.length || steps.length * batch > 5000) {
     throw new Error('Szkic harmonogramu wymaga operacji i dopuszcza najwyżej 5000 wykonań.');
   }
@@ -188,7 +187,9 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
     if (routing && !declared) throw new Error(`Operacja ${step.id}: brak jawnych dopuszczeń kopii stanowisk.`);
     const baseStationId = stationByOperation.get(step.id);
     if (!declared && !baseStationId) throw new Error(`Operacja ${step.id}: brak jawnego przypisania do stanowiska.`);
-    const stationIds = declared ? [...new Set(declared.candidates.map(item => item.stationId))] : [baseStationId!];
+    const declaredCandidates = declared?.candidates.filter(item => !step.lockedWorkstation || item.stationId === baseStationId);
+    if (declaredCandidates && !declaredCandidates.length) throw new Error(`Operacja ${step.id}: brak dopuszczonej kopii na zablokowanym stanowisku.`);
+    const stationIds = declaredCandidates ? [...new Set(declaredCandidates.map(item => item.stationId))] : [baseStationId!];
     for (const stationId of stationIds) {
       if (calendars && !calendars.stations[stationId]) {
         throw new Error(`Stanowisko ${stationId}: brak jawnego kalendarza.`);
@@ -202,7 +203,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
         copyReady.set(stationId, Array(count).fill(0));
       }
     }
-    candidatesByOperation.set(step.id, declared?.candidates ?? copies.get(baseStationId!)!.map((_, index) =>
+    candidatesByOperation.set(step.id, declaredCandidates ?? copies.get(baseStationId!)!.map((_, index) =>
       ({stationId: baseStationId!, copy: index + 1, requiredEquipmentIds: []})));
     if(stockRun?.applies(step.id)&&!candidatesByOperation.get(step.id)!.some(candidate=>stockRun.permits(step.id,candidate.stationId))) {
       throw new Error(`Zużycie operacji ${step.id}: pozycje zaopatrzenia nie pasują do żadnego dopuszczonego stanowiska.`);
@@ -689,7 +690,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
   const checked = parseDomainProjectV6(JSON.stringify(project));
   // Verify coverage/range before expanding candidate assignments.
   const lots = new SubassemblyRun(checked, batch);
-  const operationOrder = topologicalSort(checked.operations).map(operation => operation.id);
+  const operationOrder = domainOperationOrder(checked).map(operation => operation.id);
   const recipients = [...new Map(lots.lots.map(lot => {
     const ref = lot.declaration.consumer;
     return [JSON.stringify([ref.job,ref.operationId]),ref] as const;
@@ -697,7 +698,8 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
     const declared = checked.stationRouting?.operations.find(operation => operation.operationId === ref.operationId);
     const station = checked.stations.find(station => station.operationIds.includes(ref.operationId));
     const count = station ? checked.stationSettings[station.id]?.parallelStations : undefined;
-    const candidates = declared?.candidates ?? (station && count ? Array.from({length:count},(_,i)=>({stationId:station.id,copy:i+1,requiredEquipmentIds:[]})) : []);
+    const locked = checked.operations.find(operation => operation.id === ref.operationId)!.lockedWorkstation;
+    const candidates = declared?.candidates.filter(item => !locked || item.stationId === station?.id) ?? (station && count ? Array.from({length:count},(_,i)=>({stationId:station.id,copy:i+1,requiredEquipmentIds:[]})) : []);
     if(!candidates.length)throw new Error(`Odbiorca ${ref.job}:${ref.operationId}: brak jawnych dopuszczeń kopii.`);
     return {key,...ref,candidates};
   });

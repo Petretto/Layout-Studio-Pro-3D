@@ -7,8 +7,7 @@ import {createCartBook,finishCartMovement} from './transportState';
 import {resolveTransportTime} from './transportTime';
 import {MaterialStockRun} from './materialStock';
 import type {AssemblyTransportMovement} from './workerSchedule';
-import {parseDomainProjectV6,type DomainProjectV6} from './domainProject';
-import {topologicalSort} from './validation';
+import {parseDomainProjectV6,domainOperationOrder,type DomainProjectV6} from './domainProject';
 import {createWorkerRunPlan} from './workerRunPlan';
 import {sharedAvailability} from './resourceCalendar';
 import {projectWork} from './workProjection';
@@ -25,7 +24,7 @@ const copyKey=(ref:{stationId:string;copy:number})=>JSON.stringify([ref.stationI
 
 /** Bounded linear path. Physical transport and assumed JIT availability remain explicit separate modes. */
 export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,batch:number,onProgress?:(done:number,total:number)=>void,physicalInput?:{bodyInput?:BodyRunInput}):WorkerScheduleResult{
-  const project=parseDomainProjectV6(JSON.stringify(input)),steps=topologicalSort(project.operations);
+  const project=parseDomainProjectV6(JSON.stringify(input)),steps=domainOperationOrder(project);
   const physical=physicalInput!==undefined;
   if(physical&&project.operations.some(operation=>operation.physicalRole?.kind!=='body-work'))
     throw new Error('3.5b2c2: ograniczona pojemność buforów z fizycznym transportem wymaga jawnych ról korpusu i zasobów transportu montażu.');
@@ -48,7 +47,7 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
     if(project.stationRouting&&!declared)throw new Error(`Operacja ${step.id}: brak jawnych dopuszczeń kopii stanowisk.`);
     const station=project.stations.find(station=>station.operationIds.includes(step.id));
     const count=station?project.stationSettings[station.id]?.parallelStations:undefined;
-    const refs=declared?.candidates??(station&&count?Array.from({length:count},(_,i)=>({stationId:station.id,copy:i+1,requiredEquipmentIds:[]})):[]);
+    const refs=declared?.candidates.filter(item=>!step.lockedWorkstation||item.stationId===station?.id)??(station&&count?Array.from({length:count},(_,i)=>({stationId:station.id,copy:i+1,requiredEquipmentIds:[]})):[]);
     if(refs.length!==1)throw new Error('3.5b2: podgląd buforów wymaga jednej jawnej kopii dla każdej operacji.');
     return refs[0];
   });

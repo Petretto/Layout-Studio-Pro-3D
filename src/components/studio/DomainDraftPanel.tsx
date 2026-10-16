@@ -14,6 +14,7 @@ import {readDomainDraft, replaceDomainDraft, saveDomainDraft} from '../../core/d
 import {download} from '../../core/project';
 import {DomainPeopleEditor} from './DomainPeopleEditor';
 import {DomainCompetencyEditor} from './DomainCompetencyEditor';
+import {DomainBalancingPanel} from './DomainBalancingPanel';
 import {editDomainCompetencies} from '../../core/domainCompetencyEditing';
 import {DomainProductEditor} from './DomainProductEditor';
 import {DomainEquipmentEditor} from './DomainEquipmentEditor';
@@ -247,6 +248,10 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
         const {physicalConcurrency: _old, ...rest} = project;
         return policy === undefined ? rest : {...rest, physicalConcurrency: policy};
       }, 'Zapisano zmianę grup równoległości.')}
+      onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
+      canUndo={past.length > 0} canRedo={future.length > 0} />}
+    {draft.status === 'valid' && <DomainBalancingPanel key={`balance-${draft.raw}`} project={draft.saved.project}
+      onApply={next => applyDraftChange(() => next, 'Zapisano zatwierdzone przydziały bilansu i dopuszczenia kopii.')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
       canUndo={past.length > 0} canRedo={future.length > 0} />}
     {draft.status === 'valid' && <DomainWorkerSchedulePanel key={`schedule-${draft.raw}`} project={draft.saved.project} />}

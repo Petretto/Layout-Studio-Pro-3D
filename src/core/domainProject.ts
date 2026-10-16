@@ -15,6 +15,7 @@ import {validateSubassemblyFlow, type SubassemblyFlow} from './subassemblyFlow';
 import {validateStationBuffers, type StationBuffersV6} from './stationBuffers';
 import {validateMaterialSupply, type MaterialSupplyV6} from './materialSupply';
 import {validateCompetencyRequirements, type CompetencyRequirements} from './competencies';
+import {topologicalSort} from './validation';
 
 export type DomainTimeBasis = 'measured' | 'assumed';
 export interface DomainTimeInterval {startSeconds: number; endSeconds: number; basis: DomainTimeBasis}
@@ -74,6 +75,14 @@ export interface PreparedDomainMigration {
   kind: 'prepared-domain-migration';
   originalJson: string;
   project: DomainProjectV6;
+}
+
+/** Validation-only pointers come from the station registry; never persist a second assignment. */
+export function domainOperationOrder(project: DomainProjectV6): DomainOperation[] {
+  const owner = new Map(project.stations.flatMap(station => station.operationIds.map(id => [id, station.id] as const)));
+  const byId = new Map(project.operations.map(operation => [operation.id, operation]));
+  return topologicalSort(project.operations.map(operation => ({...operation, assignedWorkstationId: owner.get(operation.id)})))
+    .map(operation => ({...byId.get(operation.id)!, sequenceNumber: operation.sequenceNumber}));
 }
 
 const record = (value: unknown): value is Record<string, unknown> =>
