@@ -2,6 +2,7 @@ import {useEffect, useMemo, useRef, useState} from 'react';
 import type {DomainProjectV6} from '../../core/domainProject';
 import {download} from '../../core/project';
 import {startScheduleTask, type ScheduleProgress} from '../../core/scheduleTask';
+import type {WorkerScheduleResult} from '../../core/workerSchedule';
 import {
   buildVariantComparisonMarkdownReport,
   buildVariantComparisonReport,
@@ -20,8 +21,19 @@ import {
   type VariantCostAccountingMode,
   type VariantCostBasis,
   type VariantCostCurrency,
+  type VariantExperimentConditions,
   type VariantScheduleOutcomeInput,
 } from '../../core/domainVariantComparison';
+import {
+  NON_OPTIMUM_DISCLAIMER,
+  buildDomainImprovementProposalsReport,
+  buildImprovementProposalsMarkdownReport,
+  domainProposalKindLabels,
+  domainProposalVerificationLabels,
+  generateDomainImprovementCandidates,
+  type DomainImprovementProposalsReport,
+  type VerifiedDomainImprovementProposal,
+} from '../../core/domainImprovementProposals';
 
 const basisLabel = {
   measured: 'pomiar',
@@ -34,6 +46,15 @@ function formatDelta(value: number | null, unit: string): string {
   if (value === null) return '—';
   if (value === 0) return `0 ${unit}`;
   return `${value > 0 ? '+' : ''}${value} ${unit}`;
+}
+
+function resolveSourceSchemaVersion(originalJson: string): 4 | 5 {
+  try {
+    const parsed = JSON.parse(originalJson) as {schemaVersion?: unknown};
+    return parsed.schemaVersion === 4 ? 4 : 5;
+  } catch {
+    return 5;
+  }
 }
 
 export function DomainVariantComparisonPanel({
@@ -69,7 +90,9 @@ export function DomainVariantComparisonPanel({
   const [stationRateInput, setStationRateInput] = useState('');
   const [floorRateInput, setFloorRateInput] = useState('');
   const [showMarkdownPreview, setShowMarkdownPreview] = useState(false);
+  const [showProposalsMarkdownPreview, setShowProposalsMarkdownPreview] = useState(false);
   const [report, setReport] = useState<VariantComparisonReport | null>(null);
+  const [proposalsReport, setProposalsReport] = useState<DomainImprovementProposalsReport | null>(null);
   const [progress, setProgress] = useState<{variantIndex: number; variantCount: number; variantName: string; schedule: ScheduleProgress} | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -89,12 +112,14 @@ export function DomainVariantComparisonPanel({
   const clearComparison = () => {
     cancelRunning();
     setReport(null);
+    setProposalsReport(null);
     setError('');
   };
 
   useEffect(() => {
     cancelRunning();
     setReport(null);
+    setProposalsReport(null);
   }, [project]);
 
   const variants = libraryState.status === 'valid' ? libraryState.saved.variants : [];
@@ -122,6 +147,11 @@ export function DomainVariantComparisonPanel({
   const markdownReport = useMemo(
     () => (report ? buildVariantComparisonMarkdownReport(report) : ''),
     [report],
+  );
+
+  const proposalsMarkdownReport = useMemo(
+    () => (proposalsReport ? buildImprovementProposalsMarkdownReport(proposalsReport) : ''),
+    [proposalsReport],
   );
 
   const handleSaveVariant = () => {
@@ -206,35 +236,39 @@ export function DomainVariantComparisonPanel({
     return Number(trimmed);
   };
 
+  const parseAndValidateSharedConditions = (): VariantExperimentConditions => {
+    const count = Number(batch);
+    if (!Number.isSafeInteger(count) || count < 1 || count > 100) {
+      throw new Error('Porównanie w UI dopuszcza partię od 1 do 100 sztuk.');
+    }
+    const opRate = parseOptionalRate(operatorRateInput);
+    const stRate = parseOptionalRate(stationRateInput);
+    const sqRate = parseOptionalRate(floorRateInput);
+    const hasAnyCostInput = opRate !== null || stRate !== null || sqRate !== null || costSource.trim().length > 0;
+    return validateExperimentConditions({
+      batch: count,
+      arrivalIntervalSeconds: Number(arrivalInterval),
+      transportMode: justInTime ? 'just-in-time' : 'configured',
+      costAssumptions: hasAnyCostInput
+        ? {
+            currency: costCurrency,
+            basis: costBasis,
+            accountingMode: costAccountingMode,
+            source: costSource,
+            operatorHourlyRate: opRate,
+            stationHourlyRate: stRate,
+            floorSqmRate: sqRate,
+          }
+        : null,
+    });
+  };
+
   const runComparison = () => {
     clearComparison();
     setMessage('');
-    let checkedConditions;
+    let checkedConditions: VariantExperimentConditions;
     try {
-      const count = Number(batch);
-      if (!Number.isSafeInteger(count) || count < 1 || count > 100) {
-        throw new Error('Porównanie w UI dopuszcza partię od 1 do 100 sztuk.');
-      }
-      const opRate = parseOptionalRate(operatorRateInput);
-      const stRate = parseOptionalRate(stationRateInput);
-      const sqRate = parseOptionalRate(floorRateInput);
-      const hasAnyCostInput = opRate !== null || stRate !== null || sqRate !== null || costSource.trim().length > 0;
-      checkedConditions = validateExperimentConditions({
-        batch: count,
-        arrivalIntervalSeconds: Number(arrivalInterval),
-        transportMode: justInTime ? 'just-in-time' : 'configured',
-        costAssumptions: hasAnyCostInput
-          ? {
-              currency: costCurrency,
-              basis: costBasis,
-              accountingMode: costAccountingMode,
-              source: costSource,
-              operatorHourlyRate: opRate,
-              stationHourlyRate: stRate,
-              floorSqmRate: sqRate,
-            }
-          : null,
-      });
+      checkedConditions = parseAndValidateSharedConditions();
       if (selectedVariants.length < 2) {
         throw new Error('Wybierz co najmniej dwa zapisane warianty szkicu 6 do porównania.');
       }
@@ -308,6 +342,209 @@ export function DomainVariantComparisonPanel({
     };
 
     runNext(0);
+  };
+
+  const runProposalsVerification = () => {
+    clearComparison();
+    setMessage('');
+    let checkedConditions: VariantExperimentConditions;
+    try {
+      checkedConditions = parseAndValidateSharedConditions();
+    } catch (failure) {
+      setError((failure as Error).message);
+      return;
+    }
+
+    const baseProject = project;
+    const sourceSchemaVersion = resolveSourceSchemaVersion(originalJson);
+    const totalBaseOps = baseProject.operations.length * checkedConditions.batch;
+    let cancelled = false;
+
+    setProgress({
+      variantIndex: 1,
+      variantCount: 1,
+      variantName: 'Bieżący szkic 6 (punkt odniesienia)',
+      schedule: {completed: 0, total: totalBaseOps},
+    });
+
+    const finalizeProposals = (
+      baselineOutcome: VariantScheduleOutcomeInput,
+      baselineResult: WorkerScheduleResult | null,
+    ) => {
+      if (cancelled) return;
+      const {candidates, skippedReasons} = generateDomainImprovementCandidates(
+        baseProject,
+        baselineResult,
+        compatibleVariants,
+      );
+      if (candidates.length === 0) {
+        cancelRef.current = null;
+        setProgress(null);
+        try {
+          const built = buildDomainImprovementProposalsReport(
+            baseProject,
+            sourceSchemaVersion,
+            originalJson,
+            checkedConditions,
+            baselineOutcome,
+            [],
+            new Map(),
+            skippedReasons,
+          );
+          setProposalsReport(built);
+          setMessage('Przeanalizowano bieżący szkic 6 — brak dodatkowych niewykorzystanych zasobów lub alternatywnych przydziałów do zaproponowania.');
+        } catch (failure) {
+          setError((failure as Error).message);
+        }
+        return;
+      }
+
+      const outcomesByProposalId = new Map<string, VariantScheduleOutcomeInput>();
+      const runCandidate = (index: number) => {
+        if (cancelled) return;
+        if (index >= candidates.length) {
+          cancelRef.current = null;
+          setProgress(null);
+          try {
+            const built = buildDomainImprovementProposalsReport(
+              baseProject,
+              sourceSchemaVersion,
+              originalJson,
+              checkedConditions,
+              baselineOutcome,
+              candidates,
+              outcomesByProposalId,
+              skippedReasons,
+            );
+            setProposalsReport(built);
+            const improvedCount = built.proposals.filter(p => p.verificationStatus === 'improved').length;
+            setMessage(
+              `Zweryfikowano w symulacji ${built.proposals.length} propozycji zmian (poprawa: ${improvedCount}/${built.proposals.length}) bez deklaracji gwarantowanego optimum.`,
+            );
+          } catch (failure) {
+            setError((failure as Error).message);
+          }
+          return;
+        }
+        const cand = candidates[index];
+        const candOps = cand.proposedProject.operations.length * checkedConditions.batch;
+        setProgress({
+          variantIndex: index + 1,
+          variantCount: candidates.length,
+          variantName: cand.title,
+          schedule: {completed: 0, total: candOps},
+        });
+        const stopCand = startScheduleTask(
+          {
+            project: cand.proposedProject,
+            batch: checkedConditions.batch,
+            arrivalIntervalSeconds: checkedConditions.arrivalIntervalSeconds,
+            transportMode: checkedConditions.transportMode,
+          },
+          {
+            progress: scheduleProgress => {
+              if (cancelled) return;
+              setProgress({
+                variantIndex: index + 1,
+                variantCount: candidates.length,
+                variantName: cand.title,
+                schedule: scheduleProgress,
+              });
+            },
+            result: value => {
+              if (cancelled) return;
+              outcomesByProposalId.set(cand.id, {status: 'completed', result: value});
+              runCandidate(index + 1);
+            },
+            error: errMessage => {
+              if (cancelled) return;
+              outcomesByProposalId.set(cand.id, {status: 'error', error: errMessage});
+              runCandidate(index + 1);
+            },
+          },
+          () => new Worker(new URL('../../core/schedule.worker.ts', import.meta.url), {type: 'module'}),
+        );
+        cancelRef.current = () => {
+          cancelled = true;
+          stopCand();
+        };
+      };
+
+      runCandidate(0);
+    };
+
+    const stopBase = startScheduleTask(
+      {
+        project: baseProject,
+        batch: checkedConditions.batch,
+        arrivalIntervalSeconds: checkedConditions.arrivalIntervalSeconds,
+        transportMode: checkedConditions.transportMode,
+      },
+      {
+        progress: scheduleProgress => {
+          if (cancelled) return;
+          setProgress({
+            variantIndex: 1,
+            variantCount: 1,
+            variantName: 'Bieżący szkic 6 (punkt odniesienia)',
+            schedule: scheduleProgress,
+          });
+        },
+        result: value => {
+          finalizeProposals({status: 'completed', result: value}, value);
+        },
+        error: errMessage => {
+          finalizeProposals({status: 'error', error: errMessage}, null);
+        },
+      },
+      () => new Worker(new URL('../../core/schedule.worker.ts', import.meta.url), {type: 'module'}),
+    );
+    cancelRef.current = () => {
+      cancelled = true;
+      stopBase();
+    };
+  };
+
+  const handleSaveProposalAsVariant = (proposal: VerifiedDomainImprovementProposal) => {
+    setError('');
+    if (libraryState.status !== 'empty' && libraryState.status !== 'valid') {
+      setError('Biblioteka wariantów jest niedostępna lub wymaga odzyskania przed zapisem.');
+      return;
+    }
+    try {
+      const expectedRaw = libraryState.status === 'valid' ? libraryState.raw : null;
+      const shortName = proposal.title.slice(0, 75);
+      const written = saveDomainVariant(
+        localStorage,
+        {
+          name: shortName,
+          category: proposal.variantCategory,
+          originalJson,
+          project: proposal.proposedProject,
+        },
+        expectedRaw,
+      );
+      setLibraryState({status: 'valid', raw: written.raw, saved: written.saved});
+      if (!effectiveBaselineId) {
+        setBaselineId(written.variant.id);
+      }
+      setMessage(`Zapisano propozycję „${written.variant.name}” w bibliotece wariantów szkicu 6.`);
+    } catch (failure) {
+      setLibraryState(readDomainVariants(localStorage));
+      setError(`Nie zapisano propozycji jako wariantu: ${(failure as Error).message}`);
+    }
+  };
+
+  const handleApplyProposalToDraft = (proposal: VerifiedDomainImprovementProposal) => {
+    clearComparison();
+    setMessage('');
+    try {
+      if (onRestoreVariant(proposal.proposedProject, proposal.title)) {
+        setMessage(`Zastosowano propozycję „${proposal.title}” do aktywnego szkicu 6. Możesz cofnąć zmianę przyciskiem Cofnij.`);
+      }
+    } catch (failure) {
+      setError(`Nie zastosowano propozycji: ${(failure as Error).message}`);
+    }
   };
 
   return (
@@ -403,186 +640,188 @@ export function DomainVariantComparisonPanel({
         </div>
       )}
 
+      <div className="toolbar">
+        {compatibleVariants.length > 0 && (
+          <label className="field">
+            Wariant bazowy odniesienia
+            <select
+              aria-label="Wariant bazowy odniesienia"
+              value={effectiveBaselineId}
+              onChange={event => {
+                clearComparison();
+                setBaselineId(event.target.value);
+              }}
+            >
+              {compatibleVariants.map(item => (
+                <option key={item.id} value={item.id}>
+                  {item.name} ({domainVariantCategoryLabels[item.category]})
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <label className="field">
+          Liczba sztuk w porównaniu
+          <input
+            aria-label="Liczba sztuk w porównaniu wariantów"
+            type="number"
+            min="1"
+            max="100"
+            step="1"
+            value={batch}
+            onChange={event => {
+              clearComparison();
+              setBatch(event.target.value);
+            }}
+          />
+        </label>
+        <label className="field">
+          Odstęp przybycia sztuk [s]
+          <input
+            aria-label="Odstęp przybycia w porównaniu wariantów [s]"
+            type="number"
+            min="0.001"
+            step="any"
+            value={arrivalInterval}
+            onChange={event => {
+              clearComparison();
+              setArrivalInterval(event.target.value);
+            }}
+          />
+        </label>
+      </div>
+
+      <label className="toolbar">
+        <input
+          type="checkbox"
+          aria-label="Symulacja porównania bez transportu — just in time"
+          checked={justInTime}
+          onChange={event => {
+            clearComparison();
+            setJustInTime(event.target.checked);
+          }}
+        />
+        Symulacja porównania bez transportu — wszystko dostępne just in time (wspólny warunek dla wszystkich wariantów)
+      </label>
+
+      <div aria-label="Jawne stawki kosztowe porównania 4.6">
+        <h5>Jawne stawki kosztowe i założenia porównania (opcjonalne — 4.6)</h5>
+        <p className="muted">
+          Stawki kosztowe nie są zgadywane ani uzupełniane domyślnie. Jeżeli wpiszesz dowolną stawkę, podaj również jej źródło/założenie.
+        </p>
+        <div className="toolbar">
+          <label className="field">
+            Waluta stawek
+            <select
+              aria-label="Waluta stawek kosztowych wariantów"
+              value={costCurrency}
+              onChange={event => {
+                clearComparison();
+                setCostCurrency(event.target.value as VariantCostCurrency);
+              }}
+            >
+              <option value="PLN">PLN</option>
+              <option value="EUR">EUR</option>
+              <option value="USD">USD</option>
+            </select>
+          </label>
+          <label className="field">
+            Podstawa stawek
+            <select
+              aria-label="Podstawa stawek kosztowych wariantów"
+              value={costBasis}
+              onChange={event => {
+                clearComparison();
+                setCostBasis(event.target.value as VariantCostBasis);
+              }}
+            >
+              <option value="assumed">założone (assumed)</option>
+              <option value="confirmed">potwierdzone (confirmed)</option>
+            </select>
+          </label>
+          <label className="field">
+            Rozliczanie czasu zasobów
+            <select
+              aria-label="Rozliczanie czasu zasobów w kosztach wariantów"
+              value={costAccountingMode}
+              onChange={event => {
+                clearComparison();
+                setCostAccountingMode(event.target.value as VariantCostAccountingMode);
+              }}
+            >
+              <option value="committed-makespan">zaangażowanie zespołu i kopii w horyzoncie makespanu</option>
+              <option value="active-time">wyłącznie czas aktywnej pracy / zajętości</option>
+            </select>
+          </label>
+          <label className="field">
+            Stawka operatora [/h]
+            <input
+              aria-label="Jawna stawka godzinowa operatora"
+              type="number"
+              min="0"
+              step="any"
+              placeholder="brak"
+              value={operatorRateInput}
+              onChange={event => {
+                clearComparison();
+                setOperatorRateInput(event.target.value);
+              }}
+            />
+          </label>
+          <label className="field">
+            Stawka stanowiska [/h]
+            <input
+              aria-label="Jawna stawka godzinowa stanowiska"
+              type="number"
+              min="0"
+              step="any"
+              placeholder="brak"
+              value={stationRateInput}
+              onChange={event => {
+                clearComparison();
+                setStationRateInput(event.target.value);
+              }}
+            />
+          </label>
+          <label className="field">
+            Stawka powierzchni [/m²]
+            <input
+              aria-label="Jawna stawka powierzchni m2"
+              type="number"
+              min="0"
+              step="any"
+              placeholder="brak"
+              value={floorRateInput}
+              onChange={event => {
+                clearComparison();
+                setFloorRateInput(event.target.value);
+              }}
+            />
+          </label>
+          <label className="field">
+            Źródło i założenia stawek
+            <input
+              aria-label="Źródło i założenia stawek kosztowych"
+              value={costSource}
+              placeholder="np. kalkulacja kontrolingu Q4 / założenie koncepcyjne"
+              onChange={event => {
+                clearComparison();
+                setCostSource(event.target.value);
+              }}
+            />
+          </label>
+        </div>
+      </div>
+
       {compatibleVariants.length === 0 && libraryState.status === 'valid' && !foreignSource && (
         <p className="muted">Brak zapisanych wariantów dla bieżącego źródła szkicu 6.</p>
       )}
       {libraryState.status === 'empty' && (
-        <p className="muted">Brak zapisanych wariantów szkicu 6. Zapisz co najmniej dwa warianty (np. bazowy i usprawniony), aby uruchomić porównanie.</p>
+        <p className="muted">Brak zapisanych wariantów szkicu 6. Zapisz co najmniej dwa warianty (np. bazowy i usprawniony), aby uruchomić porównanie 4.5/4.6, albo wygeneruj propozycje zmian 4.7 dla aktywnego szkicu.</p>
       )}
 
       {compatibleVariants.length > 0 && (
         <>
-          <div className="toolbar">
-            <label className="field">
-              Wariant bazowy odniesienia
-              <select
-                aria-label="Wariant bazowy odniesienia"
-                value={effectiveBaselineId}
-                onChange={event => {
-                  clearComparison();
-                  setBaselineId(event.target.value);
-                }}
-              >
-                {compatibleVariants.map(item => (
-                  <option key={item.id} value={item.id}>
-                    {item.name} ({domainVariantCategoryLabels[item.category]})
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
-              Liczba sztuk w porównaniu
-              <input
-                aria-label="Liczba sztuk w porównaniu wariantów"
-                type="number"
-                min="1"
-                max="100"
-                step="1"
-                value={batch}
-                onChange={event => {
-                  clearComparison();
-                  setBatch(event.target.value);
-                }}
-              />
-            </label>
-            <label className="field">
-              Odstęp przybycia sztuk [s]
-              <input
-                aria-label="Odstęp przybycia w porównaniu wariantów [s]"
-                type="number"
-                min="0.001"
-                step="any"
-                value={arrivalInterval}
-                onChange={event => {
-                  clearComparison();
-                  setArrivalInterval(event.target.value);
-                }}
-              />
-            </label>
-          </div>
-
-          <label className="toolbar">
-            <input
-              type="checkbox"
-              aria-label="Symulacja porównania bez transportu — just in time"
-              checked={justInTime}
-              onChange={event => {
-                clearComparison();
-                setJustInTime(event.target.checked);
-              }}
-            />
-            Symulacja porównania bez transportu — wszystko dostępne just in time (wspólny warunek dla wszystkich wariantów)
-          </label>
-
-          <div aria-label="Jawne stawki kosztowe porównania 4.6">
-            <h5>Jawne stawki kosztowe i założenia porównania (opcjonalne — 4.6)</h5>
-            <p className="muted">
-              Stawki kosztowe nie są zgadywane ani uzupełniane domyślnie. Jeżeli wpiszesz dowolną stawkę, podaj również jej źródło/założenie.
-            </p>
-            <div className="toolbar">
-              <label className="field">
-                Waluta stawek
-                <select
-                  aria-label="Waluta stawek kosztowych wariantów"
-                  value={costCurrency}
-                  onChange={event => {
-                    clearComparison();
-                    setCostCurrency(event.target.value as VariantCostCurrency);
-                  }}
-                >
-                  <option value="PLN">PLN</option>
-                  <option value="EUR">EUR</option>
-                  <option value="USD">USD</option>
-                </select>
-              </label>
-              <label className="field">
-                Podstawa stawek
-                <select
-                  aria-label="Podstawa stawek kosztowych wariantów"
-                  value={costBasis}
-                  onChange={event => {
-                    clearComparison();
-                    setCostBasis(event.target.value as VariantCostBasis);
-                  }}
-                >
-                  <option value="assumed">założone (assumed)</option>
-                  <option value="confirmed">potwierdzone (confirmed)</option>
-                </select>
-              </label>
-              <label className="field">
-                Rozliczanie czasu zasobów
-                <select
-                  aria-label="Rozliczanie czasu zasobów w kosztach wariantów"
-                  value={costAccountingMode}
-                  onChange={event => {
-                    clearComparison();
-                    setCostAccountingMode(event.target.value as VariantCostAccountingMode);
-                  }}
-                >
-                  <option value="committed-makespan">zaangażowanie zespołu i kopii w horyzoncie makespanu</option>
-                  <option value="active-time">wyłącznie czas aktywnej pracy / zajętości</option>
-                </select>
-              </label>
-              <label className="field">
-                Stawka operatora [/h]
-                <input
-                  aria-label="Jawna stawka godzinowa operatora"
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder="brak"
-                  value={operatorRateInput}
-                  onChange={event => {
-                    clearComparison();
-                    setOperatorRateInput(event.target.value);
-                  }}
-                />
-              </label>
-              <label className="field">
-                Stawka stanowiska [/h]
-                <input
-                  aria-label="Jawna stawka godzinowa stanowiska"
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder="brak"
-                  value={stationRateInput}
-                  onChange={event => {
-                    clearComparison();
-                    setStationRateInput(event.target.value);
-                  }}
-                />
-              </label>
-              <label className="field">
-                Stawka powierzchni [/m²]
-                <input
-                  aria-label="Jawna stawka powierzchni m2"
-                  type="number"
-                  min="0"
-                  step="any"
-                  placeholder="brak"
-                  value={floorRateInput}
-                  onChange={event => {
-                    clearComparison();
-                    setFloorRateInput(event.target.value);
-                  }}
-                />
-              </label>
-              <label className="field">
-                Źródło i założenia stawek
-                <input
-                  aria-label="Źródło i założenia stawek kosztowych"
-                  value={costSource}
-                  placeholder="np. kalkulacja kontrolingu Q4 / założenie koncepcyjne"
-                  onChange={event => {
-                    clearComparison();
-                    setCostSource(event.target.value);
-                  }}
-                />
-              </label>
-            </div>
-          </div>
-
           <div className="table-wrap" aria-label="Zapisane warianty szkicu 6">
             <table>
               <thead>
@@ -656,19 +895,24 @@ export function DomainVariantComparisonPanel({
               </tbody>
             </table>
           </div>
-
-          <div className="toolbar">
-            <button disabled={selectedVariants.length < 2 || !!progress} onClick={runComparison}>
-              Porównaj warianty w symulacji ({selectedVariants.length})
-            </button>
-            {progress && (
-              <button onClick={() => {cancelRunning(); setMessage('Anulowano porównywanie wariantów.');}}>
-                Anuluj porównanie wariantów
-              </button>
-            )}
-          </div>
         </>
       )}
+
+      <div className="toolbar">
+        {compatibleVariants.length > 0 && (
+          <button disabled={selectedVariants.length < 2 || !!progress} onClick={runComparison}>
+            Porównaj warianty w symulacji ({selectedVariants.length})
+          </button>
+        )}
+        <button disabled={!!progress} onClick={runProposalsVerification}>
+          Generuj i sprawdź propozycje zmian w symulacji (4.7)
+        </button>
+        {progress && (
+          <button onClick={() => {cancelRunning(); setMessage('Anulowano obliczenia symulacyjne.');}}>
+            Anuluj porównanie wariantów
+          </button>
+        )}
+      </div>
 
       {progress && (
         <div role="status" aria-label="Postęp porównania wariantów szkicu 6">
@@ -678,6 +922,137 @@ export function DomainVariantComparisonPanel({
 
       {message && <p role="status">{message}</p>}
       {error && <p className="error" role="alert">{error}</p>}
+
+      {proposalsReport && (
+        <div aria-label="Propozycje zmian i weryfikacja w symulacji 4.7">
+          <h4>
+            Propozycje zmian ze sprawdzeniem w symulacji (4.7) — partia {proposalsReport.conditions.batch} szt., odstęp {proposalsReport.conditions.arrivalIntervalSeconds} s, tryb: {proposalsReport.conditions.transportMode === 'just-in-time' ? 'just in time' : 'skonfigurowany'}
+          </h4>
+          <p className="notice" role="note" aria-label="Zastrzeżenie braku gwarantowanego optimum 4.7">
+            <strong>Brak deklaracji gwarantowanego optimum:</strong> {NON_OPTIMUM_DISCLAIMER}
+          </p>
+          <p className="muted">
+            Wersja danych: szkic roboczy <code>v{proposalsReport.dataVersion.draftSchemaVersion}</code> (źródło <code>v{proposalsReport.dataVersion.sourceSchemaVersion}</code>). Punkt odniesienia (aktywny szkic 6): zdolność statyczna{' '}
+            <strong>{proposalsReport.baselineStatic.staticCapacityPerHour !== null ? `${proposalsReport.baselineStatic.staticCapacityPerHour} szt./h` : 'n/d'}</strong>{' '}
+            (maks. kopia stat.: {proposalsReport.baselineStatic.maxStaticCopyLoadSeconds ?? 'n/d'} s/szt.) ·{' '}
+            {proposalsReport.baselineDynamic.status === 'completed' ? (
+              <>
+                przepustowość symulacji: <strong>{proposalsReport.baselineDynamic.throughputPerHour} szt./h</strong> · makespan: <strong>{proposalsReport.baselineDynamic.makespanSeconds} s</strong> · śr. czas przejścia: <strong>{proposalsReport.baselineDynamic.averageLeadTimeSeconds} s</strong> · śr. WIP aktywny: <strong>{proposalsReport.baselineDynamic.averageActiveWipPieces} szt.</strong>
+              </>
+            ) : (
+              <span className="error">Błąd harmonogramu bazowego: {proposalsReport.baselineDynamic.error}</span>
+            )}
+          </p>
+
+          <div className="toolbar">
+            <button
+              onClick={() =>
+                download(
+                  proposalsMarkdownReport,
+                  `Raport_propozycji_zmian_v6_${new Date().toISOString().slice(0, 10)}.md`,
+                  'text/markdown;charset=utf-8',
+                )
+              }
+            >
+              Pobierz raport propozycji 4.7 (.md)
+            </button>
+            <button onClick={() => setShowProposalsMarkdownPreview(prev => !prev)}>
+              {showProposalsMarkdownPreview ? 'Ukryj podgląd raportu propozycji 4.7 (.md)' : 'Pokaż podgląd raportu propozycji 4.7 (.md)'}
+            </button>
+          </div>
+
+          {showProposalsMarkdownPreview && (
+            <pre aria-label="Podgląd raportu Markdown propozycji zmian 4.7" style={{whiteSpace: 'pre-wrap', maxHeight: '280px', overflow: 'auto'}}>
+              {proposalsMarkdownReport}
+            </pre>
+          )}
+
+          {proposalsReport.proposals.length === 0 ? (
+            <p className="muted">
+              Dla bieżącego szkicu 6 nie znaleziono dodatkowych niewykorzystanych zasobów ani alternatywnych przydziałów do zaproponowania bez dopowiadania danych.
+            </p>
+          ) : (
+            <div className="table-wrap" aria-label="Tabela propozycji zmian 4.7">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Propozycja i zakres zmiany</th>
+                    <th>Uzasadnienie i dowody z harmonogramu bazowego</th>
+                    <th>Szacunek zdolności vs wynik symulacji (status)</th>
+                    <th>Wskaźniki w symulacji (Δ vs baza)</th>
+                    <th>Akcje</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {proposalsReport.proposals.map(prop => {
+                    const dyn = prop.proposedDynamic;
+                    return (
+                      <tr key={prop.id} aria-label={`Propozycja 4.7 ${prop.title}`}>
+                        <td>
+                          <strong>{prop.title}</strong>
+                          <div><small>{domainProposalKindLabels[prop.kind]} · kategoria: {domainVariantCategoryLabels[prop.variantCategory]}</small></div>
+                          <div><small>Zakres: {prop.targetSummary}</small></div>
+                        </td>
+                        <td>
+                          <div>{prop.rationale}</div>
+                          <div>
+                            <small>
+                              Dowody: {prop.evidenceSignals.join(' | ')}
+                            </small>
+                          </div>
+                        </td>
+                        <td>
+                          <div>
+                            <strong>{domainProposalVerificationLabels[prop.verificationStatus]}</strong>
+                          </div>
+                          <div>{prop.verificationSummary}</div>
+                          <div><small>{prop.staticVsDynamicNote}</small></div>
+                        </td>
+                        {dyn.status === 'error' ? (
+                          <td className="error">
+                            Odmowa symulacji: {dyn.error}
+                          </td>
+                        ) : (
+                          <td>
+                            <div>Przepustowość: <strong>{dyn.throughputPerHour} szt./h</strong> ({formatDelta(dyn.deltaThroughputPerHour, 'szt./h')})</div>
+                            <div>Makespan: <strong>{dyn.makespanSeconds} s</strong> ({formatDelta(dyn.deltaMakespanSeconds, 's')})</div>
+                            <div>Śr. czas przejścia: <strong>{dyn.averageLeadTimeSeconds} s</strong> ({formatDelta(dyn.deltaAverageLeadTimeSeconds, 's')})</div>
+                            <div>WIP aktywny śr.: <strong>{dyn.averageActiveWipPieces} szt.</strong> ({formatDelta(dyn.deltaAverageActiveWipPieces, 'szt.')})</div>
+                            {dyn.costEvaluation && dyn.costEvaluation.batchOperatingCost !== null && (
+                              <div>
+                                <small>
+                                  Koszt oper. partii: <strong>{dyn.costEvaluation.batchOperatingCost} {dyn.costEvaluation.currency}</strong> ({formatDelta(dyn.costEvaluation.deltaBatchOperatingCost, dyn.costEvaluation.currency)})
+                                </small>
+                              </div>
+                            )}
+                          </td>
+                        )}
+                        <td>
+                          <button onClick={() => handleSaveProposalAsVariant(prop)}>
+                            Zapisz jako wariant
+                          </button>
+                          <button onClick={() => handleApplyProposalToDraft(prop)}>
+                            Zastosuj do szkicu 6
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {proposalsReport.skippedReasons.length > 0 && (
+            <div aria-label="Pominięte kategorie propozycji 4.7">
+              <small>
+                <strong>Ochrona przed dopowiadaniem danych (pominięte kategorie):</strong>{' '}
+                {proposalsReport.skippedReasons.join(' · ')}
+              </small>
+            </div>
+          )}
+        </div>
+      )}
 
       {report && (
         <div aria-label="Wynik porównania wariantów szkicu 6">

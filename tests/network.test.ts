@@ -15,6 +15,13 @@ import {
   validateCostAssumptions,
   type SavedDomainVariant,
 } from '../src/core/domainVariantComparison';
+import {
+  NON_OPTIMUM_DISCLAIMER,
+  generateDomainImprovementCandidates,
+  proposeAndVerifyDomainImprovements,
+  buildDomainImprovementProposalsReport,
+  buildImprovementProposalsMarkdownReport,
+} from '../src/core/domainImprovementProposals';
 import {proposeDomainBalance, applyDomainBalance} from '../src/core/domainBalancing';
 import {assertCompetentTeamExists, teamCoversCompetencies, type CompetencyRequirements} from '../src/core/competencies';
 import {editDomainCompetencies} from '../src/core/domainCompetencyEditing';
@@ -6458,6 +6465,166 @@ test('4.6: jawne stawki i założenia kosztowe (rozliczanie makespanu vs czasu a
     assert.ok(md.includes('300'));
   }
 });
+
+test('4.7: generowanie i weryfikacja propozycji zmian w symulacji (dodanie pracownika, dodatkowa kopia, wariant obsady, bilans, bufor)', () => {
+  const {variants, originalJson} = variantComparisonFixture();
+  const baseProject = structuredClone(variants[0].project);
+
+  // Wzbogacamy projekt o jawnie zadeklarowane zasoby:
+  // 1) Pracownik W-B jest w project.workers, lecz nie w teamWorkerIds (w bazie teamWorkerIds = ['W-A'])
+  // 2) Stanowisko ST-C ma zadeklarowane parallelStations: 2 i wyposażenie, z nieużytą kopią 2
+  // 3) Operacja OP-B ma alternatywny jawny wariant obsady (2 os., czas 12 s)
+  baseProject.stationSettings['ST-C'].parallelStations = 2;
+  baseProject.operations[1].staffing!.timeVariants.push({
+    workerCount: 2,
+    timeProfile: {
+      durationSeconds: 12,
+      durationBasis: 'assumed',
+      manualWork: [{startSeconds: 0, endSeconds: 12, basis: 'assumed'}],
+      machineRun: [],
+      operatorPresence: [{startSeconds: 0, endSeconds: 12, basis: 'assumed'}],
+    },
+  });
+
+  const conditions = {
+    batch: 2,
+    arrivalIntervalSeconds: 1,
+    transportMode: 'just-in-time' as const,
+    costAssumptions: {
+      currency: 'PLN' as const,
+      basis: 'assumed' as const,
+      source: 'Założenia testowe 4.7',
+      operatorHourlyRate: 100,
+      stationHourlyRate: 50,
+      floorSqmRate: 20,
+    },
+  };
+
+  const report = proposeAndVerifyDomainImprovements(baseProject, conditions, {
+    sourceSchemaVersion: 4,
+    originalJson,
+    savedVariants: variants,
+  });
+
+  assert.equal(report.dataVersion.draftSchemaVersion, 6);
+  assert.equal(report.dataVersion.sourceSchemaVersion, 4);
+  assert.equal(report.nonOptimumDisclaimer, NON_OPTIMUM_DISCLAIMER);
+  assert.ok(report.proposals.length >= 3);
+
+  // Każda propozycja posiada zastrzeżenie braku gwarancji optimum, uzasadnienie i dowody
+  for (const p of report.proposals) {
+    assert.equal(p.nonOptimumDisclaimer, NON_OPTIMUM_DISCLAIMER);
+    assert.ok(p.rationale.length > 10);
+    assert.ok(p.evidenceSignals.length > 0);
+    assert.ok(p.verificationSummary.length > 5);
+    assert.ok(p.staticVsDynamicNote.includes('Szacunek zdolności statycznej:'));
+    assert.ok(p.staticVsDynamicNote.length > 20);
+  }
+
+  // 1. Sprawdzenie propozycji dodania pracownika (W-B z rejestru)
+  const addWorkerProp = report.proposals.find(p => p.kind === 'add-team-worker');
+  assert.ok(addWorkerProp, 'Oczekiwano propozycji add-team-worker');
+  assert.equal(addWorkerProp.variantCategory, 'additional-worker');
+  assert.ok(addWorkerProp.targetSummary.includes('W-B'));
+  assert.equal(addWorkerProp.proposedProject.workerRunSelection!.teamWorkerIds.length, 2);
+  // Sprawdzenie rozróżnienia szacunku statycznego od wyniku dynamicznego
+  assert.equal(addWorkerProp.verificationStatus, 'improved');
+  if (addWorkerProp.proposedDynamic.status === 'completed') {
+    assert.ok(addWorkerProp.proposedDynamic.deltaMakespanSeconds! < 0);
+    assert.ok(addWorkerProp.proposedDynamic.deltaThroughputPerHour! > 0);
+    // Koszt operacyjny partii wzrasta lub zmienia się zgodnie z jawnymi stawkami
+    assert.ok(addWorkerProp.proposedDynamic.costEvaluation !== null);
+  }
+
+  // 2. Sprawdzenie propozycji dopuszczenia drugiej kopii stanowiska ST-C#2
+  const copyProp = report.proposals.find(p => p.kind === 'activate-station-copy');
+  assert.ok(copyProp, 'Oczekiwano propozycji activate-station-copy');
+  assert.equal(copyProp.variantCategory, 'additional-station');
+  assert.equal(copyProp.proposedProject.stationRouting!.operations[1].candidates.length, 2);
+
+  // 3. Sprawdzenie propozycji alternatywnego wariantu obsady operacji OP-B (2 os. / 12 s)
+  const staffVariantProp = report.proposals.find(p => p.kind === 'change-staffing-variant');
+  assert.ok(staffVariantProp, 'Oczekiwano propozycji change-staffing-variant');
+  assert.equal(staffVariantProp.variantCategory, 'additional-worker');
+
+  // 4. Sprawdzenie uwzględnienia zapisanego wariantu ze zmienionym layoutem
+  const savedLayoutProp = report.proposals.find(p => p.kind === 'saved-variant' && p.id.includes('VAR-LAYOUT'));
+  assert.ok(savedLayoutProp, 'Oczekiwano zapisanego wariantu VAR-LAYOUT');
+  assert.equal(savedLayoutProp.variantCategory, 'changed-layout');
+
+  // 5. Sprawdzenie propozycji odblokowania operatora w buforze (bbas -> bbas-worker-released)
+  const bufferedProject = structuredClone(baseProject);
+  bufferedProject.stationBuffers = {
+    buffers: [{
+      stationId: 'ST-A',
+      copy: 1,
+      inputCapacity: 1,
+      outputCapacity: 1,
+      blockingPolicy: 'bbas',
+    }],
+  };
+  const bufReport = proposeAndVerifyDomainImprovements(bufferedProject, conditions, {
+    sourceSchemaVersion: 4,
+    originalJson,
+  });
+  const bufferProp = bufReport.proposals.find(p => p.kind === 'release-blocked-worker');
+  assert.ok(bufferProp, 'Oczekiwano propozycji release-blocked-worker');
+  assert.equal(bufferProp.proposedProject.stationBuffers!.buffers[0].blockingPolicy, 'bbas-worker-released');
+  assert.equal(bufferProp.variantCategory, 'changed-layout');
+});
+
+test('4.7: raport Markdown propozycji zmian, wersja danych, obsługa odmowy symulacji i ochrona przed zmyślaniem danych', () => {
+  const {variants, originalJson} = variantComparisonFixture();
+  const baseProject = structuredClone(variants[0].project);
+
+  // Przetestowanie obsługi odmowy / błędu symulacji w propozycji
+  const candidateMock = {
+    id: 'prop-refused-test',
+    kind: 'rebalance-work' as const,
+    variantCategory: 'additional-station' as const,
+    title: 'Niewykonalny bilans',
+    targetSummary: 'Niewykonalny przydział',
+    rationale: 'Uzasadnienie testowe',
+    evidenceSignals: ['Brak wolnych kopii'],
+    proposedProject: baseProject,
+    factorDiff: {changedDimensions: ['stations'], summary: ['zmiana stacji'], comparabilityWarnings: []},
+    staticBaseline: summarizeStaticVariant(baseProject),
+    staticProposed: summarizeStaticVariant(baseProject),
+  };
+
+  const outcomes = new Map([
+    ['prop-refused-test', {status: 'error' as const, error: 'Odmowa symulacji: cykliczna zależność'}],
+  ]);
+
+  const report = buildDomainImprovementProposalsReport(
+    baseProject,
+    4,
+    originalJson,
+    {batch: 2, arrivalIntervalSeconds: 1, transportMode: 'just-in-time'},
+    {status: 'completed', result: scheduleWorkerRun(baseProject, 1, 2, undefined, undefined, {transportMode: 'just-in-time'})},
+    [candidateMock],
+    outcomes,
+    ['Brak nieużywanych stanowisk w projekcie — nie zmyślano nowych obiektów.'],
+  );
+
+  assert.equal(report.proposals.length, 1);
+  const p = report.proposals[0];
+  assert.equal(p.verificationStatus, 'refused');
+  assert.ok(p.verificationSummary.includes('Odmowa symulacji: cykliczna zależność'));
+  assert.ok(report.skippedReasons.some(r => r.includes('nie zmyślano nowych obiektów')));
+
+  const md = buildImprovementProposalsMarkdownReport(report);
+  assert.ok(md.includes('# Raport propozycji zmian i weryfikacji symulacyjnej szkicu 6 (4.7)'));
+  assert.ok(md.includes('Zastrzeżenie metodologiczne (brak deklaracji optimum):'));
+  assert.ok(md.includes(NON_OPTIMUM_DISCLAIMER));
+  assert.ok(md.includes('**Wersja danych:** schemat roboczy szkicu `v6` (projekt źródłowy `v4`)'));
+  assert.ok(md.includes('**Wielkość partii:** 2 szt.'));
+  assert.ok(md.includes('**Tryb transportu:** Tylko proces (just-in-time'));
+  assert.ok(md.includes('Niewykonalny bilans'));
+  assert.ok(md.includes('Odmowa symulacji'));
+  assert.ok(md.includes('Pominięte kategorie zmian'));
+});
+
 
 
 

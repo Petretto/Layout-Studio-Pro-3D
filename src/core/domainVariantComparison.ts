@@ -188,6 +188,10 @@ export interface VariantComparisonRow {
 
 export interface VariantComparisonReport {
   baselineVariantId: string;
+  dataVersion: {
+    draftSchemaVersion: 6;
+    sourceSchemaVersion: 4 | 5;
+  };
   conditions: VariantExperimentConditions;
   rows: VariantComparisonRow[];
 }
@@ -1162,6 +1166,10 @@ export function buildVariantComparisonReport(
 
   return {
     baselineVariantId: baseline.id,
+    dataVersion: {
+      draftSchemaVersion: 6,
+      sourceSchemaVersion: baseline.sourceSchemaVersion,
+    },
     conditions: checkedConditions,
     rows,
   };
@@ -1203,7 +1211,7 @@ const fmtDelta = (val: number | null, unit = ''): string => {
 
 /** Generate a structured Markdown synthesis report for 4.5 / 4.6 variant comparison. */
 export function buildVariantComparisonMarkdownReport(report: VariantComparisonReport): string {
-  const {conditions, rows} = report;
+  const {conditions, rows, dataVersion} = report;
   const baseline = rows.find(r => r.isBaseline) ?? rows[0];
   const transportLabel = conditions.transportMode === 'just-in-time'
     ? 'Tylko proces (just-in-time, pominięty transport i założona dostępność materiałów)'
@@ -1213,8 +1221,9 @@ export function buildVariantComparisonMarkdownReport(report: VariantComparisonRe
   const lines: string[] = [
     '# Raport porównania wariantów szkicu 6 (4.5 / 4.6)',
     '',
-    '## 1. Wspólne warunki eksperymentu',
-    `- **Wariant bazowy:** ${baseline.name} (\`${baseline.variantId}\`)`,
+    '## 1. Wersja danych, wspólne warunki eksperymentu i założenia kosztowe',
+    `- **Wersja danych:** schemat roboczy szkicu \`v${dataVersion.draftSchemaVersion}\` (projekt źródłowy \`v${dataVersion.sourceSchemaVersion}\`)`,
+    `- **Wariant bazowy:** ${baseline.name} (\`${baseline.variantId}\`, zapis: \`${baseline.savedAt}\`)`,
     `- **Wielkość partii:** ${conditions.batch} szt.`,
     `- **Odstęp przybycia sztuk:** ${conditions.arrivalIntervalSeconds} s`,
     `- **Tryb transportu:** ${transportLabel}`,
