@@ -2,6 +2,7 @@ import {planDirectOperation} from '../src/core/directHandoffPlan';
 import {explainThroughput} from '../src/core/throughputExplanation';
 import {
   DOMAIN_VARIANTS_STORAGE_KEY,
+  buildVariantComparisonMarkdownReport,
   buildVariantComparisonReport,
   compareDomainVariants,
   deleteDomainVariant,
@@ -11,6 +12,7 @@ import {
   replaceDomainVariants,
   saveDomainVariant,
   summarizeStaticVariant,
+  validateCostAssumptions,
   type SavedDomainVariant,
 } from '../src/core/domainVariantComparison';
 import {proposeDomainBalance, applyDomainBalance} from '../src/core/domainBalancing';
@@ -6095,6 +6097,368 @@ test('4.1: dynamiczne oddzielne metryki obciążenia stanowisk, maszyn i operato
     assert.equal(w.activityRatio, Math.min(1, Math.round((w.totalActiveTimeSeconds / makespan) * 1000) / 1000));
   }
 });
+
+test('4.6: zestawienie wydajności (statycznej vs dynamicznej), czasu przejścia, WIP, obsady i powierzchni dla 4 wariantów', () => {
+  const originalJson = JSON.stringify(derive(parseProject(JSON.stringify({
+    ...base,
+    processSteps: base.processSteps.slice(0, 2),
+    bom: base.bom.filter(item => ['1', '1.1'].includes(item.associatedProcessStepId)),
+  }))).project);
+  let stSeq = 0;
+  const baseProj = prepareDomainMigration(
+    previewDomainMigrationFromV4(originalJson, () => `ST-46-${++stSeq}`),
+  ).project;
+
+  const op1 = baseProj.operations[0].id;
+  const op2 = baseProj.operations[1].id;
+  baseProj.stations = [
+    {id: 'ST-A', name: 'Gniazdo A', operationIds: [op1]},
+    {id: 'ST-B', name: 'Gniazdo B', operationIds: [op2]},
+  ];
+  baseProj.stationSettings = {
+    'ST-A': {operators: 1, parallelStations: 1},
+    'ST-B': {operators: 1, parallelStations: 1},
+  };
+  baseProj.facility = {widthMm: 10000, lengthMm: 20000, heightMm: 4000, gridSizeMm: 500};
+  baseProj.obstacles = [];
+  baseProj.layoutObjects = [];
+  baseProj.product = {id: 'PROD-46', name: 'Wyrób testowy 4.6'};
+  baseProj.workers = [{id: 'W-1', name: 'Operator 1'}];
+  for (const op of baseProj.operations) {
+    op.physicalRole = {kind: 'body-work'};
+    op.staffing = {
+      requiredWorkers: 1,
+      timeVariants: [{
+        workerCount: 1,
+        timeProfile: {
+          durationSeconds: 20,
+          durationBasis: 'measured',
+          manualWork: [{startSeconds: 0, endSeconds: 20, basis: 'measured'}],
+          machineRun: [],
+          operatorPresence: [{startSeconds: 0, endSeconds: 20, basis: 'measured'}],
+        },
+      }],
+    };
+  }
+  baseProj.workerRunSelection = {
+    teamWorkerIds: ['W-1'],
+    operations: [
+      {operationId: op1, workerCount: 1, eligibleWorkerIds: ['W-1']},
+      {operationId: op2, workerCount: 1, eligibleWorkerIds: ['W-1']},
+    ],
+  };
+  const shift = {shifts: [{startSeconds: 0, endSeconds: 2000, basis: 'confirmed' as const}], breaks: []};
+  baseProj.resourceCalendars = {
+    workers: {'W-1': structuredClone(shift)},
+    stations: {'ST-A': structuredClone(shift), 'ST-B': structuredClone(shift)},
+  };
+  baseProj.stationRouting = {
+    selectionRule: 'earliest-start-then-shortest-route',
+    equipmentPlacements: [],
+    operations: [
+      {operationId: op1, candidates: [{stationId: 'ST-A', copy: 1, requiredEquipmentIds: []}]},
+      {operationId: op2, candidates: [{stationId: 'ST-B', copy: 1, requiredEquipmentIds: []}]},
+    ],
+    routes: [{
+      id: 'R-AB',
+      from: {stationId: 'ST-A', copy: 1},
+      to: {stationId: 'ST-B', copy: 1},
+      distanceMm: 8000,
+      basis: 'confirmed',
+      source: 'Pomiar trasy bazowej',
+      transportTime: {durationSeconds: 10, basis: 'measured', source: 'Pomiar przejazdu 10 s'},
+    }],
+  };
+  baseProj.bodyRunInput = {
+    bodies: [
+      {id: 'B-1', productId: baseProj.product!.id, location: {kind: 'station', stationId: 'ST-A', copy: 1}},
+      {id: 'B-2', productId: baseProj.product!.id, location: {kind: 'station', stationId: 'ST-A', copy: 1}},
+    ],
+    jobs: [
+      {job: 1, bodyId: 'B-1'},
+      {job: 2, bodyId: 'B-2'},
+    ],
+  };
+
+  // Wariant 2: Dodatkowy pracownik (W-2)
+  const addWorkerProj = structuredClone(baseProj);
+  addWorkerProj.workers.push({id: 'W-2', name: 'Operator 2'});
+  addWorkerProj.resourceCalendars!.workers['W-2'] = structuredClone(shift);
+  addWorkerProj.workerRunSelection = {
+    teamWorkerIds: ['W-1', 'W-2'],
+    operations: [
+      {operationId: op1, workerCount: 1, eligibleWorkerIds: ['W-1']},
+      {operationId: op2, workerCount: 1, eligibleWorkerIds: ['W-2']},
+    ],
+  };
+
+  // Wariant 3: Dodatkowe stanowisko (kopia równoległa ST-B#2 + obsada 2 os.)
+  const addStationProj = structuredClone(addWorkerProj);
+  addStationProj.stationSettings['ST-B'].parallelStations = 2;
+  addStationProj.stationRouting!.operations[1].candidates.push({
+    stationId: 'ST-B',
+    copy: 2,
+    requiredEquipmentIds: [],
+  });
+  addStationProj.stationRouting!.routes.push({
+    id: 'R-AB2',
+    from: {stationId: 'ST-A', copy: 1},
+    to: {stationId: 'ST-B', copy: 2},
+    distanceMm: 8000,
+    basis: 'confirmed',
+    source: 'Pomiar trasy do kopii 2',
+    transportTime: {durationSeconds: 10, basis: 'measured', source: 'Pomiar przejazdu 10 s'},
+  });
+
+  // Wariant 4: Zmieniony layout (obiekty 2D/3D na hali + krótsza trasa 2000 mm / 2 s)
+  const changedLayoutProj = structuredClone(baseProj);
+  changedLayoutProj.targetLayoutType = 'UShape';
+  changedLayoutProj.stationRouting!.routes[0].distanceMm = 2000;
+  changedLayoutProj.stationRouting!.routes[0].transportTime = {
+    durationSeconds: 2,
+    basis: 'measured',
+    source: 'Pomiar po zbliżeniu gniazd',
+  };
+  changedLayoutProj.layoutObjects = [
+    {
+      id: 'OBJ-A',
+      name: 'Stół A',
+      type: 'Table',
+      xMm: 2000,
+      yMm: 2000,
+      zMm: 0,
+      widthMm: 2000,
+      lengthMm: 1000,
+      heightMm: 900,
+      rotationDeg: 0,
+      colorHex: '#336699',
+      workstationId: 'ST-A',
+    },
+    {
+      id: 'OBJ-B',
+      name: 'Stół B',
+      type: 'Table',
+      xMm: 5000,
+      yMm: 2000,
+      zMm: 0,
+      widthMm: 2000,
+      lengthMm: 1000,
+      heightMm: 900,
+      rotationDeg: 0,
+      colorHex: '#339966',
+      workstationId: 'ST-B',
+    },
+  ];
+
+  const storage = new DraftStorage();
+  const s1 = saveDomainVariant(storage, {id: 'V-BASE', name: 'Baza 1 os.', category: 'baseline', originalJson, project: baseProj}, null);
+  const s2 = saveDomainVariant(storage, {id: 'V-WORK', name: 'Wariant +1 pracownik', category: 'additional-worker', originalJson, project: addWorkerProj}, s1.raw);
+  const s3 = saveDomainVariant(storage, {id: 'V-STAT', name: 'Wariant +1 kopia stacji', category: 'additional-station', originalJson, project: addStationProj}, s2.raw);
+  const s4 = saveDomainVariant(storage, {id: 'V-LAY', name: 'Wariant zmieniony layout', category: 'changed-layout', originalJson, project: changedLayoutProj}, s3.raw);
+
+  const report = compareDomainVariants(s4.saved.variants, 'V-BASE', {
+    batch: 2,
+    arrivalIntervalSeconds: 1,
+    transportMode: 'configured',
+  });
+
+  const rBase = report.rows.find(r => r.variantId === 'V-BASE')!;
+  const rWork = report.rows.find(r => r.variantId === 'V-WORK')!;
+  const rStat = report.rows.find(r => r.variantId === 'V-STAT')!;
+  const rLay = report.rows.find(r => r.variantId === 'V-LAY')!;
+
+  // 1. Wydajność statyczna (pułap kopii = 3600 / 20 = 180 szt./h) vs dynamiczna
+  assert.equal(rBase.staticSummary.maxStaticCopyLoadSeconds, 20);
+  assert.equal(rBase.staticSummary.staticCapacityPerHour, 180);
+  assert.equal(rBase.dynamic.status, 'completed');
+  assert.equal(rWork.dynamic.status, 'completed');
+  assert.equal(rStat.dynamic.status, 'completed');
+  assert.equal(rLay.dynamic.status, 'completed');
+
+  if (
+    rBase.dynamic.status === 'completed' &&
+    rWork.dynamic.status === 'completed' &&
+    rStat.dynamic.status === 'completed' &&
+    rLay.dynamic.status === 'completed'
+  ) {
+    // Baza (1 os.):
+    // Szt. 1: OP1 [0,20], tr [20,30], OP2 [30,50] (koniec 50)
+    // Szt. 2: przybycie t=1, start OP1 czeka na W-1 (koniec OP1 szt.1 w t=20, ale W-1 w t=20 może wziąć szt.2 OP1 [20,40], a potem szt.1 OP2 [40,60], tr szt.2 [40,50], OP2 szt.2 [60,80])
+    assert.ok(rWork.dynamic.makespanSeconds < rBase.dynamic.makespanSeconds, 'Dodatkowy pracownik skraca makespan');
+    assert.ok(rWork.dynamic.deltaThroughputPerHour! > 0, 'Dodatkowy pracownik zwiększa przepustowość');
+    assert.ok(rLay.dynamic.makespanSeconds < rBase.dynamic.makespanSeconds, 'Krótsza trasa skraca makespan');
+
+    // 2. Czas przejścia (od przybycia vs w procesie od startu 1. operacji) i sprawność przepływu
+    assert.ok(rBase.dynamic.averageLeadTimeSeconds >= rBase.dynamic.averageProcessingSpanSeconds);
+    assert.equal(rBase.dynamic.netProcessingSeconds, 80); // 2 szt. * (20 + 20) s
+    assert.equal(rBase.dynamic.netProcessingPerPieceSeconds, 40);
+    assert.ok(rBase.dynamic.flowEfficiencyRatio > 0 && rBase.dynamic.flowEfficiencyRatio <= 1);
+    assert.equal(rBase.dynamic.deltaAverageLeadTimeSeconds, 0);
+    assert.ok(rWork.dynamic.deltaAverageLeadTimeSeconds! < 0, 'Dodatkowy pracownik skraca średni czas przejścia');
+
+    // 3. WIP (w procesie i w systemie — prawo Little’a w oknie makespanu)
+    assert.ok(rBase.dynamic.averageActiveWipPieces > 0);
+    assert.ok(rBase.dynamic.maxActiveWipPieces >= 1 && rBase.dynamic.maxActiveWipPieces <= 2);
+    assert.ok(rBase.dynamic.averageSystemWipPieces >= rBase.dynamic.averageActiveWipPieces);
+    assert.equal(rBase.dynamic.maxSystemWipPieces, 2);
+
+    // 4. Obsada i stanowiska (wykorzystanie zasobów)
+    assert.equal(rBase.staticSummary.teamWorkersCount, 1);
+    assert.equal(rWork.staticSummary.teamWorkersCount, 2);
+    assert.equal(rStat.staticSummary.activeCopiesCount, 3); // ST-A#1, ST-B#1, ST-B#2
+    assert.ok(rBase.dynamic.averageTeamWorkerUtilization > 0 && rBase.dynamic.averageTeamWorkerUtilization <= 1);
+    assert.ok(rWork.dynamic.averageTeamWorkerUtilization > 0 && rWork.dynamic.averageTeamWorkerUtilization <= 1);
+    assert.ok(rBase.dynamic.averageActiveCopyOccupancy > 0 && rBase.dynamic.averageActiveCopyOccupancy <= 1);
+
+    // 5. Powierzchnia: rozróżnienie hali od obrysu obiektów i brak zgadywania gdy layoutObjects=[]
+    assert.equal(rBase.staticSummary.hasLayoutObjects, false);
+    assert.equal(rBase.staticSummary.objectsFootprintSqm, 0);
+    assert.equal(rBase.staticSummary.boundingBoxAreaSqm, null);
+    assert.equal(rBase.staticSummary.facilityAreaSqm, 200); // 10m * 20m = 200 m²
+
+    assert.equal(rLay.staticSummary.hasLayoutObjects, true);
+    assert.equal(rLay.staticSummary.objectsFootprintSqm, 4); // 2 stoły po 2m * 1m = 4 m²
+    assert.equal(rLay.staticSummary.deltaObjectsFootprintSqm, 4);
+    // Stoły w x=2000 (szer. 2000 -> [1000, 3000]) i x=5000 (szer. 2000 -> [4000, 6000]) -> rozpiętość X = 5000 mm, Y = 1000 mm -> 5 m²
+    assert.equal(rLay.staticSummary.boundingBoxAreaSqm, 5);
+
+    // 6. Brak podanych stawek kosztowych -> costEvaluation === null (brak zgadywania stawek)
+    assert.equal(rBase.dynamic.costEvaluation, null);
+    assert.equal(rWork.dynamic.costEvaluation, null);
+    assert.equal(rLay.dynamic.costEvaluation, null);
+  }
+});
+
+test('4.6: jawne stawki i założenia kosztowe (rozliczanie makespanu vs czasu aktywnego, walidacja i raport Markdown)', () => {
+  // Walidacja stawek kosztowych:
+  assert.equal(validateCostAssumptions(null), null);
+  assert.equal(validateCostAssumptions({currency: 'PLN', basis: 'assumed', source: ''}), null);
+  assert.throws(
+    () => validateCostAssumptions({currency: 'PLN', basis: 'assumed', source: '', operatorHourlyRate: 80}),
+    /jawne źródło/,
+  );
+  assert.throws(
+    () => validateCostAssumptions({currency: 'PLN', basis: 'assumed', source: 'Kalkulacja', operatorHourlyRate: -10}),
+    /nieujemną liczbą/,
+  );
+  assert.throws(
+    () => validateCostAssumptions({currency: 'PLN', basis: 'assumed', source: 'Tylko opis bez stawek'}),
+    /co najmniej jedną jawną stawkę/,
+  );
+
+  const originalJson = JSON.stringify(derive(parseProject(JSON.stringify({
+    ...base,
+    processSteps: [base.processSteps[0]],
+    bom: base.bom.filter(item => item.associatedProcessStepId === '1'),
+  }))).project);
+  let idSeq = 0;
+  const p1 = prepareDomainMigration(previewDomainMigrationFromV4(originalJson, () => `ST-COST-${++idSeq}`)).project;
+  const opId = p1.operations[0].id;
+  p1.stations = [{id: 'ST-1', name: 'Stacja 1', operationIds: [opId]}];
+  p1.stationSettings = {'ST-1': {operators: 1, parallelStations: 1}};
+  p1.facility = {widthMm: 10000, lengthMm: 10000, heightMm: 4000, gridSizeMm: 500}; // 100 m²
+  p1.obstacles = [];
+  p1.layoutObjects = [];
+  p1.workers = [{id: 'W-1', name: 'Operator 1'}];
+  p1.operations[0].staffing = {
+    requiredWorkers: 1,
+    timeVariants: [{
+      workerCount: 1,
+      timeProfile: {
+        durationSeconds: 1800, // 0.5 h na sztukę
+        durationBasis: 'measured',
+        manualWork: [{startSeconds: 0, endSeconds: 1800, basis: 'measured'}],
+        machineRun: [],
+        operatorPresence: [{startSeconds: 0, endSeconds: 1800, basis: 'measured'}],
+      },
+    }],
+  };
+  p1.workerRunSelection = {
+    teamWorkerIds: ['W-1'],
+    operations: [{operationId: opId, workerCount: 1, eligibleWorkerIds: ['W-1']}],
+  };
+
+  // Wariant 2: 2 równoległe kopie stanowiska i 2 pracowników (dla 2 sztuk makespan spada z 3600 s = 1 h do 1800 s = 0.5 h)
+  const p2 = structuredClone(p1);
+  p2.workers.push({id: 'W-2', name: 'Operator 2'});
+  p2.stationSettings['ST-1'].parallelStations = 2;
+  p2.workerRunSelection = {
+    teamWorkerIds: ['W-1', 'W-2'],
+    operations: [{operationId: opId, workerCount: 1, eligibleWorkerIds: ['W-1', 'W-2']}],
+  };
+  p2.layoutObjects = [{
+    id: 'OBJ-1',
+    name: 'Gniazdo podwójne',
+    type: 'Table',
+    xMm: 2000,
+    yMm: 2000,
+    zMm: 0,
+    widthMm: 3000,
+    lengthMm: 2000,
+    heightMm: 900,
+    rotationDeg: 0,
+    colorHex: '#225588',
+    workstationId: 'ST-1',
+  }]; // 6 m²
+
+  const storage = new DraftStorage();
+  const v1 = saveDomainVariant(storage, {id: 'C-BASE', name: '1 kopia / 1 os.', category: 'baseline', originalJson, project: p1}, null);
+  const v2 = saveDomainVariant(storage, {id: 'C-PAR', name: '2 kopie / 2 os.', category: 'additional-station', originalJson, project: p2}, v1.raw);
+
+  const report = compareDomainVariants(v2.saved.variants, 'C-BASE', {
+    batch: 2,
+    arrivalIntervalSeconds: 1,
+    transportMode: 'just-in-time',
+    costAssumptions: {
+      currency: 'PLN',
+      basis: 'confirmed',
+      accountingMode: 'committed-makespan',
+      source: 'Taryfikator wydziału montażu 2026',
+      operatorHourlyRate: 100,
+      stationHourlyRate: 60,
+      floorSqmRate: 50,
+    },
+  });
+
+  const row1 = report.rows[0];
+  const row2 = report.rows[1];
+  assert.equal(row1.dynamic.status, 'completed');
+  assert.equal(row2.dynamic.status, 'completed');
+  if (row1.dynamic.status === 'completed' && row2.dynamic.status === 'completed') {
+    // Wariant 1: 2 sztuki sekwencyjnie -> makespan = 3600 s (1 h), 1 pracownik (1 h), 1 kopia (1 h)
+    // Koszt pracy = 100 PLN, koszt stanowiska = 60 PLN, koszt operacyjny partii = 160 PLN (80 PLN/szt.)
+    // Brak obiektów layoutObjects -> objectsFootprintCost = null, facilityFloorCost = 100 m² * 50 = 5000 PLN
+    assert.equal(row1.dynamic.makespanSeconds, 3600);
+    const c1 = row1.dynamic.costEvaluation!;
+    assert.ok(c1);
+    assert.equal(c1.laborCommittedHours, 1);
+    assert.equal(c1.laborCommittedCost, 100);
+    assert.equal(c1.stationCommittedHours, 1);
+    assert.equal(c1.stationCommittedCost, 60);
+    assert.equal(c1.batchOperatingCost, 160);
+    assert.equal(c1.unitOperatingCost, 80);
+    assert.equal(c1.objectsFootprintCost, null);
+    assert.equal(c1.facilityFloorCost, 5000);
+
+    // Wariant 2: 2 sztuki równolegle (start t=0 i t=1 -> koniec t=1801 s) -> makespan = 1801 s
+    // Z obiektem layoutObjects 6 m² -> objectsFootprintCost = 6 * 50 = 300 PLN
+    assert.equal(row2.dynamic.makespanSeconds, 1801);
+    const c2 = row2.dynamic.costEvaluation!;
+    assert.ok(c2);
+    assert.equal(c2.laborActiveHours, 1); // 2 * 1800 s = 3600 s = 1 h pracy aktywnej
+    assert.equal(c2.laborActiveCost, 100);
+    assert.equal(c2.objectsFootprintCost, 300);
+
+    const md = buildVariantComparisonMarkdownReport(report);
+    assert.ok(md.includes('# Raport porównania wariantów szkicu 6 (4.5 / 4.6)'));
+    assert.ok(md.includes('Taryfikator wydziału montażu 2026'));
+    assert.ok(md.includes('1 kopia / 1 os.'));
+    assert.ok(md.includes('2 kopie / 2 os.'));
+    assert.ok(md.includes('160 PLN'));
+    assert.ok(md.includes('300'));
+  }
+});
+
 
 
 

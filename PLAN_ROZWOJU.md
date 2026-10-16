@@ -44,7 +44,11 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 4.4: cały plan 33/67 = **49,3%**; pierwsze wydanie 33/65 = **50,8%**; Etap 4: 4/7 = **57,1%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po 4.6: cały plan 35/67 = **52,2%**; pierwsze wydanie 35/65 = **53,8%**; Etap 4: 6/7 = **85,7%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+
+Stan historyczny po 4.5: cały plan 34/67 = **50,7%**; pierwsze wydanie 34/65 = **52,3%**.
+
+Stan historyczny po 4.4: cały plan 33/67 = **49,3%**; pierwsze wydanie 33/65 = **50,8%**.
 
 Stan historyczny po 4.3: cały plan 32/67 = **47,8%**; pierwsze wydanie 32/65 = **49,2%**.
 
@@ -80,6 +84,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+4.6 (2026-10-16): wdrożone w zakresie zapisanych wariantów szkicu 6 — rozszerzono `src/core/domainVariantComparison.ts` i `src/components/studio/DomainVariantComparisonPanel.tsx` o pełne zestawienie 6 wymiarów (wydajność statyczna `[szt./h]` vs dynamiczna przepustowość symulacji `[szt./h]` i $\Delta$, czas przejścia wyrobu `lead time` i czas w procesie `span` od $O_1$ ze wskaźnikiem przepływu $T_{\text{netto}}/T_{\text{span}}$, WIP całego wyrobu policzony analitycznie na osi czasu `WIP aktywny` oraz `WIP w systemie` średni i szczytowy, obsada i wykorzystanie zespołu/kopii względem makespanu, powierzchnia hali i suma obrysów 2D `layoutObjects` z obrysem minimalnym AABB bez zmyślania wymiarów dla stacji bez geometrii, oraz koszty przy jawnych stawkach i założeniach: `costBasis`, `accountingMode: makespan | active-only`, walidacja ujemnych/niepoprawnych stawek i brak wyceny bez jawnych stawek). Dodano tabelę syntezy `aria-label="Tabela syntezy wskaźników 4.6"` oraz generator i eksport raportu porównania `.md` zawierającego wersję danych (`schemaVersion`), warunki eksperymentu i założenia kosztowe. Zmiana każdego parametru stawek lub założeń kosztowych unieważnia wynik porównania. Backup `backup/v0.4.0_przed_4_6_20261016` (311 plików z SHA256). Celowane 18/18 PASS (2 nowe testy 4.6), okresowa pełna regresja 305/305 PASS (trzeci ukończony pakiet od 4.3c, po 4.4, 4.5 i 4.6), typecheck/build PASS, Edge CDP UI PASS (`tests/qa/verify_4_6.mjs`, `outputs/qa/verify_4_6.png`). Raport `WERYFIKACJA_ZESTAWIENIA_WARIANTOW_4_6.md`. Następny punkt: 4.7. Postęp 35/67 = 52,2%, pierwsze wydanie 35/65 = 53,8%. Vercel nie zweryfikowano.
 
 4.5 (2026-10-16): wdrożone w zakresie zapisanych wariantów szkicu 6 — `domainVariantComparison.ts` i panel `DomainVariantComparisonPanel.tsx`: izolowana biblioteka wariantów (`layout-studio-domain-v6-variants-v1`, maks. 20, ochrona źródeł 4/5 i uszkodzonych zapisów), zapisywanie wariantów `baseline`, `additional-worker`, `additional-station`, `changed-layout`, przywracanie do aktywnego szkicu 6 z historią `Cofnij/Ponów` oraz porównywanie wybranych wariantów w tle (`schedule.worker.ts`) przy jednakowych, jawnych warunkach eksperymentu (`batch`, `arrivalIntervalSeconds`, `transportMode: configured | just-in-time`). Kontrola zmienionych czynników (`process`, `workers`, `stations`, `layout`) z ostrzeżeniami przy zmianach wieloczynnikowych lub zmianie procesu/popytu. Oddzielenie szacunku statycznego (`[s/szt.]` bez dzielenia czasu operacji przez liczbę osób) od wyników dynamicznych harmonogramu (makespan i Δ vs baza, przepustowość `[szt./h]` i Δ, średni czas przejścia, praca netto, unia pracy najdłużej pracującej kopii, oczekiwania jednoprzyczynowe, oddzielne oczekiwania mieszane bez dzielenia czasu, blokady wyjścia, ruchy transportowe, jawne założenia). Zmiana warunków, bazy, wyboru lub szkicu unieważnia wynik porównania. Backup `backup/v0.4.0_przed_4_5_20261016` (307 plików z SHA256). Celowane 19/19 PASS (3 nowe testy 4.5), typecheck/build PASS, Edge CDP UI PASS (`tests/qa/verify_4_5.mjs`, `outputs/qa/verify_4_5.png`). Bez pełnej regresji (drugi pakiet od pełnego przebiegu 296/296 w 4.3c). Raport `WERYFIKACJA_POROWNANIA_WARIANTOW_4_5.md`. Następny punkt: 4.6. Postęp 34/67 = 50,7%, pierwsze wydanie 34/65 = 52,3%. Vercel nie zweryfikowano.
 
@@ -459,7 +465,7 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | 4.3 | Uwzględniać wymagania wyposażenia i kompetencji oraz wskazywać brak wykonalnego przydziału. | wdrożone |
 | 4.4 | Wyjaśniać przyczynę ograniczenia przepustowości: obróbka, obsada, transport, blokada lub brak materiału. | wdrożone |
 | 4.5 | Porównywać zapisane warianty przy tych samych warunkach eksperymentu: bazowy, dodatkowy pracownik, dodatkowe stanowisko, zmieniony layout. | wdrożone |
-| 4.6 | Zestawiać wydajność, czas przejścia, WIP, obsadę, powierzchnię i koszty przy jawnych stawkach oraz założeniach. | nierozpoczęte |
+| 4.6 | Zestawiać wydajność, czas przejścia, WIP, obsadę, powierzchnię i koszty przy jawnych stawkach oraz założeniach. | wdrożone |
 | 4.7 | Proponować zmiany wraz z uzasadnieniem i wynikiem sprawdzenia w symulacji; bez deklaracji gwarantowanego optimum. | nierozpoczęte |
 
 **Odbiór etapu:** można porównać dodanie operatora, stanowiska i reorganizację pracy, rozróżniając szacunek zdolności od wyniku symulacji. Raport zawiera wersję danych, warunki eksperymentu i założenia kosztowe.

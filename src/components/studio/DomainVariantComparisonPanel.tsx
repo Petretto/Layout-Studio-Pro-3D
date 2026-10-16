@@ -3,6 +3,7 @@ import type {DomainProjectV6} from '../../core/domainProject';
 import {download} from '../../core/project';
 import {startScheduleTask, type ScheduleProgress} from '../../core/scheduleTask';
 import {
+  buildVariantComparisonMarkdownReport,
   buildVariantComparisonReport,
   deleteDomainVariant,
   domainVariantCategoryLabels,
@@ -16,6 +17,9 @@ import {
   type DomainVariantCategory,
   type SavedDomainVariant,
   type VariantComparisonReport,
+  type VariantCostAccountingMode,
+  type VariantCostBasis,
+  type VariantCostCurrency,
   type VariantScheduleOutcomeInput,
 } from '../../core/domainVariantComparison';
 
@@ -57,6 +61,14 @@ export function DomainVariantComparisonPanel({
   const [batch, setBatch] = useState(String(project.bodyRunInput?.jobs.length ?? 1));
   const [arrivalInterval, setArrivalInterval] = useState('1');
   const [justInTime, setJustInTime] = useState(false);
+  const [costCurrency, setCostCurrency] = useState<VariantCostCurrency>('PLN');
+  const [costBasis, setCostBasis] = useState<VariantCostBasis>('assumed');
+  const [costAccountingMode, setCostAccountingMode] = useState<VariantCostAccountingMode>('committed-makespan');
+  const [costSource, setCostSource] = useState('');
+  const [operatorRateInput, setOperatorRateInput] = useState('');
+  const [stationRateInput, setStationRateInput] = useState('');
+  const [floorRateInput, setFloorRateInput] = useState('');
+  const [showMarkdownPreview, setShowMarkdownPreview] = useState(false);
   const [report, setReport] = useState<VariantComparisonReport | null>(null);
   const [progress, setProgress] = useState<{variantIndex: number; variantCount: number; variantName: string; schedule: ScheduleProgress} | null>(null);
   const [message, setMessage] = useState('');
@@ -106,6 +118,11 @@ export function DomainVariantComparisonPanel({
   );
 
   const currentProjectSignature = useMemo(() => JSON.stringify(project), [project]);
+
+  const markdownReport = useMemo(
+    () => (report ? buildVariantComparisonMarkdownReport(report) : ''),
+    [report],
+  );
 
   const handleSaveVariant = () => {
     clearComparison();
@@ -183,6 +200,12 @@ export function DomainVariantComparisonPanel({
     }
   };
 
+  const parseOptionalRate = (raw: string): number | null => {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+    return Number(trimmed);
+  };
+
   const runComparison = () => {
     clearComparison();
     setMessage('');
@@ -192,10 +215,25 @@ export function DomainVariantComparisonPanel({
       if (!Number.isSafeInteger(count) || count < 1 || count > 100) {
         throw new Error('Porównanie w UI dopuszcza partię od 1 do 100 sztuk.');
       }
+      const opRate = parseOptionalRate(operatorRateInput);
+      const stRate = parseOptionalRate(stationRateInput);
+      const sqRate = parseOptionalRate(floorRateInput);
+      const hasAnyCostInput = opRate !== null || stRate !== null || sqRate !== null || costSource.trim().length > 0;
       checkedConditions = validateExperimentConditions({
         batch: count,
         arrivalIntervalSeconds: Number(arrivalInterval),
         transportMode: justInTime ? 'just-in-time' : 'configured',
+        costAssumptions: hasAnyCostInput
+          ? {
+              currency: costCurrency,
+              basis: costBasis,
+              accountingMode: costAccountingMode,
+              source: costSource,
+              operatorHourlyRate: opRate,
+              stationHourlyRate: stRate,
+              floorSqmRate: sqRate,
+            }
+          : null,
       });
       if (selectedVariants.length < 2) {
         throw new Error('Wybierz co najmniej dwa zapisane warianty szkicu 6 do porównania.');
@@ -279,7 +317,7 @@ export function DomainVariantComparisonPanel({
         Zapisuj migawki szkicu 6 jako osobne warianty (bazowy, dodatkowy pracownik, dodatkowe stanowisko, zmieniony layout) i porównuj je przy dokładnie tych samych warunkach eksperymentu (wielkość partii, odstęp przybycia, tryb transportu). Biblioteka wariantów szkicu 6 jest odizolowana od projektów 4/5.
       </p>
       <p className="muted">
-        Szacunek statyczny (liczba zasobów i suma czasów technologicznych) jest prezentowany oddzielnie od wyniku dynamicznego harmonogramu. Oczekiwania mieszane są wykazane bez dzielenia czasu między przyczyny. Program nie dopowiada czasów, zasobów, zapasów ani parametrów nowych stanowisk.
+        Szacunek statyczny (liczba zasobów i suma czasów technologicznych) jest prezentowany oddzielnie od wyniku dynamicznego harmonogramu. Oczekiwania mieszane są wykazane bez dzielenia czasu między przyczyny. Program nie dopowiada czasów, zasobów, zapasów, powierzchni ani stawek kosztowych.
       </p>
 
       <div className="toolbar">
@@ -436,13 +474,122 @@ export function DomainVariantComparisonPanel({
             Symulacja porównania bez transportu — wszystko dostępne just in time (wspólny warunek dla wszystkich wariantów)
           </label>
 
+          <div aria-label="Jawne stawki kosztowe porównania 4.6">
+            <h5>Jawne stawki kosztowe i założenia porównania (opcjonalne — 4.6)</h5>
+            <p className="muted">
+              Stawki kosztowe nie są zgadywane ani uzupełniane domyślnie. Jeżeli wpiszesz dowolną stawkę, podaj również jej źródło/założenie.
+            </p>
+            <div className="toolbar">
+              <label className="field">
+                Waluta stawek
+                <select
+                  aria-label="Waluta stawek kosztowych wariantów"
+                  value={costCurrency}
+                  onChange={event => {
+                    clearComparison();
+                    setCostCurrency(event.target.value as VariantCostCurrency);
+                  }}
+                >
+                  <option value="PLN">PLN</option>
+                  <option value="EUR">EUR</option>
+                  <option value="USD">USD</option>
+                </select>
+              </label>
+              <label className="field">
+                Podstawa stawek
+                <select
+                  aria-label="Podstawa stawek kosztowych wariantów"
+                  value={costBasis}
+                  onChange={event => {
+                    clearComparison();
+                    setCostBasis(event.target.value as VariantCostBasis);
+                  }}
+                >
+                  <option value="assumed">założone (assumed)</option>
+                  <option value="confirmed">potwierdzone (confirmed)</option>
+                </select>
+              </label>
+              <label className="field">
+                Rozliczanie czasu zasobów
+                <select
+                  aria-label="Rozliczanie czasu zasobów w kosztach wariantów"
+                  value={costAccountingMode}
+                  onChange={event => {
+                    clearComparison();
+                    setCostAccountingMode(event.target.value as VariantCostAccountingMode);
+                  }}
+                >
+                  <option value="committed-makespan">zaangażowanie zespołu i kopii w horyzoncie makespanu</option>
+                  <option value="active-time">wyłącznie czas aktywnej pracy / zajętości</option>
+                </select>
+              </label>
+              <label className="field">
+                Stawka operatora [/h]
+                <input
+                  aria-label="Jawna stawka godzinowa operatora"
+                  type="number"
+                  min="0"
+                  step="any"
+                  placeholder="brak"
+                  value={operatorRateInput}
+                  onChange={event => {
+                    clearComparison();
+                    setOperatorRateInput(event.target.value);
+                  }}
+                />
+              </label>
+              <label className="field">
+                Stawka stanowiska [/h]
+                <input
+                  aria-label="Jawna stawka godzinowa stanowiska"
+                  type="number"
+                  min="0"
+                  step="any"
+                  placeholder="brak"
+                  value={stationRateInput}
+                  onChange={event => {
+                    clearComparison();
+                    setStationRateInput(event.target.value);
+                  }}
+                />
+              </label>
+              <label className="field">
+                Stawka powierzchni [/m²]
+                <input
+                  aria-label="Jawna stawka powierzchni m2"
+                  type="number"
+                  min="0"
+                  step="any"
+                  placeholder="brak"
+                  value={floorRateInput}
+                  onChange={event => {
+                    clearComparison();
+                    setFloorRateInput(event.target.value);
+                  }}
+                />
+              </label>
+              <label className="field">
+                Źródło i założenia stawek
+                <input
+                  aria-label="Źródło i założenia stawek kosztowych"
+                  value={costSource}
+                  placeholder="np. kalkulacja kontrolingu Q4 / założenie koncepcyjne"
+                  onChange={event => {
+                    clearComparison();
+                    setCostSource(event.target.value);
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+
           <div className="table-wrap" aria-label="Zapisane warianty szkicu 6">
             <table>
               <thead>
                 <tr>
                   <th>W porównaniu</th>
                   <th>Wariant i deklarowana rola</th>
-                  <th>Szacunek statyczny (zasoby, suma czasów, trasy)</th>
+                  <th>Szacunek statyczny (zasoby, suma czasów, trasy, powierzchnia)</th>
                   <th>Różnice względem wariantu bazowego</th>
                   <th>Akcje</th>
                 </tr>
@@ -478,7 +625,7 @@ export function DomainVariantComparisonPanel({
                         <div><small>{new Date(item.at).toLocaleString('pl-PL')} · ID: {item.id}</small></div>
                       </td>
                       <td>
-                        Zespół: {staticInfo.teamWorkersCount}/{staticInfo.definedWorkersCount} os. · Stanowiska: {staticInfo.activeStationsCount}/{staticInfo.totalStationsCount} (kopie: {staticInfo.totalCopiesCount}) · Suma czasów: {staticInfo.selectedWorkContentSeconds !== null ? `${staticInfo.selectedWorkContentSeconds} s/szt.` : 'brak wyboru'} ({basisLabel[staticInfo.timeBasis]}) · Trasy: {staticInfo.declaredRoutesCount} ({staticInfo.totalRouteDistanceMm} mm) · Układ: {staticInfo.targetLayoutType} ({staticInfo.layoutObjectsCount} ob.)
+                        Zespół: {staticInfo.teamWorkersCount}/{staticInfo.definedWorkersCount} os. · Stanowiska: {staticInfo.activeStationsCount}/{staticInfo.totalStationsCount} (kopie: {staticInfo.totalCopiesCount}) · Suma czasów: {staticInfo.selectedWorkContentSeconds !== null ? `${staticInfo.selectedWorkContentSeconds} s/szt.` : 'brak wyboru'} ({basisLabel[staticInfo.timeBasis]}) · Trasy: {staticInfo.declaredRoutesCount} ({staticInfo.totalRouteDistanceMm} mm) · Układ: {staticInfo.targetLayoutType} ({staticInfo.layoutObjectsCount} ob., pow. ob.: {staticInfo.objectsFootprintSqm} m², hala: {staticInfo.facilityAreaSqm} m²)
                       </td>
                       <td>
                         <div>{diff.summary.join('; ') || '—'}</div>
@@ -538,8 +685,131 @@ export function DomainVariantComparisonPanel({
             Zestawienie porównawcze — partia {report.conditions.batch} szt., odstęp przybycia {report.conditions.arrivalIntervalSeconds} s, tryb: {report.conditions.transportMode === 'just-in-time' ? 'just in time (bez transportu, założona dostępność materiałów)' : 'skonfigurowany (z transportem, korpusami i zaopatrzeniem)'}
           </h4>
           <p className="muted">
-            Wszystkie wiersze obliczono dla tych samych warunków eksperymentu. Szacunek statyczny [s/szt.] opisuje wyłącznie zapisane parametry i nie zastępuje wyniku symulacji. Czasy oczekiwań jednoprzyczynowych i oczekiwań mieszanych są rozdzielone (bez dzielenia oczekiwań mieszanych na poszczególne przyczyny).
+            Wszystkie wiersze obliczono dla tych samych warunków eksperymentu. Szacunek statyczny [s/szt.] oraz statyczny pułap kopii [szt./h] opisują wyłącznie zapisane parametry i nie zastępują wyniku symulacji. Czasy oczekiwań jednoprzyczynowych i oczekiwań mieszanych są rozdzielone (bez dzielenia oczekiwań mieszanych na poszczególne przyczyny).
           </p>
+
+          <div className="toolbar">
+            <button
+              onClick={() =>
+                download(
+                  markdownReport,
+                  `Raport_porownania_wariantow_v6_${new Date().toISOString().slice(0, 10)}.md`,
+                  'text/markdown;charset=utf-8',
+                )
+              }
+            >
+              Pobierz raport porównania (.md)
+            </button>
+            <button onClick={() => setShowMarkdownPreview(prev => !prev)}>
+              {showMarkdownPreview ? 'Ukryj podgląd raportu (.md)' : 'Pokaż podgląd raportu (.md)'}
+            </button>
+          </div>
+
+          {showMarkdownPreview && (
+            <pre aria-label="Podgląd raportu Markdown porównania wariantów" style={{whiteSpace: 'pre-wrap', maxHeight: '280px', overflow: 'auto'}}>
+              {markdownReport}
+            </pre>
+          )}
+
+          <h5>Synteza wskaźników 4.6: wydajność, czas przejścia, WIP, obsada, powierzchnia i koszty</h5>
+          <div className="table-wrap" aria-label="Tabela syntezy wskaźników 4.6">
+            <table>
+              <thead>
+                <tr>
+                  <th>Wariant (typ)</th>
+                  <th>Wydajność: stat. pułap kopii vs dyn. harmonogram [szt./h]</th>
+                  <th>Czas przejścia od przybycia / w procesie [s]</th>
+                  <th>WIP w procesie i w systemie [szt.]</th>
+                  <th>Obsada i stanowiska (wykorzystanie w makespanie)</th>
+                  <th>Powierzchnia: obiekty / obrys / hala [m²]</th>
+                  <th>Koszty przy jawnych stawkach i założeniach</th>
+                </tr>
+              </thead>
+              <tbody>
+                {report.rows.map(row => {
+                  const st = row.staticSummary;
+                  const dyn = row.dynamic;
+                  return (
+                    <tr key={`synth-${row.variantId}`} aria-label={`Synteza 4.6 ${row.name}`}>
+                      <td>
+                        <strong>{row.name}</strong>
+                        <div><small>{domainVariantCategoryLabels[row.category]}{row.isBaseline ? ' · BAZA' : ''}</small></div>
+                      </td>
+                      {dyn.status === 'error' ? (
+                        <td colSpan={6} className="error">
+                          Odmowa / zatrzymanie przebiegu: {dyn.error}
+                        </td>
+                      ) : (
+                        <>
+                          <td>
+                            <div>Dyn.: <strong>{dyn.throughputPerHour} szt./h</strong> ({row.isBaseline ? 'baza' : formatDelta(dyn.deltaThroughputPerHour, 'szt./h')})</div>
+                            <div>Makespan: <strong>{dyn.makespanSeconds} s</strong> ({row.isBaseline ? 'baza' : formatDelta(dyn.deltaMakespanSeconds, 's')})</div>
+                            <div><small>Stat. pułap kopii: {st.staticCapacityPerHour !== null ? `${st.staticCapacityPerHour} szt./h` : '—'} (maks. kopia: {st.maxStaticCopyLoadSeconds ?? '—'} s/szt.)</small></div>
+                          </td>
+                          <td>
+                            <div>Od przybycia: <strong>{dyn.averageLeadTimeSeconds} s</strong> ({row.isBaseline ? 'baza' : formatDelta(dyn.deltaAverageLeadTimeSeconds, 's')})</div>
+                            <div><small>zakres od przybycia: {dyn.minLeadTimeSeconds}–{dyn.maxLeadTimeSeconds} s</small></div>
+                            <div>W procesie (od 1. op.): <strong>{dyn.averageProcessingSpanSeconds} s</strong> ({row.isBaseline ? 'baza' : formatDelta(dyn.deltaAverageProcessingSpanSeconds, 's')})</div>
+                            <div><small>Praca netto/szt.: {dyn.netProcessingPerPieceSeconds} s · Sprawność przepływu: {(dyn.flowEfficiencyRatio * 100).toFixed(1)}%</small></div>
+                          </td>
+                          <td>
+                            <div>W procesie śr.: <strong>{dyn.averageActiveWipPieces} szt.</strong> ({row.isBaseline ? 'baza' : formatDelta(dyn.deltaAverageActiveWipPieces, 'szt.')}) · maks.: <strong>{dyn.maxActiveWipPieces} szt.</strong></div>
+                            <div><small>W systemie (od przybycia) śr.: {dyn.averageSystemWipPieces} szt. ({row.isBaseline ? 'baza' : formatDelta(dyn.deltaAverageSystemWipPieces, 'szt.')}) · maks.: {dyn.maxSystemWipPieces} szt.</small></div>
+                          </td>
+                          <td>
+                            <div>Zespół: <strong>{st.teamWorkersCount}/{st.definedWorkersCount} os.</strong> · aktywność: {dyn.workerActiveSeconds} s</div>
+                            <div><small>Wykorzystanie zespołu śr.: {(dyn.averageTeamWorkerUtilization * 100).toFixed(1)}% · maks. os.: {(dyn.maxTeamWorkerUtilization * 100).toFixed(1)}%</small></div>
+                            <div>Stanowiska: <strong>{st.activeStationsCount}/{st.totalStationsCount}</strong> · kopie akt.: <strong>{st.activeCopiesCount}/{st.totalCopiesCount}</strong></div>
+                            <div><small>Zajętość kopii śr.: {(dyn.averageActiveCopyOccupancy * 100).toFixed(1)}% · maks. kopii: {(dyn.maxActiveCopyOccupancy * 100).toFixed(1)}%</small></div>
+                          </td>
+                          <td>
+                            <div>Obiekty ({st.layoutObjectsCount}): <strong>{st.objectsFootprintSqm} m²</strong> ({row.isBaseline ? 'baza' : formatDelta(st.deltaObjectsFootprintSqm, 'm²')})</div>
+                            <div><small>Obrys zespołu ob.: {st.boundingBoxAreaSqm !== null ? `${st.boundingBoxAreaSqm} m²` : 'brak ob. layoutObjects'}</small></div>
+                            <div><small>Hala: {st.facilityAreaSqm} m² · Trasy: {st.totalRouteDistanceMm} mm</small></div>
+                          </td>
+                          <td>
+                            {dyn.costEvaluation ? (
+                              <>
+                                <div>
+                                  Koszt oper. partii: <strong>{dyn.costEvaluation.batchOperatingCost !== null ? `${dyn.costEvaluation.batchOperatingCost} ${dyn.costEvaluation.currency}` : 'brak stawek h'}</strong>
+                                  {dyn.costEvaluation.batchOperatingCost !== null && (
+                                    <> ({row.isBaseline ? 'baza' : formatDelta(dyn.costEvaluation.deltaBatchOperatingCost, dyn.costEvaluation.currency)})</>
+                                  )}
+                                </div>
+                                <div>
+                                  Koszt oper./szt.: <strong>{dyn.costEvaluation.unitOperatingCost !== null ? `${dyn.costEvaluation.unitOperatingCost} ${dyn.costEvaluation.currency}/szt.` : '—'}</strong>
+                                  {dyn.costEvaluation.unitOperatingCost !== null && (
+                                    <> ({row.isBaseline ? 'baza' : formatDelta(dyn.costEvaluation.deltaUnitOperatingCost, `${dyn.costEvaluation.currency}/szt.`)})</>
+                                  )}
+                                </div>
+                                <div>
+                                  <small>
+                                    Praca (akt./zaang.): {dyn.costEvaluation.laborActiveCost ?? '—'} / {dyn.costEvaluation.laborCommittedCost ?? '—'} {dyn.costEvaluation.currency} · Stanowiska (zaj./zaang.): {dyn.costEvaluation.stationOccupiedCost ?? '—'} / {dyn.costEvaluation.stationCommittedCost ?? '—'} {dyn.costEvaluation.currency}
+                                  </small>
+                                </div>
+                                <div>
+                                  <small>
+                                    Pow. obiektów: {dyn.costEvaluation.objectsFootprintCost !== null ? `${dyn.costEvaluation.objectsFootprintCost} ${dyn.costEvaluation.currency}` : 'brak ob./stawki'} · Hala: {dyn.costEvaluation.facilityFloorCost !== null ? `${dyn.costEvaluation.facilityFloorCost} ${dyn.costEvaluation.currency}` : '—'} · BOM/szt.: {dyn.costEvaluation.bomUnitCost ?? 'brak BOM'}
+                                  </small>
+                                </div>
+                                <div><small>Podstawa: {dyn.costEvaluation.basis === 'confirmed' ? 'potwierdzone' : 'założone'} ({dyn.costEvaluation.source})</small></div>
+                              </>
+                            ) : (
+                              <div>
+                                <small>Brak podanych stawek (koszty operacyjne i powierzchniowe nie są zgadywane). BOM/szt.: {st.bomUnitCost !== null ? `${st.bomUnitCost} (wg BOM)` : 'brak pozycji BOM'}.</small>
+                              </div>
+                            )}
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <h5>Szczegóły ograniczeń przepustowości (4.4) i kontroli czynników (4.5)</h5>
           <div className="table-wrap">
             <table>
               <thead>
@@ -637,3 +907,4 @@ export function DomainVariantComparisonPanel({
     </div>
   );
 }
+

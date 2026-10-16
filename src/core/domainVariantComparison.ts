@@ -3,6 +3,7 @@ import {parseStationProjectV5} from './stationProject';
 import {parseDomainProjectV6, type DomainProjectV6} from './domainProject';
 import {scheduleWorkerRun, type TransportSimulationMode, type WorkerScheduleResult} from './workerSchedule';
 import {explainThroughput} from './throughputExplanation';
+import {calculateScheduleStateMetrics} from './scheduleStateMetrics';
 import type {DomainDraftStoragePort} from './domainDraftStorage';
 
 /** Isolated from active v4/v5 storage and the single active schema-6 draft key. */
@@ -40,10 +41,25 @@ export type DomainVariantLibraryRead =
   | {status: 'corrupt'; raw: string; error: string}
   | {status: 'unavailable'; error: string};
 
+export type VariantCostCurrency = 'PLN' | 'EUR' | 'USD';
+export type VariantCostBasis = 'confirmed' | 'assumed';
+export type VariantCostAccountingMode = 'committed-makespan' | 'active-time';
+
+export interface VariantCostAssumptions {
+  currency: VariantCostCurrency;
+  basis: VariantCostBasis;
+  source: string;
+  accountingMode?: VariantCostAccountingMode;
+  operatorHourlyRate?: number | null;
+  stationHourlyRate?: number | null;
+  floorSqmRate?: number | null;
+}
+
 export interface VariantExperimentConditions {
   batch: number;
   arrivalIntervalSeconds: number;
   transportMode: TransportSimulationMode;
+  costAssumptions?: VariantCostAssumptions | null;
 }
 
 export type VariantFactorDimension = 'process' | 'workers' | 'stations' | 'layout';
@@ -63,11 +79,19 @@ export interface StaticVariantSummary {
   totalCopiesCount: number;
   selectedWorkContentSeconds: number | null;
   maxStaticCopyLoadSeconds: number | null;
+  staticCapacityPerHour: number | null;
   staticLoadBasis: string;
   declaredRoutesCount: number;
   totalRouteDistanceMm: number;
   targetLayoutType: DomainProjectV6['targetLayoutType'];
   layoutObjectsCount: number;
+  hasLayoutObjects: boolean;
+  facilityAreaSqm: number;
+  objectsFootprintSqm: number;
+  boundingBoxAreaSqm: number | null;
+  deltaObjectsFootprintSqm: number | null;
+  bomItemsCount: number;
+  bomUnitCost: number | null;
   timeBasis: 'measured' | 'assumed' | 'mixed' | 'missing';
 }
 
@@ -81,6 +105,32 @@ export interface VariantSingleCauseWaits {
   totalSingleCause: number;
 }
 
+export interface VariantCostEvaluation {
+  currency: VariantCostCurrency;
+  basis: VariantCostBasis;
+  source: string;
+  accountingMode: VariantCostAccountingMode;
+  laborActiveHours: number;
+  laborCommittedHours: number;
+  laborActiveCost: number | null;
+  laborCommittedCost: number | null;
+  selectedLaborCost: number | null;
+  stationOccupiedHours: number;
+  stationCommittedHours: number;
+  stationOccupiedCost: number | null;
+  stationCommittedCost: number | null;
+  selectedStationCost: number | null;
+  batchOperatingCost: number | null;
+  unitOperatingCost: number | null;
+  deltaBatchOperatingCost: number | null;
+  deltaUnitOperatingCost: number | null;
+  objectsFootprintCost: number | null;
+  deltaObjectsFootprintCost: number | null;
+  facilityFloorCost: number | null;
+  bomUnitCost: number | null;
+  bomBatchCost: number | null;
+}
+
 export interface VariantDynamicCompleted {
   status: 'completed';
   makespanSeconds: number;
@@ -88,7 +138,28 @@ export interface VariantDynamicCompleted {
   throughputPerHour: number;
   deltaThroughputPerHour: number | null;
   averageLeadTimeSeconds: number;
+  minLeadTimeSeconds: number;
+  maxLeadTimeSeconds: number;
+  deltaAverageLeadTimeSeconds: number | null;
+  averageProcessingSpanSeconds: number;
+  minProcessingSpanSeconds: number;
+  maxProcessingSpanSeconds: number;
+  deltaAverageProcessingSpanSeconds: number | null;
   netProcessingSeconds: number;
+  netProcessingPerPieceSeconds: number;
+  flowEfficiencyRatio: number;
+  averageActiveWipPieces: number;
+  maxActiveWipPieces: number;
+  deltaAverageActiveWipPieces: number | null;
+  averageSystemWipPieces: number;
+  maxSystemWipPieces: number;
+  deltaAverageSystemWipPieces: number | null;
+  workerActiveSeconds: number;
+  averageTeamWorkerUtilization: number;
+  maxTeamWorkerUtilization: number;
+  stationOccupiedSeconds: number;
+  averageActiveCopyOccupancy: number;
+  maxActiveCopyOccupancy: number;
   busiestCopy: {stationId: string; copy: number; seconds: number; share: number} | null;
   singleCauseWaitSeconds: VariantSingleCauseWaits;
   mixedWaitSeconds: number;
@@ -96,6 +167,7 @@ export interface VariantDynamicCompleted {
   blockedHoldSeconds: number;
   transportMovementsSeconds: number;
   transportMovementsCount: number;
+  costEvaluation: VariantCostEvaluation | null;
   assumptions: string[];
 }
 
@@ -125,6 +197,7 @@ export type VariantScheduleOutcomeInput =
   | {status: 'error'; error: string};
 
 const round = (value: number) => Math.round((value + Number.EPSILON) * 1000) / 1000;
+const roundCost = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
 function isCategory(value: unknown): value is DomainVariantCategory {
   return value === 'baseline' || value === 'additional-worker' || value === 'additional-station' || value === 'changed-layout';
@@ -289,6 +362,65 @@ export function prepareVariantForDraftRestore(variant: SavedDomainVariant, curre
   return parseDomainProjectV6(JSON.stringify(variant.project));
 }
 
+function computeLayoutSurfaceMetrics(project: DomainProjectV6): {
+  hasLayoutObjects: boolean;
+  facilityAreaSqm: number;
+  objectsFootprintSqm: number;
+  boundingBoxAreaSqm: number | null;
+} {
+  const facilityAreaSqm = round((project.facility.widthMm * project.facility.lengthMm) / 1_000_000);
+  const objects = project.layoutObjects;
+  if (objects.length === 0) {
+    return {
+      hasLayoutObjects: false,
+      facilityAreaSqm,
+      objectsFootprintSqm: 0,
+      boundingBoxAreaSqm: null,
+    };
+  }
+  let footprintMm2 = 0;
+  let minX = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  for (const obj of objects) {
+    footprintMm2 += obj.widthMm * obj.lengthMm;
+    const rad = (Math.abs(obj.rotationDeg || 0) * Math.PI) / 180;
+    const cos = Math.abs(Math.cos(rad));
+    const sin = Math.abs(Math.sin(rad));
+    const halfSpanX = (obj.widthMm * cos + obj.lengthMm * sin) / 2;
+    const halfSpanY = (obj.widthMm * sin + obj.lengthMm * cos) / 2;
+    minX = Math.min(minX, obj.xMm - halfSpanX);
+    maxX = Math.max(maxX, obj.xMm + halfSpanX);
+    minY = Math.min(minY, obj.yMm - halfSpanY);
+    maxY = Math.max(maxY, obj.yMm + halfSpanY);
+  }
+  return {
+    hasLayoutObjects: true,
+    facilityAreaSqm,
+    objectsFootprintSqm: round(footprintMm2 / 1_000_000),
+    boundingBoxAreaSqm: round(((maxX - minX) * (maxY - minY)) / 1_000_000),
+  };
+}
+
+function maxConcurrentIntervals(intervals: readonly {start: number; end: number}[]): number {
+  const events: {t: number; delta: number}[] = [];
+  for (const item of intervals) {
+    if (item.end > item.start) {
+      events.push({t: item.start, delta: 1});
+      events.push({t: item.end, delta: -1});
+    }
+  }
+  events.sort((a, b) => (a.t !== b.t ? a.t - b.t : a.delta - b.delta));
+  let current = 0;
+  let max = 0;
+  for (const ev of events) {
+    current += ev.delta;
+    if (current > max) max = current;
+  }
+  return max;
+}
+
 export function summarizeStaticVariant(project: DomainProjectV6): StaticVariantSummary {
   const definedWorkersCount = project.workers.length;
   const teamWorkersCount = project.workerRunSelection?.teamWorkerIds.length ?? 0;
@@ -326,6 +458,7 @@ export function summarizeStaticVariant(project: DomainProjectV6): StaticVariantS
   }
 
   let maxStaticCopyLoadSeconds: number | null = null;
+  let staticCapacityPerHour: number | null = null;
   let staticLoadBasis = 'Brak pełnego wyboru wariantów obsady.';
   if (selectedWorkContentSeconds !== null) {
     const copyLoads = new Map<string, number>();
@@ -349,6 +482,9 @@ export function summarizeStaticVariant(project: DomainProjectV6): StaticVariantS
       }
     }
     maxStaticCopyLoadSeconds = copyLoads.size > 0 ? Math.max(...copyLoads.values()) : 0;
+    staticCapacityPerHour = maxStaticCopyLoadSeconds !== null && maxStaticCopyLoadSeconds > 0
+      ? round(3600 / maxStaticCopyLoadSeconds)
+      : null;
     staticLoadBasis = hasMultipleCandidates
       ? 'Wiele dopuszczonych kopii — rzeczywisty podział wyznacza harmonogram.'
       : 'Statyczna suma czasów technologicznych na kopię [s/szt.] — nie jest dowodem przepustowości.';
@@ -358,6 +494,11 @@ export function summarizeStaticVariant(project: DomainProjectV6): StaticVariantS
   const declaredRoutesCount = routes.length;
   const totalRouteDistanceMm = round(routes.reduce((sum, r) => sum + r.distanceMm, 0));
   const timeBasis = bases.size === 0 ? 'missing' : bases.size === 1 ? [...bases][0] : 'mixed';
+  const surface = computeLayoutSurfaceMetrics(project);
+  const bomItemsCount = project.bom.length;
+  const bomUnitCost = bomItemsCount > 0
+    ? roundCost(project.bom.reduce((sum, item) => sum + item.quantityPerUnit * item.unitCost, 0))
+    : null;
 
   return {
     definedWorkersCount,
@@ -368,11 +509,19 @@ export function summarizeStaticVariant(project: DomainProjectV6): StaticVariantS
     totalCopiesCount,
     selectedWorkContentSeconds,
     maxStaticCopyLoadSeconds,
+    staticCapacityPerHour,
     staticLoadBasis,
     declaredRoutesCount,
     totalRouteDistanceMm,
     targetLayoutType: project.targetLayoutType,
     layoutObjectsCount: project.layoutObjects.length,
+    hasLayoutObjects: surface.hasLayoutObjects,
+    facilityAreaSqm: surface.facilityAreaSqm,
+    objectsFootprintSqm: surface.objectsFootprintSqm,
+    boundingBoxAreaSqm: surface.boundingBoxAreaSqm,
+    deltaObjectsFootprintSqm: null,
+    bomItemsCount,
+    bomUnitCost,
     timeBasis,
   };
 }
@@ -611,7 +760,59 @@ function collectRunAssumptions(
       assumptions.push('Kalendarze zmian/przerw zawierają przedziały założone');
     }
   }
+  if (conditions.costAssumptions) {
+    const ca = conditions.costAssumptions;
+    const basisLabel = ca.basis === 'confirmed' ? 'potwierdzone' : 'założone';
+    const modeLabel = (ca.accountingMode ?? 'committed-makespan') === 'committed-makespan'
+      ? 'zaangażowanie zasobów w horyzoncie makespanu'
+      : 'wyłącznie czas aktywnej pracy/zajętości';
+    assumptions.push(`Stawki kosztowe (${ca.currency}, ${basisLabel}, ${modeLabel}): ${ca.source}`);
+  }
   return assumptions;
+}
+
+export function validateCostAssumptions(cost?: VariantCostAssumptions | null): VariantCostAssumptions | null {
+  if (!cost) return null;
+  const hasOperatorRate = cost.operatorHourlyRate !== undefined && cost.operatorHourlyRate !== null;
+  const hasStationRate = cost.stationHourlyRate !== undefined && cost.stationHourlyRate !== null;
+  const hasFloorRate = cost.floorSqmRate !== undefined && cost.floorSqmRate !== null;
+  const trimmedSource = typeof cost.source === 'string' ? cost.source.trim() : '';
+
+  if (!hasOperatorRate && !hasStationRate && !hasFloorRate && !trimmedSource) {
+    return null;
+  }
+  if (cost.currency !== 'PLN' && cost.currency !== 'EUR' && cost.currency !== 'USD') {
+    throw new Error('Koszty wariantów: waluta musi być jedną z wartości PLN, EUR albo USD.');
+  }
+  if (cost.basis !== 'confirmed' && cost.basis !== 'assumed') {
+    throw new Error('Koszty wariantów: podstawa stawek musi być określona jako confirmed albo assumed.');
+  }
+  const accountingMode: VariantCostAccountingMode = cost.accountingMode ?? 'committed-makespan';
+  if (accountingMode !== 'committed-makespan' && accountingMode !== 'active-time') {
+    throw new Error('Koszty wariantów: nieznany tryb rozliczania czasu zasobów.');
+  }
+  if (!hasOperatorRate && !hasStationRate && !hasFloorRate) {
+    throw new Error('Koszty wariantów: podaj co najmniej jedną jawną stawkę (operatora, stanowiska lub powierzchni).');
+  }
+  if (!trimmedSource) {
+    throw new Error('Koszty wariantów: podaj jawne źródło lub opis założeń dla wprowadzonych stawek kosztowych.');
+  }
+  const checkNonNegative = (val: number | null | undefined, label: string): number | null => {
+    if (val === undefined || val === null) return null;
+    if (!Number.isFinite(val) || val < 0) {
+      throw new Error(`Koszty wariantów: stawka „${label}” musi być nieujemną liczbą skończoną.`);
+    }
+    return roundCost(val);
+  };
+  return {
+    currency: cost.currency,
+    basis: cost.basis,
+    source: trimmedSource,
+    accountingMode,
+    operatorHourlyRate: checkNonNegative(cost.operatorHourlyRate, 'stawka godzinowa operatora'),
+    stationHourlyRate: checkNonNegative(cost.stationHourlyRate, 'stawka godzinowa stanowiska'),
+    floorSqmRate: checkNonNegative(cost.floorSqmRate, 'stawka powierzchni m²'),
+  };
 }
 
 export function validateExperimentConditions(conditions: VariantExperimentConditions): VariantExperimentConditions {
@@ -624,10 +825,85 @@ export function validateExperimentConditions(conditions: VariantExperimentCondit
   if (conditions.transportMode !== 'configured' && conditions.transportMode !== 'just-in-time') {
     throw new Error('Warunki eksperymentu: nieznany tryb transportu.');
   }
+  const checkedCosts = validateCostAssumptions(conditions.costAssumptions);
   return {
     batch: conditions.batch,
     arrivalIntervalSeconds: conditions.arrivalIntervalSeconds,
     transportMode: conditions.transportMode,
+    ...(checkedCosts ? {costAssumptions: checkedCosts} : {}),
+  };
+}
+
+function evaluateVariantCosts(
+  costAssumptions: VariantCostAssumptions | null,
+  batch: number,
+  makespanSeconds: number,
+  staticSummary: StaticVariantSummary,
+  workerActiveSeconds: number,
+  stationOccupiedSeconds: number,
+): VariantCostEvaluation | null {
+  if (!costAssumptions) return null;
+  const accountingMode: VariantCostAccountingMode = costAssumptions.accountingMode ?? 'committed-makespan';
+  const makespanHours = makespanSeconds / 3600;
+  const laborActiveHours = round(workerActiveSeconds / 3600);
+  const laborCommittedHours = round(staticSummary.teamWorkersCount * makespanHours);
+  const stationOccupiedHours = round(stationOccupiedSeconds / 3600);
+  const stationCommittedHours = round(staticSummary.activeCopiesCount * makespanHours);
+
+  const opRate = costAssumptions.operatorHourlyRate ?? null;
+  const stRate = costAssumptions.stationHourlyRate ?? null;
+  const sqRate = costAssumptions.floorSqmRate ?? null;
+
+  const laborActiveCost = opRate !== null ? roundCost(laborActiveHours * opRate) : null;
+  const laborCommittedCost = opRate !== null ? roundCost(laborCommittedHours * opRate) : null;
+  const selectedLaborCost = accountingMode === 'committed-makespan' ? laborCommittedCost : laborActiveCost;
+
+  const stationOccupiedCost = stRate !== null ? roundCost(stationOccupiedHours * stRate) : null;
+  const stationCommittedCost = stRate !== null ? roundCost(stationCommittedHours * stRate) : null;
+  const selectedStationCost = accountingMode === 'committed-makespan' ? stationCommittedCost : stationOccupiedCost;
+
+  const hasOperatingRate = selectedLaborCost !== null || selectedStationCost !== null;
+  const batchOperatingCost = hasOperatingRate
+    ? roundCost((selectedLaborCost ?? 0) + (selectedStationCost ?? 0))
+    : null;
+  const unitOperatingCost = batchOperatingCost !== null && batch > 0
+    ? roundCost(batchOperatingCost / batch)
+    : null;
+
+  const objectsFootprintCost = sqRate !== null && staticSummary.hasLayoutObjects
+    ? roundCost(staticSummary.objectsFootprintSqm * sqRate)
+    : null;
+  const facilityFloorCost = sqRate !== null
+    ? roundCost(staticSummary.facilityAreaSqm * sqRate)
+    : null;
+
+  const bomUnitCost = staticSummary.bomUnitCost;
+  const bomBatchCost = bomUnitCost !== null ? roundCost(bomUnitCost * batch) : null;
+
+  return {
+    currency: costAssumptions.currency,
+    basis: costAssumptions.basis,
+    source: costAssumptions.source,
+    accountingMode,
+    laborActiveHours,
+    laborCommittedHours,
+    laborActiveCost,
+    laborCommittedCost,
+    selectedLaborCost,
+    stationOccupiedHours,
+    stationCommittedHours,
+    stationOccupiedCost,
+    stationCommittedCost,
+    selectedStationCost,
+    batchOperatingCost,
+    unitOperatingCost,
+    deltaBatchOperatingCost: null,
+    deltaUnitOperatingCost: null,
+    objectsFootprintCost,
+    deltaObjectsFootprintCost: null,
+    facilityFloorCost,
+    bomUnitCost,
+    bomBatchCost,
   };
 }
 
@@ -651,11 +927,16 @@ export function buildVariantComparisonReport(
     throw new Error('Porównywane warianty muszą pochodzić z tego samego projektu źródłowego 4/5.');
   }
 
-  const summarizeOutcome = (variant: SavedDomainVariant, outcome: VariantScheduleOutcomeInput): VariantDynamicOutcome => {
+  const summarizeOutcome = (
+    variant: SavedDomainVariant,
+    staticSummary: StaticVariantSummary,
+    outcome: VariantScheduleOutcomeInput,
+  ): VariantDynamicOutcome => {
     if (outcome.status === 'error') {
       return {status: 'error', error: outcome.error};
     }
     const explanation = explainThroughput(outcome.result);
+    const stateMetrics = calculateScheduleStateMetrics(variant.project, outcome.result);
     const byCategory = new Map(explanation.signals.map(s => [s.category, s]));
     const single = (cat: 'workers' | 'transport' | 'blocking' | 'material' | 'calendar' | 'other') =>
       byCategory.get(cat)?.singleCauseWaitSeconds ?? 0;
@@ -673,10 +954,94 @@ export function buildVariantComparisonReport(
     };
     const makespanSeconds = explanation.horizonSeconds;
     const throughputPerHour = makespanSeconds > 0 ? round((checkedConditions.batch / makespanSeconds) * 3600) : 0;
-    const leadTimes = outcome.result.jobs.map(job => job.finish - job.arrival);
+
+    // Lead times & processing spans per piece (job)
+    const jobs = outcome.result.jobs;
+    const leadTimes = jobs.map(job => Math.max(0, job.finish - job.arrival));
     const averageLeadTimeSeconds = leadTimes.length > 0
       ? round(leadTimes.reduce((sum, v) => sum + v, 0) / leadTimes.length)
       : 0;
+    const minLeadTimeSeconds = leadTimes.length > 0 ? round(Math.min(...leadTimes)) : 0;
+    const maxLeadTimeSeconds = leadTimes.length > 0 ? round(Math.max(...leadTimes)) : 0;
+
+    const activeIntervals: {start: number; end: number}[] = [];
+    const systemIntervals: {start: number; end: number}[] = [];
+    const processingSpans: number[] = [];
+
+    for (const job of jobs) {
+      const firstStart = job.starts.length > 0 ? Math.min(...job.starts) : job.arrival;
+      const span = Math.max(0, job.finish - firstStart);
+      processingSpans.push(span);
+      activeIntervals.push({start: firstStart, end: job.finish});
+      systemIntervals.push({start: job.arrival, end: job.finish});
+    }
+
+    const averageProcessingSpanSeconds = processingSpans.length > 0
+      ? round(processingSpans.reduce((sum, v) => sum + v, 0) / processingSpans.length)
+      : 0;
+    const minProcessingSpanSeconds = processingSpans.length > 0 ? round(Math.min(...processingSpans)) : 0;
+    const maxProcessingSpanSeconds = processingSpans.length > 0 ? round(Math.max(...processingSpans)) : 0;
+
+    const netProcessingSeconds = byCategory.get('processing')?.workSeconds ?? 0;
+    const netProcessingPerPieceSeconds = checkedConditions.batch > 0
+      ? round(netProcessingSeconds / checkedConditions.batch)
+      : 0;
+    const flowEfficiencyRatio = averageProcessingSpanSeconds > 0
+      ? round(Math.min(1, netProcessingPerPieceSeconds / averageProcessingSpanSeconds))
+      : 0;
+
+    // WIP (whole pieces in [0, makespanSeconds])
+    const totalActivePieceSeconds = processingSpans.reduce((sum, v) => sum + v, 0);
+    const totalSystemPieceSeconds = leadTimes.reduce((sum, v) => sum + v, 0);
+    const averageActiveWipPieces = makespanSeconds > 0 ? round(totalActivePieceSeconds / makespanSeconds) : 0;
+    const maxActiveWipPieces = maxConcurrentIntervals(activeIntervals);
+    const averageSystemWipPieces = makespanSeconds > 0 ? round(totalSystemPieceSeconds / makespanSeconds) : 0;
+    const maxSystemWipPieces = maxConcurrentIntervals(systemIntervals);
+
+    // Staffing & Station Utilization from ScheduleStateSummary
+    const teamWorkerIdSet = new Set(variant.project.workerRunSelection?.teamWorkerIds ?? []);
+    const teamWorkerMetrics = teamWorkerIdSet.size > 0
+      ? stateMetrics.workers.filter(w => teamWorkerIdSet.has(w.workerId))
+      : stateMetrics.workers;
+    const workerActiveSeconds = round(
+      teamWorkerMetrics.reduce((sum, w) => sum + w.totalActiveTimeSeconds, 0),
+    );
+    const averageTeamWorkerUtilization = teamWorkerMetrics.length > 0 && makespanSeconds > 0
+      ? round(Math.min(1, workerActiveSeconds / (teamWorkerMetrics.length * makespanSeconds)))
+      : 0;
+    const maxTeamWorkerUtilization = teamWorkerMetrics.length > 0
+      ? round(Math.max(...teamWorkerMetrics.map(w => w.activityRatio)))
+      : 0;
+
+    const routedStationIds = new Set(
+      (variant.project.stationRouting?.operations ?? []).flatMap(op => op.candidates.map(c => c.stationId)),
+    );
+    const assignedStationIds = new Set(
+      variant.project.stations.filter(s => s.operationIds.length > 0).map(s => s.id),
+    );
+    const activeStationIdSet = assignedStationIds.size > 0 ? assignedStationIds : routedStationIds;
+    const activeCopyMetrics = stateMetrics.stations.filter(
+      st => activeStationIdSet.has(st.stationId) || st.operationsCount > 0,
+    );
+    const stationOccupiedSeconds = round(
+      activeCopyMetrics.reduce((sum, st) => sum + st.totalOccupiedTimeSeconds, 0),
+    );
+    const averageActiveCopyOccupancy = activeCopyMetrics.length > 0 && makespanSeconds > 0
+      ? round(Math.min(1, stationOccupiedSeconds / (activeCopyMetrics.length * makespanSeconds)))
+      : 0;
+    const maxActiveCopyOccupancy = activeCopyMetrics.length > 0
+      ? round(Math.max(...activeCopyMetrics.map(st => st.occupancyRatio)))
+      : 0;
+
+    const costEvaluation = evaluateVariantCosts(
+      checkedConditions.costAssumptions ?? null,
+      checkedConditions.batch,
+      makespanSeconds,
+      staticSummary,
+      workerActiveSeconds,
+      stationOccupiedSeconds,
+    );
+
     return {
       status: 'completed',
       makespanSeconds,
@@ -684,7 +1049,28 @@ export function buildVariantComparisonReport(
       throughputPerHour,
       deltaThroughputPerHour: null,
       averageLeadTimeSeconds,
-      netProcessingSeconds: byCategory.get('processing')?.workSeconds ?? 0,
+      minLeadTimeSeconds,
+      maxLeadTimeSeconds,
+      deltaAverageLeadTimeSeconds: null,
+      averageProcessingSpanSeconds,
+      minProcessingSpanSeconds,
+      maxProcessingSpanSeconds,
+      deltaAverageProcessingSpanSeconds: null,
+      netProcessingSeconds,
+      netProcessingPerPieceSeconds,
+      flowEfficiencyRatio,
+      averageActiveWipPieces,
+      maxActiveWipPieces,
+      deltaAverageActiveWipPieces: null,
+      averageSystemWipPieces,
+      maxSystemWipPieces,
+      deltaAverageSystemWipPieces: null,
+      workerActiveSeconds,
+      averageTeamWorkerUtilization,
+      maxTeamWorkerUtilization,
+      stationOccupiedSeconds,
+      averageActiveCopyOccupancy,
+      maxActiveCopyOccupancy,
       busiestCopy: explanation.processingByCopy[0] ?? null,
       singleCauseWaitSeconds,
       mixedWaitSeconds: explanation.mixedWaitSeconds,
@@ -692,6 +1078,7 @@ export function buildVariantComparisonReport(
       blockedHoldSeconds: byCategory.get('blocking')?.workSeconds ?? 0,
       transportMovementsSeconds: explanation.transportSeconds,
       transportMovementsCount: explanation.transportCount,
+      costEvaluation,
       assumptions: collectRunAssumptions(variant.project, outcome.result, checkedConditions),
     };
   };
@@ -700,15 +1087,16 @@ export function buildVariantComparisonReport(
     const outcome = outcomesByVariantId.get(variant.id);
     if (!outcome) throw new Error(`Brak wyniku harmonogramu dla wariantu ${variant.name} (${variant.id}).`);
     const isBaseline = variant.id === baseline.id;
+    const staticSummary = summarizeStaticVariant(variant.project);
     return {
       variantId: variant.id,
       name: variant.name,
       category: variant.category,
       isBaseline,
       savedAt: variant.at,
-      staticSummary: summarizeStaticVariant(variant.project),
+      staticSummary,
       factorDiff: inspectVariantFactors(baseline.project, variant.project, variant.category, isBaseline),
-      dynamic: summarizeOutcome(variant, outcome),
+      dynamic: summarizeOutcome(variant, staticSummary, outcome),
     } satisfies VariantComparisonRow;
   });
 
@@ -716,13 +1104,58 @@ export function buildVariantComparisonReport(
   const baselineDynamic = baselineRow.dynamic.status === 'completed' ? baselineRow.dynamic : null;
 
   const rows = rawRows.map(row => {
-    if (row.dynamic.status !== 'completed' || !baselineDynamic) return row;
+    const updatedStatic: StaticVariantSummary = {
+      ...row.staticSummary,
+      deltaObjectsFootprintSqm: round(
+        row.staticSummary.objectsFootprintSqm - baselineRow.staticSummary.objectsFootprintSqm,
+      ),
+    };
+    if (row.dynamic.status !== 'completed' || !baselineDynamic) {
+      return {
+        ...row,
+        staticSummary: updatedStatic,
+      };
+    }
+    const baseCost = baselineDynamic.costEvaluation;
+    const rowCost = row.dynamic.costEvaluation;
+    const updatedCost: VariantCostEvaluation | null = rowCost
+      ? {
+          ...rowCost,
+          deltaBatchOperatingCost:
+            rowCost.batchOperatingCost !== null && baseCost?.batchOperatingCost !== null && baseCost?.batchOperatingCost !== undefined
+              ? roundCost(rowCost.batchOperatingCost - baseCost.batchOperatingCost)
+              : null,
+          deltaUnitOperatingCost:
+            rowCost.unitOperatingCost !== null && baseCost?.unitOperatingCost !== null && baseCost?.unitOperatingCost !== undefined
+              ? roundCost(rowCost.unitOperatingCost - baseCost.unitOperatingCost)
+              : null,
+          deltaObjectsFootprintCost:
+            rowCost.objectsFootprintCost !== null && baseCost?.objectsFootprintCost !== null && baseCost?.objectsFootprintCost !== undefined
+              ? roundCost(rowCost.objectsFootprintCost - baseCost.objectsFootprintCost)
+              : null,
+        }
+      : null;
+
     return {
       ...row,
+      staticSummary: updatedStatic,
       dynamic: {
         ...row.dynamic,
         deltaMakespanSeconds: round(row.dynamic.makespanSeconds - baselineDynamic.makespanSeconds),
         deltaThroughputPerHour: round(row.dynamic.throughputPerHour - baselineDynamic.throughputPerHour),
+        deltaAverageLeadTimeSeconds: round(
+          row.dynamic.averageLeadTimeSeconds - baselineDynamic.averageLeadTimeSeconds,
+        ),
+        deltaAverageProcessingSpanSeconds: round(
+          row.dynamic.averageProcessingSpanSeconds - baselineDynamic.averageProcessingSpanSeconds,
+        ),
+        deltaAverageActiveWipPieces: round(
+          row.dynamic.averageActiveWipPieces - baselineDynamic.averageActiveWipPieces,
+        ),
+        deltaAverageSystemWipPieces: round(
+          row.dynamic.averageSystemWipPieces - baselineDynamic.averageSystemWipPieces,
+        ),
+        costEvaluation: updatedCost,
       },
     };
   });
@@ -761,3 +1194,133 @@ export function compareDomainVariants(
   }
   return buildVariantComparisonReport(variants, baselineVariantId, checkedConditions, outcomes);
 }
+
+const fmtDelta = (val: number | null, unit = ''): string => {
+  if (val === null) return '—';
+  const sign = val > 0 ? '+' : '';
+  return `${sign}${val}${unit ? ` ${unit}` : ''}`;
+};
+
+/** Generate a structured Markdown synthesis report for 4.5 / 4.6 variant comparison. */
+export function buildVariantComparisonMarkdownReport(report: VariantComparisonReport): string {
+  const {conditions, rows} = report;
+  const baseline = rows.find(r => r.isBaseline) ?? rows[0];
+  const transportLabel = conditions.transportMode === 'just-in-time'
+    ? 'Tylko proces (just-in-time, pominięty transport i założona dostępność materiałów)'
+    : 'Skonfigurowany (jawne trasy, wózki, bufory i zaopatrzenie)';
+  const ca = conditions.costAssumptions ?? null;
+
+  const lines: string[] = [
+    '# Raport porównania wariantów szkicu 6 (4.5 / 4.6)',
+    '',
+    '## 1. Wspólne warunki eksperymentu',
+    `- **Wariant bazowy:** ${baseline.name} (\`${baseline.variantId}\`)`,
+    `- **Wielkość partii:** ${conditions.batch} szt.`,
+    `- **Odstęp przybycia sztuk:** ${conditions.arrivalIntervalSeconds} s`,
+    `- **Tryb transportu:** ${transportLabel}`,
+  ];
+
+  if (ca) {
+    const basisLabel = ca.basis === 'confirmed' ? 'potwierdzone (confirmed)' : 'założone (assumed)';
+    const modeLabel = (ca.accountingMode ?? 'committed-makespan') === 'committed-makespan'
+      ? 'zaangażowanie zasobów w horyzoncie makespanu'
+      : 'wyłącznie czas aktywnej pracy/zajętości';
+    lines.push(
+      `- **Jawne stawki kosztowe (${ca.currency}, ${basisLabel}):** źródło/założenia: *${ca.source}*; tryb rozliczenia: *${modeLabel}*`,
+      `  - Stawka godzinowa operatora: ${ca.operatorHourlyRate !== null && ca.operatorHourlyRate !== undefined ? `${ca.operatorHourlyRate} ${ca.currency}/h` : 'nie podano (brak obliczeń kosztu pracy)'}`,
+      `  - Stawka godzinowa stanowiska: ${ca.stationHourlyRate !== null && ca.stationHourlyRate !== undefined ? `${ca.stationHourlyRate} ${ca.currency}/h` : 'nie podano (brak obliczeń kosztu stanowisk)'}`,
+      `  - Stawka powierzchni: ${ca.floorSqmRate !== null && ca.floorSqmRate !== undefined ? `${ca.floorSqmRate} ${ca.currency}/m²` : 'nie podano (brak obliczeń kosztu powierzchni)'}`,
+    );
+  } else {
+    lines.push(
+      '- **Stawki kosztowe:** nie podano jawnych stawek godzinowych ani powierzchniowych — koszty operacyjne i powierzchniowe nie są zgadywane.',
+    );
+  }
+
+  lines.push(
+    '',
+    '## 2. Zestawienie wskaźników: wydajność, czas przejścia, WIP, obsada, powierzchnia i koszty (4.6)',
+    '',
+    '| Wariant | Kategoria | Wydajność stat. / dyn. [szt./h] | Makespan [s] (Δ) | Czas przejścia śr. od przybycia / w procesie [s] | WIP śr. / maks. w procesie (w systemie) [szt.] | Obsada (wykorzystanie śr./maks.) | Stanowiska i kopie (zajętość śr./maks.) | Powierzchnia ob. / obrys / hala [m²] | Koszt oper. partii / jedn. (Δ) |',
+    '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |',
+  );
+
+  for (const row of rows) {
+    const st = row.staticSummary;
+    const catLabel = domainVariantCategoryLabels[row.category];
+    const statCap = st.staticCapacityPerHour !== null ? `${st.staticCapacityPerHour}` : 'n/d';
+    const bboxLabel = st.boundingBoxAreaSqm !== null ? `${st.boundingBoxAreaSqm}` : 'brak ob.';
+    const surfaceCell = `${st.objectsFootprintSqm} (${fmtDelta(st.deltaObjectsFootprintSqm, 'm²')}) / ${bboxLabel} / ${st.facilityAreaSqm}`;
+
+    if (row.dynamic.status === 'error') {
+      lines.push(
+        `| **${row.name}** | ${catLabel} | stat. ${statCap} / BŁĄD | BŁĄD: ${row.dynamic.error} | — | — | ${st.teamWorkersCount}/${st.definedWorkersCount} os. | ${st.activeStationsCount}/${st.totalStationsCount} st. (${st.activeCopiesCount}/${st.totalCopiesCount} kopii) | ${surfaceCell} | — |`,
+      );
+      continue;
+    }
+
+    const d = row.dynamic;
+    const thrCell = `stat. ${statCap} / **${d.throughputPerHour}** (${fmtDelta(d.deltaThroughputPerHour, 'szt./h')})`;
+    const mkCell = `**${d.makespanSeconds}** (${fmtDelta(d.deltaMakespanSeconds, 's')})`;
+    const ltCell = `${d.averageLeadTimeSeconds} (${fmtDelta(d.deltaAverageLeadTimeSeconds, 's')}) / ${d.averageProcessingSpanSeconds} (${fmtDelta(d.deltaAverageProcessingSpanSeconds, 's')})`;
+    const wipCell = `${d.averageActiveWipPieces} (${fmtDelta(d.deltaAverageActiveWipPieces)}) / ${d.maxActiveWipPieces} (sys: ${d.averageSystemWipPieces} / ${d.maxSystemWipPieces})`;
+    const staffCell = `${st.teamWorkersCount}/${st.definedWorkersCount} os. (${(d.averageTeamWorkerUtilization * 100).toFixed(1)}% / ${(d.maxTeamWorkerUtilization * 100).toFixed(1)}%)`;
+    const copyCell = `${st.activeStationsCount}/${st.totalStationsCount} st., ${st.activeCopiesCount}/${st.totalCopiesCount} kopii (${(d.averageActiveCopyOccupancy * 100).toFixed(1)}% / ${(d.maxActiveCopyOccupancy * 100).toFixed(1)}%)`;
+
+    let costCell = 'brak jawnych stawek';
+    if (d.costEvaluation) {
+      const ce = d.costEvaluation;
+      if (ce.batchOperatingCost !== null && ce.unitOperatingCost !== null) {
+        costCell = `**${ce.batchOperatingCost} ${ce.currency}** (${fmtDelta(ce.deltaBatchOperatingCost, ce.currency)}) / **${ce.unitOperatingCost} ${ce.currency}/szt.**`;
+      } else if (ce.objectsFootprintCost !== null) {
+        costCell = `pow. ob.: ${ce.objectsFootprintCost} ${ce.currency}`;
+      }
+    }
+
+    lines.push(
+      `| **${row.name}**${row.isBaseline ? ' *(baza)*' : ''} | ${catLabel} | ${thrCell} | ${mkCell} | ${ltCell} | ${wipCell} | ${staffCell} | ${copyCell} | ${surfaceCell} | ${costCell} |`,
+    );
+  }
+
+  lines.push('', '## 3. Ograniczenia przepustowości (4.4), czynniki zmian i założenia wariantów', '');
+  for (const row of rows) {
+    lines.push(`### ${row.name} (${domainVariantCategoryLabels[row.category]})${row.isBaseline ? ' — Wariant bazowy' : ''}`);
+    lines.push(`- **Zmienione czynniki względem bazy:** ${row.factorDiff.summary.join('; ')}`);
+    if (row.factorDiff.comparabilityWarnings.length > 0) {
+      for (const warn of row.factorDiff.comparabilityWarnings) {
+        lines.push(`- **Ostrzeżenie porównywalności:** ${warn}`);
+      }
+    }
+    if (row.dynamic.status === 'error') {
+      lines.push(`- **Status harmonogramu:** BŁĄD — ${row.dynamic.error}`, '');
+      continue;
+    }
+    const d = row.dynamic;
+    const busiest = d.busiestCopy
+      ? `${d.busiestCopy.stationId}#${d.busiestCopy.copy} (${d.busiestCopy.seconds} s, ${(d.busiestCopy.share * 100).toFixed(1)}% makespanu)`
+      : 'brak';
+    lines.push(
+      `- **Najbardziej obciążona kopia stanowiska:** ${busiest}`,
+      `- **Oczekiwania jednoprzyczynowe łącznie:** ${d.singleCauseWaitSeconds.totalSingleCause} s (pracownicy: ${d.singleCauseWaitSeconds.workers} s, transport: ${d.singleCauseWaitSeconds.transport} s, blokady/kolejki: ${d.singleCauseWaitSeconds.blocking} s, materiał/podzespoły: ${d.singleCauseWaitSeconds.material} s, kalendarz: ${d.singleCauseWaitSeconds.calendar} s, inne: ${d.singleCauseWaitSeconds.other} s)`,
+      `- **Oczekiwania wieloprzyczynowe (nierozdzielane arbitralnie):** ${d.mixedWaitSeconds} s`,
+      `- **Przetrzymanie na zablokowanym wyjściu / kontynuacji:** ${d.blockedHoldSeconds} s`,
+      `- **Ruchy transportowe:** ${d.transportMovementsCount} (${d.transportMovementsSeconds} s)`,
+    );
+    if (d.costEvaluation) {
+      const ce = d.costEvaluation;
+      lines.push(
+        `- **Rozbicie kosztów (${ce.currency}, stawki ${ce.basis === 'confirmed' ? 'potwierdzone' : 'założone'}, źródło: ${ce.source}):** ` +
+        `praca aktywna=${ce.laborActiveCost ?? 'n/d'} (${ce.laborActiveHours} h), praca zaangażowana=${ce.laborCommittedCost ?? 'n/d'} (${ce.laborCommittedHours} h), ` +
+        `stanowiska zajęte=${ce.stationOccupiedCost ?? 'n/d'} (${ce.stationOccupiedHours} h), stanowiska zaangażowane=${ce.stationCommittedCost ?? 'n/d'} (${ce.stationCommittedHours} h), ` +
+        `powierzchnia obiektów=${ce.objectsFootprintCost ?? 'n/d'}, powierzchnia hali=${ce.facilityFloorCost ?? 'n/d'}, BOM/szt.=${ce.bomUnitCost ?? 'n/d'}`,
+      );
+    }
+    if (d.assumptions.length > 0) {
+      lines.push(`- **Założenia przebiegu:** ${d.assumptions.join('; ')}`);
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n');
+}
+
