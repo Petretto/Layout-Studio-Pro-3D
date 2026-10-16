@@ -1,7 +1,7 @@
 # Plan rozwoju i rejestr postępu aplikacji
 
 Data utworzenia: 2026-09-29  
-Ostatnia aktualizacja: 2026-10-15
+Ostatnia aktualizacja: 2026-10-16
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
 Przykładowy przypadek testowy: niepełny proces Eko; odbiór uniwersalności wymaga także niezależnych procesów.
 
@@ -77,7 +77,9 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
-4.3 (2026-10-16): nierozpoczęte — uwzględniać wymagania wyposażenia i kompetencji oraz wskazywać brak wykonalnego przydziału.
+Rejestr rozpoczęcia 4.3 (2026-10-16): nierozpoczęte → w trakcie. Pakiet 4.3a zakończony w zakresie rdzenia; postęp głównych ID pozostaje 31/67 = 46,3%, pierwsze wydanie 31/65 = 47,7% (`node scripts/plan_progress.mjs`).
+
+4.3a (2026-10-16): zakończony pakiet rdzenia — opcjonalny kontrakt kompetencji szkicu 6, walidacja referencji, API edycji i kontrola rzeczywistej obsady w zwykłym harmonogramie, buforach i bezpośrednim przekazaniu. Decyzja użytkownika: kompetencje obsady uzupełniają się. Brak zespołu dokładnej liczebności oraz limit przeszukiwania mają odrębne komunikaty. Backup `backup/v0.4.0_przed_4_3a_20261016` (296 plików z SHA256). Celowane 58/58 PASS (6 nowych), typecheck/build PASS; zapis/odczyt i ochrona źródeł 4/5 przez testy, bez odbioru UI i pełnej regresji. Kontrakt/raport `MODEL_KOMPETENCJI_I_PRZYDZIALOW_4_3.md`. Następne 4.3b — formularz i odbiór, 4.3c — integracja bilansu z dopuszczeniami i zasobami; całe 4.3 pozostaje w trakcie. Vercel nie zweryfikowano.
 
 4.2 (2026-10-16): wdrożone — umożliwić blokowanie przydziałów przed automatycznym balansowaniem. Rozszerzenie modelu operacji (`ProcessStep.lockedWorkstation`) oraz algorytmu bilansowania (`src/core/algorithms/lineBalancingEngine.ts`) dla heurystyk RPW i LCR. Zapewniono stabilne utrzymanie operacji zablokowanych na przypisanych stanowiskach (`assignedWorkstationId`), dopakowywanie operacji swobodnych wokół nich z zachowaniem czasu taktu i relacji pierwszeństwa, tranzytywną kontrolę kolejności stacji (blokada zablokowanego poprzednika na późniejszej stacji) oraz wymóg ciągłości numeracji stacji (odrzucenie luk). W UI Studio (`BalancingBoard.tsx` i `OperationInspector.tsx`): oznaczanie zablokowanych operacji symbolem 🔒 na wykresie Yamazumi i liście rozwijanej, szybki przycisk akcji w toolbarze oraz checkbox i selektor stacji docelowej w formularzu edycyjnym operacji. Backup `backup/v0.4.0_przed_4_2_20261016` (164 pliki z SHA256). Testy jednostkowe 35/35 PASS (`tests/core.test.ts`), pełna regresja 283/283 PASS, kompilacja/build PASS, test Edge CDP zrzut `outputs/qa/verify_4_2.png` (94 662 bajty). Raport: `RAPORT_BLOKOWANIA_PRZYDZIALOW_4_2.md`. Następny punkt: 4.3 — wymagania wyposażenia i kompetencji. Postęp: cały plan 31/67 = 46,3%, pierwsze wydanie 31/65 = 47,7%, Etap 4: 2/7 = 28,6%. Vercel nie zweryfikowano.
 
@@ -442,7 +444,7 @@ Te pozycje uszczegóławiają kroki nadrzędne; nie są dodatkowymi niezależnym
 | --- | --- | --- |
 | 4.1 | Pokazywać oddzielnie obciążenie stanowisk, maszyn i operatorów oraz objaśnić mianowniki wskaźników. | wdrożone |
 | 4.2 | Umożliwić blokowanie przydziałów przed automatycznym balansowaniem. | wdrożone |
-| 4.3 | Uwzględniać wymagania wyposażenia i kompetencji oraz wskazywać brak wykonalnego przydziału. | nierozpoczęte |
+| 4.3 | Uwzględniać wymagania wyposażenia i kompetencji oraz wskazywać brak wykonalnego przydziału. | w trakcie |
 | 4.4 | Wyjaśniać przyczynę ograniczenia przepustowości: obróbka, obsada, transport, blokada lub brak materiału. | nierozpoczęte |
 | 4.5 | Porównywać zapisane warianty przy tych samych warunkach eksperymentu: bazowy, dodatkowy pracownik, dodatkowe stanowisko, zmieniony layout. | nierozpoczęte |
 | 4.6 | Zestawiać wydajność, czas przejścia, WIP, obsadę, powierzchnię i koszty przy jawnych stawkach oraz założeniach. | nierozpoczęte |

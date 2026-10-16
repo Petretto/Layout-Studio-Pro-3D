@@ -7,6 +7,7 @@ import {createCartBook,finishCartMovement,startCartMovement,type CartBook,type C
 import {parseDomainProjectV6, type DomainProjectV6} from './domainProject';
 import {topologicalSort} from './validation';
 import {createWorkerRunPlan} from './workerRunPlan';
+import {teamCoversCompetencies} from './competencies';
 import {sharedAvailability, type CalendarWindow} from './resourceCalendar';
 import {createWorkerReservationBook, releaseWorkerTeam, reserveWorkerTeam,
   type WorkerReservationBook} from './workerReservations';
@@ -429,6 +430,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
               return;
             }
             combinations++;
+            if (!teamCoversCompetencies(checked, step.id, workerIds)) return;
             if (bodyId) {
               let probe = arrival;
               const futureWaitCauses = new Set<'workers' | 'calendar' | 'material'>();

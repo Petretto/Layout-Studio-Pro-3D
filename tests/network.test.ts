@@ -1,4 +1,6 @@
 import {planDirectOperation} from '../src/core/directHandoffPlan';
+import {assertCompetentTeamExists, teamCoversCompetencies, type CompetencyRequirements} from '../src/core/competencies';
+import {editDomainCompetencies} from '../src/core/domainCompetencyEditing';
 import {applyBufferedBodyEvent,validateBufferedBodyBook,type BufferedBodyBook} from '../src/core/bufferedBodyState';
 import {reserveBufferedAssemblyMovement,finishBufferedAssemblyMovement} from '../src/core/bufferedAssemblyMovement';
 import {createBufferBook,applyBufferEvent,bufferLoad,bufferHasSpace,bufferCanAccept,outputBlock} from '../src/core/bufferState';
@@ -1107,6 +1109,96 @@ test('2.6b: jawne kopie, stałe wyposażenie i potwierdzone trasy zachowują zap
     assert.throws(()=>saveDomainDraft(storage,{originalJson:original,project},'stale'),/zmieniony|konflikt|zmienił/i);
     assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),written.raw);
   }
+});
+
+function competencyFixture(project: ReturnType<typeof stationChoiceFixture>): CompetencyRequirements {
+  return {competencies:[{id:'C-A',name:'Kompetencja A'},{id:'C-B',name:'Kompetencja B'}],
+    workers:project.workers.slice(0,2).map((worker,index)=>({workerId:worker.id,competencyIds:[index?'C-B':'C-A']})),
+    operations:[{operationId:project.operations[0].id,requiredCompetencyIds:['C-A','C-B']}]};
+}
+
+test('4.3a: kompetencje uzupełniają się w rzeczywistej obsadzie, nie w całej liście dopuszczeń',()=>{
+  const project=stationChoiceFixture();project.competencyRequirements=competencyFixture(project);
+  const operationId=project.operations[0].id;
+  assert.equal(teamCoversCompetencies(project,operationId,['W-A']),false);
+  assert.equal(teamCoversCompetencies(project,operationId,['W-A','W-B']),true);
+  assert.throws(()=>createWorkerRunPlan(project,project.workerRunSelection!.teamWorkerIds,project.workerRunSelection!.operations),/brak wykonalnej obsady 1 osób/);
+  const profile=project.operations[0].staffing!.timeVariants[0].timeProfile;
+  project.operations[0].staffing!.timeVariants.push({workerCount:2,timeProfile:structuredClone(profile)});
+  project.workerRunSelection!.operations[0].workerCount=2;
+  const result=scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'});
+  assert.deepEqual(result.runs[0].workerIds,['W-A','W-B']);assertNoWorkerOverlap(result);
+});
+
+test('4.3a: harmonogram czeka na kompetentną osobę i zachowuje wymagane wyposażenie',()=>{
+  const project=stationChoiceFixture();project.competencyRequirements=competencyFixture(project);
+  project.competencyRequirements.workers[1].competencyIds=['C-A','C-B'];
+  project.resourceCalendars!.workers['W-B'].shifts[0].startSeconds=25;
+  const before=JSON.stringify(project),result=scheduleWorkerRun(project,1,1);
+  assert.deepEqual(result.runs[0].workerIds,['W-B']);assert.equal(result.runs[0].startSeconds,25);
+  assert.equal(result.runs[0].equipmentIds!.length,1);assertNoWorkerOverlap(result);
+  assert.equal(JSON.stringify(project),before);
+  const replies:ScheduleReply[]=[];executeScheduleRequest({project,batch:1,arrivalIntervalSeconds:1},r=>replies.push(r));
+  assert.deepEqual((replies.find(r=>r.kind==='result') as {result:unknown}).result,result);
+});
+
+test('4.3a: bufory i bezpośrednie przekazanie pomijają obsady bez kompetencji',()=>{
+  const project=bufferedProcessFixture();project.competencyRequirements=competencyFixture(project);
+  const qualified=project.workers[1].id;
+  project.competencyRequirements.workers[1].competencyIds=['C-A','C-B'];
+  const result=scheduleWorkerRun(project,1,2,undefined,undefined,{transportMode:'just-in-time'});
+  assert.ok(result.runs.filter(run=>run.operationId===project.operations[0].id).every(run=>run.workerIds.length===1&&run.workerIds[0]===qualified));
+  assertNoWorkerOverlap(result);
+  const plan=createWorkerRunPlan(project,project.workerRunSelection!.teamWorkerIds,project.workerRunSelection!.operations).operations[0];
+  const target={stationId:project.stations[0].id,copy:1,requiredEquipmentIds:[]};
+  const book=createWorkerReservationBook(project.workers.map(w=>w.id));
+  const direct=planDirectOperation(project,plan,target,0,book,new Set());
+  assert.deepEqual(direct.choice!.workers,[qualified]);
+  const blocked=planDirectOperation(project,plan,target,0,book,new Set([qualified]));
+  assert.equal(blocked.choice,undefined);
+});
+
+test('4.3a: walidacja kontraktu odrzuca obce referencje i chroni dane przed błędną edycją',()=>{
+  const project=stationChoiceFixture(),rules=competencyFixture(project),before=JSON.stringify(project);
+  const saved=editDomainCompetencies(project,rules);
+  assert.deepEqual(parseDomainProjectV6(JSON.stringify(saved)).competencyRequirements,rules);
+  assert.equal(editDomainCompetencies(saved,undefined).competencyRequirements,undefined);
+  for(const mutate of [
+    (r:CompetencyRequirements)=>{r.competencies.push({...r.competencies[0]});},
+    (r:CompetencyRequirements)=>{r.workers[0].workerId='UNKNOWN';},
+    (r:CompetencyRequirements)=>{r.workers[0].competencyIds=['UNKNOWN'];},
+    (r:CompetencyRequirements)=>{r.operations[0].operationId='UNKNOWN';},
+    (r:CompetencyRequirements)=>{r.operations[0].requiredCompetencyIds.push('C-A');},
+  ]){const invalid=structuredClone(rules);mutate(invalid);assert.throws(()=>editDomainCompetencies(saved,invalid),/Kompetencje/);}
+  assert.equal(JSON.stringify(project),before);
+  const original=JSON.stringify(derive({...base,bom:[]}).project);
+  for(const source of [original,JSON.stringify({...prepareStationMigration(previewStationMigration(original)).project,competencyRequirements:rules})]){
+    const contaminated=JSON.stringify({...JSON.parse(source),competencyRequirements:rules});
+    const preview=JSON.parse(source).schemaVersion===5?previewDomainMigrationFromV5(contaminated):previewDomainMigrationFromV4(contaminated);
+    const migrated=prepareDomainMigration(preview);
+    assert.equal(migrated.project.competencyRequirements,undefined);assert.equal(migrated.originalJson,contaminated);
+  }
+});
+
+test('4.3a: limit poszukiwania nie jest dowodem braku wykonalnej obsady',()=>{
+  const project=stationChoiceFixture();project.competencyRequirements=competencyFixture(project);
+  assert.throws(()=>assertCompetentTeamExists(project,project.operations[0].id,Array.from({length:30},(_,i)=>`X-${i}`),5),/limit 10000.*nierozstrzygnięta/);
+  assert.doesNotThrow(()=>assertCompetentTeamExists({},'operation',['worker'],1));
+});
+
+test('4.3a: zapis i ponowne otwarcie zachowują kontrakt i źródło, błędny zapis chroni poprzedni',()=>{
+  const original=JSON.stringify(derive({...base,schemaVersion:4,bom:[]}).project);
+  const project=stationChoiceFixture();project.competencyRequirements=competencyFixture(project);
+  const values=new Map<string,string>(),storage={getItem:(key:string)=>values.get(key)??null,setItem:(key:string,value:string)=>{values.set(key,value);}};
+  const saved=saveDomainDraft(storage,{originalJson:original,project},null);
+  const read=readDomainDraft(storage);assert.equal(read.status,'valid');
+  if(read.status!=='valid')throw new Error('Brak odczytu szkicu');
+  assert.equal(read.saved.originalJson,original);assert.deepEqual(read.saved.project.competencyRequirements,project.competencyRequirements);
+  const invalid=structuredClone(project);invalid.competencyRequirements!.workers[0].competencyIds=['UNKNOWN'];
+  assert.throws(()=>saveDomainDraft(storage,{originalJson:original,project:invalid},saved.raw),/Kompetencje/);
+  assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),saved.raw);
+  const replies:ScheduleReply[]=[];executeScheduleRequest({project,batch:1,arrivalIntervalSeconds:1},r=>replies.push(r));
+  assert.ok(!replies.some(r=>r.kind==='result'));assert.ok(JSON.stringify(replies).includes('brak wykonalnej obsady'));
 });
 
 function stationChoiceFixture(){

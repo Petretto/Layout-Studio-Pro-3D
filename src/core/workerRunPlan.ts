@@ -1,5 +1,6 @@
 import {parseDomainProjectV6, type DomainProjectV6} from './domainProject';
 import {validateWorkerRunSelection, type WorkerOperationSelection} from './workerRunSelection';
+import {assertCompetentTeamExists} from './competencies';
 
 export type {WorkerOperationSelection} from './workerRunSelection';
 
@@ -22,6 +23,7 @@ export function createWorkerRunPlan(project: DomainProjectV6, teamWorkerIds: rea
   const byOperation = new Map(selection.operations.map(item => [item.operationId, item]));
   const operations = checked.operations.map(operation => {
     const choice = byOperation.get(operation.id)!;
+    assertCompetentTeamExists(checked, operation.id, choice.eligibleWorkerIds, choice.workerCount);
     const variant = operation.staffing!.timeVariants.find(item => item.workerCount === choice.workerCount)!;
     const presence = variant.timeProfile.operatorPresence;
     return Object.freeze({operationId: operation.id, workerCount: choice.workerCount,

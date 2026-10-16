@@ -14,6 +14,7 @@ import {validateAssemblyTransport, type AssemblyTransport} from './assemblyTrans
 import {validateSubassemblyFlow, type SubassemblyFlow} from './subassemblyFlow';
 import {validateStationBuffers, type StationBuffersV6} from './stationBuffers';
 import {validateMaterialSupply, type MaterialSupplyV6} from './materialSupply';
+import {validateCompetencyRequirements, type CompetencyRequirements} from './competencies';
 
 export type DomainTimeBasis = 'measured' | 'assumed';
 export interface DomainTimeInterval {startSeconds: number; endSeconds: number; basis: DomainTimeBasis}
@@ -66,6 +67,7 @@ export interface DomainProjectV6 extends Omit<StationProjectV5,
   subassemblyFlow?: SubassemblyFlow;
   stationBuffers?: StationBuffersV6;
   materialSupply?: MaterialSupplyV6;
+  competencyRequirements?: CompetencyRequirements;
 }
 
 export interface PreparedDomainMigration {
@@ -272,6 +274,7 @@ export function parseDomainProjectV6(text: string): DomainProjectV6 {
       }
     } else throw new Error(`${label}: nieznany rodzaj roli.`);
   }
+  if (has(raw, 'competencyRequirements')) validateCompetencyRequirements(raw as unknown as DomainProjectV6, raw.competencyRequirements);
   if (has(raw, 'workerRunSelection')) {
     validateWorkerRunSelection(raw as unknown as DomainProjectV6, raw.workerRunSelection);
   }
@@ -292,8 +295,8 @@ export function prepareDomainMigration(preview: DomainMigrationPreview): Prepare
   const {schemaVersion: _version, processSteps, workstationSettings, stations, stationRouting: _unsupportedRouting,
     bodyRunInput: _unsupportedBodies, physicalConcurrency: _unsupportedConcurrency, materialNetwork: _unsupportedMaterialNetwork,
     assemblyTransport: _unsupportedAssemblyTransport, subassemblyFlow: _unsupportedSubassemblyFlow,
-    stationBuffers: _unsupportedBuffers, materialSupply: _unsupportedSupply, ...source} =
-    checked.stationProject as StationProjectV5 & {stationRouting?: unknown; bodyRunInput?: unknown; physicalConcurrency?: unknown; materialNetwork?: unknown; assemblyTransport?: unknown; subassemblyFlow?: unknown; stationBuffers?: unknown; materialSupply?: unknown};
+    stationBuffers: _unsupportedBuffers, materialSupply: _unsupportedSupply, competencyRequirements: _unsupportedCompetencies, ...source} =
+    checked.stationProject as StationProjectV5 & {stationRouting?: unknown; bodyRunInput?: unknown; physicalConcurrency?: unknown; materialNetwork?: unknown; assemblyTransport?: unknown; subassemblyFlow?: unknown; stationBuffers?: unknown; materialSupply?: unknown; competencyRequirements?: unknown};
   const operations = processSteps.map(step => {
     const {assignedWorkstationId: _assignment, timeProfile: _unsupportedProfile,
       staffing: _unsupportedStaffing, physicalRole: _unsupportedRole, ...operation} =

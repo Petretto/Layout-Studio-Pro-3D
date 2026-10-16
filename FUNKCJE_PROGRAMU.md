@@ -1,5 +1,7 @@
 # Layout Studio Pro 3D v0.4.0 — funkcje programu
 
+Aktualizacja 4.3a (2026-10-16): rdzeń szkicu 6 obsługuje opcjonalny słownik kompetencji, jawne kompetencje osób i wymagania operacji (API/zapis). Rzeczywista obsada musi łącznie pokryć wymagania; osoby mogą się uzupełniać. Kontrola działa także z buforami, bezpośrednim przekazaniem i JIT. Niewykonalna liczebność daje odmowę, limit poszukiwania ma osobny komunikat. Formularz i integracja z automatycznym bilansem pozostają do 4.3b/4.3c; całe 4.3 w trakcie. Kontrakt i dowody: `MODEL_KOMPETENCJI_I_PRZYDZIALOW_4_3.md`.
+
 Stan: 29.09.2026. Rejestr zmian i odbioru: `ZMIANY_v0.4.0.md`.
 Uzupełnienie stabilizacyjne z 29.09.2026: `WERYFIKACJA_STABILIZACJA_A.md`; bieżący plan i statusy: `PLAN_ROZWOJU.md`.
 Program służy do koncepcyjnego projektowania, bilansowania i porównywania wariantów linii. Jest lokalną aplikacją inżynierską, nie odpowiednikiem pełnego systemu Visual Components.

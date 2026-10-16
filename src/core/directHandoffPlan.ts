@@ -4,6 +4,7 @@ import type {StationCandidate} from './stationRouting';
 import type {WorkerReservationBook} from './workerReservations';
 import {sharedAvailability} from './resourceCalendar';
 import {projectWork} from './workProjection';
+import {teamCoversCompetencies} from './competencies';
 
 export interface BufferedOperationChoice {
   workers:string[]; projection:NonNullable<ReturnType<typeof projectWork>>; from:number; until:number;
@@ -21,6 +22,7 @@ export function planDirectOperation(project:DomainProjectV6,operation:PlannedWor
       return;
     }
     if(++combinations>10000)throw new Error('Przekazanie: zbyt wiele kombinacji pracowników.');
+    if(!teamCoversCompetencies(project,operation.operationId,workers))return;
     if(workers.some(id=>blockedWorkers.has(id))){cause='workers';return;}
     const windows=project.resourceCalendars?sharedAvailability(project.resourceCalendars,target.stationId,workers):[{startSeconds:0,endSeconds:Number.MAX_VALUE}];
     const window=windows.find(window=>window.endSeconds>at);

@@ -12,6 +12,7 @@ import {topologicalSort} from './validation';
 import {createWorkerRunPlan} from './workerRunPlan';
 import {sharedAvailability} from './resourceCalendar';
 import {projectWork} from './workProjection';
+import {teamCoversCompetencies} from './competencies';
 import {createWorkerReservationBook,reserveWorkerTeam,releaseWorkerTeam} from './workerReservations';
 import {createBufferBook,applyBufferEvent,bufferHasSpace,type BufferRef,type BufferBook} from './bufferState';
 import type {StationCandidate} from './stationRouting';
@@ -290,6 +291,7 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
           if(selected)return;
           if(workers.length<operation.workerCount){for(let i=from;i<=operation.eligibleWorkerIds.length-(operation.workerCount-workers.length);i++)choose([...workers,operation.eligibleWorkerIds[i]],i+1);return;}
           if(++combinations>10000)throw new Error('Bufory: zbyt wiele kombinacji pracowników.');
+          if(!teamCoversCompetencies(project,operation.operationId,workers))return;
           if([...active].some(index=>index!==ignore&&mayHoldWorkers(steps.findIndex(step=>step.id===runs[index].operationId))&&runs[index].workerIds.some(id=>workers.includes(id)))){stage.causes.add('workers');return;}
           const windows=project.resourceCalendars?sharedAvailability(project.resourceCalendars,target.stationId,workers):[{startSeconds:now,endSeconds:now+operation.durationSeconds}];
           const next=windows.find(window=>window.endSeconds>now);if(!next)return;
