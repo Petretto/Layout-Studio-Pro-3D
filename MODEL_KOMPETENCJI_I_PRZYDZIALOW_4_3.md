@@ -1,6 +1,6 @@
 # Kompetencje i wykonalność przydziału — 4.3
 
-Data: 2026-10-16. Status 4.3: **w trakcie**. Pakiet 4.3a: zakończony rdzeń kompetencji szkicu 6.
+Data: 2026-10-16. Status 4.3: **w trakcie**. Pakiety 4.3a (rdzeń) i 4.3b (formularz kompetencji szkicu 6) zakończone.
 
 ## Decyzja użytkownika i kontrakt
 
@@ -18,10 +18,22 @@ To opcjonalne rozszerzenie szkicu 6. Dotychczasowe szkice bez kontraktu zachowuj
 
 ## Dalsze pakiety
 
-- **4.3b:** edytor słownika, kompetencji osób i wymagań operacji; historia, unieważnienie wyniku, czytelna diagnostyka, zapis/reload i odbiór UI.
+- **4.3b — zakończony:** edytor słownika, kompetencji osób i wymagań operacji; historia, unieważnienie wyniku, czytelna diagnostyka, zapis/reload i odbiór UI. Dowody poniżej.
 - **4.3c:** integracja bilansu z dopuszczeniami kopii, wymaganiami wyposażenia i kompetencji. `runLineBalancing` przyjmuje tylko operacje, cel i algorytm; nie ma rejestru osób/wyposażenia. `runStationBalancing` chroni tożsamości zapisanych stanowisk i odmawia nieuzgodnionego przegrupowania. Integracja musi rozdzielić propozycję przydziału, kontrolę wykonalności i zatwierdzenie tożsamości. Nie mapować stanowisk po indeksach; nie przedstawiać niepowodzenia heurystyki jako dowodu braku rozwiązania.
 
 Całe 4.3 pozostaje otwarte; 4.3a nie rozszerza automatycznego bilansowania ani formularzy.
+
+## Weryfikacja 4.3b — formularz
+
+`DomainCompetencyEditor.tsx` w `DomainDraftPanel.tsx` korzysta z istniejącego `editDomainCompetencies` i wspólnej historii/zapisu szkicu. Nie zmienia schematu ani reguł harmonogramu. Słownik umożliwia dodawanie i zmianę nazw; zapisane ID pozostają stałe. Używaną kompetencję można usunąć dopiero po odznaczeniu jej przypisań i wymagań. Osobny przycisk usuwa całą konfigurację. Niezapisane zmiany można odrzucić. Puste/duplikowane definicje odrzuca walidacja. Przypisania i wymagania są jawnie zaznaczane osobno dla każdej osoby i operacji.
+
+Tabela oceny dotyczy **zapisanych** danych: wskazuje brak zadeklarowanych wymagań, brak wyboru obsady, istnienie zespołu o zadanej liczebności, brak pokrycia lub limit przeszukiwania. Informuje o oddzielnej ocenie kalendarzy/zasobów w harmonogramie oraz o braku integracji z aktywnym automatycznym bilansem 4/5.
+
+Backup: `backup/v0.4.0_przed_4_3b_20261016`, 299 plików i manifest SHA256. Testy `node scripts/test.mjs --suite=network '--test-name-pattern=4\.3a'`: **6/6 PASS**. `npm.cmd run build`: **PASS** (TypeScript i Vite), ostrzeżenie o chunku ponad 500 kB. Pełnej regresji nie uruchamiano: pakiet obejmuje formularz istniejącego kontraktu, bez zmian algorytmu; odbiór dotyczy UI i zależnego rdzenia.
+
+`node tests/qa/verify_4_3b.mjs`: **Edge CDP PASS**. Syntetyczny proces dwóch operacji, dwie osoby o uzupełniających się kompetencjach i jawny wariant dwuosobowy. Sprawdzono: odrzucenie pustych/duplikowanych definicji, zapis kompetencji/wymagań, stałe ID i blokadę usuwania używanych definicji, Cofnij/Ponów, Odrzuć, wynik rzeczywistego Web Workera w JIT, unieważnienie wyniku po zmianie, ocenę i odmowę przy braku pokrycia, reload, usunięcie konfiguracji i cofnięcie usunięcia. Projekty 4/5 oraz dokładny tekst źródła zachowane. Bazę projektu 4 ustalono po standardowym odczycie normalizującym domyślne `layoutMode` i `timeUnit`; dane porównano niezależnie od kolejności kluczy i daty zapisu. Wstępne próby ujawniły błędy przygotowania testu (oczekiwanie na reload, brak jawnego odstępu przybycia, początkowa normalizacja v4); poprawiono runner, bez zmian zachowania produktu.
+
+Zrzut `outputs/qa/verify_4_3b.png` obejrzano: widoczne definicje, zaznaczenia osób/operacji, przyciski i tabela oceny; brak obciętych pól. Test wykonano lokalnie na buildzie. Vercel nie zweryfikowano. Pozostaje 4.3c; status całego 4.3 nie zmienia się na „wdrożone”.
 
 ## Weryfikacja 4.3a
 

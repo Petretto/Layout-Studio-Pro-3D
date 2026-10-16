@@ -13,6 +13,8 @@ import {editDomainWorkerRun, type DomainWorkerRunChange} from '../../core/domain
 import {readDomainDraft, replaceDomainDraft, saveDomainDraft} from '../../core/domainDraftStorage';
 import {download} from '../../core/project';
 import {DomainPeopleEditor} from './DomainPeopleEditor';
+import {DomainCompetencyEditor} from './DomainCompetencyEditor';
+import {editDomainCompetencies} from '../../core/domainCompetencyEditing';
 import {DomainProductEditor} from './DomainProductEditor';
 import {DomainEquipmentEditor} from './DomainEquipmentEditor';
 import {DomainTimeEditor} from './DomainTimeEditor';
@@ -180,6 +182,10 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
     {draft.status === 'corrupt' && <div className="notice" role="alert"><p>Istniejący szkic jest uszkodzony: {draft.error}. Zachowano go bez zmian; zastąpienie wymaga pobrania surowej kopii i potwierdzenia.</p><button onClick={() => {download(draft.raw, 'Odzyskiwanie_szkicu_v6.json', 'application/json'); setDownloadedRaw(draft.raw);}}>Pobierz surową kopię szkicu</button></div>}
     {draft.status === 'valid' && <div className="notice"><p>Zapisany szkic: {draft.saved.project.name} · źródło v{draft.saved.sourceSchemaVersion} · {draft.saved.project.operations.length} operacji · {draft.saved.project.stations.length} stanowisk · {new Date(draft.saved.at).toLocaleString('pl-PL')}. Status: niekompletny.</p><div className="toolbar"><button onClick={() => {download(draft.raw, 'Szkic_modelu_v6_z_oryginalem.json', 'application/json'); setDownloadedRaw(draft.raw);}}>Pobierz szkic z oryginałem</button><button onClick={() => download(draft.saved.originalJson, `Oryginalny_projekt_v${draft.saved.sourceSchemaVersion}.json`, 'application/json')}>Pobierz źródło</button></div></div>}
     {draft.status === 'valid' && <DomainPeopleEditor key={`people-${draft.raw}`} project={draft.saved.project} onApply={applyPeople}
+      onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
+      canUndo={past.length > 0} canRedo={future.length > 0} />}
+    {draft.status === 'valid' && <DomainCompetencyEditor key={`competencies-${draft.raw}`} project={draft.saved.project}
+      onApply={value => applyDraftChange(project => editDomainCompetencies(project, value), 'Zapisano zmianę kompetencji obsady.')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
       canUndo={past.length > 0} canRedo={future.length > 0} />}
     {draft.status === 'valid' && <DomainProductEditor key={`product-${draft.raw}`} project={draft.saved.project} onApply={applyProduct}
