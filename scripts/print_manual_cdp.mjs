@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join, resolve, dirname, basename } from 'node:path';
 
 const CDP_PORT = 9488;
 const EDGE_PATH = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
@@ -21,7 +21,7 @@ async function generatePdf() {
     '--disable-extensions',
     `--user-data-dir=${userDataDir}`,
     'about:blank'
-  ], { stdio: 'ignore' });
+  ], { stdio: 'ignore', windowsHide: true });
 
   let ws;
   try {
@@ -29,7 +29,7 @@ async function generatePdf() {
     for (let i = 0; i < 30; i++) {
       await sleep(400);
       try {
-        const res = await fetch(`http://127.0.0.1:${CDP_PORT}/json/list`);
+        const res = await fetch(`http://127.0.0.1:${CDP_PORT}/json/list`, {signal: AbortSignal.timeout(1000)});
         if (res.ok) {
           const list = await res.json();
           versionData = list.find(t => t.type === 'page' && t.webSocketDebuggerUrl);
@@ -66,6 +66,9 @@ async function generatePdf() {
     console.log('Navigating to', fileUrl);
     await send('Page.navigate', { url: fileUrl });
     await sleep(2500);
+    const checked = await send('Runtime.evaluate', {expression: 'Promise.all([document.fonts.ready, ...Array.from(document.images, image => image.decode())]).then(() => ({images:document.images.length,broken:Array.from(document.images).filter(image=>!image.naturalWidth).length}))', awaitPromise: true, returnByValue: true});
+    if (checked.exceptionDetails || checked.result.value.broken) throw new Error('Podręcznik zawiera niewczytany obraz.');
+    console.log('Verified images:', checked.result.value.images);
 
     console.log('Printing to PDF via Page.printToPDF...');
     const result = await send('Page.printToPDF', {
@@ -89,7 +92,10 @@ async function generatePdf() {
     if (ws) ws.close();
     browser.kill();
     await sleep(500);
-    try { rmSync(userDataDir, { recursive: true, force: true }); } catch {}
+    const cleanupTarget = resolve(userDataDir);
+    if (dirname(cleanupTarget) === resolve(tmpdir()) && basename(cleanupTarget).startsWith('edge-pdf-gen-')) {
+      try { rmSync(cleanupTarget, { recursive: true, force: true }); } catch {}
+    }
   }
 }
 

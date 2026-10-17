@@ -175,6 +175,8 @@ const fullHtml = `<!DOCTYPE html>
   }
   img {
     max-width: 96%;
+    max-height: 150mm;
+    object-fit: contain;
     height: auto;
     border: 1px solid #cbd5e1;
     border-radius: 6px;
@@ -199,7 +201,7 @@ const fullHtml = `<!DOCTYPE html>
 </style>
 </head>
 <body>
-  <div class="header-badge">Oficjalna dokumentacja systemowa v0.4.0</div>
+  <div class="header-badge">Podręcznik v0.4.0 — aktualizacja funkcji Etapów 1–4</div>
   ${bodyHtml}
 </body>
 </html>`;

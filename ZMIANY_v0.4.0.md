@@ -1,5 +1,9 @@
 # Zmiany v0.4.0 — 29.09.2026
 
+## Aktualizacja dokumentacji 18.10.2026 — 7.8.1
+
+Podręcznik użytkownika Markdown/HTML/PDF uzupełniono po Etapach 1–4 o pełną ścieżkę szkicu 6 i porównywania wariantów. Zawiera 21 obrazów i 21 stron PDF; rozróżnia lokalne zapisy 4/5/6, pomiary/założenia, JIT, statyczny bilans i wyniki symulacji. Generacja i odbiór renderów PASS, raport `WERYFIKACJA_INSTRUKCJI_7_8_1.md`. Bez zmian kodu aplikacji, modeli i schematu; bez regresji automatycznej aplikacji w tym pakiecie. Starszy Word v0.2 pozostaje historyczny. Finalna instrukcja po Etapach 5–7 nadal w 7.8.2.
+
 ## Kopia przed zmianami
 
 Kopia: backup/v0.3.1_przed_zasobami_20260927_221046.

@@ -1,7 +1,7 @@
 # Plan rozwoju i rejestr postępu aplikacji
 
 Data utworzenia: 2026-09-29  
-Ostatnia aktualizacja: 2026-10-16
+Ostatnia aktualizacja: 2026-10-18
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
 Przykładowy przypadek testowy: niepełny proces Eko; odbiór uniwersalności wymaga także niezależnych procesów.
 
@@ -82,10 +82,12 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 4 | Balansowanie i porównywanie wariantów | wdrożone | Etapy 2–3 |
 | 5 | Edytor hali i spójny interfejs | w trakcie | Stabilny model danych; podstawowe poprawki UX od etapu 1 |
 | 6 | Biblioteka wyposażenia i 3D | nierozpoczęte | Etapy 3 i 5 |
-| 7 | Walidacja różnych procesów i przygotowanie komercyjne | nierozpoczęte | Etapy 1–6; zbieranie danych od początku |
+| 7 | Walidacja różnych procesów i przygotowanie komercyjne | w trakcie | Etapy 1–6; zbieranie danych od początku |
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+7.8.1 (2026-10-18): wdrożone — istniejący podręcznik Markdown jako edytowalne źródło, HTML i PDF uzupełniono po Etapach 1–4 o konfigurację i zapis szkicu 6, osoby/czasy/kompetencje/wyposażenie, kalendarze/transport, bufory/zaopatrzenie, harmonogram/Gantt/diagnostykę, bilans, bibliotekę wariantów, jawne koszty i propozycje usprawnień. Zrzuty z zapisanych odbiorów oznaczone jako syntetyczne; do Gantta użyto zatwierdzonej kopii Git bez nadpisania lokalnej zmiany. Backup `backup/v0.4.0_przed_7_8_1_20261018` (316 plików z SHA256). Generacja HTML i Edge CDP PDF PASS (21 wczytanych obrazów), kontrola Python PASS (21 stron, brak brakujących obrazów/rozdziałów, pustych stron i tekstu poza stroną), wizualny odbiór renderów wszystkich stron PASS. Bez testów regresji/builda aplikacji — dokumentacja, bez zmian modelu/produktu. Raport `WERYFIKACJA_INSTRUKCJI_7_8_1.md`. Główne 7.8 nadal w trakcie do 7.8.2; licznik głównych ID bez zmiany. Następny pakiet 5.1 — propozycje organizacji edytora hali i decyzja projektowa. Vercel nie zweryfikowano.
 
 4.7 (2026-10-16): wdrożone — proponowanie zmian wraz z uzasadnieniem i wynikiem sprawdzenia w symulacji; bez deklaracji gwarantowanego optimum. Zamknięcie i odbiór Etapu 4 (7/7 = 100,0% wdrożone). Wdrożono moduł domenowy `src/core/domainImprovementProposals.ts` oraz integrację w UI `src/components/studio/DomainVariantComparisonPanel.tsx`: 1) jawne stałe zastrzeżenie metodologiczne `NON_OPTIMUM_DISCLAIMER` prezentowane w UI i w raporcie Markdown; 2) generator kandydatów bazujący wyłącznie na zadeklarowanych zasobach (bez zmyślania obiektów, czasów ani stawek): `add-team-worker`, `expand-worker-eligibility`, `change-staffing-variant`, `activate-station-copy`, `rebalance-work` (RPW/LCR z silnika 4.3), `release-blocked-worker` (bufor bbas -> bbas-worker-released), `saved-variant` (z biblioteki wariantów 4.5); 3) weryfikacja w symulacji przy identycznych warunkach eksperymentu (`VariantExperimentConditions`); 4) notatka `staticVsDynamicNote` rozróżniająca statyczny szacunek zdolności (najwolniejsza kopia, pułap `[szt./h]`) od wyniku dynamicznego (makespan, przepustowość, czas przejścia, WIP) oraz klasyfikacja statusu: `Poprawa w symulacji` (`improved`), `Brak zmiany` (`unchanged`), `Pogorszenie` (`regressed`), `Odmowa / niewykonalność` (`refused`); 5) akcje w UI: `Zapisz jako wariant` (do biblioteki 4.5) oraz `Zastosuj do szkicu 6` (z historią `Cofnij dane szkicu` / `Ponów dane szkicu`); 6) generator i eksport raportu Markdown `buildImprovementProposalsMarkdownReport` z wersją danych (schemat v6, źródło v4/v5), warunkami, założeniami kosztowymi i dowodami; 7) ochrona starszych projektów 4/5 i `originalJson`. Backup `backup/v0.4.0_przed_4_7_20261016` (314 plików z SHA256). Celowane testy 20/20 PASS (2 nowe testy 4.7), typecheck/build PASS, Edge CDP UI PASS (`tests/qa/verify_4_7.mjs`, `outputs/qa/verify_4_7.png`). Raport `WERYFIKACJA_PROPOZYCJI_ZMIAN_4_7.md`. Etap 4 wdrożony w całości. Następny krok: Etap 5 / 5.1 (propozycje organizacji UI hali) lub wydzielony pakiet 7.8.1 (aktualizacja instrukcji użytkownika po Etapach 1–4). Postęp 36/67 = 53,7%, pierwsze wydanie 36/65 = 55,4%. Vercel nie zweryfikowano.
 
@@ -521,8 +523,8 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 | 7.5 | Rozdzielić szczegółowo modelowane straty od rezerwy OEE, aby nie naliczać tych samych strat dwukrotnie. | nierozpoczęte |
 | 7.6 | Ustalić sposób dystrybucji i wdrożyć instalację/uruchamianie, aktualizacje oraz kopie i odzyskiwanie projektu; sprawdzić na czystym komputerze. | nierozpoczęte |
 | 7.7 | Przeprowadzić przegląd zależności, licencji kodu i modeli oraz bezpieczeństwa adekwatnego do sposobu dystrybucji. | nierozpoczęte |
-| 7.8 | Zaktualizować edytowalną instrukcję ze screenshotami, pełny opis funkcji, rejestr zmian i znane ograniczenia. | nierozpoczęte |
-| 7.8.1 | Aktualizacja podręcznika użytkownika ze screenshotami po wdrożeniu Etapów 1–4: obsługa szkicu 6, harmonogramu, wykresu Gantta, buforów, zaopatrzenia materiałowego, kompetencji obsady, bilansowania z ograniczeniami, biblioteki wariantów oraz propozycji zmian z weryfikacją symulacyjną. | nierozpoczęte |
+| 7.8 | Zaktualizować edytowalną instrukcję ze screenshotami, pełny opis funkcji, rejestr zmian i znane ograniczenia. | w trakcie |
+| 7.8.1 | Aktualizacja podręcznika użytkownika ze screenshotami po wdrożeniu Etapów 1–4: obsługa szkicu 6, harmonogramu, wykresu Gantta, buforów, zaopatrzenia materiałowego, kompetencji obsady, bilansowania z ograniczeniami, biblioteki wariantów oraz propozycji zmian z weryfikacją symulacyjną. | wdrożone |
 | 7.8.2 | Finalna aktualizacja instrukcji, pełnego opisu funkcji i ograniczeń po zakończeniu Etapów 5–7 (nowy edytor hali, CAD 2D/3D i walidacja komercyjna). | nierozpoczęte |
 | 7.9 | Wykonać pilotażowy odbiór z użytkownikiem na uzgodnionych scenariuszach, usunąć błędy krytyczne i zapisać zakres gotowego wydania. | nierozpoczęte |
 | 7.10 | Dopracować wygląd generowanego raportu PDF: czytelną hierarchię, typografię, tabele i wykresy, podziały stron oraz wersję do druku. Sprawdzić na krótkim i długim projekcie, także pod kątem obciętego tekstu i zgodności liczb z wynikami aplikacji. | nierozpoczęte |
