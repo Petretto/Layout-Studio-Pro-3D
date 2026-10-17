@@ -1,6 +1,6 @@
 # Organizacja edytora hali — przegląd 5.1
 
-Data: 2026-10-18. Status: **w trakcie — propozycje gotowe, decyzja użytkownika oczekuje**.
+Data: 2026-10-18. Status: **wdrożone — użytkownik wybrał wariant B**. Dotyczy to odbioru projektu UI, nie wdrożenia edytora w aplikacji.
 
 ## Punkt wyjścia i zakres
 
@@ -42,4 +42,6 @@ Zrzuty `outputs/qa/verify_5_1_a.png`, `verify_5_1_b.png`, `verify_5_1_a_600.png`
 
 ## Decyzja projektowa
 
-**Oczekuje na wybór użytkownika: A, B albo wskazaną korektę.** Do czasu wyboru 5.1 pozostaje w trakcie, a implementacja 5.2 nie rozpoczyna się. Zapis wyboru i ewentualnych warunków zakończy odbiór tego ID.
+**Decyzja użytkownika 2026-10-18: B — większy rzut, panele na żądanie.** Wariant ten jest podstawą implementacji 5.2. Drzewo otwiera się po lewej nad rzutem, właściwości po prawej, a dolna kontrola/inspekcja jest zwijana. Na mniejszych ekranach panele otwierają się na żądanie z wewnętrznym przewijaniem. Rekomendację A zachowano powyżej jako historię porównania; nie nadpisuje ona wyboru użytkownika.
+
+Podgląd otwiera się teraz w wybranym B i nadal pozwala przełączyć A do porównania. Aktualna aplikacja pozostaje bez zmian do wdrożenia 5.2. Instrukcja produktu zostanie wtedy zaktualizowana zgodnie z obowiązującą zasadą. Wybór zapisano po przeglądzie obu propozycji; 5.1 spełnia kryterium decyzji projektowej.

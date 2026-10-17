@@ -23,7 +23,8 @@ try{
   const viewport=async width=>{await send('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:false});await sleep(100);};
   const screenshot=async name=>{mkdirSync('outputs/qa',{recursive:true});writeFileSync(`outputs/qa/${name}.png`,Buffer.from((await send('Page.captureScreenshot',{format:'png'})).data,'base64'));};
   const noOverflow=()=>evaluate('document.documentElement.scrollWidth<=innerWidth');
-  await viewport(1440);strictEqual(await evaluate('document.getElementById("choose-a").getAttribute("aria-pressed")'),'true');
+  await viewport(1440);strictEqual(await evaluate('document.getElementById("choose-b").getAttribute("aria-pressed")'),'true');
+  await evaluate('document.getElementById("choose-a").click()');
   await evaluate(`document.querySelector('.station[data-id="ST-B"]').dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}))`);
   ok((await evaluate('document.getElementById("selected").textContent')).includes('ST-B'));
   strictEqual(await evaluate('document.getElementById("bottom-id").textContent'),'ST-B');
