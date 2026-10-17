@@ -32,7 +32,7 @@ Procedura przy każdym pakiecie prac:
 3. Wdrażać małe, spójne zmiany, zachowując kompatybilność danych albo zapewniając sprawdzoną migrację.
 4. Dla każdego ukończonego ID dopisać do rejestru datę, rezultat, dowód weryfikacji i odnośnik do raportu lub plików.
 5. Dopiero po pozytywnej weryfikacji ustawić „wdrożone”. Sam build lub samo dodanie kodu nie potwierdza działania funkcji w UI.
-6. Aktualizować podsumowanie etapów, opis funkcji, instrukcję i datę ostatniej aktualizacji odpowiednio do zakresu zmian.
+6. Aktualizować podsumowanie etapów, opis funkcji, instrukcję i datę ostatniej aktualizacji odpowiednio do zakresu zmian. Po ukończeniu całego pakietu lub znacznej części planu aktualizacja instrukcji użytkownika jest obowiązkowa, jeżeli wprowadzone zmiany wpływają na działanie programu lub interakcję z użytkownikiem. Uzupełnić odpowiednie kroki obsługi, nazwy pól i przycisków, zasady interpretacji wyników, ograniczenia oraz screenshoty zmienionych ekranów; zaktualizować edytowalne źródło i pochodne wersje instrukcji oraz sprawdzić ich zgodność i czytelność. Odnotować aktualizację w odbiorze pakietu. Zasada obowiązuje przez cały rozwój i nie ogranicza się do punktów 7.8.1 oraz 7.8.2.
 7. Jeśli brakuje danych lub decyzji, pozostawić „w trakcie” i zapisać blokadę oraz potrzebną informację. Nie oznaczać zadania jako ukończonego.
 8. Gdy wykryto regresję ukończonego kroku, przywrócić „w trakcie” i odnotować przyczynę.
 
@@ -86,6 +86,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+Zasada utrzymania instrukcji (2026-10-18, decyzja użytkownika): po ukończeniu całego pakietu lub znacznej części planu aktualizować instrukcję, jeżeli zmiany wpływają na działanie programu lub interakcję z użytkownikiem. Obowiązek dopisano do procedury odbioru pakietów; bez zmiany statusów funkcji i licznika postępu.
 
 7.8.1 (2026-10-18): wdrożone — istniejący podręcznik Markdown jako edytowalne źródło, HTML i PDF uzupełniono po Etapach 1–4 o konfigurację i zapis szkicu 6, osoby/czasy/kompetencje/wyposażenie, kalendarze/transport, bufory/zaopatrzenie, harmonogram/Gantt/diagnostykę, bilans, bibliotekę wariantów, jawne koszty i propozycje usprawnień. Zrzuty z zapisanych odbiorów oznaczone jako syntetyczne; do Gantta użyto zatwierdzonej kopii Git bez nadpisania lokalnej zmiany. Backup `backup/v0.4.0_przed_7_8_1_20261018` (316 plików z SHA256). Generacja HTML i Edge CDP PDF PASS (21 wczytanych obrazów), kontrola Python PASS (21 stron, brak brakujących obrazów/rozdziałów, pustych stron i tekstu poza stroną), wizualny odbiór renderów wszystkich stron PASS. Bez testów regresji/builda aplikacji — dokumentacja, bez zmian modelu/produktu. Raport `WERYFIKACJA_INSTRUKCJI_7_8_1.md`. Główne 7.8 nadal w trakcie do 7.8.2; licznik głównych ID bez zmiany. Następny pakiet 5.1 — propozycje organizacji edytora hali i decyzja projektowa. Vercel nie zweryfikowano.
 
