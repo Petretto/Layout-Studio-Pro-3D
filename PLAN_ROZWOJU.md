@@ -44,7 +44,9 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 5.4: cały plan 40/67 = **59,7%**; pierwsze wydanie 40/65 = **61,5%**; Etap 5: 6/13 = **46,2%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po 5.5: cały plan 41/67 = **61,2%**; pierwsze wydanie 41/65 = **63,1%**; Etap 5: 7/13 = **53,8%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+
+Stan historyczny po 5.4: cały plan 40/67 = **59,7%**; pierwsze wydanie 40/65 = **61,5%**; Etap 5: 6/13 = **46,2%**.
 
 Stan historyczny po 5.3: cały plan 39/67 = **58,2%**; pierwsze wydanie 39/65 = **60,0%**; Etap 5: 5/13 = **38,5%**.
 
@@ -94,6 +96,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+5.5 (2026-10-18): wdrożone — przyciąganie do siatki (`facility.gridSizeMm`), krawędzi obiektów/przeszkód (`edges`) i punktów połączeń (`objectConnectionPoints`: środek technologiczny + środki 4 boków) oraz możliwość jego wyłączenia (`src/core/algorithms/layoutSelection.ts`, `src/components/studio/LayoutEditor.tsx`). Niezależne przełączniki każdego trybu, przycisk `Wyłącz przyciąganie / Włącz przyciąganie`, tymczasowe wyłączenie klawiszem `Alt` (ruch co 1 mm), wizualne znaczniki portów `.cad-connection-point` i prowadnice `.cad-snap-guide`. Backup `backup/v0.4.0_przed_5_5_20261018` (464 pliki z SHA256). Testy celowane 6/6 PASS (`5.3`–`5.5`), build PASS, Edge CDP UI 5.5 PASS (`tests/qa/verify_5_5.mjs`, 1440/600 px) oraz regresja UI 5.2, 5.3 i 5.4 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 24 strony/24 obrazy (`outputs/qa/manual_5_5`). Raport `WERYFIKACJA_PRZYCIAGANIA_5_5.md`. Następny punkt: 5.6. Postęp: cały plan 41/67 = 61,2%, pierwsze wydanie 41/65 = 63,1%, Etap 5: 7/13 = 53,8%. Vercel nie zweryfikowano.
 
 5.4 (2026-10-18): wdrożone — przenoszenie stanowiska razem z przypisanym regałem FIFO i strefą obsługi operatora bez utraty relacji technologicznych (`src/core/algorithms/layoutSelection.ts`, `src/components/studio/LayoutEditor.tsx`). Wspólne przesuwanie myszą na rzucie CAD 2D (z podglądem na żywo fioletowych linii relacji `layoutRoutes`), zmiana X/Y we Właściwościach oraz wyrównywanie zespołów stanowisk (`TableESD` + `FlowRackFIFO3Tier` + `OperatorErgoMat` tej samej kopii `-COPY-N`). Przełącznik `Przenoś stanowisko z FIFO i strefą` (domyślnie aktywny), przycisk `Zaznacz zespół stanowiska` oraz tryb korekty pojedynczego elementu po odznaczeniu opcji. Schemat zapisu bez zmian. Backup `backup/v0.4.0_przed_5_4_20261018` (314 plików z SHA256). Testy celowane 4/4 PASS (`5.3` + `5.4`), build PASS, Edge CDP UI 5.4 PASS (`tests/qa/verify_5_4.mjs`, 1440/600 px) oraz regresja UI 5.2 i 5.3 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 23 strony/23 obrazy, kontrola `verify_manual.py` i odbiór wizualny PASS. Raport `WERYFIKACJA_ZESPOLU_STANOWISKA_5_4.md`. Następny punkt: 5.5. Postęp: cały plan 40/67 = 59,7%, pierwsze wydanie 40/65 = 61,5%, Etap 5: 6/13 = 46,2%. Vercel nie zweryfikowano.
 
@@ -504,7 +508,7 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 | 5.2 | Uporządkować przestrzeń pracy według wybranego B: większy rzut w środku, biblioteka/drzewo po lewej i właściwości po prawej otwierane na żądanie, wyniki i oś czasu na dole w zwijanym panelu; uwzględnić mniejsze ekrany. | wdrożone |
 | 5.3 | Dodać zaznaczanie wielu obiektów, grupowanie, kopiowanie i wyrównywanie. | wdrożone |
 | 5.4 | Przenosić stanowisko razem z przypisanym FIFO i strefą obsługi bez utraty relacji technologicznych. | wdrożone |
-| 5.5 | Dodać przyciąganie do siatki, krawędzi i punktów połączeń oraz możliwość jego wyłączenia. | nierozpoczęte |
+| 5.5 | Dodać przyciąganie do siatki, krawędzi i punktów połączeń oraz możliwość jego wyłączenia. | wdrożone |
 | 5.6 | Dodać wymiarowanie, pomiary odległości, warstwy i blokowanie obiektów. | nierozpoczęte |
 | 5.7 | Obsłużyć podkład hali z kalibracją skali. | nierozpoczęte |
 | 5.8 | Ustalić i wdrożyć obsługiwany podzbiór importu DXF, z raportem pominiętej geometrii i sprawdzeniem jednostek. | nierozpoczęte |
@@ -569,7 +573,7 @@ Braki nie blokują stabilizacji. Nie należy zastępować ich domysłami przedst
 
 | Temat | Potrzebne informacje | Stan |
 | --- | --- | --- |
-| Proces Eko | Czasy pomiarowe, rozdział pracy ręcznej/maszynowej, obsada i dopuszczalna równoległość montażu | Do zebrania w 7.1 |
+| Proces Eko | Czasy pomiarowe, rozdział pracy ręcznej/maszynowe, obsada i dopuszczalna równoległość montażu | Do zebrania w 7.1 |
 | Hala i logistyka | Rzut z wymiarami, rzeczywiste stanowiska, strefy, trasy i bufory | Do zebrania w 7.1 |
 | Odbiór modelu | Zestaw danych porównawczych, tolerancje i scenariusze | Do ustalenia przed 7.2 |
 | Koszty | Stawki pracy i transportu, koszty inwestycji, okres porównania | Do ustalenia przed 4.6 |
@@ -584,6 +588,7 @@ Każdy kolejny wpis powinien wskazywać konkretne ID. Nie usuwać historii przy 
 
 | Data | ID | Zmiana statusu | Rezultat / dowód / uwagi |
 | --- | --- | --- | --- |
+| 2026-10-18 | 5.5 | nierozpoczęte → w trakcie → wdrożone | Przyciąganie do siatki, krawędzi obiektów/przeszkód i punktów połączeń (`objectConnectionPoints`, `snapLayoutTranslation`) oraz możliwość wyłączenia (niezależne przełączniki, przycisk `Wyłącz przyciąganie / Włącz przyciąganie`, klawisz `Alt`). Wizualne znaczniki portów `.cad-connection-point` i prowadnice `.cad-snap-guide`. Backup `backup/v0.4.0_przed_5_5_20261018` (464 pliki SHA256). Testy 6/6 PASS (`5.3`–`5.5`), build PASS, Edge CDP UI 5.5 PASS (`tests/qa/verify_5_5.mjs`, 1440/600 px) oraz regresja 5.2–5.4 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 24 strony/24 obrazy (`outputs/qa/manual_5_5`). Raport: `WERYFIKACJA_PRZYCIAGANIA_5_5.md`. Postęp: cały plan 41/67 = 61,2%, pierwsze wydanie 41/65 = 63,1%, Etap 5: 7/13 = 53,8%. |
 | 2026-10-18 | 5.4 | nierozpoczęte → w trakcie → wdrożone | Przenoszenie stanowiska razem z przypisanym regałem FIFO i strefą obsługi bez utraty relacji technologicznych (`layoutSelection.ts`, `LayoutEditor.tsx`). Opcja `Przenoś stanowisko z FIFO i strefą`, przycisk `Zaznacz zespół stanowiska`, przeciąganie myszą, edycja X/Y i wyrównywanie zespołów z zachowaniem `workstationId` i linii `layoutRoutes`; odznaczenie opcji do korekty pojedynczego elementu. Backup `backup/v0.4.0_przed_5_4_20261018` (314 plików SHA256). Testy 4/4 PASS (`5.3` + `5.4`), build PASS, Edge CDP UI 5.4 PASS (`tests/qa/verify_5_4.mjs`, 1440/600 px) oraz regresja 5.2 i 5.3 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 23 strony/23 obrazy (`outputs/qa/manual_5_4`). Raport: `WERYFIKACJA_ZESPOLU_STANOWISKA_5_4.md`. Postęp: cały plan 40/67 = 59,7%, pierwsze wydanie 40/65 = 61,5%, Etap 5: 6/13 = 46,2%. |
 | 2026-10-16 | 7.8.1 | dodano do planu | Na wniosek użytkownika wydzielono pakiet 7.8.1: przygotowanie i aktualizacja instrukcji używania aplikacji (podręcznika użytkownika ze screenshotami) po wdrożeniu Etapów 1–4 (szkic 6, bufory, zaopatrzenie, wózki, kompetencje, bilans z ograniczeniami, biblioteka wariantów, propozycje usprawnień). Pakiet możliwy do realizacji przed lub równolegle z Etapem 5. Punkt 7.8.2 zachowano jako finalną instrukcję po Etapach 5–7. Główny licznik planu bez zmian: 36/67 = 53,7%. |
 | 2026-10-16 | 4.7 | w trakcie → wdrożone | Proponowanie zmian wraz z uzasadnieniem i wynikiem sprawdzenia w symulacji (bez deklaracji optimum). Zamknięcie i odbiór Etapu 4 (7/7 = 100,0%). Moduł `domainImprovementProposals.ts`, `NON_OPTIMUM_DISCLAIMER`, generator propozycji (pracownik, dopuszczenia, wariant obsady, kopia stacji, bilans RPW/LCR, bufor), weryfikacja w symulacji, rozróżnienie szacunku statycznego od wyniku dynamicznego, akcje Zapisz jako wariant i Zastosuj do szkicu 6 (Cofnij/Ponów), raport Markdown (.md). Backup `backup/v0.4.0_przed_4_7_20261016` (314 plików). Testy 20/20 PASS, build PASS, Edge CDP UI PASS (`outputs/qa/verify_4_7.png`). Raport: `WERYFIKACJA_PROPOZYCJI_ZMIAN_4_7.md`. Postęp: cały plan 36/67 = 53,7%, pierwsze wydanie 36/65 = 55,4%, Etap 4: 7/7 = 100,0%. |
