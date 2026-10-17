@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**  
-Aktualizacja podręcznika: **18.10.2026 — odbiór funkcji Etapów 1–4 (7.8.1), edytora hali B (5.2) oraz narzędzi zaznaczenia i grup (5.3)**.
+Aktualizacja podręcznika: **18.10.2026 — odbiór funkcji Etapów 1–4 (7.8.1), edytora hali B (5.2) oraz narzędzi zaznaczenia, grup i zespołów stanowisk (5.3–5.4)**.
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -116,6 +116,10 @@ Pod rzutem znajdują się zwijane listy wyposażenia i przeszkód oraz **Wyniki 
 Rozwiń **Grupowanie i kopiowanie wyposażenia**. **Grupuj zaznaczone** zapisuje wizualną grupę; późniejsze wybranie jednego członka wybiera całą grupę. **Rozgrupuj zaznaczone** usuwa to powiązanie. Grupowanie nie tworzy stanowiska technologicznego. Aby skopiować zaznaczenie, wpisz jawne przesunięcia X i Y w mm (zero jest dozwolone) i wybierz **Kopiuj zaznaczone**. Kopie mają nowe ID, nowe grupy i nie mają przypisania do stanowiska; nie zwiększają liczby kopii produkcyjnych ani zdolności linii. Sprawdź kolizje po skopiowaniu. Grupowanie, wyrównanie, wspólne przesunięcie i kopiowanie cofasz jako pojedyncze akcje. Grupy i kopie pozostają w zapisie lokalnym i JSON; ponowna automatyczna generacja zastępuje ręczny layout wraz z grupami po potwierdzeniu.
 
 ![Zaznaczenie i grupowanie wyposażenia — syntetyczny odbiór 5.3](../outputs/qa/verify_5_3_1440.png)
+
+**Przenoszenie zespołu stanowiska (5.4).** Domyślnie aktywna opcja **Przenoś stanowisko z FIFO i strefą** na pasku narzędzi sprawia, że przeciągnięcie na rzucie lub zmiana współrzędnych X/Y we **Właściwościach** dla stołu, regału FIFO albo strefy pracy operatora przypisanych do tego samego stanowiska (lub tej samej kopii `-COPY-N`) przesuwa cały zespół stanowiska o ten sam wektor, zachowując wzajemne odstępy, identyfikatory, przypisanie `workstationId` oraz fioletowe linie relacji technologicznych. Również wyrównywanie wielu stanowisk (**Do lewej/prawej/góry/dołu**) przesuwa całe zespoły stanowisk. Przycisk **Zaznacz zespół stanowiska** jawnie rozszerza bieżące zaznaczenie na wszystkie elementy wybranych stanowisk. Aby skorygować położenie pojedynczego regału FIFO lub maty względem stołu, odznacz **Przenoś stanowisko z FIFO i strefą**.
+
+![Przenoszenie zespołu stanowiska z zachowaniem relacji — syntetyczny odbiór 5.4](../outputs/qa/verify_5_4_1440.png)
 
 ---
 

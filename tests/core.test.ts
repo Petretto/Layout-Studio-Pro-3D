@@ -5,7 +5,8 @@ import * as XLSX from 'xlsx';
 import { calculateTaktTime } from '../src/core/algorithms/taktCalculator';
 import { runLineBalancing } from '../src/core/algorithms/lineBalancingEngine';
 import { generate3DLayout,layoutWarnings,corners } from '../src/core/algorithms/layoutEngine';
-import {alignLayoutObjects,expandVisualSelection,groupLayoutObjects,copyLayoutObjects} from '../src/core/algorithms/layoutSelection';
+import {alignLayoutObjects,expandMoveSelection,expandVisualSelection,groupLayoutObjects,copyLayoutObjects,moveLayoutObjects,workstationAssemblyIds} from '../src/core/algorithms/layoutSelection';
+import {layoutRoutes} from '../src/core/algorithms/routing';
 import { simulate,simulationAt,SIMULATION_SPEEDS,stepSimulationTime } from '../src/core/algorithms/simulation';
 import { importProcess,importBOM,processRows,bomRows,templateWorkbookBytes,TEMPLATE_PROCESS_STEPS,TEMPLATE_BOM_COMPONENTS,PROCESS_COLUMN_DOCS,BOM_COLUMN_DOCS } from '../src/core/export/excelImporter';
 import { exportToDxf } from '../src/core/export/dxfExporter';
@@ -180,6 +181,57 @@ test('5.3: kopie geometrii mają nowe tożsamości i grupy bez zdolności stanow
   assert.deepEqual(parseProject(JSON.stringify({...motor,schemaVersion:4,layoutMode:'manual',layoutObjects:copied.objects})).layoutObjects,copied.objects);
   assert.ok(parseProject(JSON.stringify(motor)));assert.throws(()=>copyLayoutObjects(objects,['A'],NaN,0,()=> 'X'));assert.throws(()=>copyLayoutObjects(objects,['A'],0,0,()=> 'A'));
   assert.throws(()=>parseProject(JSON.stringify({...motor,layoutObjects:[{...base,id:'A',visualGroupId:42}]})),/grupy wizualnej/);
+});
+test('5.4: przenoszenie stanowiska przesuwa stół, przypisane FIFO i strefę obsługi bez utraty relacji technologicznych',()=>{
+  const derived=derive(structuredClone(motor)).project;
+  const before=structuredClone(derived.layoutObjects),routesBefore=layoutRoutes(derived);
+  assert.deepEqual(workstationAssemblyIds(before,'TBL-WS-1'),['TBL-WS-1','FIFO-WS-1','MAT-WS-1']);
+  assert.deepEqual(workstationAssemblyIds(before,'FIFO-WS-1'),['TBL-WS-1','FIFO-WS-1','MAT-WS-1']);
+  assert.deepEqual(workstationAssemblyIds(before,'MAT-IN'),['MAT-IN']);
+  const moved=moveLayoutObjects(before,['TBL-WS-1'],1500,-800,true);
+  for(const id of ['TBL-WS-1','FIFO-WS-1','MAT-WS-1']){
+    const orig=before.find(o=>o.id===id)!,curr=moved.find(o=>o.id===id)!;
+    assert.equal(curr.xMm,orig.xMm+1500);assert.equal(curr.yMm,orig.yMm-800);
+    assert.equal(curr.workstationId,'WS-1');
+  }
+  const tbl=moved.find(o=>o.id==='TBL-WS-1')!,fifo=moved.find(o=>o.id==='FIFO-WS-1')!,mat=moved.find(o=>o.id==='MAT-WS-1')!;
+  const origTbl=before.find(o=>o.id==='TBL-WS-1')!,origFifo=before.find(o=>o.id==='FIFO-WS-1')!,origMat=before.find(o=>o.id==='MAT-WS-1')!;
+  assert.equal(fifo.xMm-tbl.xMm,origFifo.xMm-origTbl.xMm);assert.equal(fifo.yMm-tbl.yMm,origFifo.yMm-origTbl.yMm);
+  assert.equal(mat.xMm-tbl.xMm,origMat.xMm-origTbl.xMm);assert.equal(mat.yMm-tbl.yMm,origMat.yMm-origTbl.yMm);
+  assert.deepEqual(moved.filter(o=>o.workstationId!=='WS-1'),before.filter(o=>o.workstationId!=='WS-1'));
+  const updatedProject={...derived,layoutMode:'manual' as const,layoutObjects:moved};
+  const routesAfter=layoutRoutes(updatedProject);
+  assert.equal(routesAfter.length,routesBefore.length);
+  assert.deepEqual(routesAfter.map(r=>[r.a.id,r.b.id,r.a.workstationId,r.b.workstationId]),routesBefore.map(r=>[r.a.id,r.b.id,r.a.workstationId,r.b.workstationId]));
+  const ws1Route=routesAfter.find(r=>r.a.id==='TBL-WS-1')!;
+  assert.equal(ws1Route.a.xMm,origTbl.xMm+1500);assert.equal(ws1Route.a.yMm,origTbl.yMm-800);
+  assert.equal(derive(updatedProject).issues.filter(i=>i.severity==='error').length,0);
+});
+test('5.4: wielokopiowe stanowisko (-COPY-2), wyrównywanie zespołów i korekta pojedynczego elementu',()=>{
+  const initial=derive(structuredClone(motor)).project;
+  const ws1Key=JSON.stringify([...initial.balancing!.workstations[0].assignedStepIds].sort());
+  const base=derive({...structuredClone(motor),workstationSettings:{[ws1Key]:{operators:1,parallelStations:2}}}).project;
+  const objs=base.layoutObjects;
+  assert.deepEqual(workstationAssemblyIds(objs,'TBL-WS-1'),['TBL-WS-1','FIFO-WS-1','MAT-WS-1']);
+  assert.deepEqual(workstationAssemblyIds(objs,'FIFO-WS-1-COPY-2'),['TBL-WS-1-COPY-2','FIFO-WS-1-COPY-2','MAT-WS-1-COPY-2']);
+  const movedCopy2=moveLayoutObjects(objs,['FIFO-WS-1-COPY-2'],600,400,true);
+  for(const id of ['TBL-WS-1-COPY-2','FIFO-WS-1-COPY-2','MAT-WS-1-COPY-2']){
+    const orig=objs.find(o=>o.id===id)!,curr=movedCopy2.find(o=>o.id===id)!;
+    assert.equal(curr.xMm,orig.xMm+600);assert.equal(curr.yMm,orig.yMm+400);
+  }
+  for(const id of ['TBL-WS-1','FIFO-WS-1','MAT-WS-1']){
+    assert.deepEqual(movedCopy2.find(o=>o.id===id),objs.find(o=>o.id===id));
+  }
+  const singleOnly=moveLayoutObjects(objs,['FIFO-WS-1'],300,-200,false);
+  assert.equal(singleOnly.find(o=>o.id==='FIFO-WS-1')!.xMm,objs.find(o=>o.id==='FIFO-WS-1')!.xMm+300);
+  assert.deepEqual(singleOnly.find(o=>o.id==='TBL-WS-1'),objs.find(o=>o.id==='TBL-WS-1'));
+  const shifted=moveLayoutObjects(objs,['TBL-WS-2'],900,0,true);
+  const aligned=alignLayoutObjects(shifted,['TBL-WS-1','TBL-WS-2'],'left',true);
+  const dx=aligned.find(o=>o.id==='TBL-WS-2')!.xMm-shifted.find(o=>o.id==='TBL-WS-2')!.xMm;
+  assert.equal(dx,-900);
+  assert.equal(aligned.find(o=>o.id==='FIFO-WS-2')!.xMm-shifted.find(o=>o.id==='FIFO-WS-2')!.xMm,dx);
+  assert.equal(aligned.find(o=>o.id==='MAT-WS-2')!.xMm-shifted.find(o=>o.id==='MAT-WS-2')!.xMm,dx);
+  assert.deepEqual(expandMoveSelection(objs,['TBL-WS-1'],true),['TBL-WS-1','FIFO-WS-1','MAT-WS-1']);
 });
 test('JSON starych projektów migruje, zły schemat odrzucany',()=>{for(const p of [motor,battery]){const parsed=parseProject(JSON.stringify(p));assert.equal(parsed.schemaVersion,4);assert.ok(derive(parsed).project.balancing);}assert.throws(()=>parseProject('{}'));assert.throws(()=>parseProject(JSON.stringify({...motor,schemaVersion:999})));assert.throws(()=>parseProject(JSON.stringify({...motor,demand:{...motor.demand,plannedBreaksMinutesPerShift:600}})));});
 test('archiwum importu zachowuje bajty starszego JSON także z BOM i poza granicą bloku',async()=>{
