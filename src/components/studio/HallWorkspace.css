@@ -1,0 +1,23 @@
+.hall-workspace { max-width: none; padding: 18px; }
+.hall-stage { position: relative; }
+.hall-workspace .cad-canvas { height: clamp(420px, 64vh, 850px); display: block; }
+.hall-drawer { position: absolute; top: 0; bottom: 0; z-index: 3; width: min(380px, 90%); overflow-y: auto; overscroll-behavior: contain; padding: 16px; background: #142238; border: 1px solid #64748b; border-radius: 12px; box-shadow: 0 12px 28px #0009; }
+.hall-drawer-left { left: 0; }
+.hall-drawer-right { right: 0; }
+.hall-drawer-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hall-drawer-heading h2 { margin: 0; font-size: 18px; }
+.hall-drawer .panel { padding: 0; border: 0; background: transparent; }
+.hall-drawer .form-grid { grid-template-columns: minmax(0, 1fr); }
+.hall-drawer input { max-width: 100%; }
+.hall-tree { list-style: none; padding: 0; }
+.hall-tree button { width: 100%; text-align: left; margin-bottom: 5px; overflow-wrap: anywhere; }
+.hall-tree button[aria-pressed=true] { border-color: #38bdf8; background: #23435c; }
+.hall-bottom { margin-top: 12px; padding: 12px; border: 1px solid #40536f; border-radius: 12px; }
+.hall-bottom > summary { cursor: pointer; }
+.hall-bottom[open] { max-height: 340px; overflow: auto; }
+@media (max-width: 700px) {
+  .hall-workspace { padding: 12px; }
+  .hall-workspace .cad-canvas { height: 520px; }
+  .hall-panel-controls button { flex: 1 1 120px; }
+  .hall-drawer { width: min(380px, 94%); }
+}

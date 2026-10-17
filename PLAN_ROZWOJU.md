@@ -89,6 +89,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
+5.2 (2026-10-18): wdrożone — wybrany B w aktywnym edytorze projektu 4: większy rzut, biblioteka/drzewo po lewej i parametry/właściwości po prawej na żądanie, jeden panel naraz, Escape i wewnętrzne przewijanie; zwijane dolne listy oraz istniejąca symulacja projektu 4 z osią czasu uruchamiana po otwarciu. Zachowane potwierdzenia, historia, ID i zapis; usuwanie nieaktualnego formularza po zmianie projektu. Backup `backup/v0.4.0_przed_5_2_20261018` (322 pliki SHA256). Testy celowane 6/6 PASS, build PASS, Edge CDP UI/gest/siatka/historia/zapis-odczyt/wyniki PASS (1440/960/600 px). Instrukcja Markdown/HTML/PDF zaktualizowana; 21 stron/21 obrazów, kontrola i wizualny odbiór PASS. Raport `WERYFIKACJA_EDYTORA_5_2.md`. Bez zmiany schematu lub reguł symulacji; kontekst szkicu 6 odrębny. Następny punkt 5.3. Vercel nie zweryfikowano.
+
 5.1 (2026-10-18): wdrożone — użytkownik wybrał **B: większy rzut, panele na żądanie** po porównaniu A/B w `PROPOZYCJE_UI_5_1.html`. Wdrożenie 5.2 ma korzystać z drzewa po lewej i właściwości po prawej otwieranych nad rzutem oraz zwijanego dolnego panelu; uwzględnić mniejsze ekrany i wewnętrzne przewijanie. Podglądy mają wspólne zaznaczenie, bez zmiany aplikacji/zapisów. Edge CDP PASS (`tests/qa/verify_5_1.mjs`, 1440/960/600 px, klawiatura/mysz, panele i przewijanie); zrzuty `outputs/qa/verify_5_1_*.png`. Decyzja i granice: `PROJEKT_ORGANIZACJI_EDYTORA_5_1.md`. Historyczna rekomendacja A nie nadpisuje wyboru B. Bez regresji/builda aplikacji — projekt UI, nie wdrożenie edytora. Następny punkt 5.2; po rzeczywistej zmianie obsługi obowiązkowo zaktualizować instrukcję.
 
 Zasada utrzymania instrukcji (2026-10-18, decyzja użytkownika): po ukończeniu całego pakietu lub znacznej części planu aktualizować instrukcję, jeżeli zmiany wpływają na działanie programu lub interakcję z użytkownikiem. Obowiązek dopisano do procedury odbioru pakietów; bez zmiany statusów funkcji i licznika postępu.
@@ -489,7 +491,7 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 | ID | Krok / oczekiwany rezultat | Status |
 | --- | --- | --- |
 | 5.1 | Przygotować i porównać dwie propozycje organizacji UI; w razie potrzeby użyć Figmy lub Pencil i zapisać decyzję projektową. | wdrożone |
-| 5.2 | Uporządkować przestrzeń pracy według wybranego B: większy rzut w środku, biblioteka/drzewo po lewej i właściwości po prawej otwierane na żądanie, wyniki i oś czasu na dole w zwijanym panelu; uwzględnić mniejsze ekrany. | nierozpoczęte |
+| 5.2 | Uporządkować przestrzeń pracy według wybranego B: większy rzut w środku, biblioteka/drzewo po lewej i właściwości po prawej otwierane na żądanie, wyniki i oś czasu na dole w zwijanym panelu; uwzględnić mniejsze ekrany. | wdrożone |
 | 5.3 | Dodać zaznaczanie wielu obiektów, grupowanie, kopiowanie i wyrównywanie. | nierozpoczęte |
 | 5.4 | Przenosić stanowisko razem z przypisanym FIFO i strefą obsługi bez utraty relacji technologicznych. | nierozpoczęte |
 | 5.5 | Dodać przyciąganie do siatki, krawędzi i punktów połączeń oraz możliwość jego wyłączenia. | nierozpoczęte |

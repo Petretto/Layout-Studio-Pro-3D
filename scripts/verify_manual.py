@@ -3,6 +3,7 @@ Run with the bundled Python (pypdf, pdfplumber, pypdfium2 and Pillow).
 """
 import json
 import re
+import sys
 from pathlib import Path
 import pdfplumber
 import pypdfium2 as pdfium
@@ -11,7 +12,7 @@ from PIL import Image, ImageDraw
 root = Path(__file__).resolve().parent.parent
 manual = root / 'Instrukcja/Podrecznik_Uzytkownika.md'
 pdf_path = root / 'Instrukcja/Podrecznik_Uzytkownika.pdf'
-out = root / 'outputs/qa/manual_7_8_1'
+out = root / (sys.argv[1] if len(sys.argv) > 1 else 'outputs/qa/manual_7_8_1')
 out.mkdir(parents=True, exist_ok=True)
 references = re.findall(r'!\[[^\]]*\]\(([^)]+)\)', manual.read_text(encoding='utf-8'))
 missing = [name for name in references if not (manual.parent / name).is_file()]

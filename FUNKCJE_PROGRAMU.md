@@ -165,6 +165,7 @@ Wyniki: bazowa pracochłonność, bazowe minimum teoretyczne, fizyczne kopie i o
 
 ## Layout, hala i CAD 2D
 
+- Wariant B (5.2): rzut na pełnej szerokości, drzewo po lewej i właściwości/parametry hali po prawej otwierane nad rzutem; jeden panel naraz, Escape i wewnętrzne przewijanie. Dolne listy oraz wyniki i oś czasu aktywnego projektu 4 są zwijane. Symulacja uruchamia się dopiero po otwarciu wyników, zachowuje przebieg przy zwijaniu i korzysta z istniejących założeń modelu 4. Szkic 6 pozostaje osobnym kontekstem.
 - Wymiary hali, siatka, przeszkody/strefy wyłączone.
 - Układy U, liniowy, L oraz „Z procesu — gałęzie / rybia ość”.
 - Układ grafowy wyznacza poziomy zależności i główną nitkę na podstawie skumulowanych czasów; pozostałe gałęzie rozkłada obok. Nie odczytuje technologii z nazw operacji.
