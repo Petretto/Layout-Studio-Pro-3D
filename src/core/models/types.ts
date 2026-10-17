@@ -70,6 +70,8 @@ export interface LayoutObject {
   rotationDeg: number;
   colorHex: string;
   workstationId?: string;
+  /** Visual editor group only; never a station/resource assignment. */
+  visualGroupId?: string;
 }
 
 export interface FacilityConfig {

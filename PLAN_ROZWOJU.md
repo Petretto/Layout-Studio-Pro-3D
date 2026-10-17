@@ -44,7 +44,11 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 5.1: cały plan 37/67 = **55,2%**; pierwsze wydanie 37/65 = **56,9%**; Etap 5: 3/13 = **23,1%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po 5.3: cały plan 39/67 = **58,2%**; pierwsze wydanie 39/65 = **60,0%**; Etap 5: 5/13 = **38,5%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+
+Stan historyczny po 5.2: cały plan 38/67 = **56,7%**; pierwsze wydanie 38/65 = **58,5%**; Etap 5: 4/13 = **30,8%**.
+
+Stan historyczny po 5.1: cały plan 37/67 = **55,2%**; pierwsze wydanie 37/65 = **56,9%**; Etap 5: 3/13 = **23,1%**.
 
 Stan historyczny po 4.7 (odbiór Etapu 4): cały plan 36/67 = **53,7%**; pierwsze wydanie 36/65 = **55,4%**; Etap 4: 7/7 = **100,0%**.
 
@@ -88,6 +92,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+5.3 (2026-10-18): wdrożone — wielokrotne zaznaczenie wyposażenia CAD 2D przez Shift/Ctrl/Meta i pola wyboru drzewa, trwałe grupy wizualne, wspólne przesuwanie jednym gestem i wyrównywanie obróconych obrysów; grupy zachowują odstępy. Decyzja użytkownika: kopie wyłącznie geometrii z nowymi ID/grupami, bez przypisania do stanowiska i bez zwiększenia zdolności produkcyjnej; przesunięcia X/Y jawne. Opcjonalne `LayoutObject.visualGroupId`, stare dane bez migracji, walidacja i roundtrip; historia/zapis-odczyt PASS. Backup `backup/v0.4.0_przed_5_3_20261018` (325 plików SHA256). Celowane 2/2 i okresowa pełna regresja 309/309 PASS (trzeci pakiet od 4.6), build PASS, Edge UI 5.3 i regresja 5.2 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 22 strony/22 obrazy, kontrola i wizualny odbiór PASS. Raport `WERYFIKACJA_GRUP_I_KOPII_5_3.md`. Przeszkody w osobnym edytorze, automatyczne zespoły stanowiska w 5.4, wspólne zaznaczenie 3D w 5.10. Następny punkt 5.4. Vercel nie zweryfikowano.
 
 5.2 (2026-10-18): wdrożone — wybrany B w aktywnym edytorze projektu 4: większy rzut, biblioteka/drzewo po lewej i parametry/właściwości po prawej na żądanie, jeden panel naraz, Escape i wewnętrzne przewijanie; zwijane dolne listy oraz istniejąca symulacja projektu 4 z osią czasu uruchamiana po otwarciu. Zachowane potwierdzenia, historia, ID i zapis; usuwanie nieaktualnego formularza po zmianie projektu. Backup `backup/v0.4.0_przed_5_2_20261018` (322 pliki SHA256). Testy celowane 6/6 PASS, build PASS, Edge CDP UI/gest/siatka/historia/zapis-odczyt/wyniki PASS (1440/960/600 px). Instrukcja Markdown/HTML/PDF zaktualizowana; 21 stron/21 obrazów, kontrola i wizualny odbiór PASS. Raport `WERYFIKACJA_EDYTORA_5_2.md`. Bez zmiany schematu lub reguł symulacji; kontekst szkicu 6 odrębny. Następny punkt 5.3. Vercel nie zweryfikowano.
 
@@ -492,7 +498,7 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 | --- | --- | --- |
 | 5.1 | Przygotować i porównać dwie propozycje organizacji UI; w razie potrzeby użyć Figmy lub Pencil i zapisać decyzję projektową. | wdrożone |
 | 5.2 | Uporządkować przestrzeń pracy według wybranego B: większy rzut w środku, biblioteka/drzewo po lewej i właściwości po prawej otwierane na żądanie, wyniki i oś czasu na dole w zwijanym panelu; uwzględnić mniejsze ekrany. | wdrożone |
-| 5.3 | Dodać zaznaczanie wielu obiektów, grupowanie, kopiowanie i wyrównywanie. | nierozpoczęte |
+| 5.3 | Dodać zaznaczanie wielu obiektów, grupowanie, kopiowanie i wyrównywanie. | wdrożone |
 | 5.4 | Przenosić stanowisko razem z przypisanym FIFO i strefą obsługi bez utraty relacji technologicznych. | nierozpoczęte |
 | 5.5 | Dodać przyciąganie do siatki, krawędzi i punktów połączeń oraz możliwość jego wyłączenia. | nierozpoczęte |
 | 5.6 | Dodać wymiarowanie, pomiary odległości, warstwy i blokowanie obiektów. | nierozpoczęte |

@@ -10,6 +10,8 @@
 .hall-drawer .form-grid { grid-template-columns: minmax(0, 1fr); }
 .hall-drawer input { max-width: 100%; }
 .hall-tree { list-style: none; padding: 0; }
+.hall-tree li { display: flex; align-items: center; gap: 8px; }
+.hall-tree input[type=checkbox] { flex: 0 0 18px; width: 18px; }
 .hall-tree button { width: 100%; text-align: left; margin-bottom: 5px; overflow-wrap: anywhere; }
 .hall-tree button[aria-pressed=true] { border-color: #38bdf8; background: #23435c; }
 .hall-bottom { margin-top: 12px; padding: 12px; border: 1px solid #40536f; border-radius: 12px; }

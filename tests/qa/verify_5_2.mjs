@@ -63,9 +63,9 @@ try{
     ok(!await evaluate(`!!document.querySelector('.hall-drawer')`));
   }
   await click('Generuj automatycznie');ok(await evaluate(`document.querySelector('dialog').open`));await click('Anuluj');await click('Zapisz lokalnie');deepStrictEqual(await saved(),final,'Anulowanie generatora zmieniło model');
-  await evaluate(`document.querySelector('.hall-bottom').open=true`);ok(await evaluate(`document.querySelector('.hall-bottom').textContent.includes('Przeszkoda QA 5.2')`));
+  await evaluate(`document.querySelector('.hall-objects').open=true`);ok(await evaluate(`document.querySelector('.hall-objects').textContent.includes('Przeszkoda QA 5.2')`));
   // Return to a valid, generated geometry before opening the existing simulation.
-  await evaluate(`[...document.querySelectorAll('.hall-bottom tr')].find(r=>r.textContent.includes('Przeszkoda QA 5.2')).querySelector('.danger').click()`);await sleep(100);await click('Potwierdź');
+  await evaluate(`[...document.querySelectorAll('.hall-objects tr')].find(r=>r.textContent.includes('Przeszkoda QA 5.2')).querySelector('.danger').click()`);await sleep(100);await click('Potwierdź');
   await click('Generuj automatycznie');await click('Potwierdź');await click('Zapisz lokalnie');
   await evaluate(`document.querySelector('.hall-results').open=true`);
   await until(`!!document.querySelector('[aria-label="Oś czasu symulacji"]:not(:disabled)')`);
@@ -73,7 +73,7 @@ try{
   const resultText=await evaluate(`document.querySelector('.hall-results .metrics').textContent`);
   await evaluate(`document.querySelector('.hall-results').open=false`);await sleep(50);await evaluate(`document.querySelector('.hall-results').open=true`);
   strictEqual(await evaluate(`document.querySelector('.hall-results .metrics').textContent`),resultText,'Zwinięcie zresetowało wynik');
-  await evaluate(`document.querySelector('.hall-results').open=false;document.querySelector('.hall-bottom').open=false;document.querySelector('.hall-workspace').scrollIntoView({block:'start'})`);
+  await evaluate(`document.querySelector('.hall-results').open=false;document.querySelector('.hall-objects').open=false;document.querySelector('.hall-workspace').scrollIntoView({block:'start'})`);
   await send('Emulation.setDeviceMetricsOverride',{width:1440,height:1600,deviceScaleFactor:1,mobile:false});await sleep(100);
   writeFileSync('outputs/qa/verify_5_2_workspace.png',Buffer.from((await send('Page.captureScreenshot',{format:'png'})).data,'base64'));
   ok(!errors.length,errors.join('; '));

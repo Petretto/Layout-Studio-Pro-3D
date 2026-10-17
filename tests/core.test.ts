@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx';
 import { calculateTaktTime } from '../src/core/algorithms/taktCalculator';
 import { runLineBalancing } from '../src/core/algorithms/lineBalancingEngine';
 import { generate3DLayout,layoutWarnings,corners } from '../src/core/algorithms/layoutEngine';
+import {alignLayoutObjects,expandVisualSelection,groupLayoutObjects,copyLayoutObjects} from '../src/core/algorithms/layoutSelection';
 import { simulate,simulationAt,SIMULATION_SPEEDS,stepSimulationTime } from '../src/core/algorithms/simulation';
 import { importProcess,importBOM,processRows,bomRows,templateWorkbookBytes,TEMPLATE_PROCESS_STEPS,TEMPLATE_BOM_COMPONENTS,PROCESS_COLUMN_DOCS,BOM_COLUMN_DOCS } from '../src/core/export/excelImporter';
 import { exportToDxf } from '../src/core/export/dxfExporter';
@@ -155,6 +156,31 @@ test('3.10: mnożniki odtwarzania symulacji ponad 100x, krok czasowy bez przekro
 });
 test('trzy układy różnią się geometrią i mają wejście/wyjście',()=>{const stations=runLineBalancing([step('1',10),step('2',10),step('3',10),step('4',10)],10).workstations;const layouts=['UShape','Linear','LShape'].map(type=>generate3DLayout(stations,type as any,motor.facility));assert.notDeepEqual(layouts[1],layouts[2]);assert.notDeepEqual(layouts[0],layouts[1]);layouts.forEach(layout=>{assert.ok(layout.find(o=>o.type==='MaterialIn'));assert.ok(layout.find(o=>o.type==='FinishedGoods'));assert.equal(layoutWarnings({...motor,obstacles:[],layoutObjects:layout}).length,0);});});
 test('obrócone obiekty mają prawidłowe narożniki, kolizje i DXF',()=>{const o={id:'test',name:'Test',type:'Table' as const,xMm:100,yMm:100,widthMm:200,lengthMm:100,heightMm:500,zMm:0,rotationDeg:90,colorHex:'#fff'};const c=corners(o);assert.ok(Math.abs(c[0].x-250)<1e-8);assert.ok(Math.abs(c[0].y-50)<1e-8);assert.ok(layoutWarnings({...motor,layoutObjects:[o],obstacles:[{id:'x',name:'Słup',xMm:150,yMm:80,widthMm:30,lengthMm:30,heightMm:200}]}).some(s=>s.includes('kolizja')));const dxf=exportToDxf(motor.facility,[o],'Test',motor.obstacles);assert.match(dxf,/OBSTACLES/);assert.match(dxf,/\$INSUNITS\n70\n4/);assert.match(dxf,/10\n250\n20\n-50/);});
+
+test('5.3: wyrównanie obróconych obrysów i grup zachowuje relacje oraz źródło',()=>{
+  const base={name:'Stół',type:'TableESD' as const,xMm:0,yMm:0,zMm:0,widthMm:200,lengthMm:100,heightMm:500,rotationDeg:0,colorHex:'#fff',workstationId:'WS-1'};
+  const objects=[{...base,id:'A',xMm:100,rotationDeg:90},{...base,id:'B',xMm:800},{...base,id:'C',xMm:1100},{...base,id:'D',xMm:1700}];
+  const before=structuredClone(objects);
+  const aligned=alignLayoutObjects(objects,['A','B'],'left');
+  assert.equal(Math.min(...corners(aligned[0]).map(c=>c.x)),Math.min(...corners(aligned[1]).map(c=>c.x)));
+  assert.deepEqual(objects,before);assert.equal(aligned[1].workstationId,'WS-1');assert.equal(aligned[2],objects[2]);
+  const grouped=groupLayoutObjects(objects,['B','C'],'VIS-1');
+  assert.deepEqual(expandVisualSelection(grouped,'C'),['B','C']);
+  const moved=alignLayoutObjects(grouped,['A','B','C'],'right');
+  assert.equal(moved[2].xMm-moved[1].xMm,300);
+  assert.equal(Math.max(...corners(moved[0]).map(c=>c.x)),Math.max(...[moved[1],moved[2]].flatMap(corners).map(c=>c.x)));
+  assert.ok(!groupLayoutObjects(grouped,['B','C'],null)[1].visualGroupId);
+});
+test('5.3: kopie geometrii mają nowe tożsamości i grupy bez zdolności stanowiska; zapis czyta stare i nowe dane',()=>{
+  const base={name:'Stół',type:'TableESD' as const,xMm:100,yMm:200,zMm:0,widthMm:200,lengthMm:100,heightMm:500,rotationDeg:0,colorHex:'#fff',workstationId:'WS-1',visualGroupId:'VIS-OLD'};
+  const objects=[{...base,id:'A'},{...base,id:'B',xMm:800}],before=structuredClone(objects);let id=0;
+  const copied=copyLayoutObjects(objects,['A','B'],1000,-100,()=>`NEW-${++id}`);
+  const copies=copied.objects.slice(2);assert.equal(copies.length,2);assert.ok(copies.every(o=>!o.workstationId));assert.equal(copies[0].xMm,1100);assert.equal(copies[0].yMm,100);
+  assert.equal(copies[0].visualGroupId,copies[1].visualGroupId);assert.notEqual(copies[0].visualGroupId,'VIS-OLD');assert.deepEqual(objects,before);
+  assert.deepEqual(parseProject(JSON.stringify({...motor,schemaVersion:4,layoutMode:'manual',layoutObjects:copied.objects})).layoutObjects,copied.objects);
+  assert.ok(parseProject(JSON.stringify(motor)));assert.throws(()=>copyLayoutObjects(objects,['A'],NaN,0,()=> 'X'));assert.throws(()=>copyLayoutObjects(objects,['A'],0,0,()=> 'A'));
+  assert.throws(()=>parseProject(JSON.stringify({...motor,layoutObjects:[{...base,id:'A',visualGroupId:42}]})),/grupy wizualnej/);
+});
 test('JSON starych projektów migruje, zły schemat odrzucany',()=>{for(const p of [motor,battery]){const parsed=parseProject(JSON.stringify(p));assert.equal(parsed.schemaVersion,4);assert.ok(derive(parsed).project.balancing);}assert.throws(()=>parseProject('{}'));assert.throws(()=>parseProject(JSON.stringify({...motor,schemaVersion:999})));assert.throws(()=>parseProject(JSON.stringify({...motor,demand:{...motor.demand,plannedBreaksMinutesPerShift:600}})));});
 test('archiwum importu zachowuje bajty starszego JSON także z BOM i poza granicą bloku',async()=>{
   const source=readFileSync('tests/qa/D5f_legacy_motor_untagged.json');
