@@ -87,6 +87,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
+5.1 (2026-10-18): w trakcie — dwie porównane propozycje w `PROPOZYCJE_UI_5_1.html`: A stały warsztat (drzewo, rzut, inspektor i dolna kontrola), B rzut z panelami na żądanie. Szkice pokazują wspólne zaznaczenie i adaptację szerokości; nie zmieniają aplikacji ani zapisów. Rekomendacja A na desktopie, panele na żądanie przy mniejszej szerokości. Edge CDP PASS (`tests/qa/verify_5_1.mjs`, 1440/960/600 px, klawiatura/mysz, panele i wewnętrzne przewijanie); zrzuty `outputs/qa/verify_5_1_*.png`. Porównanie i granice `PROJEKT_ORGANIZACJI_EDYTORA_5_1.md`. Bez regresji/builda aplikacji — szkice projektowe. Decyzja użytkownika oczekuje; bez niej nie rozpoczynamy wdrażania 5.2 ani nie oznaczamy 5.1 jako wdrożone. Instrukcja produktu zostanie zaktualizowana po rzeczywistej zmianie obsługi.
+
 Zasada utrzymania instrukcji (2026-10-18, decyzja użytkownika): po ukończeniu całego pakietu lub znacznej części planu aktualizować instrukcję, jeżeli zmiany wpływają na działanie programu lub interakcję z użytkownikiem. Obowiązek dopisano do procedury odbioru pakietów; bez zmiany statusów funkcji i licznika postępu.
 
 7.8.1 (2026-10-18): wdrożone — istniejący podręcznik Markdown jako edytowalne źródło, HTML i PDF uzupełniono po Etapach 1–4 o konfigurację i zapis szkicu 6, osoby/czasy/kompetencje/wyposażenie, kalendarze/transport, bufory/zaopatrzenie, harmonogram/Gantt/diagnostykę, bilans, bibliotekę wariantów, jawne koszty i propozycje usprawnień. Zrzuty z zapisanych odbiorów oznaczone jako syntetyczne; do Gantta użyto zatwierdzonej kopii Git bez nadpisania lokalnej zmiany. Backup `backup/v0.4.0_przed_7_8_1_20261018` (316 plików z SHA256). Generacja HTML i Edge CDP PDF PASS (21 wczytanych obrazów), kontrola Python PASS (21 stron, brak brakujących obrazów/rozdziałów, pustych stron i tekstu poza stroną), wizualny odbiór renderów wszystkich stron PASS. Bez testów regresji/builda aplikacji — dokumentacja, bez zmian modelu/produktu. Raport `WERYFIKACJA_INSTRUKCJI_7_8_1.md`. Główne 7.8 nadal w trakcie do 7.8.2; licznik głównych ID bez zmiany. Następny pakiet 5.1 — propozycje organizacji edytora hali i decyzja projektowa. Vercel nie zweryfikowano.
@@ -484,7 +486,7 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 
 | ID | Krok / oczekiwany rezultat | Status |
 | --- | --- | --- |
-| 5.1 | Przygotować i porównać dwie propozycje organizacji UI; w razie potrzeby użyć Figmy lub Pencil i zapisać decyzję projektową. | nierozpoczęte |
+| 5.1 | Przygotować i porównać dwie propozycje organizacji UI; w razie potrzeby użyć Figmy lub Pencil i zapisać decyzję projektową. | w trakcie |
 | 5.2 | Uporządkować przestrzeń pracy: biblioteka/drzewo po lewej, główny widok w środku, właściwości po prawej, wyniki i oś czasu na dole; uwzględnić mniejsze ekrany. | nierozpoczęte |
 | 5.3 | Dodać zaznaczanie wielu obiektów, grupowanie, kopiowanie i wyrównywanie. | nierozpoczęte |
 | 5.4 | Przenosić stanowisko razem z przypisanym FIFO i strefą obsługi bez utraty relacji technologicznych. | nierozpoczęte |
