@@ -524,6 +524,29 @@ W module planowania zapotrzebowania i czasu taktu (`DemandWizardView`) wprowadzo
   - **Przycisk szybkiej korekty Lean**: pozwala jednym kliknięciem dostosować suwak OEE do sugerowanego poziomu rezydualnego, eliminując dublowanie strat.
   - **Podgląd Taksu netto**: prezentacja Taksu skorygowanego (`adjustedTaktSeconds`) w karcie głównej ze wskazaniem zysku czasu cyklu.
 
+### 5.9. Dystrybucja, uruchamianie offline i Disaster Recovery (Plan 7.6)
+
+Wersja produkcyjna Layout Studio Pro 3D została zoptymalizowana pod kątem pełnej autonomii, bezpieczeństwa danych projektowych oraz niezawodności w środowiskach przemysłowych pozbawionych stałego dostępu do Internetu.
+
+- **Dystrybucja i architektura 100% Offline-First**:
+  - Aplikacja nie pobiera żadnych zasobów, czcionek, skryptów ani stylów z zewnętrznych sieci CDN w trakcie działania.
+  - Wszystkie silniki (Three.js 3D, silnik fizyki, biblioteki DXF, generator PDF, Web Workery) są spakowane lokalnie w katalogu produkcyjnym `dist/`.
+  - Uruchomienie na czystym stanowisku (Windows/Linux/macOS) wymaga jedynie środowiska Node.js (v20.19.0 LTS lub nowszego) oraz dowolnej nowoczesnej przeglądarki (Edge, Chrome, Firefox).
+
+- **Skrót uruchomieniowy (`Uruchom_Layout_Studio.bat`)**:
+  - Na komputerach z systemem Windows aplikację uruchamia się dwuklikiem w plik `Uruchom_Layout_Studio.bat`.
+  - Skrypt automatycznie weryfikuje obecność skompilowanego pakietu `dist/` (w razie potrzeby buduje go automatycznie), uruchamia lokalny, bezpieczny serwer HTTP na porcie `4173` i otwiera domyślną przeglądarkę internetową pod adresem `http://127.0.0.1:4173`.
+
+- **Kompleksowa kopia środowiska i Disaster Recovery (`.lsbackup.json`)**:
+  - Dostęp do panelu kopii zapasowych uzyskuje się z poziomu paska narzędziowego (przycisk `Kopie i odzyskiwanie`) lub pulpitu startowego (karta `Kopia i odzyskiwanie (.lsbackup)`).
+  - **Pobieranie pełnej kopii zapasowej (`Pobierz kopię środowiska (.lsbackup.json)`)**:
+    - Eksportuje całe środowisko pracy do jednego, spójnego pliku JSON: aktywny projekt (Schema 4), biblioteki stanowisk i wyposażenia v5, szkice procesu v6, zdefiniowane warianty produkcyjne oraz konfiguracje scenariuszy symulacji.
+    - Każda kopia posiada nagłówek metadanych (wersja aplikacji, data utworzenia) oraz kryptograficzną sumę kontrolną **SHA-256 (FIPS 180-4)** obliczaną deterministycznie z czystego payloadu.
+  - **Integralność i bezpieczne przywracanie awaryjne (Disaster Recovery)**:
+    - Przy próbie wgrania pliku `.lsbackup.json` silnik weryfikuje poprawność strukturalną, zgodność schematów oraz zgodność sumy SHA-256 (wykrywając jakiekolwiek uszkodzenia lub modyfikacje pliku).
+    - **Automatyczny Rollback Snapshot**: Przed nadpisaniem pamięci lokalnej przeglądarki system automatycznie tworzy i zapisuje migawkę awaryjną aktualnego stanu (`layout_studio_rollback_snapshot`). W przypadku jakichkolwiek problemów użytkownik może natychmiast cofnąć przywrócenie jednym kliknięciem (`Przywróć stan sprzed ostatniego odzyskania`).
+
+
 
 
 

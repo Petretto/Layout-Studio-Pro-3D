@@ -2426,4 +2426,104 @@ test('7.5: dekompozycja strat OEE, wykrywanie ryzyka podwójnego naliczenia stra
   assert.ok(res.taktComparison.deltaSeconds > 0);
 });
 
+test('7.6: tworzenie, walidacja integralności SHA-256 i odzyskiwanie pełnej kopii środowiska (Disaster Recovery)', () => {
+  const {
+    sha256Hex,
+    createWorkspaceBackup,
+    validateWorkspaceBackup,
+    restoreWorkspaceBackup,
+    inspectWorkspaceStorage,
+    STORAGE_KEYS,
+  } = require('../src/core/workspaceBackup');
+
+  // 1. Sprawdzenie determinizmu SHA-256
+  const emptyHash = sha256Hex('');
+  assert.equal(emptyHash, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
+  const testHash = sha256Hex('Layout Studio Pro 3D');
+  assert.ok(testHash && testHash.length === 64);
+
+  // 2. Symulacja pamięci lokalnej (StoragePort)
+  const memoryStore: Record<string, string> = {
+    [STORAGE_KEYS.v4Project]: JSON.stringify({
+      project: {
+        id: 'PRJ-V4',
+        name: 'Linia Testowa V4',
+        schemaVersion: 4,
+        timeUnit: 's',
+        targetLayoutType: 'Linear',
+        demand: { yearlyDemand: 50000, workingDaysPerYear: 250, shiftsPerDay: 2, hoursPerShift: 8, plannedBreaksMinutesPerShift: 30, oeePercent: 85 },
+        processSteps: [{ id: 'OP-1', name: 'Montaż', standardTimeSeconds: 45, vaTimeSeconds: 40, nvaTimeSeconds: 5, predecessorIds: [], sequenceNumber: 1 }],
+        bom: [],
+        layoutObjects: [],
+        workstations: [],
+        facility: { widthMm: 20000, lengthMm: 30000, heightMm: 6000, isConfirmed: true, gridSizeMm: 1000 },
+      }
+    }),
+    [STORAGE_KEYS.v4Scenarios]: JSON.stringify([
+      { id: 'SC-1', name: 'Wariant 1', at: '2026-10-18T10:00:00.000Z', project: { id: 'PRJ-V4', name: 'Linia Testowa V4', schemaVersion: 4 } }
+    ])
+  };
+
+  const storagePort = {
+    getItem: (key: string) => memoryStore[key] ?? null,
+    setItem: (key: string, value: string) => { memoryStore[key] = value; },
+    removeItem: (key: string) => { delete memoryStore[key]; },
+  };
+
+  // 3. Inspekcja stanu storage
+  const summary = inspectWorkspaceStorage(storagePort);
+  assert.equal(summary.hasActiveProjectV4, true, 'summary.hasActiveProjectV4');
+  assert.equal(summary.activeProjectV4Name, 'Linia Testowa V4', 'summary.activeProjectV4Name');
+  assert.equal(summary.scenariosV4Count, 1, 'summary.scenariosV4Count');
+  assert.equal(summary.hasStationsProjectV5, false, 'summary.hasStationsProjectV5');
+
+  // 4. Utworzenie pełnej kopii zapasowej
+  const backup = createWorkspaceBackup(storagePort, '0.4.0');
+  assert.equal(backup.format, 'layout-studio-workspace-backup', 'backup.format');
+  assert.equal(backup.formatVersion, 1, 'backup.formatVersion');
+  assert.equal(backup.appVersion, '0.4.0', 'backup.appVersion');
+  assert.ok(backup.checksumSha256.length === 64, 'backup.checksumSha256 length 64');
+
+  const backupJson = JSON.stringify(backup, null, 2);
+
+  // 5. Walidacja poprawnej kopii
+  const valResult = validateWorkspaceBackup(backupJson);
+  assert.equal(valResult.valid, true, 'valResult.valid should be true: ' + valResult.error);
+  assert.equal(valResult.checksumMatches, true, 'valResult.checksumMatches should be true');
+  assert.equal(valResult.validatedProjectsCount, 1, 'valResult.validatedProjectsCount should be 1');
+
+  // 6. Walidacja kopii ze sfałszowaną sumą kontrolną
+  const tamperedJson = backupJson.replace(backup.checksumSha256, '0000000000000000000000000000000000000000000000000000000000000000');
+  const tamperedResult = validateWorkspaceBackup(tamperedJson);
+  assert.equal(tamperedResult.checksumMatches, false, 'tamperedResult.checksumMatches should be false');
+
+  // 7. Walidacja kopii z uszkodzonym projektem
+  const brokenProjectBackup = JSON.parse(backupJson);
+  brokenProjectBackup.storage.v4ProjectRaw = JSON.stringify({ project: { id: 'BAD', schemaVersion: 999 } });
+  const brokenResult = validateWorkspaceBackup(JSON.stringify(brokenProjectBackup));
+  assert.equal(brokenResult.valid, false, 'brokenResult.valid should be false');
+  assert.ok(brokenResult.error?.includes('Uszkodzony projekt v4'), 'brokenResult.error should mention uszkodzony projekt');
+
+  // 8. Test procedury odzyskiwania (Disaster Recovery & Rollback)
+  const targetMemory: Record<string, string> = {
+    [STORAGE_KEYS.v4Project]: JSON.stringify({ project: { name: 'Dotychczasowy Projekt Do Zastąpienia', schemaVersion: 4 } })
+  };
+  const targetPort = {
+    getItem: (key: string) => targetMemory[key] ?? null,
+    setItem: (key: string, value: string) => { targetMemory[key] = value; },
+  };
+
+  const restoreResult = restoreWorkspaceBackup(targetPort, valResult.payload!);
+  assert.equal(restoreResult.success, true, 'restoreResult.success should be true');
+  assert.ok(restoreResult.restoredKeys.includes(STORAGE_KEYS.v4Project), 'restoredKeys has v4Project');
+  assert.ok(restoreResult.restoredKeys.includes(STORAGE_KEYS.v4Scenarios), 'restoredKeys has v4Scenarios');
+
+  // Sprawdzenie, czy utworzono rollback snapshot dotychczasowego stanu
+  const rollbackObj = JSON.parse(restoreResult.rollbackSnapshot);
+  assert.ok(rollbackObj.storage.v4ProjectRaw.includes('Dotychczasowy Projekt Do Zastąpienia'), 'rollback snapshot has old project');
+
+  // Sprawdzenie, czy nowy stan w targetPort to stan z kopii
+  assert.ok(targetMemory[STORAGE_KEYS.v4Project].includes('Linia Testowa V4'), 'target has new project');
+});
+
 

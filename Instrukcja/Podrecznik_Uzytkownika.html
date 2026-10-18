@@ -553,5 +553,28 @@
 <li><strong>Przycisk szybkiej korekty Lean</strong>: pozwala jednym kliknięciem dostosować suwak OEE do sugerowanego poziomu rezydualnego, eliminując dublowanie strat.</li>
 <li><strong>Podgląd Taksu netto</strong>: prezentacja Taksu skorygowanego (<code>adjustedTaktSeconds</code>) w karcie głównej ze wskazaniem zysku czasu cyklu.</li>
 </ul>
+<h3>5.9. Dystrybucja, uruchamianie offline i Disaster Recovery (Plan 7.6)</h3>
+<p>Wersja produkcyjna Layout Studio Pro 3D została zoptymalizowana pod kątem pełnej autonomii, bezpieczeństwa danych projektowych oraz niezawodności w środowiskach przemysłowych pozbawionych stałego dostępu do Internetu.</p>
+<ul>
+<li><strong>Dystrybucja i architektura 100% Offline-First</strong>:</li>
+<li>Aplikacja nie pobiera żadnych zasobów, czcionek, skryptów ani stylów z zewnętrznych sieci CDN w trakcie działania.</li>
+<li>Wszystkie silniki (Three.js 3D, silnik fizyki, biblioteki DXF, generator PDF, Web Workery) są spakowane lokalnie w katalogu produkcyjnym <code>dist/</code>.</li>
+<li>Uruchomienie na czystym stanowisku (Windows/Linux/macOS) wymaga jedynie środowiska Node.js (v20.19.0 LTS lub nowszego) oraz dowolnej nowoczesnej przeglądarki (Edge, Chrome, Firefox).</li>
+</ul>
+<ul>
+<li><strong>Skrót uruchomieniowy (<code>Uruchom_Layout_Studio.bat</code>)</strong>:</li>
+<li>Na komputerach z systemem Windows aplikację uruchamia się dwuklikiem w plik <code>Uruchom_Layout_Studio.bat</code>.</li>
+<li>Skrypt automatycznie weryfikuje obecność skompilowanego pakietu <code>dist/</code> (w razie potrzeby buduje go automatycznie), uruchamia lokalny, bezpieczny serwer HTTP na porcie <code>4173</code> i otwiera domyślną przeglądarkę internetową pod adresem <code>http://127.0.0.1:4173</code>.</li>
+</ul>
+<ul>
+<li><strong>Kompleksowa kopia środowiska i Disaster Recovery (<code>.lsbackup.json</code>)</strong>:</li>
+<li>Dostęp do panelu kopii zapasowych uzyskuje się z poziomu paska narzędziowego (przycisk <code>Kopie i odzyskiwanie</code>) lub pulpitu startowego (karta <code>Kopia i odzyskiwanie (.lsbackup)</code>).</li>
+<li><strong>Pobieranie pełnej kopii zapasowej (<code>Pobierz kopię środowiska (.lsbackup.json)</code>)</strong>:</li>
+<li>Eksportuje całe środowisko pracy do jednego, spójnego pliku JSON: aktywny projekt (Schema 4), biblioteki stanowisk i wyposażenia v5, szkice procesu v6, zdefiniowane warianty produkcyjne oraz konfiguracje scenariuszy symulacji.</li>
+<li>Każda kopia posiada nagłówek metadanych (wersja aplikacji, data utworzenia) oraz kryptograficzną sumę kontrolną <strong>SHA-256 (FIPS 180-4)</strong> obliczaną deterministycznie z czystego payloadu.</li>
+<li><strong>Integralność i bezpieczne przywracanie awaryjne (Disaster Recovery)</strong>:</li>
+<li>Przy próbie wgrania pliku <code>.lsbackup.json</code> silnik weryfikuje poprawność strukturalną, zgodność schematów oraz zgodność sumy SHA-256 (wykrywając jakiekolwiek uszkodzenia lub modyfikacje pliku).</li>
+<li><strong>Automatyczny Rollback Snapshot</strong>: Przed nadpisaniem pamięci lokalnej przeglądarki system automatycznie tworzy i zapisuje migawkę awaryjną aktualnego stanu (<code>layout_studio_rollback_snapshot</code>). W przypadku jakichkolwiek problemów użytkownik może natychmiast cofnąć przywrócenie jednym kliknięciem (<code>Przywróć stan sprzed ostatniego odzyskania</code>).</li>
+</ul>
 </body>
 </html>
