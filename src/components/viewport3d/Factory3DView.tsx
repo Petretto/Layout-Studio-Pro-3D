@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { ProjectData, LayoutObject } from '../../core/models/types';
+import { createParametricEquipmentGroup } from '../../core/equipment/parametricEquipmentModels';
 import {
   Play,
   Pause,
@@ -520,107 +521,7 @@ export const Factory3DView: React.FC<Factory3DViewProps> = ({ project }) => {
 
 // Helper 3D Mesh Builders
 function build3DObject(parent: THREE.Group, obj: LayoutObject) {
-  const x = (obj.xMm + obj.widthMm / 2) / 1000;
-  const z = (obj.yMm + obj.lengthMm / 2) / 1000;
-  const w = obj.widthMm / 1000;
-  const l = obj.lengthMm / 1000;
-  const h = obj.heightMm / 1000;
-
-  const group = new THREE.Group();
-  group.position.set(x, 0, z);
-  group.rotation.y = (obj.rotationDeg * Math.PI) / 180;
-
-  if (obj.type === 'TableESD' || obj.type === 'Table') {
-    const topGeo = new THREE.BoxGeometry(w, 0.06, l);
-    const topMat = new THREE.MeshStandardMaterial({ color: 0x1e40af, roughness: 0.4 });
-    const top = new THREE.Mesh(topGeo, topMat);
-    top.position.y = h;
-    top.castShadow = true;
-    top.receiveShadow = true;
-    group.add(top);
-
-    const legGeo = new THREE.BoxGeometry(0.08, h, 0.08);
-    const legMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.7, roughness: 0.3 });
-    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => {
-      const leg = new THREE.Mesh(legGeo, legMat);
-      leg.position.set((sx * (w - 0.16)) / 2, h / 2, (sz * (l - 0.16)) / 2);
-      leg.castShadow = true;
-      group.add(leg);
-    });
-
-    const postGeo = new THREE.BoxGeometry(0.06, 1.2, 0.06);
-    const postMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8 });
-    [-1, 1].forEach((sx) => {
-      const post = new THREE.Mesh(postGeo, postMat);
-      post.position.set((sx * (w - 0.2)) / 2, h + 0.6, -l / 2 + 0.05);
-      group.add(post);
-    });
-
-    const railGeo = new THREE.BoxGeometry(w - 0.1, 0.05, 0.05);
-    const rail = new THREE.Mesh(railGeo, postMat);
-    rail.position.set(0, h + 1.15, -l / 2 + 0.05);
-    group.add(rail);
-
-  } else if (obj.type.includes('FIFO')) {
-    const frameMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.4, roughness: 0.4 });
-    const legGeo = new THREE.BoxGeometry(0.06, h, 0.06);
-    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => {
-      const leg = new THREE.Mesh(legGeo, frameMat);
-      leg.position.set((sx * (w - 0.1)) / 2, h / 2, (sz * (l - 0.1)) / 2);
-      group.add(leg);
-    });
-
-    [0.4, 0.8, 1.2].forEach((shelfY, idx) => {
-      const shelfGeo = new THREE.BoxGeometry(w - 0.05, 0.03, l - 0.05);
-      const shelfMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8 });
-      const shelf = new THREE.Mesh(shelfGeo, shelfMat);
-      shelf.position.set(0, shelfY, 0);
-      shelf.rotation.x = 0.08;
-      group.add(shelf);
-
-      const kltGeo = new THREE.BoxGeometry(0.35, 0.2, 0.45);
-      const kltMat = new THREE.MeshStandardMaterial({ color: idx === 0 ? 0x2563eb : idx === 1 ? 0xd97706 : 0xdc2626 });
-      [-0.4, 0, 0.4].forEach((kx) => {
-        const klt = new THREE.Mesh(kltGeo, kltMat);
-        klt.position.set(kx, shelfY + 0.12, 0);
-        klt.rotation.x = 0.08;
-        group.add(klt);
-      });
-    });
-
-  } else if (obj.type.includes('Conveyor')) {
-    const railMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8 });
-    const rSideGeo = new THREE.BoxGeometry(w, 0.1, 0.05);
-    [-1, 1].forEach((sz) => {
-      const side = new THREE.Mesh(rSideGeo, railMat);
-      side.position.set(0, 0.75, (sz * (l - 0.05)) / 2);
-      group.add(side);
-    });
-
-    const rollerGeo = new THREE.CylinderGeometry(0.04, 0.04, l - 0.1, 12);
-    const rollerMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.9, roughness: 0.2 });
-    for (let rx = -w / 2 + 0.1; rx <= w / 2 - 0.1; rx += 0.15) {
-      const roller = new THREE.Mesh(rollerGeo, rollerMat);
-      roller.rotation.z = Math.PI / 2;
-      roller.position.set(rx, 0.75, 0);
-      group.add(roller);
-    }
-
-  } else if (obj.type === 'OperatorErgoMat') {
-    const matGeo = new THREE.BoxGeometry(w, 0.02, l);
-    const matMat = new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.9 });
-    const mat = new THREE.Mesh(matGeo, matMat);
-    mat.position.y = 0.01;
-    group.add(mat);
-
-  } else {
-    const boxGeo = new THREE.BoxGeometry(w, h || 0.05, l);
-    const boxMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(obj.colorHex || '#3b82f6'), opacity: 0.9, transparent: true });
-    const box = new THREE.Mesh(boxGeo, boxMat);
-    box.position.y = (h || 0.05) / 2;
-    group.add(box);
-  }
-
+  const group = createParametricEquipmentGroup(obj);
   parent.add(group);
 }
 

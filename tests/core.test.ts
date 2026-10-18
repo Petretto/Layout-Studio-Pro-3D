@@ -40,6 +40,8 @@ import {
 } from '../src/core/equipment/equipmentStandard';
 import { editDomainEquipment } from '../src/core/domainEquipmentEditing';
 import { parseDomainProjectV6 } from '../src/core/domainProject';
+import { createParametricEquipmentGroup, disposeEquipmentGroup } from '../src/core/equipment/parametricEquipmentModels';
+import * as THREE from 'three';
 const step=(id:string,time:number,preds:string[]=[]):ProcessStep=>({id,name:id,standardTimeSeconds:time,vaTimeSeconds:time*.8,nvaTimeSeconds:time*.2,sequenceNumber:Number(id)||1,predecessorIds:preds});
 const workbook=(data:Record<string,unknown>[])=>{const book=XLSX.utils.book_new();XLSX.utils.book_append_sheet(book,XLSX.utils.json_to_sheet(data),'Test');return XLSX.write(book,{type:'array',bookType:'xlsx'}) as ArrayBuffer;};
 
@@ -1314,3 +1316,267 @@ test('6.1: powiązanie wyposażenia schematu 6 z equipmentStandardId', () => {
   });
   assert.equal(editedEq.equipment[0].equipmentStandardId, 'spec-table-esd-1500x800');
 });
+
+test('6.2: parametryczne generowanie stołów montażowych (Table, TableESD, TestStationBench)', () => {
+  const tableStandard = {
+    id: 'lo-table-1',
+    name: 'Stół montażowy standardowy',
+    type: 'Table' as const,
+    xMm: 2000,
+    yMm: 3000,
+    zMm: 0,
+    widthMm: 1500,
+    lengthMm: 800,
+    heightMm: 850,
+    rotationDeg: 0,
+    colorHex: '#3b82f6',
+  };
+
+  const groupStd = createParametricEquipmentGroup(tableStandard);
+  assert.ok(groupStd instanceof THREE.Group);
+  assert.equal(groupStd.userData.id, 'lo-table-1');
+  assert.equal(groupStd.userData.type, 'Table');
+  // Pozycja w Three.js: X = (2000 + 1500/2)/1000 = 2.75, Y = 0, Z = (3000 + 800/2)/1000 = 3.4
+  assert.equal(groupStd.position.x, 2.75);
+  assert.equal(groupStd.position.y, 0);
+  assert.equal(groupStd.position.z, 3.4);
+  assert.ok(groupStd.children.length >= 10, 'Stół powinien mieć blat, 4 nogi, stopy, ramy i nadbudowę');
+
+  // Stół ESD z matą
+  const tableESD = {
+    ...tableStandard,
+    id: 'lo-table-esd',
+    type: 'TableESD' as const,
+    colorHex: '#1e3a8a',
+  };
+  const groupESD = createParametricEquipmentGroup(tableESD);
+  assert.ok(groupESD.children.length > groupStd.children.length, 'Stół ESD powinien zawierać nakładkę maty ESD');
+
+  // Stół diagnostyczny TestStationBench z kanałem zasilającym i ekranem
+  const testBench = {
+    ...tableStandard,
+    id: 'lo-test-bench',
+    type: 'TestStationBench' as const,
+  };
+  const groupTest = createParametricEquipmentGroup(testBench);
+  assert.ok(groupTest.children.length > groupESD.children.length, 'Stół testowy powinien zawierać aparaturę i ekran');
+});
+
+test('6.2: parametryczne generowanie regałów (FlowRackFIFO3Tier, ShelvingUnitBulk)', () => {
+  const fifo = {
+    id: 'lo-fifo-1',
+    name: 'Regał przepływowy FIFO',
+    type: 'FlowRackFIFO3Tier' as const,
+    xMm: 0,
+    yMm: 0,
+    zMm: 0,
+    widthMm: 1200,
+    lengthMm: 1000,
+    heightMm: 1600,
+    rotationDeg: 90,
+    colorHex: '#d97706',
+  };
+
+  const groupFifo = createParametricEquipmentGroup(fifo);
+  assert.ok(groupFifo instanceof THREE.Group);
+  // Sprawdź obrót
+  assert.equal(groupFifo.rotation.y, (-90 * Math.PI) / 180);
+  // Regał FIFO ma co najmniej 4 nogi + 3 półki rolkowe + półkę zwrotu pustych
+  assert.ok(groupFifo.children.length >= 8);
+
+  const bulkRack = {
+    id: 'lo-bulk-1',
+    name: 'Regał magazynowy wysokiego składowania',
+    type: 'ShelvingUnitBulk' as const,
+    xMm: 5000,
+    yMm: 2000,
+    zMm: 0,
+    widthMm: 2700,
+    lengthMm: 1100,
+    heightMm: 2500,
+    rotationDeg: 0,
+    colorHex: '#1e3a8a',
+  };
+  const groupBulk = createParametricEquipmentGroup(bulkRack);
+  assert.ok(groupBulk instanceof THREE.Group);
+  assert.ok(groupBulk.children.length >= 10, 'Regał magazynowy powinien mieć słupy, belki i półki');
+});
+
+test('6.2: parametryczne generowanie palet i oznakowań podłogowych (PalletEuroFloorMark, PalletEuroStack)', () => {
+  const floorMark = {
+    id: 'lo-pallet-mark',
+    name: 'Miejsce paletowe Euro z obrysem',
+    type: 'PalletEuroFloorMark' as const,
+    xMm: 1000,
+    yMm: 1000,
+    zMm: 0,
+    widthMm: 1200,
+    lengthMm: 800,
+    heightMm: 144,
+    rotationDeg: 0,
+    colorHex: '#facc15',
+  };
+  const groupMark = createParametricEquipmentGroup(floorMark);
+  assert.ok(groupMark instanceof THREE.Group);
+  // Powinien zawierać obrys pasów i narożników oraz paletę Euro
+  assert.ok(groupMark.children.length >= 6);
+
+  const palletStack = {
+    id: 'lo-pallet-stack',
+    name: 'Stos palet Euro',
+    type: 'PalletEuroStack' as const,
+    xMm: 1000,
+    yMm: 1000,
+    zMm: 0,
+    widthMm: 1200,
+    lengthMm: 800,
+    heightMm: 450, // 3 palety w stosie
+    rotationDeg: 0,
+    colorHex: '#c89f68',
+  };
+  const groupStack = createParametricEquipmentGroup(palletStack);
+  assert.ok(groupStack instanceof THREE.Group);
+  // Stos 3 palet powinien mieć więcej elementów niż pojedyncza paleta
+  assert.ok(groupStack.children.length >= 3);
+});
+
+test('6.2: parametryczne generowanie pojemników KLT (KltBoxStack, MaterialIn, FinishedGoods)', () => {
+  const kltStack = {
+    id: 'lo-klt-stack',
+    name: 'Stos pojemników KLT',
+    type: 'KltBoxStack' as const,
+    xMm: 2000,
+    yMm: 2000,
+    zMm: 0,
+    widthMm: 800,
+    lengthMm: 600,
+    heightMm: 600,
+    rotationDeg: 0,
+    colorHex: '#2563eb',
+  };
+  const groupKlt = createParametricEquipmentGroup(kltStack);
+  assert.ok(groupKlt instanceof THREE.Group);
+  assert.ok(groupKlt.children.length >= 4, 'Stos KLT powinien zawierać pojemniki w siatce');
+
+  const matIn = {
+    id: 'lo-mat-in',
+    name: 'Pojemnik wejściowy materiału',
+    type: 'MaterialIn' as const,
+    xMm: 0,
+    yMm: 0,
+    zMm: 0,
+    widthMm: 600,
+    lengthMm: 400,
+    heightMm: 300,
+    rotationDeg: 0,
+    colorHex: '#16a34a',
+  };
+  const groupIn = createParametricEquipmentGroup(matIn);
+  assert.ok(groupIn instanceof THREE.Group);
+
+  const finGoods = {
+    id: 'lo-fin-goods',
+    name: 'Pojemnik wyjściowy wyrobów gotowych',
+    type: 'FinishedGoods' as const,
+    xMm: 0,
+    yMm: 0,
+    zMm: 0,
+    widthMm: 600,
+    lengthMm: 400,
+    heightMm: 300,
+    rotationDeg: 0,
+    colorHex: '#2563eb',
+  };
+  const groupOut = createParametricEquipmentGroup(finGoods);
+  assert.ok(groupOut instanceof THREE.Group);
+});
+
+test('6.2: parametryczne generowanie wózków transportowych i AGV (CartTuggerPlatform, AGVMiniLifter)', () => {
+  const tugger = {
+    id: 'lo-tugger-1',
+    name: 'Wózek platformowy pociągowy',
+    type: 'CartTuggerPlatform' as const,
+    xMm: 3000,
+    yMm: 3000,
+    zMm: 0,
+    widthMm: 1300,
+    lengthMm: 900,
+    heightMm: 950,
+    rotationDeg: 0,
+    colorHex: '#1d4ed8',
+  };
+  const groupTugger = createParametricEquipmentGroup(tugger);
+  assert.ok(groupTugger instanceof THREE.Group);
+  // Zawiera 4 zestawy kołowe (koła + widelce), ramę podwozia, płytę ładunkową, krawędzie, dyszel i uchwyt
+  assert.ok(groupTugger.children.length >= 12);
+
+  const agv = {
+    id: 'lo-agv-1',
+    name: 'Wózek samojezdny AMR/AGV',
+    type: 'AGVMiniLifter' as const,
+    xMm: 4000,
+    yMm: 4000,
+    zMm: 0,
+    widthMm: 900,
+    lengthMm: 650,
+    heightMm: 300,
+    rotationDeg: 0,
+    colorHex: '#0284c7',
+  };
+  const groupAGV = createParametricEquipmentGroup(agv);
+  assert.ok(groupAGV instanceof THREE.Group);
+  // Zawiera korpus, zderzaki bezpieczeństwa, skanery LIDAR, stół podnośnika i pas LED
+  assert.ok(groupAGV.children.length >= 6);
+});
+
+test('6.2: parametryczne generowanie przenośników rolkowych (ConveyorRollerSegment)', () => {
+  const conveyor = {
+    id: 'lo-conv-1',
+    name: 'Przenośnik rolkowy grawitacyjny',
+    type: 'ConveyorRollerSegment' as const,
+    xMm: 1000,
+    yMm: 1000,
+    zMm: 0,
+    widthMm: 700,
+    lengthMm: 2400,
+    heightMm: 800,
+    rotationDeg: 0,
+    colorHex: '#475569',
+  };
+  const groupConv = createParametricEquipmentGroup(conveyor);
+  assert.ok(groupConv instanceof THREE.Group);
+  // Dla długości 2400mm przy podziałce 100mm powinno być ponad 20 rolek + profile boczne + 2 podpory H
+  assert.ok(groupConv.children.length >= 20, 'Przenośnik powinien posiadać zestaw rolek i podpór');
+});
+
+test('6.2: nakładki wizualne (strefa obsługi, obrys kolizji, porty transportowe) oraz zwalnianie zasobów (dispose)', () => {
+  const tableWithOverlays = {
+    id: 'lo-table-overlays',
+    name: 'Stół z nakładkami wizualnymi',
+    type: 'Table' as const,
+    xMm: 0,
+    yMm: 0,
+    zMm: 0,
+    widthMm: 1500,
+    lengthMm: 800,
+    heightMm: 850,
+    rotationDeg: 0,
+    colorHex: '#3b82f6',
+  };
+
+  const baseCount = createParametricEquipmentGroup(tableWithOverlays).children.length;
+
+  const withOverlays = createParametricEquipmentGroup(tableWithOverlays, {
+    showServiceZone: true,
+    showCollisionEnvelope: true,
+    showTransportPorts: true,
+  });
+
+  assert.ok(withOverlays.children.length > baseCount, 'Grupa z nakładkami powinna zawierać dodatkowe obiekty wizualizacyjne');
+
+  // Sprawdź czyste zwalnianie zasobów GPU bez błędów
+  assert.doesNotThrow(() => {
+    disposeEquipmentGroup(withOverlays);
+  });
+});
+
