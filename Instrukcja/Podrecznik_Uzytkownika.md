@@ -437,3 +437,24 @@ W widoku 3D (`6 Widok 3D i symulacja`) wprowadzono pełną synchronizację przes
 
 ![Karta inspekcji stanu detalu z postępem i wykazem BOM](../outputs/qa/verify_6_6_inspection_card_3d.png)
 
+### 5.5. Tryb uproszczony 3D (LOD) oraz praca wielomonitorowa (Popout Window) (6.7)
+
+Dla projektów o dużej skali oraz konfiguracji wielomonitorowych wdrożono dedykowane narzędzia poprawy wydajności i czytelności:
+
+- **Tryb uproszczony 3D (LOD / Bounding Box)**:
+  - W górnym pasku narzędziowym widoku 3D dostępny jest przycisk **Tryb uproszczony (LOD)**.
+  - Po aktywacji (`⚡ Tryb uproszczony: WŁ`) aplikacja automatycznie zastępuje złożone modele wyposażenia (stoły z nogami, regały z półkami i rolkami) lekkimi bryłami prostopadłościennymi o identycznych wymiarach zewnętrznych, zachowując kontrastowe linie krawędzi i oryginalne kolory.
+  - Pozwala na płynne manipulowanie i odtwarzanie animacji symulacji rozległych fabryk nawet na zintegrowanych kartach graficznych biurowych laptopów.
+
+- **Otwieranie widoków w osobnym oknie monitora (Popout Window)**:
+  - Przycisk **`⧉ Otwórz ... w osobnym oknie`** pozwala przenieść kluczowe moduły do osobnego, niezależnego okna przeglądarki na drugi lub trzeci monitor:
+    - **Przepływ procesu (`2a Przepływ`)**: stały podgląd sieci powiązań technologicznych obok tabeli danych.
+    - **Hala i CAD 2D (`5 Hala i CAD`)**: pełnoekranowy edytor rzutu posadzki z siatką i wymiarowaniem.
+    - **Hala 3D i symulacja (`6 3D i symulacja`)**: pełnowymiarowy trójwymiarowy podgląd hali z odtwarzaniem partii.
+  - **Współdzielenie stanu na żywo**: Dzięki technologii React Portals wszelkie zmiany wprowadzane w oknie głównym (np. przesunięcie stacji, edycja czasu operacji, zmiana obsady) są natychmiast, bez żadnych opóźnień odzwierciedlane w oknie popout.
+  - **Przywracanie do okna głównego**: Kliknięcie przycisku `✕ Przywróć do okna głównego` w nagłówku okna popout lub po prostu zamknięcie tego okna przywraca widok z powrotem do układu zintegrowanego.
+
+![Tryb uproszczony 3D — lekki render brył zastępczych LOD](../outputs/qa/verify_6_7_simplified_lod_mode_active.png)
+
+![Przycisk otwarcia rzutu CAD w osobnym oknie](../outputs/qa/verify_6_7_popout_cad_btn.png)
+

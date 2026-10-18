@@ -566,7 +566,7 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 | 6.4 | Oddzielić model wizualny od parametrów technologicznych, aby wymiana wyglądu nie zmieniała zdolności produkcyjnej. | wdrożone |
 | 6.5 | Dodać wygodne manipulatory przesuwania i obrotu oraz ukrywanie warstw i obiektów. | wdrożone |
 | 6.6 | Animować produkty, podzespoły i transport zgodnie z harmonogramem symulacji; umożliwić pauzę i inspekcję stanu. | wdrożone |
-| 6.7 | Sprawdzić czytelność oraz wydajność większej sceny i zapewnić użyteczny tryb uproszczony. | nierozpoczęte |
+| 6.7 | Sprawdzić czytelność oraz wydajność większej sceny i zapewnić użyteczny tryb uproszczony (LOD/Bounding Box dla słabszych GPU) oraz możliwość otwierania widoków (3D, rzut CAD, przepływ procesu) w osobnym oknie (Popout Window). | wdrożone |
 
 **Odbiór etapu:** 3D pozwala zlokalizować problem i edytować układ, a animacja pozostaje zgodna z harmonogramem. Model wizualny nie jest źródłem czasów operacji ani niezależną kopią danych procesu.
 

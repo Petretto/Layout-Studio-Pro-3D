@@ -37,6 +37,8 @@ export interface ParametricModelOptions {
   showTransportPorts?: boolean;
   /** If true, renders wireframe models instead of solid PBR meshes (useful for performance / debug). */
   wireframe?: boolean;
+  /** If true, renders lightweight low-poly bounding box instead of detailed multi-part mesh (Plan 6.7 LOD). */
+  simplifiedBox?: boolean;
   /** Custom base color override (hex string, e.g. '#2563eb'). */
   colorHex?: string;
 }
@@ -1094,8 +1096,22 @@ export function createParametricEquipmentGroup(
   group.position.set(posX, posY, posZ);
   group.rotation.y = (-object.rotationDeg * Math.PI) / 180;
 
-  // Build the characteristic 3D visual equipment model
-  if(object.visualModelId){
+  // Plan 6.7: High-performance simplified bounding box LOD mode for large factory layouts / low-spec GPUs
+  if (options.simplifiedBox) {
+    const boxMat = new THREE.MeshStandardMaterial({
+      color: colorHex ? new THREE.Color(colorHex) : 0x475569,
+      roughness: 0.6,
+      metalness: 0.1,
+      wireframe: wire,
+    });
+    const mesh = addBox(group, w, h, l, 0, h / 2, 0, boxMat);
+    // Add subtle contrasting edge lines for visual readability
+    const edges = new THREE.EdgesGeometry(mesh.geometry);
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x0f172a, linewidth: 1 });
+    const edgeLines = new THREE.LineSegments(edges, lineMat);
+    edgeLines.position.set(0, h / 2, 0);
+    group.add(edgeLines);
+  } else if(object.visualModelId){
     group.add(createConceptVisual(object.visualModelId,w,l,h,wire));
   }else switch (object.type as string) {
     case 'Table':

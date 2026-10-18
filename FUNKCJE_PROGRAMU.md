@@ -561,3 +561,21 @@ W widoku 3D (`Scene.tsx`) oraz module symulacji (`simulationAnimation.ts`) wdro�
 - **Niezmiennik Zasady 6**:
   - Czysto odczytowy charakter animacji 3D — snapshoty i inspekcja nie modyfikują struktury procesu, bilansu ani wyników symulacji. Szczegóły: `WERYFIKACJA_ANIMACJI_I_INSPEKCJI_6_6.md`.
 
+### Tryb uproszczony 3D (LOD) oraz otwieranie widoków w osobnym oknie (Popout) — 6.7 (2026-10-18)
+W ramach optymalizacji wydajności i czytelności wielomonitorowej wdrożono:
+- **Tryb uproszczony 3D (LOD / Bounding Box)**:
+  - Opcja `simplifiedBox` w `createParametricEquipmentGroup` zastępująca złożone, wieloczęściowe geometrie parametryczne lekkimi bryłami prostopadłościennymi z kontrastowymi liniami krawędzi (`LineSegments`).
+  - Przycisk przełączający `Tryb uproszczony (LOD)` / `⚡ Tryb uproszczony: WŁ` w toolbarze widoku 3D.
+  - Zapewnia płynne wyświetlanie i edycję rozległych hal fabrycznych ze znaczną liczbą stanowisk na słabszych układach GPU (zintegrowana grafika biurowa).
+- **Otwieranie widoków w osobnym oknie monitora (Popout Window via React Portals)**:
+  - Komponent `PopoutWindow` renderujący widok do natywnego okna przeglądarki (`window.open` + `createPortal`).
+  - Przycisk `⧉ Otwórz w osobnym oknie` dostępny w:
+    - *Przepływ procesu* (diagram logiczny gałęzi i relacji),
+    - *Hala i CAD 2D* (rzut posadzki hali),
+    - *Hala 3D i symulacja* (trójwymiarowy model z animacją).
+  - Płynne współdzielenie stanu React w pamięci (zmiany na jednym ekranie są natychmiast widoczne na drugim).
+  - Bezpieczne przywracanie widoku do okna głównego (`✕ Przywróć do okna głównego` lub automatycznie przy zamknięciu okna).
+- **Niezmiennik Zasady 6**:
+  - Tryb uproszczony i okna Popout nie modyfikują danych technologicznych procesu, bilansu ani wyników symulacji. Szczegóły: `WERYFIKACJA_WYDAJNOSCI_I_OKIEN_6_7.md`.
+
+

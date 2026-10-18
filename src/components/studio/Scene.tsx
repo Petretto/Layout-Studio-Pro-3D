@@ -59,6 +59,7 @@ export function Scene({
   const [hiddenIds,setHiddenIds]=useState<string[]>([]);
   const [inspectedJobId,setInspectedJobId]=useState<number|null>(null);
   const [showInspector,setShowInspector]=useState(true);
+  const [simplifiedBox,setSimplifiedBox]=useState(false);
   const activity=useRef(activeRuns);activity.current=activeRuns;
   const simPlaybackRef=useRef(simulationPlayback);simPlaybackRef.current=simulationPlayback;
   const topView=useRef<()=>void>(()=>{}),focusObject=useRef<(id:string)=>void>(()=>{});
@@ -191,6 +192,7 @@ export function Scene({
         showServiceZone:showZones&&isVisible,
         showCollisionEnvelope:showEnvelopes&&isVisible,
         showTransportPorts:showZones&&isVisible,
+        simplifiedBox,
       });
       group.visible=isVisible;
       groups.push(group);
@@ -538,7 +540,7 @@ export function Scene({
       renderer.dispose();
       renderer.domElement.remove();
     };
-  },[p,editing,snap,readOnly,selectedIds,showZones,showEnvelopes,gizmoMode,layers3D,hiddenIds]);
+  },[p,editing,snap,readOnly,selectedIds,showZones,showEnvelopes,gizmoMode,layers3D,hiddenIds,simplifiedBox]);
 
   const hasVisualAssumptions=p.layoutObjects.some(o=>o.isVisualAssumption);
   const isFacilityConfirmed=!!(p.facility.underlay?.calibratedDistanceMm||p.facility.isConfirmed);
@@ -598,6 +600,14 @@ export function Scene({
         </button>
         <button onClick={()=>setShowEnvelopes(prev=>!prev)} aria-pressed={showEnvelopes} title="Pokaż lub ukryj obrysy kolizji w 3D (6.1/6.2)">
           Obrysy kolizji 3D {showEnvelopes?'włączone':'wyłączone'}
+        </button>
+        <button
+          onClick={()=>setSimplifiedBox(prev=>!prev)}
+          aria-pressed={simplifiedBox}
+          className={simplifiedBox?'active':''}
+          title="Tryb uproszczony 3D (LOD/Bounding Box) — redukuje geometrię do lekkich brył dla maksymalnej wydajności na słabszych GPU (6.7)"
+        >
+          {simplifiedBox ? '⚡ Tryb uproszczony: WŁ' : 'Tryb uproszczony (LOD)'}
         </button>
 
         {!readOnly&&((selectedIds&&selectedIds.length>0)||draft)&& (

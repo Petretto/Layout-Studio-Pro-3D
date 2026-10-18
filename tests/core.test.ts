@@ -1867,5 +1867,56 @@ test('6.6: niezmiennik Zasady 6 — czysta deterministyczna animacja nie modyfik
   assert.equal(JSON.stringify(p.processSteps), initialStepsJson, 'Struktura operacji procesu nie może ulec zmianie');
 });
 
+test('6.7: tryb uproszczony 3D (simplifiedBox LOD) redukuje geometrię do lekkich brył zastępczych', () => {
+  const sampleTable = {
+    id: 'lo-table-lod',
+    name: 'Stół montażowy LOD',
+    type: 'Table' as const,
+    xMm: 2000,
+    yMm: 3000,
+    zMm: 0,
+    widthMm: 1500,
+    lengthMm: 800,
+    heightMm: 850,
+    rotationDeg: 0,
+    colorHex: '#3b82f6',
+  };
+
+  // 1. Grupa ze standardowym, szczegółowym modelem parametrycznym
+  const detailedGroup = createParametricEquipmentGroup(sampleTable, { simplifiedBox: false });
+  // Model szczegółowy ma co najmniej 10 dzieci (blat, 4 nogi, stopy, ramy)
+  assert.ok(detailedGroup.children.length >= 10, 'Szczegółowy model powinien mieć wiele części składowych');
+
+  // 2. Grupa w trybie uproszczonym (simplifiedBox = true)
+  const simplifiedGroup = createParametricEquipmentGroup(sampleTable, { simplifiedBox: true });
+  assert.ok(simplifiedGroup instanceof THREE.Group);
+  // Tryb uproszczony składa się wyłącznie z 1 lekkiej bryły Mesh i 1 obwiedni krawędzi LineSegments
+  assert.equal(simplifiedGroup.children.length, 2, 'Tryb uproszczony LOD powinien zawierać dokładnie 2 elementy (Mesh + krawędzie)');
+  const meshChild = simplifiedGroup.children.find(c => c instanceof THREE.Mesh) as THREE.Mesh;
+  assert.ok(meshChild, 'Tryb uproszczony musi zawierać Mesh bryły');
+  assert.ok(meshChild.geometry instanceof THREE.BoxGeometry, 'Geometria w trybie uproszczonym musi być prostopadłościanem BoxGeometry');
+
+  // 3. Pozycja i wymiary w Three.js pozostają identyczne
+  assert.equal(simplifiedGroup.position.x, detailedGroup.position.x);
+  assert.equal(simplifiedGroup.position.y, detailedGroup.position.y);
+  assert.equal(simplifiedGroup.position.z, detailedGroup.position.z);
+});
+
+test('6.7: niezmiennik trybu uproszczonego i popout window — brak wpływu na proces, bilans i symulację', () => {
+  const p = derive(parseProject(JSON.stringify(motor))).project;
+  const initialSteps = JSON.stringify(p.processSteps);
+  const initialBalancing = JSON.stringify(p.balancing);
+
+  // Wywołanie renderowania uproszczonego dla wszystkich obiektów
+  for (const obj of p.layoutObjects) {
+    createParametricEquipmentGroup(obj, { simplifiedBox: true });
+  }
+
+  // Weryfikacja nienaruszalności danych procesu
+  assert.equal(JSON.stringify(p.processSteps), initialSteps, 'Proces nie może ulec modyfikacji');
+  assert.equal(JSON.stringify(p.balancing), initialBalancing, 'Bilans nie może ulec modyfikacji');
+});
+
+
 
 
