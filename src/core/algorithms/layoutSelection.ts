@@ -436,4 +436,41 @@ export function analyzeGeometricLayoutWarnings(
   };
 }
 
+export type NudgeDirection = 'left'|'right'|'up'|'down';
+
+export function nudgeLayoutObjects(
+  objects: LayoutObject[],
+  ids: string[],
+  direction: NudgeDirection,
+  stepMm: number,
+  stationAssembly = true
+): LayoutObject[] {
+  if (!Number.isFinite(stepMm) || stepMm <= 0) throw new Error('Krok przesunięcia musi być dodatnią liczbą mm');
+  const dx = direction === 'left' ? -stepMm : direction === 'right' ? stepMm : 0;
+  const dy = direction === 'up' ? -stepMm : direction === 'down' ? stepMm : 0;
+  return moveLayoutObjects(objects, ids, dx, dy, stationAssembly);
+}
+
+export interface ShortcutDefinition {
+  key: string;
+  label: string;
+  description: string;
+  context: 'all'|'2d'|'3d';
+}
+
+export const LAYOUT_SHORTCUTS: readonly ShortcutDefinition[] = [
+  { key: 'Ctrl+Z', label: 'Cofnij', description: 'Cofa ostatnią operację w projekcie', context: 'all' },
+  { key: 'Ctrl+Y', label: 'Ponów', description: 'Ponawia cofniętą operację w projekcie', context: 'all' },
+  { key: 'Ctrl+S', label: 'Zapisz lokalnie', description: 'Zapisuje projekt w pamięci przeglądarki', context: 'all' },
+  { key: 'F', label: 'Dopasuj widok', description: 'Dopasowuje powiększenie do obrysu hali lub wybranego obiektu', context: 'all' },
+  { key: 'T', label: 'Widok z góry', description: 'Ustawia kamerę 3D bezpośrednio nad halą', context: '3d' },
+  { key: 'G', label: 'Przyciąganie do siatki', description: 'Włącza lub wyłącza przyciąganie do siatki', context: 'all' },
+  { key: 'M', label: 'Przesuwanie wyposażenia', description: 'Przełącza tryb przesuwania wyposażenia i widoku', context: 'all' },
+  { key: 'L', label: 'Zablokuj / odblokuj', description: 'Blokuje lub odblokowuje pozycję i wymiary zaznaczonych obiektów', context: 'all' },
+  { key: 'S', label: 'Relacje technologiczne', description: 'Włącza lub wyłącza fioletowe linie powiązań technologicznych', context: '3d' },
+  { key: 'Strzałki', label: 'Przesunięcie o krok', description: 'Przesuwa zaznaczone obiekty o krok siatki (z Shift ×5)', context: 'all' },
+  { key: 'Escape', label: 'Odznacz / zamknij', description: 'Zamyka otwarty panel, anuluje pomiar lub usuwa zaznaczenie', context: 'all' },
+];
+
+
 

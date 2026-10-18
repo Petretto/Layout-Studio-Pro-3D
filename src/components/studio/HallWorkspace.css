@@ -27,4 +27,8 @@
 .geo-warning-list { margin: 8px 0 0; padding-left: 18px; }
 .geo-warning-list li { margin-bottom: 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .geo-badge { display: inline-block; padding: 2px 7px; border-radius: 4px; background: #334155; border: 1px solid #f59e0b; color: #fde047; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+.cad-shortcuts-cheatsheet { background: #0f172a; border-color: #334155; }
+.shortcuts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 8px 16px; margin-top: 8px; font-size: 13px; }
+.shortcut-item { color: #cbd5e1; }
+.shortcut-item kbd { display: inline-block; padding: 2px 6px; font-family: monospace; font-size: 11px; font-weight: 700; background: #1e293b; border: 1px solid #475569; border-radius: 4px; color: #38bdf8; box-shadow: 0 1px 2px #0004; }
 

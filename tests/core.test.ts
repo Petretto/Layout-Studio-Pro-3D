@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import { calculateTaktTime } from '../src/core/algorithms/taktCalculator';
 import { runLineBalancing } from '../src/core/algorithms/lineBalancingEngine';
 import { generate3DLayout,layoutWarnings,corners } from '../src/core/algorithms/layoutEngine';
-import {alignLayoutObjects,analyzeGeometricLayoutWarnings,BHP_GEOMETRY_DISCLAIMER,BHP_SAFE_STATE_NOTE,calibrateUnderlayScale,classifyLayoutObjectLayer,computeFunctionalZones,expandMoveSelection,expandVisualSelection,groupLayoutObjects,copyLayoutObjects,lockLayoutObjects,measureObjectsDistance,measurePointsDistance,moveLayoutObjects,objectConnectionPoints,snapLayoutTranslation,underlayDimensionsMm,workstationAssemblyIds} from '../src/core/algorithms/layoutSelection';
+import {alignLayoutObjects,analyzeGeometricLayoutWarnings,BHP_GEOMETRY_DISCLAIMER,BHP_SAFE_STATE_NOTE,calibrateUnderlayScale,classifyLayoutObjectLayer,computeFunctionalZones,expandMoveSelection,expandVisualSelection,groupLayoutObjects,copyLayoutObjects,lockLayoutObjects,measureObjectsDistance,measurePointsDistance,moveLayoutObjects,nudgeLayoutObjects,objectConnectionPoints,snapLayoutTranslation,underlayDimensionsMm,workstationAssemblyIds,LAYOUT_SHORTCUTS} from '../src/core/algorithms/layoutSelection';
 import {layoutRoutes} from '../src/core/algorithms/routing';
 import { simulate,simulationAt,SIMULATION_SPEEDS,stepSimulationTime } from '../src/core/algorithms/simulation';
 import { importProcess,importBOM,processRows,bomRows,templateWorkbookBytes,TEMPLATE_PROCESS_STEPS,TEMPLATE_BOM_COMPONENTS,PROCESS_COLUMN_DOCS,BOM_COLUMN_DOCS } from '../src/core/export/excelImporter';
@@ -806,6 +806,72 @@ test('5.9: kontrola geometryczna rzutu odróżnia ostrzeżenia geometryczne 2D o
   assert.ok(warningCheck.affectedObjectIds.includes('TBL-WS-1'));
   assert.ok(warningCheck.affectedObjectIds.includes('TBL-WS-2'));
 });
+
+test('5.10: LAYOUT_SHORTCUTS zawiera wymagane skróty, opisy i konteksty', () => {
+  assert.ok(LAYOUT_SHORTCUTS.length >= 10);
+  const keys = LAYOUT_SHORTCUTS.map(s => s.key);
+  assert.ok(keys.includes('Ctrl+Z'));
+  assert.ok(keys.includes('Ctrl+Y'));
+  assert.ok(keys.includes('Ctrl+S'));
+  assert.ok(keys.includes('F'));
+  assert.ok(keys.includes('T'));
+  assert.ok(keys.includes('G'));
+  assert.ok(keys.includes('M'));
+  assert.ok(keys.includes('L'));
+  assert.ok(keys.includes('S'));
+  assert.ok(keys.includes('Strzałki'));
+  assert.ok(keys.includes('Escape'));
+
+  for (const item of LAYOUT_SHORTCUTS) {
+    assert.ok(item.key.length > 0);
+    assert.ok(item.label.length > 0);
+    assert.ok(item.description.length > 0);
+    assert.ok(['all', '2d', '3d'].includes(item.context));
+  }
+});
+
+test('5.10: nudgeLayoutObjects przesuwa obiekty w 4 kierunkach z ochroną locked i opcją zespołu', () => {
+  const derived = derive(motor);
+  const objects = derived.project.layoutObjects;
+  const table = objects.find(o => o.id === 'TBL-WS-1')!;
+  const fifo = objects.find(o => o.id === 'FIFO-WS-1')!;
+
+  // 1. Nudge right with stationAssembly = true
+  const movedRight = nudgeLayoutObjects(objects, [table.id], 'right', 150, true);
+  const tableRight = movedRight.find(o => o.id === table.id)!;
+  const fifoRight = movedRight.find(o => o.id === fifo.id)!;
+  assert.equal(tableRight.xMm, table.xMm + 150);
+  assert.equal(tableRight.yMm, table.yMm);
+  assert.equal(fifoRight.xMm, fifo.xMm + 150);
+
+  // 2. Nudge left
+  const movedLeft = nudgeLayoutObjects(movedRight, [table.id], 'left', 150, true);
+  const tableLeft = movedLeft.find(o => o.id === table.id)!;
+  assert.equal(tableLeft.xMm, table.xMm);
+
+  // 3. Nudge down
+  const movedDown = nudgeLayoutObjects(objects, [table.id], 'down', 200, false);
+  const tableDown = movedDown.find(o => o.id === table.id)!;
+  const fifoDown = movedDown.find(o => o.id === fifo.id)!;
+  assert.equal(tableDown.yMm, table.yMm + 200);
+  assert.equal(fifoDown.yMm, fifo.yMm); // stationAssembly=false, fifo nie rusza się
+
+  // 4. Nudge up
+  const movedUp = nudgeLayoutObjects(movedDown, [table.id], 'up', 200, false);
+  const tableUp = movedUp.find(o => o.id === table.id)!;
+  assert.equal(tableUp.yMm, table.yMm);
+
+  // 5. Locked object protection
+  const lockedObjects = objects.map(o => o.id === table.id ? { ...o, locked: true } : o);
+  const attemptedNudge = nudgeLayoutObjects(lockedObjects, [table.id], 'right', 100, false);
+  const tableLocked = attemptedNudge.find(o => o.id === table.id)!;
+  assert.equal(tableLocked.xMm, table.xMm); // nie przesunięty, bo locked
+
+  // 6. Invalid step check
+  assert.throws(() => nudgeLayoutObjects(objects, [table.id], 'right', 0), /dodatnią liczbą/);
+  assert.throws(() => nudgeLayoutObjects(objects, [table.id], 'right', -50), /dodatnią liczbą/);
+});
+
 
 
 

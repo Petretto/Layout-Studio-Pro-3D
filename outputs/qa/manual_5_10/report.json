@@ -1,0 +1,40 @@
+{
+  "pages": 29,
+  "imageReferences": 29,
+  "missingImages": [],
+  "absentSections": [],
+  "blankPages": [],
+  "wordsOutsidePage": [],
+  "pagesBySection": {
+    "3.1.": [
+      19
+    ],
+    "3.2.": [
+      20
+    ],
+    "3.3.": [
+      21
+    ],
+    "3.4.": [
+      22
+    ],
+    "3.5.": [
+      23
+    ],
+    "3.6.": [
+      25
+    ],
+    "3.7.": [
+      26
+    ],
+    "3.8.": [
+      27
+    ],
+    "3.9.": [
+      28
+    ],
+    "4. Ważne zasady": [
+      29
+    ]
+  }
+}
