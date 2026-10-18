@@ -1,5 +1,7 @@
 # Layout Studio Pro 3D v0.4.0 — funkcje programu
 
+Uzupełnienie źródeł Eko 7.1b (2026-10-18): potwierdzono 13 osób łącznie w procesie ramy 1.4; mierzone OP10–OP20 po jednej osobie, pakowanie OP21 w dwie osoby przy zachowaniu 1320 s (22 min). To zapis pochodzenia i liczebności w rejestrze, bez automatycznych przydziałów osób lub zmiany aplikacji. Tożsamości, współdzielenie i profile obecności nadal wymagają danych; obsady OP22–OP25 nie określono.
+
 Aktualizacja danych Eko 7.1a (2026-10-18): użytkownik potwierdził rzeczywiste pochodzenie arkuszy procesu/BOM, pomiary z lipca 2026 i wariant ramy 1.4; OP22–OP25 pozostają przykładami (600/600/480/480 s). Audyt obejmuje 12 pozostałych czasów i 60 BOM oraz rejestr braków obsady, profili, geometrii, transportu, buforów, kalendarzy i wyników produkcji. Karty pomocnicze CSV i rejestr źródeł w `dane/eko/7_1`, raport `DANE_EKO_7_1.md`. Nie jest to nowa funkcja importera, zmiana przykładu ani odbiór modelu produkcyjnego. 7.1 pozostaje w trakcie.
 
 Aktualizacja instrukcji 7.8.1 (2026-10-18): `Instrukcja/Podrecznik_Uzytkownika.md` jest aktualnym edytowalnym źródłem podręcznika po Etapach 1–4, z pochodnymi HTML/PDF (21 stron, 21 obrazów). Nowy rozdział opisuje pełną ścieżkę szkicu 6, zapis, harmonogram, bufory, materiał, kompetencje, bilans, warianty, koszty i propozycje zmian. Zrzuty opisano jako syntetyczne. Historyczny Word v0.2 nie jest nową instrukcją. Generacja i wizualny odbiór PDF PASS; raport `WERYFIKACJA_INSTRUKCJI_7_8_1.md`. Finalna aktualizacja po dalszych etapach pozostaje w 7.8.2.

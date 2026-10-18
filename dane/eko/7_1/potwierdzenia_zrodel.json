@@ -34,7 +34,24 @@
       "reportedPersonCount": 13,
       "personCountScope": null,
       "operationCrewAssignments": null,
-      "notes": "Liczba podana w odpowiedzi na pytanie o obsadę pomiarów OP10–OP21. Zakres (cały proces albo zespół każdej operacji) wymaga doprecyzowania EKO-C2; nie przypisano 13 osób automatycznie do operacji."
+      "notes": "Pierwotna odpowiedź bez określenia zakresu. Doprecyzowanie zapisano w EKO-U4; historyczny wpis zachowano."
+    },
+    {
+      "id": "EKO-U4",
+      "recordedOn": "2026-10-18",
+      "authority": "użytkownik projektu — odpowiedź w tej rozmowie",
+      "statement": "Łącznie w procesie. tylko pakowanie było wykonywane przez 2 osoby",
+      "totalProcessPersonCount": 13,
+      "personCountScope": "whole-process",
+      "frameVariant": "1.4",
+      "measurementPeriod": "2026-07",
+      "operationWorkerCounts": {
+        "OP10": 1, "OP11": 1, "OP12": 1, "OP13": 1,
+        "OP14": 1, "OP15": 1, "OP16": 1, "OP17": 1,
+        "OP18": 1, "OP19": 1, "OP20": 1, "OP21": 2
+      },
+      "workerIdentitiesAndSharing": null,
+      "notes": "Tylko pakowanie OP21 wykonywały 2 osoby, pozostałe mierzone operacje OP10–OP20 po jednej. 1320 s OP21 jest czasem dla tej obsady; nie dzielić przez 2. Nie określono tożsamości osób, współdzielenia między operacjami, przedziałów obecności ani jednoczesności. Nie rozszerzać tej deklaracji na testowe OP22–OP25."
     }
   ],
   "clarifications": [
@@ -48,10 +65,11 @@
     },
     {
       "id": "EKO-C2",
-      "status": "pending",
+      "status": "resolved",
       "question": "Czy 13 osób to łączna obsada procesu Eko, czy wszystkie 13 osób wspólnie wykonywało każdą mierzoną operację?",
-      "resolution": null,
-      "sourceConfirmationId": "EKO-U3"
+      "resolution": "13-total-process-OP21-two-other-measured-operations-one",
+      "sourceConfirmationId": "EKO-U3",
+      "confirmationId": "EKO-U4"
     }
   ]
 }

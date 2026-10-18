@@ -1,7 +1,7 @@
 {
   "kind": "eko-source-audit-not-an-application-project",
   "auditVersion": 1,
-  "auditedAt": "2026-10-18T14:21:57.311Z",
+  "auditedAt": "2026-10-18T14:22:51.149Z",
   "productionDataAccepted": false,
   "notice": "User confirms real source, July 2026, frame variant 1.4. Four synthetic times remain examples per explicit clarification. Complete production model not accepted.",
   "sources": [
@@ -56,8 +56,8 @@
     {
       "id": "EKO-S7",
       "path": "dane/eko/7_1/potwierdzenia_zrodel.json",
-      "bytes": 2439,
-      "sha256": "3194ba58dfa2c57dc58f84900c4da54928fb78e7a040dcab3ab8e9cec9f57fe6",
+      "bytes": 3395,
+      "sha256": "735699041b58174c8896bb030f24de9b8195c08227e77cbbdd978cd7a45ac9e5",
       "measurementPeriod": null,
       "productionConfirmation": null
     }
@@ -103,7 +103,33 @@
       "reportedPersonCount": 13,
       "personCountScope": null,
       "operationCrewAssignments": null,
-      "notes": "Liczba podana w odpowiedzi na pytanie o obsadę pomiarów OP10–OP21. Zakres (cały proces albo zespół każdej operacji) wymaga doprecyzowania EKO-C2; nie przypisano 13 osób automatycznie do operacji."
+      "notes": "Pierwotna odpowiedź bez określenia zakresu. Doprecyzowanie zapisano w EKO-U4; historyczny wpis zachowano."
+    },
+    {
+      "id": "EKO-U4",
+      "recordedOn": "2026-10-18",
+      "authority": "użytkownik projektu — odpowiedź w tej rozmowie",
+      "statement": "Łącznie w procesie. tylko pakowanie było wykonywane przez 2 osoby",
+      "totalProcessPersonCount": 13,
+      "personCountScope": "whole-process",
+      "frameVariant": "1.4",
+      "measurementPeriod": "2026-07",
+      "operationWorkerCounts": {
+        "OP10": 1,
+        "OP11": 1,
+        "OP12": 1,
+        "OP13": 1,
+        "OP14": 1,
+        "OP15": 1,
+        "OP16": 1,
+        "OP17": 1,
+        "OP18": 1,
+        "OP19": 1,
+        "OP20": 1,
+        "OP21": 2
+      },
+      "workerIdentitiesAndSharing": null,
+      "notes": "Tylko pakowanie OP21 wykonywały 2 osoby, pozostałe mierzone operacje OP10–OP20 po jednej. 1320 s OP21 jest czasem dla tej obsady; nie dzielić przez 2. Nie określono tożsamości osób, współdzielenia między operacjami, przedziałów obecności ani jednoczesności. Nie rozszerzać tej deklaracji na testowe OP22–OP25."
     }
   ],
   "clarifications": [
@@ -122,12 +148,34 @@
     },
     {
       "id": "EKO-C2",
-      "status": "pending",
+      "status": "resolved",
       "question": "Czy 13 osób to łączna obsada procesu Eko, czy wszystkie 13 osób wspólnie wykonywało każdą mierzoną operację?",
-      "resolution": null,
-      "sourceConfirmationId": "EKO-U3"
+      "resolution": "13-total-process-OP21-two-other-measured-operations-one",
+      "sourceConfirmationId": "EKO-U3",
+      "confirmationId": "EKO-U4"
     }
   ],
+  "staffing": {
+    "confirmationId": "EKO-U4",
+    "totalProcessPersonCount": 13,
+    "operationWorkerCounts": {
+      "OP10": 1,
+      "OP11": 1,
+      "OP12": 1,
+      "OP13": 1,
+      "OP14": 1,
+      "OP15": 1,
+      "OP16": 1,
+      "OP17": 1,
+      "OP18": 1,
+      "OP19": 1,
+      "OP20": 1,
+      "OP21": 2
+    },
+    "workerIdentitiesAndSharing": null,
+    "simultaneousAvailabilityInferred": false,
+    "timeScalingApplied": false
+  },
   "process": {
     "sourceId": "EKO-S1",
     "sheet": "Dane",
@@ -153,6 +201,8 @@
         "crewIds": null,
         "measurementPeriod": "2026-07",
         "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
         "confirmation": "EKO-U1"
       },
       {
@@ -173,6 +223,8 @@
         "crewIds": null,
         "measurementPeriod": "2026-07",
         "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
         "confirmation": "EKO-U1"
       },
       {
@@ -193,6 +245,8 @@
         "crewIds": null,
         "measurementPeriod": "2026-07",
         "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
         "confirmation": "EKO-U1"
       },
       {
@@ -213,6 +267,8 @@
         "crewIds": null,
         "measurementPeriod": "2026-07",
         "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
         "confirmation": "EKO-U1"
       },
       {
@@ -233,6 +289,8 @@
         "crewIds": null,
         "measurementPeriod": "2026-07",
         "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
         "confirmation": "EKO-U1"
       },
       {
@@ -253,6 +311,8 @@
         "crewIds": null,
         "measurementPeriod": "2026-07",
         "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
         "confirmation": "EKO-U1"
       },
       {
@@ -273,6 +333,8 @@
         "crewIds": null,
         "measurementPeriod": "2026-07",
         "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
         "confirmation": "EKO-U1"
       },
       {
@@ -293,6 +355,8 @@
         "crewIds": null,
         "measurementPeriod": "2026-07",
         "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
         "confirmation": "EKO-U1"
       },
       {
@@ -313,6 +377,8 @@
         "crewIds": null,
         "measurementPeriod": "2026-07",
         "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
         "confirmation": "EKO-U1"
       },
       {
@@ -333,6 +399,8 @@
         "crewIds": null,
         "measurementPeriod": "2026-07",
         "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
         "confirmation": "EKO-U1"
       },
       {
@@ -353,6 +421,8 @@
         "crewIds": null,
         "measurementPeriod": "2026-07",
         "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
         "confirmation": "EKO-U1"
       },
       {
@@ -373,6 +443,8 @@
         "crewIds": null,
         "measurementPeriod": "2026-07",
         "method": null,
+        "measuredCrewWorkerCount": 2,
+        "crewCountConfirmation": "EKO-U4",
         "confirmation": "EKO-U1"
       },
       {
@@ -393,6 +465,8 @@
         "crewIds": null,
         "measurementPeriod": null,
         "method": null,
+        "measuredCrewWorkerCount": null,
+        "crewCountConfirmation": null,
         "confirmation": "EKO-U2"
       },
       {
@@ -413,6 +487,8 @@
         "crewIds": null,
         "measurementPeriod": null,
         "method": null,
+        "measuredCrewWorkerCount": null,
+        "crewCountConfirmation": null,
         "confirmation": "EKO-U2"
       },
       {
@@ -433,6 +509,8 @@
         "crewIds": null,
         "measurementPeriod": null,
         "method": null,
+        "measuredCrewWorkerCount": null,
+        "crewCountConfirmation": null,
         "confirmation": "EKO-U2"
       },
       {
@@ -453,6 +531,8 @@
         "crewIds": null,
         "measurementPeriod": null,
         "method": null,
+        "measuredCrewWorkerCount": null,
+        "crewCountConfirmation": null,
         "confirmation": "EKO-U2"
       }
     ]

@@ -8,7 +8,7 @@ Użytkownik potwierdził rzeczywiste pochodzenie `tests/Test Eko.xlsx` i `tests/
 
 Dowody odpowiedzi są zapisane w `potwierdzenia_zrodel.json`; pełny audyt i identyfikatory źródeł zawiera `../../../outputs/data_audit/eko_7_1.json`. Rejestr braków: `../../../DANE_EKO_7_1.md`.
 
-Podano również **13 osób** (EKO-U3). Do wyjaśnienia EKO-C2 nie wiadomo, czy jest to łączna obsada procesu, czy zespół każdej operacji. Karty przydziałów pozostają puste; czasów nie dzielimy ani nie mnożymy przez tę liczbę.
+Użytkownik doprecyzował obsadę (EKO-U4): **13 osób łącznie w procesie**, po **1 osobie dla mierzonych OP10–OP20** oraz **2 osoby przy pakowaniu OP21**. Zmierzony czas pakowania **1320 s = 22 min** dotyczy tej dwuosobowej obsady; nie dzielimy go przez dwa. Nie określono tożsamości osób, współdzielenia ani przedziałów obecności. Karty są nadal pustymi wzorcami, a deklaracja nie obejmuje testowych OP22–OP25.
 
 ## Jak uzupełniać karty
 
