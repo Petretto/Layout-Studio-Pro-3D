@@ -2,7 +2,8 @@ import { strict as assert } from 'node:assert';
 import {Box3,Group,Mesh,BoxGeometry,PlaneGeometry,MeshBasicMaterial,Vector3} from 'three';
 import {sceneContentBounds} from '../src/core/equipment/sceneFraming';
 import { test } from 'node:test';
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import * as XLSX from 'xlsx';
 import { calculateTaktTime } from '../src/core/algorithms/taktCalculator';
 import { runLineBalancing } from '../src/core/algorithms/lineBalancingEngine';
@@ -2525,5 +2526,53 @@ test('7.6: tworzenie, walidacja integralności SHA-256 i odzyskiwanie pełnej ko
   // Sprawdzenie, czy nowy stan w targetPort to stan z kopii
   assert.ok(targetMemory[STORAGE_KEYS.v4Project].includes('Linia Testowa V4'), 'target has new project');
 });
+
+test('7.7: weryfikacja licencji zależności produkcyjnych, modeli 3D i niezmienników bezpieczeństwa', () => {
+  // 1. Zależności produkcyjne czasu wykonania (Runtime dependencies)
+  // Wszystkie biblioteki ładowane do przeglądarki klienta muszą posiadać licencje permisywne (MIT / Apache-2.0 / ISC)
+  const ALLOWED_RUNTIME_LICENSES = ['MIT', 'Apache-2.0', 'ISC', '0BSD', 'BSD-2-Clause', 'BSD-3-Clause'];
+
+  // Odczyt package.json i sprawdzenie deklaracji zależności
+  const pkgJsonPath = resolve('./package.json');
+  const pkgData = JSON.parse(readFileSync(pkgJsonPath, 'utf8'));
+  const prodDeps = Object.keys(pkgData.dependencies || {});
+
+  assert.ok(prodDeps.includes('three'), 'three is in prod dependencies');
+  assert.ok(prodDeps.includes('react'), 'react is in prod dependencies');
+  assert.ok(prodDeps.includes('react-dom'), 'react-dom is in prod dependencies');
+  assert.ok(prodDeps.includes('lucide-react'), 'lucide-react is in prod dependencies');
+  assert.ok(prodDeps.includes('xlsx'), 'xlsx is in prod dependencies');
+
+  // Sprawdzenie licencji zainstalowanych pakietów produkcyjnych
+  for (const depName of prodDeps) {
+    const depPkgPath = resolve('./node_modules', depName, 'package.json');
+    if (existsSync(depPkgPath)) {
+      const depPkg = JSON.parse(readFileSync(depPkgPath, 'utf8'));
+      const lic = depPkg.license || (depPkg.licenses && depPkg.licenses[0]?.type) || 'UNKNOWN';
+      const isAllowed = ALLOWED_RUNTIME_LICENSES.some(allowed => typeof lic === 'string' && lic.includes(allowed));
+      assert.ok(isAllowed, `Pakiet produkcyjny ${depName} musi mieć dozwoloną licencję komercyjną. Wykryto: ${lic}`);
+    }
+  }
+
+  // 2. Weryfikacja metadanych i licencji modeli wyposażenia przemysłowego (Plan 6.1)
+  const specKeys = Object.keys(DEFAULT_EQUIPMENT_SPECS);
+  assert.ok(specKeys.length >= 15, `Oczekiwano co najmniej 15 specyfikacji wyposażenia, znaleziono: ${specKeys.length}`);
+
+  for (const key of specKeys) {
+    const spec = (DEFAULT_EQUIPMENT_SPECS as Record<string, any>)[key];
+    assert.equal(spec.metadata.license, 'MIT', `Specyfikacja ${key} musi posiadać licencję MIT`);
+    assert.equal(spec.metadata.isCertifiedTechnologicalCapacity, false, `Specyfikacja ${key} nie może symulować certyfikatu BHP bez podstawy`);
+    assert.ok(spec.metadata.polygonCountLimit > 0, `Specyfikacja ${key} musi mieć określony budżet wielokątów`);
+  }
+
+  // 3. Weryfikacja modeli konceptów wizualnych (Plan 6.4)
+  for (const model of EQUIPMENT_VISUAL_MODELS) {
+    const assetPath = resolve('./src/core/equipment/visualAssets', `${model.id}.json`);
+    assert.ok(existsSync(assetPath), `Asset konceptu ${model.id} musi istnieć w visualAssets`);
+    const assetJson = JSON.parse(readFileSync(assetPath, 'utf8'));
+    assert.ok(assetJson.object, `Asset ${model.id} musi być poprawną sceną Three.js ObjectLoader`);
+  }
+});
+
 
 

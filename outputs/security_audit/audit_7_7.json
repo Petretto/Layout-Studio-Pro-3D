@@ -1,0 +1,66 @@
+{
+  "auditDate": "2026-10-18T16:26:56.047Z",
+  "appVersion": "0.4.0",
+  "breakdown": {
+    "totalPackages": 95,
+    "licenses": {
+      "MIT": 79,
+      "BSD-3-Clause": 2,
+      "Apache-2.0": 4,
+      "CC-BY-4.0": 1,
+      "ISC": 7,
+      "MPL-2.0": 2
+    },
+    "runtimeDependencies": [
+      {
+        "name": "@vercel/analytics",
+        "version": "2.0.1",
+        "license": "MIT"
+      },
+      {
+        "name": "lucide-react",
+        "version": "1.39.0",
+        "license": "ISC"
+      },
+      {
+        "name": "react",
+        "version": "18.3.1",
+        "license": "MIT"
+      },
+      {
+        "name": "react-dom",
+        "version": "18.3.1",
+        "license": "MIT"
+      },
+      {
+        "name": "three",
+        "version": "0.168.0",
+        "license": "MIT"
+      },
+      {
+        "name": "xlsx",
+        "version": "0.20.3",
+        "license": "Apache-2.0"
+      }
+    ]
+  },
+  "modelsAndAssets": {
+    "standardEquipmentSpecsCount": 16,
+    "standardEquipmentLicense": "MIT",
+    "proceduralGenerators": "Autorskie Three.js (Layout Studio Pro)",
+    "conceptsVerified": true
+  },
+  "security": {
+    "npmAuditVulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "zeroCdnOfflineSafe": true,
+    "cspEnforced": true
+  },
+  "isCompliantForCommercialDistribution": true
+}

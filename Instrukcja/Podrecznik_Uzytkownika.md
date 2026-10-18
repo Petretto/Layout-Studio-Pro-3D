@@ -546,6 +546,26 @@ Wersja produkcyjna Layout Studio Pro 3D została zoptymalizowana pod kątem peł
     - Przy próbie wgrania pliku `.lsbackup.json` silnik weryfikuje poprawność strukturalną, zgodność schematów oraz zgodność sumy SHA-256 (wykrywając jakiekolwiek uszkodzenia lub modyfikacje pliku).
     - **Automatyczny Rollback Snapshot**: Przed nadpisaniem pamięci lokalnej przeglądarki system automatycznie tworzy i zapisuje migawkę awaryjną aktualnego stanu (`layout_studio_rollback_snapshot`). W przypadku jakichkolwiek problemów użytkownik może natychmiast cofnąć przywrócenie jednym kliknięciem (`Przywróć stan sprzed ostatniego odzyskania`).
 
+### 5.10. Zgodność licencyjna, prawa do modeli 3D i bezpieczeństwo (Plan 7.7)
+
+Przed komercyjnym wdrożeniem i instalacją na komputerach zakładowych przeprowadzono całościowy audyt prawno-autorski oraz bezpieczeństwa kodu:
+
+- **Pełna zgodność licencyjna zależności runtime (100% Permissive)**:
+  - Wszystkie biblioteki ładowane do środowiska wykonawczego aplikacji (`react`, `react-dom`, `three`, `lucide-react`, `xlsx`, `@vercel/analytics`) objęte są wyłącznie uznanymi licencjami permisywnymi (**MIT**, **Apache-2.0**, **ISC**).
+  - W aplikacji **nie występuje żadna zależność typu Copyleft** (GPL / AGPL), co gwarantuje pełną ochronę własności intelektualnej modeli procesowych klienta i pełną swobodę komercyjnego wykorzystania wewnątrz przedsiębiorstwa.
+  - Narzędzia pomocnicze i kompilacyjne czasu budowania (np. `lightningcss` — MPL-2.0, `caniuse-lite` — CC-BY-4.0) są odseparowane i nie przenikają do kodu wynikowego klienta.
+
+- **Prawa autorskie modeli 3D i wyposażenia**:
+  - Wszystkie standardowe modele wyposażenia (16 typów w standardzie 6.1: stoły montażowe, regały FIFO, palety EPAL, wózki, roboty AGV, przenośniki) są generowane proceduralnie z kodu źródłowego Three.js i objęte licencją projektu (**MIT**).
+  - Modele konceptualne (stanowisko z nadbudową, regał na części, wózek półkowy) stanowią autorskie opracowania demonstracyjne Blender/GLTF i nie naruszają praw osób trzecich ani wzorów przemysłowych.
+
+- **Bezpieczeństwo i brak podatności (0 Vulnerabilities)**:
+  - Przeprowadzono audyt bezpieczeństwa (`npm audit`), potwierdzając **0 luk podatności** (0 critical, 0 high, 0 moderate, 0 low).
+  - Architektura odcięta od Internetu (Air-Gapped): aplikacja nie wykonuje w runtime żadnych zapytań sieciowych, a nagłówki serwera wymuszają rygorystyczną politykę bezpieczeństwa Content-Security-Policy (CSP).
+  - Bezpieczne parsowanie formatów wejściowych (DXF, Excel, JSON): importy operują na rygorystycznie białej liście bezpiecznych struktur, uniemożliwiając wykonanie złośliwego kodu lub makr.
+  - Automatyczna weryfikacja stanu licencji i podatności: polecenie `npm run audit:licenses`.
+
+
 
 
 

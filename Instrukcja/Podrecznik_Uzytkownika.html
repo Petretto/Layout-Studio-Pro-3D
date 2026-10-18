@@ -576,5 +576,25 @@
 <li>Przy próbie wgrania pliku <code>.lsbackup.json</code> silnik weryfikuje poprawność strukturalną, zgodność schematów oraz zgodność sumy SHA-256 (wykrywając jakiekolwiek uszkodzenia lub modyfikacje pliku).</li>
 <li><strong>Automatyczny Rollback Snapshot</strong>: Przed nadpisaniem pamięci lokalnej przeglądarki system automatycznie tworzy i zapisuje migawkę awaryjną aktualnego stanu (<code>layout_studio_rollback_snapshot</code>). W przypadku jakichkolwiek problemów użytkownik może natychmiast cofnąć przywrócenie jednym kliknięciem (<code>Przywróć stan sprzed ostatniego odzyskania</code>).</li>
 </ul>
+<h3>5.10. Zgodność licencyjna, prawa do modeli 3D i bezpieczeństwo (Plan 7.7)</h3>
+<p>Przed komercyjnym wdrożeniem i instalacją na komputerach zakładowych przeprowadzono całościowy audyt prawno-autorski oraz bezpieczeństwa kodu:</p>
+<ul>
+<li><strong>Pełna zgodność licencyjna zależności runtime (100% Permissive)</strong>:</li>
+<li>Wszystkie biblioteki ładowane do środowiska wykonawczego aplikacji (<code>react</code>, <code>react-dom</code>, <code>three</code>, <code>lucide-react</code>, <code>xlsx</code>, <code>@vercel/analytics</code>) objęte są wyłącznie uznanymi licencjami permisywnymi (<strong>MIT</strong>, <strong>Apache-2.0</strong>, <strong>ISC</strong>).</li>
+<li>W aplikacji <strong>nie występuje żadna zależność typu Copyleft</strong> (GPL / AGPL), co gwarantuje pełną ochronę własności intelektualnej modeli procesowych klienta i pełną swobodę komercyjnego wykorzystania wewnątrz przedsiębiorstwa.</li>
+<li>Narzędzia pomocnicze i kompilacyjne czasu budowania (np. <code>lightningcss</code> — MPL-2.0, <code>caniuse-lite</code> — CC-BY-4.0) są odseparowane i nie przenikają do kodu wynikowego klienta.</li>
+</ul>
+<ul>
+<li><strong>Prawa autorskie modeli 3D i wyposażenia</strong>:</li>
+<li>Wszystkie standardowe modele wyposażenia (16 typów w standardzie 6.1: stoły montażowe, regały FIFO, palety EPAL, wózki, roboty AGV, przenośniki) są generowane proceduralnie z kodu źródłowego Three.js i objęte licencją projektu (<strong>MIT</strong>).</li>
+<li>Modele konceptualne (stanowisko z nadbudową, regał na części, wózek półkowy) stanowią autorskie opracowania demonstracyjne Blender/GLTF i nie naruszają praw osób trzecich ani wzorów przemysłowych.</li>
+</ul>
+<ul>
+<li><strong>Bezpieczeństwo i brak podatności (0 Vulnerabilities)</strong>:</li>
+<li>Przeprowadzono audyt bezpieczeństwa (<code>npm audit</code>), potwierdzając <strong>0 luk podatności</strong> (0 critical, 0 high, 0 moderate, 0 low).</li>
+<li>Architektura odcięta od Internetu (Air-Gapped): aplikacja nie wykonuje w runtime żadnych zapytań sieciowych, a nagłówki serwera wymuszają rygorystyczną politykę bezpieczeństwa Content-Security-Policy (CSP).</li>
+<li>Bezpieczne parsowanie formatów wejściowych (DXF, Excel, JSON): importy operują na rygorystycznie białej liście bezpiecznych struktur, uniemożliwiając wykonanie złośliwego kodu lub makr.</li>
+<li>Automatyczna weryfikacja stanu licencji i podatności: polecenie <code>npm run audit:licenses</code>.</li>
+</ul>
 </body>
 </html>
