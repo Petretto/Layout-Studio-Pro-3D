@@ -21,6 +21,25 @@ import { DEFAULT_MOTOR_PROJECT as motor,DEFAULT_BATTERY_PROJECT as battery, DEFA
 import { ProcessStep } from '../src/core/models/types';
 import { moveOperation, connectOperations, disconnectOperations, addOperation, removeOperation, editOperation, flowPositions } from '../src/core/editing';
 import { toSeconds, fromSeconds, convertTime, formatTimeValue, formatTimeWithUnit, TIME_UNITS } from '../src/core/time';
+import {
+  MM_TO_M,
+  M_TO_MM,
+  mmToWorld,
+  worldToMm,
+  vectorMmToWorld,
+  DEFAULT_EQUIPMENT_SPECS,
+  getEquipmentStandardSpec,
+  validateEquipmentStandardSpec,
+  calculateEquipmentFootprint,
+  checkEquipmentCollision2D,
+  checkEquipmentCollision3D,
+  checkObstacleCollision,
+  getTransportPortWorldPosition,
+  assertVisualModelIndependence,
+  type EquipmentStandardSpec,
+} from '../src/core/equipment/equipmentStandard';
+import { editDomainEquipment } from '../src/core/domainEquipmentEditing';
+import { parseDomainProjectV6 } from '../src/core/domainProject';
 const step=(id:string,time:number,preds:string[]=[]):ProcessStep=>({id,name:id,standardTimeSeconds:time,vaTimeSeconds:time*.8,nvaTimeSeconds:time*.2,sequenceNumber:Number(id)||1,predecessorIds:preds});
 const workbook=(data:Record<string,unknown>[])=>{const book=XLSX.utils.book_new();XLSX.utils.book_append_sheet(book,XLSX.utils.json_to_sheet(data),'Test');return XLSX.write(book,{type:'array',bookType:'xlsx'}) as ArrayBuffer;};
 
@@ -944,6 +963,354 @@ test('5.13: automatyczna propozycja w docelowym modelu stanowisk v5 oraz ochrona
   assert.equal(preservedTable.yMm, customTableY, 'Ręczna pozycja Y stołu nie może być nadpisana');
 });
 
+test('6.1: jednostki i konwersja skali mm do układu Three.js (1m = 1000mm)', () => {
+  assert.equal(MM_TO_M, 0.001);
+  assert.equal(M_TO_MM, 1000);
+  assert.equal(mmToWorld(1000), 1.0);
+  assert.equal(mmToWorld(1500), 1.5);
+  assert.equal(mmToWorld(0), 0.0);
+  assert.equal(worldToMm(1.0), 1000);
+  assert.equal(worldToMm(2.345), 2345);
 
+  const vWorld = vectorMmToWorld({ x: 2000, y: 3000, z: 850 });
+  // Three.js: X to szerokość, Y to wysokość (elewacja zMm), Z to głębokość (długość hali yMm)
+  assert.equal(vWorld.x, 2.0);
+  assert.equal(vWorld.y, 0.85);
+  assert.equal(vWorld.z, 3.0);
+});
 
+test('6.1: rejestr standardu wyposażenia waliduje wszystkie domyślne typy ObjectType', () => {
+  const objectTypes: (keyof typeof DEFAULT_EQUIPMENT_SPECS)[] = [
+    'Table',
+    'TableESD',
+    'TableToolRail',
+    'QualityGate',
+    'ReworkStation',
+    'FlowRackFIFO2Tier',
+    'FlowRackFIFO3Tier',
+    'RollerConveyorGravity',
+    'RollerConveyorMotorized',
+    'PalletEuroFloorMark',
+    'OperatorErgoMat',
+    'Shadowboard5S',
+    'AndonBoard',
+    'MaterialIn',
+    'FinishedGoods',
+  ];
 
+  for (const type of objectTypes) {
+    const spec = getEquipmentStandardSpec(type);
+    assert.ok(spec, `Specyfikacja dla ${type} musi istnieć w rejestrze`);
+    assert.equal(spec.objectType, type);
+
+    // Walidacja kontraktu specyfikacji
+    const validated = validateEquipmentStandardSpec(spec);
+    assert.equal(validated.id, spec.id);
+
+    // Niezmiennik: model wizualny nigdy nie deklaruje zdolności technologicznej
+    assert.equal(spec.metadata.isCertifiedTechnologicalCapacity, false);
+    assert.ok(['MIT', 'CC-BY-4.0', 'CC0'].includes(spec.metadata.license));
+
+    // Punkt wstawienia
+    assert.ok(['footprint-center', 'bottom-left', 'top-left'].includes(spec.insertion.anchor));
+    if (type === 'AndonBoard') {
+      assert.equal(spec.insertion.elevation, 'suspended');
+      assert.ok(spec.insertion.groundContactZMm > 2000);
+    } else {
+      assert.equal(spec.insertion.elevation, 'floor');
+      assert.equal(spec.insertion.groundContactZMm, 0);
+    }
+
+    // Obrys kolizji
+    assert.ok(spec.collision.widthMm > 0);
+    assert.ok(spec.collision.lengthMm > 0);
+    assert.ok(spec.collision.heightMm > 0);
+    assert.ok(spec.collision.clearanceMarginMm >= 0);
+
+    // Strefy obsługi
+    for (const zone of spec.serviceZones) {
+      assert.ok(zone.id.length > 0);
+      assert.ok(zone.widthMm >= 600);
+      assert.ok(zone.depthMm >= 400);
+      assert.equal(zone.isErgonomicGuidelineOnly, true);
+    }
+
+    // Porty transportowe
+    for (const port of spec.transportPorts) {
+      assert.ok(port.id.length > 0);
+      assert.ok(['input', 'output', 'bidirectional'].includes(port.type));
+      assert.ok(port.allowedCarriers.length > 0);
+      assert.ok(port.dockingClearanceMm.widthMm > 0);
+    }
+  }
+});
+
+test('6.1: walidacja niepoprawnej specyfikacji standardu odrzuca błędne dane', () => {
+  assert.throws(() => validateEquipmentStandardSpec(null), /wymagany obiekt/);
+  assert.throws(() => validateEquipmentStandardSpec({ id: 'x' }), /brak poprawnej nazwy/);
+  assert.throws(() => validateEquipmentStandardSpec({ id: 'x', name: 'X', objectType: 'Table' }), /brak punktu wstawienia/);
+  assert.throws(() => validateEquipmentStandardSpec({
+    id: 'x',
+    name: 'X',
+    objectType: 'Table',
+    insertion: { anchor: 'invalid-anchor', elevation: 'floor', facing: 'front-positive-y', groundContactZMm: 0 },
+  }), /nieobsługiwany anchor/);
+  assert.throws(() => validateEquipmentStandardSpec({
+    id: 'x',
+    name: 'X',
+    objectType: 'Table',
+    insertion: { anchor: 'footprint-center', elevation: 'floor', facing: 'front-positive-y', groundContactZMm: 0 },
+    collision: { widthMm: -100, lengthMm: 800, heightMm: 850, clearanceMarginMm: 50, isSolidObstacle: true },
+    metadata: { source: 'built-in', author: 'A', license: 'MIT', version: '1.0', isCertifiedTechnologicalCapacity: false },
+  }), /widthMm musi być liczbą > 0/);
+  assert.throws(() => validateEquipmentStandardSpec({
+    id: 'x',
+    name: 'X',
+    objectType: 'Table',
+    insertion: { anchor: 'footprint-center', elevation: 'floor', facing: 'front-positive-y', groundContactZMm: 0 },
+    collision: { widthMm: 1500, lengthMm: 800, heightMm: 850, clearanceMarginMm: 50, isSolidObstacle: true },
+    metadata: { source: 'built-in', author: 'A', license: 'MIT', version: '1.0', isCertifiedTechnologicalCapacity: true as any },
+  }), /musi być false/);
+});
+
+test('6.1: obrys kolizji 2D i 3D z marginesem bezpieczeństwa oraz detekcja kolizji', () => {
+  const table1: LayoutObject = {
+    id: 'TBL-1',
+    name: 'Stół 1',
+    type: 'Table',
+    xMm: 1000,
+    yMm: 1000,
+    zMm: 0,
+    widthMm: 1500,
+    lengthMm: 800,
+    heightMm: 850,
+    rotationDeg: 0,
+    colorHex: '#3b82f6',
+  };
+
+  // Stół 2 oddalony o 3000 mm (brak kolizji)
+  const table2Far: LayoutObject = {
+    id: 'TBL-2',
+    name: 'Stół 2',
+    type: 'Table',
+    xMm: 4000,
+    yMm: 1000,
+    zMm: 0,
+    widthMm: 1500,
+    lengthMm: 800,
+    heightMm: 850,
+    rotationDeg: 0,
+    colorHex: '#3b82f6',
+  };
+
+  assert.equal(checkEquipmentCollision2D(table1, table2Far), false);
+  assert.equal(checkEquipmentCollision3D(table1, table2Far), false);
+
+  // Stół 3 nakładający się na stół 1
+  const table3Overlap: LayoutObject = {
+    id: 'TBL-3',
+    name: 'Stół 3',
+    type: 'Table',
+    xMm: 1200,
+    yMm: 1100,
+    zMm: 0,
+    widthMm: 1500,
+    lengthMm: 800,
+    heightMm: 850,
+    rotationDeg: 0,
+    colorHex: '#3b82f6',
+  };
+
+  assert.equal(checkEquipmentCollision2D(table1, table3Overlap), true);
+  assert.equal(checkEquipmentCollision3D(table1, table3Overlap), true);
+
+  // Stół 4 stykający się w strefie marginesu (clearanceMarginMm = 50)
+  // Table 1 maxX = 2500. Table 4 minX = 2520 (odległość 20mm < margin 50mm)
+  const table4MarginContact: LayoutObject = {
+    id: 'TBL-4',
+    name: 'Stół 4',
+    type: 'Table',
+    xMm: 2520,
+    yMm: 1000,
+    zMm: 0,
+    widthMm: 1500,
+    lengthMm: 800,
+    heightMm: 850,
+    rotationDeg: 0,
+    colorHex: '#3b82f6',
+  };
+  assert.equal(checkEquipmentCollision2D(table1, table4MarginContact), true);
+
+  // Tablica Andon podwieszona na Z=2200 nad stołem 1 (Z=0..850)
+  const andonAbove: LayoutObject = {
+    id: 'ANDON-1',
+    name: 'Andon',
+    type: 'AndonBoard',
+    xMm: 1100,
+    yMm: 1100,
+    zMm: 2200,
+    widthMm: 1200,
+    lengthMm: 200,
+    heightMm: 600,
+    rotationDeg: 0,
+    colorHex: '#ef4444',
+  };
+  // 2D kolizja nie zachodzi, bo Andon nie jest solid obstacle
+  assert.equal(checkEquipmentCollision2D(table1, andonAbove), false);
+  assert.equal(checkEquipmentCollision3D(table1, andonAbove), false);
+
+  // Kolizja ze słupem hali (Obstacle)
+  const pillarObstacle: Obstacle = {
+    id: 'PIL-1',
+    name: 'Słup nośny',
+    xMm: 1500,
+    yMm: 1200,
+    widthMm: 400,
+    lengthMm: 400,
+    heightMm: 6000,
+  };
+  assert.equal(checkObstacleCollision(table1, pillarObstacle), true);
+
+  const distantObstacle: Obstacle = {
+    id: 'PIL-2',
+    name: 'Słup daleki',
+    xMm: 8000,
+    yMm: 8000,
+    widthMm: 400,
+    lengthMm: 400,
+    heightMm: 6000,
+  };
+  assert.equal(checkObstacleCollision(table1, distantObstacle), false);
+});
+
+test('6.1: pozycjonowanie portów transportowych i transformacje obrotu wyposażenia', () => {
+  const table: LayoutObject = {
+    id: 'TBL-PORT',
+    name: 'Stół z portami',
+    type: 'Table',
+    xMm: 1000,
+    yMm: 2000,
+    zMm: 0,
+    widthMm: 1500,
+    lengthMm: 800,
+    heightMm: 850,
+    rotationDeg: 0,
+    colorHex: '#3b82f6',
+  };
+  const spec = getEquipmentStandardSpec('Table');
+  const inPort = spec.transportPorts.find(p => p.id === 'port-table-in')!;
+  const outPort = spec.transportPorts.find(p => p.id === 'port-table-out')!;
+
+  // 1. Obrót 0°: środek stołu = (1750, 2400).
+  // Port IN: localX = -750, localY = 0 => worldX = 1000, worldY = 2400, worldZ = 850
+  const portInRot0 = getTransportPortWorldPosition(table, inPort);
+  assert.equal(portInRot0.xMm, 1000);
+  assert.equal(portInRot0.yMm, 2400);
+  assert.equal(portInRot0.zMm, 850);
+  assert.equal(portInRot0.absoluteApproachDeg, 270);
+
+  // Port OUT: localX = +750, localY = 0 => worldX = 2500, worldY = 2400, worldZ = 850
+  const portOutRot0 = getTransportPortWorldPosition(table, outPort);
+  assert.equal(portOutRot0.xMm, 2500);
+  assert.equal(portOutRot0.yMm, 2400);
+  assert.equal(portOutRot0.zMm, 850);
+  assert.equal(portOutRot0.absoluteApproachDeg, 90);
+
+  // 2. Obrót 90°:
+  const tableRot90 = { ...table, rotationDeg: 90 };
+  const portInRot90 = getTransportPortWorldPosition(tableRot90, inPort);
+  // local (-750, 0) rotated by 90° => (0, -750)
+  assert.equal(portInRot90.xMm, 1750);
+  assert.equal(portInRot90.yMm, 1650);
+  assert.equal(portInRot90.absoluteApproachDeg, 0); // 270 + 90 = 360 = 0°
+});
+
+test('6.1: niezmiennik oddzielenia modelu wizualnego od parametrów technologicznych (Plan 6.4 & Zasada 6)', () => {
+  const techBase = {
+    cycleTimeSeconds: 120,
+    standardTimeSeconds: 110,
+    capableOperationIds: ['OP-1', 'OP-2'],
+  };
+
+  // Zmiana geometrii, koloru, modelu 3D bez modyfikacji technologii - dozwolona
+  assert.doesNotThrow(() => {
+    assertVisualModelIndependence(techBase, { ...techBase });
+  });
+
+  // Próba zmiany czasu cyklu pod pretekstem zmiany modelu wizualnego - odrzucana!
+  assert.throws(() => {
+    assertVisualModelIndependence(techBase, { ...techBase, cycleTimeSeconds: 90 });
+  }, /nie może modyfikować czasu cyklu/);
+
+  // Próba zmiany czasu standardowego - odrzucana!
+  assert.throws(() => {
+    assertVisualModelIndependence(techBase, { ...techBase, standardTimeSeconds: 80 });
+  }, /nie może modyfikować czasu standardowego/);
+
+  // Próba zmiany zdolności operacyjnych - odrzucana!
+  assert.throws(() => {
+    assertVisualModelIndependence(techBase, { ...techBase, capableOperationIds: ['OP-1'] });
+  }, /nie może modyfikować zdolności operacyjnych/);
+});
+
+test('6.1: powiązanie wyposażenia schematu 6 z equipmentStandardId', () => {
+  // Stwórz projekt v6 ze stanowiskiem
+  const v6Base = {
+    schemaVersion: 6 as const,
+    modelStatus: 'incomplete' as const,
+    name: 'Projekt v6 test standardu',
+    algorithm: 'Manual' as const,
+    demand: structuredClone(DEFAULT_MOTOR_PROJECT.demand),
+    facility: structuredClone(DEFAULT_MOTOR_PROJECT.facility),
+    bom: [],
+    targetLayoutType: DEFAULT_MOTOR_PROJECT.targetLayoutType,
+    layoutSettings: structuredClone(DEFAULT_MOTOR_PROJECT.layoutSettings),
+    layoutMode: 'manual' as const,
+    operations: [
+      { id: 'OP-01', name: 'Montaż stojana', standardTimeSeconds: 60, vaTimeSeconds: 50, nvaTimeSeconds: 10, sequenceNumber: 1, predecessorIds: [] },
+    ],
+    stations: [
+      { id: 'ST-01', name: 'Stanowisko 1', operationIds: ['OP-01'] },
+    ],
+    stationSettings: { 'ST-01': { operators: 1, parallelStations: 1 } },
+    workers: [{ id: 'W-01', name: 'Jan Kowalski' }],
+    workerPools: [{ id: 'POOL-1', name: 'Monterzy', workerIds: ['W-01'] }],
+    equipment: [],
+    product: { id: 'PRD-1', name: 'Silnik EV' },
+    subassemblies: [],
+    obstacles: [],
+    layoutObjects: [
+      { id: 'LO-01', name: 'Stół 1', type: 'Table' as const, xMm: 1000, yMm: 1000, zMm: 0, widthMm: 1500, lengthMm: 800, heightMm: 850, rotationDeg: 0, colorHex: '#3b82f6', workstationId: 'ST-01' },
+    ],
+  };
+
+  // 1. Dodanie wyposażenia z equipmentStandardId
+  const withEq = editDomainEquipment(v6Base, {
+    kind: 'add-equipment',
+    id: 'EQ-01',
+    name: 'Stół montażowy główny',
+    stationId: 'ST-01',
+    layoutObjectId: 'LO-01',
+    capableOperationIds: ['OP-01'],
+    equipmentStandardId: 'spec-table-std-1500x800',
+  });
+
+  assert.equal(withEq.equipment.length, 1);
+  assert.equal(withEq.equipment[0].equipmentStandardId, 'spec-table-std-1500x800');
+
+  // 2. Walidacja w parseDomainProjectV6
+  const parsed = parseDomainProjectV6(JSON.stringify(withEq));
+  assert.equal(parsed.equipment[0].equipmentStandardId, 'spec-table-std-1500x800');
+
+  // 3. Edycja equipmentStandardId
+  const editedEq = editDomainEquipment(withEq, {
+    kind: 'edit-equipment',
+    id: 'EQ-01',
+    name: 'Stół montażowy ESD',
+    stationId: 'ST-01',
+    layoutObjectId: 'LO-01',
+    capableOperationIds: ['OP-01'],
+    equipmentStandardId: 'spec-table-esd-1500x800',
+  });
+  assert.equal(editedEq.equipment[0].equipmentStandardId, 'spec-table-esd-1500x800');
+});

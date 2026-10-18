@@ -76,6 +76,8 @@ export interface LayoutObject {
   locked?: boolean;
   /** Visual assumption marker: dimensions & equipment are conceptual layout assumptions, not certified technological capacities. */
   isVisualAssumption?: boolean;
+  /** Optional standard specification ID from the Equipment Standard registry (Plan 6.1). */
+  equipmentStandardId?: string;
 }
 
 export interface FacilityUnderlay {

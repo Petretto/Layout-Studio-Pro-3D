@@ -41,7 +41,7 @@ export type DomainOperation = Omit<ProcessStep, 'assignedWorkstationId'> & {
 };
 export interface DomainWorker {id: string; name: string}
 export interface DomainWorkerPool {id: string; name: string; workerIds: string[]}
-export interface DomainEquipment {id: string; name: string; stationId?: string; layoutObjectId?: string; capableOperationIds?: string[]}
+export interface DomainEquipment {id: string; name: string; stationId?: string; layoutObjectId?: string; capableOperationIds?: string[]; equipmentStandardId?: string}
 export interface DomainProduct {id: string; name: string}
 export interface DomainSubassembly {id: string; name: string; producerOperationId?: string; consumerOperationIds: string[]}
 
@@ -244,6 +244,9 @@ export function parseDomainProjectV6(text: string): DomainProjectV6 {
       if (item.stationId && visual.workstationId && item.stationId !== visual.workstationId) {
         throw new Error(`Wyposażenie ${item.id}: sprzeczne powiązanie stanowiska i geometrii.`);
       }
+    }
+    if (item.equipmentStandardId !== undefined && (typeof item.equipmentStandardId !== 'string' || !item.equipmentStandardId.trim())) {
+      throw new Error(`Wyposażenie ${item.id}: niepoprawne equipmentStandardId.`);
     }
   }
   if (raw.product !== null && (!record(raw.product) || typeof raw.product.id !== 'string' || !raw.product.id.trim() ||

@@ -16,7 +16,7 @@ export function deriveStationProject(input: StationProjectV5) {
   const balancing = applyStationResources(runStationBalancing(source, target), source.workstationSettings);
   let layoutObjects = source.layoutObjects;
   let layoutMode = source.layoutMode;
-  if ((!layoutObjects || layoutObjects.length === 0) && balancing.workstations.length > 0) {
+  if ((!layoutObjects || layoutObjects.length === 0) && balancing.workstations.length > 0 && source.id !== 'eko-demo-v04') {
     layoutObjects = generate3DLayout(
       balancing.workstations,
       source.targetLayoutType ?? 'ProcessFlow',
