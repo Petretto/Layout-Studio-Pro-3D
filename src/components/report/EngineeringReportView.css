@@ -1,0 +1,588 @@
+/* EngineeringReportView.css — Style ekranowe i wydruku A4 (Plan 7.10) */
+
+.engineering-report-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+}
+
+.report-view-mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #111c30;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid #28374f;
+  margin-bottom: 8px;
+}
+
+.report-view-mode-bar .view-toggles {
+  display: flex;
+  gap: 8px;
+}
+
+.report-view-mode-bar button.active {
+  background: #2563eb;
+  border-color: #3b82f6;
+  color: white;
+}
+
+/* Karta główna raportu */
+.engineering-report-document {
+  background: #101d32;
+  color: #e2e8f0;
+  border: 1px solid #2a3b54;
+  border-radius: 12px;
+  padding: 36px 40px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.5;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* Nagłówek raportu */
+.report-doc-header {
+  border-bottom: 2px solid #334764;
+  padding-bottom: 20px;
+  margin-bottom: 28px;
+}
+
+.report-doc-brand {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.report-logo-text {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #38bdf8;
+  text-transform: uppercase;
+}
+
+.report-logo-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+}
+
+.report-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.report-status-badge.ok {
+  background: #064e3b;
+  color: #6ee7b7;
+  border: 1px solid #059669;
+}
+
+.report-status-badge.warn {
+  background: #451a03;
+  color: #fcd34d;
+  border: 1px solid #d97706;
+}
+
+.report-status-badge.bad {
+  background: #4c0519;
+  color: #fda4af;
+  border: 1px solid #e11d48;
+}
+
+.report-title-block h1 {
+  font-size: 24px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  letter-spacing: -0.02em;
+}
+
+.report-metadata-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 10px;
+}
+
+.report-metadata-grid span strong {
+  color: #cbd5e1;
+}
+
+/* Sekcje raportu */
+.report-section {
+  margin-bottom: 32px;
+}
+
+.report-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #38bdf8;
+  border-bottom: 1px solid #23344d;
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.report-section-number {
+  background: #1e293b;
+  color: #7dd3fc;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* Kafelki KPI / Podsumowanie */
+.report-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.report-kpi-card {
+  background: #132238;
+  border: 1px solid #2c3f59;
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.report-kpi-label {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.report-kpi-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: #f0f9ff;
+}
+
+.report-kpi-sub {
+  font-size: 11px;
+  color: #64748b;
+}
+
+/* Tabele parametrów i bilansu */
+.report-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #28374d;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+
+.report-table th {
+  background: #1a2a42;
+  color: #93c5fd;
+  font-weight: 600;
+  padding: 9px 12px;
+  border-bottom: 1px solid #28374d;
+  white-space: nowrap;
+}
+
+.report-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #1e2d42;
+  color: #cbd5e1;
+}
+
+.report-table tr:nth-child(even) td {
+  background: #132238;
+}
+
+.report-table tr.bottleneck td {
+  background: #3a1523;
+  color: #fecdd3;
+  font-weight: 600;
+}
+
+.report-table tr.summary-row td {
+  background: #162a47;
+  font-weight: 700;
+  color: #ffffff;
+  border-top: 2px solid #3b82f6;
+}
+
+/* Wykres Yamazumi w raporcie */
+.report-yamazumi-container {
+  background: #0d1726;
+  border: 1px solid #25364e;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 16px 0;
+}
+
+.report-yamazumi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 14px;
+}
+
+.report-yamazumi-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.report-yamazumi-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 90px;
+  align-items: center;
+  gap: 12px;
+}
+
+.report-yamazumi-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.report-yamazumi-track {
+  height: 22px;
+  background: #17263c;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.report-yamazumi-bar {
+  height: 100%;
+  background: #10b981;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.report-yamazumi-bar.over {
+  background: #ef4444;
+}
+
+.report-yamazumi-takt-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 2px dashed #fbbf24;
+  z-index: 2;
+}
+
+.report-yamazumi-val {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f1f5f9;
+  text-align: right;
+  font-family: monospace;
+}
+
+/* Stopka i podpis inżynierski */
+.report-signoff-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-top: 36px;
+  padding-top: 24px;
+  border-top: 1px solid #2a3d58;
+}
+
+.report-signoff-box {
+  border-top: 1px solid #475569;
+  padding-top: 8px;
+  font-size: 11px;
+  color: #94a3b8;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.report-disclaimer-note {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #64748b;
+  margin-top: 24px;
+  padding: 12px 16px;
+  background: #0c1626;
+  border-radius: 6px;
+  border-left: 3px solid #38bdf8;
+}
+
+/* =========================================================================
+   STYLE DRUKOWANIA I GENEROWANIA PDF (@media print)
+   ========================================================================= */
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 10mm 15mm 10mm;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 10pt;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .studio,
+  .studio main,
+  .page {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Ukrycie elementów nawigacji, paska narzędziowego i UI */
+  .studio-header,
+  .save-bar,
+  .studio-nav,
+  .message,
+  .toolbar,
+  .footer-nav,
+  .validation,
+  .report-view-mode-bar,
+  .raw-markdown-preview {
+    display: none !important;
+  }
+
+  .engineering-report-document {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .report-doc-header {
+    border-bottom: 2px solid #0f172a !important;
+    padding-bottom: 12px;
+    margin-bottom: 18px;
+  }
+
+  .report-logo-text {
+    color: #0284c7 !important;
+    font-size: 11pt;
+  }
+
+  .report-title-block h1 {
+    color: #0f172a !important;
+    font-size: 18pt;
+    margin-bottom: 4px;
+  }
+
+  .report-metadata-grid {
+    color: #475569 !important;
+    font-size: 9pt;
+  }
+
+  .report-metadata-grid span strong {
+    color: #0f172a !important;
+  }
+
+  .report-status-badge {
+    border: 1px solid #cbd5e1 !important;
+  }
+
+  .report-status-badge.ok {
+    background: #ecfdf5 !important;
+    color: #065f46 !important;
+    border-color: #a7f3d0 !important;
+  }
+
+  .report-status-badge.warn {
+    background: #fffbeb !important;
+    color: #92400e !important;
+    border-color: #fde68a !important;
+  }
+
+  .report-status-badge.bad {
+    background: #fff1f2 !important;
+    color: #9f1239 !important;
+    border-color: #fecdd3 !important;
+  }
+
+  .report-section {
+    margin-bottom: 20px;
+    break-inside: auto;
+  }
+
+  .report-section.print-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-section.print-break-before {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .report-section-title {
+    color: #0369a1 !important;
+    border-bottom: 1px solid #94a3b8 !important;
+    font-size: 11pt;
+    padding-bottom: 4px;
+    margin-bottom: 10px;
+  }
+
+  .report-section-number {
+    background: #e2e8f0 !important;
+    color: #0f172a !important;
+  }
+
+  .report-kpi-card {
+    background: #f8fafc !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 10px 12px !important;
+  }
+
+  .report-kpi-label {
+    color: #475569 !important;
+    font-size: 8pt;
+  }
+
+  .report-kpi-value {
+    color: #0f172a !important;
+    font-size: 16pt;
+  }
+
+  .report-kpi-sub {
+    color: #64748b !important;
+    font-size: 8pt;
+  }
+
+  .report-table-wrapper {
+    border: 1px solid #cbd5e1 !important;
+    overflow: visible !important;
+  }
+
+  .report-table {
+    font-size: 8.5pt;
+  }
+
+  .report-table th {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border-bottom: 1px solid #94a3b8 !important;
+    padding: 6px 8px !important;
+  }
+
+  .report-table td {
+    border-bottom: 1px solid #e2e8f0 !important;
+    color: #1e293b !important;
+    padding: 5px 8px !important;
+  }
+
+  .report-table tr:nth-child(even) td {
+    background: #f8fafc !important;
+  }
+
+  .report-table tr.bottleneck td {
+    background: #ffe4e6 !important;
+    color: #9f1239 !important;
+  }
+
+  .report-table tr.summary-row td {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+    border-top: 2px solid #0284c7 !important;
+  }
+
+  .report-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-yamazumi-container {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 10px 14px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-yamazumi-header {
+    color: #475569 !important;
+  }
+
+  .report-yamazumi-label {
+    color: #0f172a !important;
+    font-size: 8.5pt;
+  }
+
+  .report-yamazumi-track {
+    background: #e2e8f0 !important;
+    height: 18px;
+  }
+
+  .report-yamazumi-bar {
+    background: #059669 !important;
+  }
+
+  .report-yamazumi-bar.over {
+    background: #dc2626 !important;
+  }
+
+  .report-yamazumi-takt-line {
+    border-left: 2px dashed #d97706 !important;
+  }
+
+  .report-yamazumi-val {
+    color: #0f172a !important;
+    font-size: 8.5pt;
+  }
+
+  .report-signoff-grid {
+    border-top: 1px solid #94a3b8 !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .report-signoff-box {
+    border-top: 1px solid #475569 !important;
+    color: #475569 !important;
+  }
+
+  .report-disclaimer-note {
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-left: 3px solid #0284c7 !important;
+    color: #475569 !important;
+    font-size: 8pt;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

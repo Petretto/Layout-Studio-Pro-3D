@@ -596,5 +596,41 @@
 <li>Bezpieczne parsowanie formatów wejściowych (DXF, Excel, JSON): importy operują na rygorystycznie białej liście bezpiecznych struktur, uniemożliwiając wykonanie złośliwego kodu lub makr.</li>
 <li>Automatyczna weryfikacja stanu licencji i podatności: polecenie <code>npm run audit:licenses</code>.</li>
 </ul>
+<h3>5.11. Profesjonalny raport inżynierski PDF i wykres Yamazumi (Plan 7.10)</h3>
+<p>W zakładce <code>4 Raport inżynierski</code> udostępniono zaawansowany generator dokumentacji technicznej, zoptymalizowany pod kątem formalnej akceptacji wdrożeń przemysłowych, audytów Lean Management oraz wydruku i eksportu do wielostronicowego formatu <strong>PDF / A4 portrait</strong>:</p>
+<ul>
+<li><strong>Hierarchia dokumentu i układ sekcji</strong>:</li>
+<li><strong>Nagłówek formalny</strong>: nazwa i kod projektu, autor, data sporządzenia, wersja silnika aplikacji oraz wskaźnik statusu walidacji (<code>Zgodny</code>, <code>Ostrzeżenia</code>, <code>Błędy krytyczne</code>).</li>
+<li><strong>1. Podsumowanie wykonawcze (KPI Cards)</strong>: kluczowe metryki linii zestawione w kontrastowych kartach:</li>
+<li>Czas taktu ($TT$),</li>
+<li>Wąskie gardło ($CT_{max}$),</li>
+<li>Liczba stanowisk roboczych i operatorów,</li>
+<li>Efektywność zbalansowania linii ($Line\ Efficiency\ [\%]$),</li>
+<li>Projektowa przepustowość linii ($[szt./h]$).</li>
+<li><strong>2. Założenia produkcyjne i popytowe</strong>: tabela parametrów wejściowych (czas pracy, wielkość zmiany, liczba dni roboczych, popyt w okresie, bufor bezpieczeństwa).</li>
+<li><strong>3. Bilansowanie linii i Wykres Yamazumi</strong>:</li>
+<li><strong>Wektorowy wykres słupkowy Yamazumi (SVG/CSS)</strong>: prezentuje czasy cyklu poszczególnych stanowisk roboczych z wyróżnieniem operacji dodających wartość (VA) i niedodających wartości (NVA).</li>
+<li>Czerwona, przerywana linia odniesienia Takt Time ($TT$) pozwala natychmiast zidentyfikować stacje przeciążone ($CT > TT$) oraz stację stanowiącą wąskie gardło linii.</li>
+<li>Szczegółowa tabela stanowisk z wyliczonym obciążeniem procentowym i przypisaną obsadą.</li>
+<li><strong>4. Operacje technologiczne (Routing & Process)</strong>: pełny wykaz kroków procesu z numeracją sekwencji, czasami standardowymi, relacjami poprzedników i przypisanymi stacjami.</li>
+<li><strong>5. Zestawienie materiałowe (BOM) i koszty komponentów</strong>: zestawienie części, indeksów magazynowych, typów pojemników logistycznych, wielkości opakowań oraz kalkulacja łącznego kosztu komponentów na sztukę wyrobu.</li>
+<li><strong>6. Parametry przestrzenne hali i rozmieszczenia layoutu</strong>: wymiary hali produkcyjnej, powierzchnia ($m^2$), typ przepływu linii (np. linia prosta, U-kształtna), tryb pozycjonowania stanowisk oraz zestawienie stref bezpieczeństwa i przeszkód OHS/BHP.</li>
+<li><strong>7. Raport walidacji i Quality Gate</strong>: automatyczny audyt poprawności technologicznej i przestrzennej (wykrywanie braków stacji, przekroczeń taktu, kolizji geometrycznych).</li>
+<li><strong>8. Klauzule formalne i metryka akceptacji</strong>:</li>
+<li>Przypomnienie niezmienników inżynierskich: Zasada 5 (niefałszowanie danych produkcyjnych), Zasada 6 (niezależność stanu procesu od geometrii 3D), zgodność z normami OHS/BHP.</li>
+<li>Metryka podpisów akceptacyjnych dla Inżyniera Procesu / Industrial Engineera oraz Kierownika Produkcji / Lean Championa.</li>
+</ul>
+<ul>
+<li><strong>Dedykowany arkusz wydruku (<code>@media print</code>)</strong>:</li>
+<li>Narzucony format <code>size: A4 portrait</code> z marginesami $12\text{ mm} \times 10\text{ mm}$.</li>
+<li>Automatyczna ochrona przed ucinaniem wierszy (<code>break-inside: avoid; page-break-inside: avoid;</code>) na tabelach, kartach KPI, wykresie Yamazumi i blokach podpisów.</li>
+<li>Powtarzanie nagłówków tabel na kolejnych stronach wydruku (<code>thead { display: table-header-group; }</code>).</li>
+<li>Automatyczne ukrywanie elementów interfejsu studia, paska akcji raportu oraz nawigacji podczas drukowania i eksportu do PDF.</li>
+</ul>
+<ul>
+<li><strong>Przełącznik trybu widoku (<code>Widok dokumentu A4</code> / <code>Surowy Markdown</code>)</strong>:</li>
+<li>Domyślny widok A4 prezentuje sformatowany dokument inżynierski.</li>
+<li>Tryb surowego tekstu Markdown umożliwia szybkie skopiowanie raportu do systemów ERP/MES lub edytorów zewnętrznych.</li>
+</ul>
 </body>
 </html>

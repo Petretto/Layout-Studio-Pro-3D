@@ -2574,5 +2574,39 @@ test('7.7: weryfikacja licencji zależności produkcyjnych, modeli 3D i niezmien
   }
 });
 
+test('7.10: weryfikacja spójności danych raportu inżynierskiego PDF dla krótkiego i długiego projektu', () => {
+  // 1. Krótki projekt: Motor EV
+  const { project: motorProj, issues: motorIssues } = derive(motor);
+  const motorTakt = calculateTaktTime(motorProj.demand);
+  assert.ok(motorTakt.taktTimeSeconds > 0, 'motor taktTimeSeconds > 0');
+  assert.equal(motorProj.processSteps.length, 6, 'motor has 6 process steps');
+  assert.equal(motorProj.bom.length, 5, 'motor has 5 bom items');
+  assert.ok(motorProj.balancing, 'motor balancing exists');
+  assert.equal(motorProj.balancing?.workstations.length, 2, 'motor has 2 workstations');
+  const motorTotalWork = motorProj.processSteps.reduce((acc, s) => acc + s.standardTimeSeconds, 0);
+  assert.equal(motorProj.balancing?.totalWorkContentSeconds, motorTotalWork, 'motor totalWorkContent matches steps sum');
+
+  // 2. Długi projekt: Eko (z pliku fixtures/qa)
+  const ekoRaw = JSON.parse(readFileSync(resolve('./tests/qa/Eko_D5c_original_v4.json'), 'utf8'));
+  const { project: ekoProj, issues: ekoIssues } = derive(ekoRaw);
+  const ekoTakt = calculateTaktTime(ekoProj.demand);
+  assert.ok(ekoTakt.taktTimeSeconds > 0, 'eko taktTimeSeconds > 0');
+  assert.equal(ekoProj.processSteps.length, 16, 'eko has 16 process steps');
+  assert.equal(ekoProj.bom.length, 60, 'eko has 60 bom items');
+  assert.ok(ekoProj.balancing, 'eko balancing exists');
+  assert.equal(ekoProj.balancing?.workstations.length, 16, 'eko has 16 workstations');
+
+  // Weryfikacja kosztów BOM w raporcie:
+  const ekoBOMCost = ekoProj.bom.reduce((sum, b) => sum + b.unitCost * b.quantityPerUnit, 0);
+  assert.ok(ekoBOMCost > 0, 'eko BOM cost > 0');
+
+  // Sprawdzenie, czy raport inżynierski generuje poprawny tekst zawierający wszystkie stacje i brak błędów NaN
+  const reportText = engineeringReport(ekoProj, ekoIssues);
+  assert.ok(!reportText.includes('NaN'), 'reportText has no NaN');
+  assert.ok(reportText.includes('OP10'), 'reportText has OP10');
+  assert.ok(reportText.includes('OP21'), 'reportText has OP21');
+});
+
+
 
 
