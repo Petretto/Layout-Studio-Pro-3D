@@ -17,6 +17,7 @@ import {prepareBodyRun, type BodyRunInput} from './bodyRunInput';
 import {applyBodyEvent, bodyAllowsOperation, type BodyBook, type BodyEvent} from './bodyState';
 import {matchingConcurrencyGroup} from './physicalConcurrency';
 import {resolveTransportTime,type TransportBreakdown,type ResolvedTransportTime} from './transportTime';
+import {buildJobVariantMap, resolveChangeover, type ChangeoverRun} from './changeoverMatrix';
 import {ProcessStallError, diagnoseUnbufferedProcessStall} from './processStallDetection';
 
 export interface WorkerScheduleRun {
@@ -45,6 +46,8 @@ export interface WorkerScheduleRun {
   bodyId?: string;
   stationReserveStartSeconds?: number;
   transport?: {workerIds?: readonly string[]; equipmentIds?: readonly string[]; routeId: string; startSeconds: number; endSeconds: number; basis: 'measured' | 'assumed'; breakdown?:TransportBreakdown};
+  variantId?: string;
+  changeoverBeforeSeconds?: number;
 }
 
 export interface AssemblyTransportMovement {kind:'loaded'|'empty';purpose:'transfer'|'approach'|'return';routeId:string;workerIds:readonly string[];equipmentIds:readonly string[];startSeconds:number;endSeconds:number;lotId?:string}
@@ -69,6 +72,7 @@ export interface WorkerScheduleResult {
   transportReservations?: readonly TransportDeviceReservation[];
   cartBook?: CartBook;
   transportMovements?: readonly AssemblyTransportMovement[];
+  changeovers?: readonly ChangeoverRun[];
 }
 
 type EventInput =
@@ -251,6 +255,9 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   };
   let book = createWorkerReservationBook(checked.assemblyTransport ? checked.workers.map(w => w.id) : plan.teamWorkerIds);
   const runs: WorkerScheduleRun[] = [];
+  const changeovers: ChangeoverRun[] = [];
+  const jobVariantMap = buildJobVariantMap(checked, batch);
+  const lastProcessedOnCopy = new Map<string, {variantId: string; job: number; endSeconds: number}>();
   let completed = 0;
   jobs.forEach((job, i) => events.push({kind: 'arrival', at: job.arrival, job: i}));
   let currentSimulationTime = 0;
@@ -681,7 +688,8 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
     throw new Error('Partia: 1–10000; jawny odstęp przybycia musi być dodatni.');
   }
   if(options.transportMode!==undefined&&options.transportMode!=='configured'&&options.transportMode!=='just-in-time')throw new Error('Nieznany tryb transportu symulacji.');
-  if(project.stationBuffers?.buffers.some(buffer=>buffer.inputCapacity!=null||buffer.outputCapacity!=null)) {
+  if(project.stationBuffers?.buffers.some(buffer=>buffer.inputCapacity!=null||buffer.outputCapacity!=null) ||
+     (project.changeoverMatrix && project.operations.every((op, idx) => op.predecessorIds.length === (idx ? 1 : 0)))) {
     return scheduleBufferedProcess(project,arrivalIntervalSeconds,batch,onProgress,options.transportMode==='just-in-time'?undefined:{bodyInput});
   }
   if (!project.subassemblyFlow || options.transportMode === 'just-in-time') {

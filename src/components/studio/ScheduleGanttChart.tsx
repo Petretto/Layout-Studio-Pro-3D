@@ -26,6 +26,7 @@ const KIND_COLORS: Record<GanttBarKind, {bg: string; border: string; label: stri
   'transport-transfer': {bg: '#06b6d4', border: '#0891b2', label: 'Przewóz ładunku'},
   'transport-empty': {bg: '#38bdf8', border: '#0284c7', label: 'Dojazd / powrót'},
   'reserve': {bg: '#3b82f6', border: '#2563eb', label: 'Rezerwacja celu'},
+  'changeover': {bg: '#ea580c', border: '#c2410c', label: 'Przezbrojenie'},
 };
 
 export function ScheduleGanttChart({

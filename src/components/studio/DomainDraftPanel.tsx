@@ -33,6 +33,7 @@ import {DomainSubassemblyEditor} from './DomainSubassemblyEditor';
 import {editDomainSubassemblyFlow} from '../../core/domainSubassemblyEditing';
 import {DomainBuffersEditor} from './DomainBuffersEditor';
 import {DomainSupplyEditor} from './DomainSupplyEditor';
+import {DomainChangeoverEditor} from './DomainChangeoverEditor';
 import {editDomainStationBuffers, editDomainMaterialSupply} from '../../core/domainBuffersEditing';
 import {editDomainMaterialNetwork} from '../../core/domainMaterialEditing';
 import {editDomainPhysicalRole} from '../../core/domainPhysicalRoleEditing';
@@ -234,6 +235,17 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
       canUndo={past.length > 0} canRedo={future.length > 0} />}
     {draft.status === 'valid' && <DomainSupplyEditor key={`supply-${draft.raw}`} project={draft.saved.project}
       onApply={supply => applyDraftChange(project => editDomainMaterialSupply(project, supply), 'Zapisano zaopatrzenie materiałowe w szkicu 6.')}
+      onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
+      canUndo={past.length > 0} canRedo={future.length > 0} />}
+    {draft.status === 'valid' && <DomainChangeoverEditor key={`changeover-${draft.raw}`} project={draft.saved.project}
+      onApply={payload => applyDraftChange(project => {
+        const {changeoverMatrix: _oldMatrix, productionOrders: _oldOrders, ...rest} = project;
+        return {
+          ...rest,
+          ...(payload.changeoverMatrix ? {changeoverMatrix: payload.changeoverMatrix} : {}),
+          ...(payload.productionOrders ? {productionOrders: payload.productionOrders} : {}),
+        };
+      }, 'Zapisano warianty wyrobów, przezbrojenia i zlecenia partii (Plan 7.3).')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
       canUndo={past.length > 0} canRedo={future.length > 0} />}
     {draft.status === 'valid' && <DomainBodyEditor key={`body-${draft.raw}`} project={draft.saved.project}

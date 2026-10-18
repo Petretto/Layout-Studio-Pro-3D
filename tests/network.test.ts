@@ -6650,6 +6650,175 @@ test('4.7: raport Markdown propozycji zmian, wersja danych, obsługa odmowy symu
   assert.ok(md.includes('Pominięte kategorie zmian'));
 });
 
+test('7.3b: symulacja wielowariantowa, wstawianie bloków przezbrojeń, opóźnienie kolejnej partii i weryfikacja Gantta', () => {
+  const originalJson = JSON.stringify(derive(parseProject(JSON.stringify({
+    ...base,
+    processSteps: [
+      {id: 'OP-1', name: 'Montaż korpusu', standardTimeSeconds: 50, vaTimeSeconds: 40, nvaTimeSeconds: 10, sequenceNumber: 1, predecessorIds: []},
+      {id: 'OP-2', name: 'Kontrola końcowa', standardTimeSeconds: 30, vaTimeSeconds: 25, nvaTimeSeconds: 5, sequenceNumber: 2, predecessorIds: ['OP-1']}
+    ],
+    bom: [],
+  }))).project);
+
+  let idSeq = 0;
+  const project = prepareDomainMigration(previewDomainMigrationFromV4(originalJson, () => `ST-73-${++idSeq}`)).project;
+
+  project.stations = [
+    {id: 'ST-1', name: 'Stanowisko montażu', operationIds: ['OP-1']},
+    {id: 'ST-2', name: 'Stanowisko kontroli', operationIds: ['OP-2']}
+  ];
+  project.layoutObjects = [
+    {id: 'TBL-1', name: 'Stół montażowy', type: 'Table', xMm: 1000, yMm: 1000, zMm: 0, widthMm: 1500, lengthMm: 1000, heightMm: 900, rotationDeg: 0, colorHex: '#444444', workstationId: 'ST-1'},
+    {id: 'TBL-2', name: 'Stół kontrolny', type: 'Table', xMm: 3000, yMm: 1000, zMm: 0, widthMm: 1500, lengthMm: 1000, heightMm: 900, rotationDeg: 0, colorHex: '#444444', workstationId: 'ST-2'}
+  ];
+  project.operations = [
+    {
+      id: 'OP-1',
+      name: 'Montaż korpusu',
+      standardTimeSeconds: 50,
+      vaTimeSeconds: 40,
+      nvaTimeSeconds: 10,
+      predecessorIds: [],
+      staffing: {
+        requiredWorkers: 1,
+        timeVariants: [{
+          workerCount: 1,
+          timeProfile: {
+            durationSeconds: 50,
+            durationBasis: 'measured',
+            manualWork: [{startSeconds: 0, endSeconds: 50, basis: 'measured'}],
+            machineRun: [],
+            operatorPresence: [{startSeconds: 0, endSeconds: 50, basis: 'measured'}],
+          }
+        }]
+      }
+    },
+    {
+      id: 'OP-2',
+      name: 'Kontrola końcowa',
+      standardTimeSeconds: 30,
+      vaTimeSeconds: 25,
+      nvaTimeSeconds: 5,
+      predecessorIds: ['OP-1'],
+      staffing: {
+        requiredWorkers: 1,
+        timeVariants: [{
+          workerCount: 1,
+          timeProfile: {
+            durationSeconds: 30,
+            durationBasis: 'assumed',
+            manualWork: [{startSeconds: 0, endSeconds: 30, basis: 'assumed'}],
+            machineRun: [],
+            operatorPresence: [{startSeconds: 0, endSeconds: 30, basis: 'assumed'}],
+          }
+        }]
+      }
+    }
+  ];
+  project.stationSettings = {
+    'ST-1': {operators: 1, parallelStations: 1},
+    'ST-2': {operators: 1, parallelStations: 1}
+  };
+  project.workers = [
+    {id: 'W-1', name: 'Jan Kowalski'},
+    {id: 'W-2', name: 'Piotr Nowak'}
+  ];
+  project.workerRunSelection = {
+    teamWorkerIds: ['W-1', 'W-2'],
+    operations: [
+      {operationId: 'OP-1', workerCount: 1, eligibleWorkerIds: ['W-1']},
+      {operationId: 'OP-2', workerCount: 1, eligibleWorkerIds: ['W-2']}
+    ]
+  };
+  project.stationRouting = {
+    selectionRule: 'earliest-start-then-shortest-route',
+    equipmentPlacements: [],
+    operations: [
+      {operationId: 'OP-1', candidates: [{stationId: 'ST-1', copy: 1, requiredEquipmentIds: []}]},
+      {operationId: 'OP-2', candidates: [{stationId: 'ST-2', copy: 1, requiredEquipmentIds: []}]}
+    ],
+    routes: []
+  };
+
+  // 1. Zdefiniowanie wariantów i macierzy przezbrojeń
+  project.changeoverMatrix = {
+    variants: [
+      {id: 'VAR-A', name: 'Wariant A — standard', color: '#2563eb'},
+      {id: 'VAR-B', name: 'Wariant B — premium', color: '#16a34a'}
+    ],
+    defaultDurationSeconds: 15,
+    defaultDurationBasis: 'assumed',
+    transitions: [
+      {
+        id: 'TR-1',
+        fromVariantId: 'VAR-A',
+        toVariantId: 'VAR-B',
+        stationId: 'ST-1',
+        durationSeconds: 45, // Na ST-1 przezbrojenie A->B trwa 45 s
+        durationBasis: 'measured',
+        cleanoutRequired: true
+      }
+    ]
+  };
+
+  // 2. Dwie partie: 1 sztuka VAR-A, następnie 1 sztuka VAR-B (łącznie 2 zlecenia / 2 joby)
+  project.productionOrders = [
+    {batchId: 'B-1', variantId: 'VAR-A', quantity: 1},
+    {batchId: 'B-2', variantId: 'VAR-B', quantity: 1}
+  ];
+
+  // 3. Uruchomienie symulacji w trybie JIT (buffered linear flow)
+  const result = scheduleWorkerRun(project, 1, 2, undefined, undefined, {transportMode: 'just-in-time'});
+
+  assert.ok(result.changeovers, 'Oczekiwano zarejestrowanych bloków przezbrojeń');
+  assert.equal(result.changeovers!.length, 2, 'Oczekiwano przezbrojenia na ST-1 i ST-2 przy przejściu na VAR-B');
+
+  // Weryfikacja przezbrojenia na ST-1 (dedykowana reguła: 45 s)
+  const co1 = result.changeovers!.find(c => c.stationId === 'ST-1');
+  assert.ok(co1, 'Oczekiwano przezbrojenia na ST-1');
+  assert.equal(co1!.fromVariantId, 'VAR-A');
+  assert.equal(co1!.toVariantId, 'VAR-B');
+  assert.equal(co1!.durationSeconds, 45);
+  assert.equal(co1!.durationBasis, 'measured');
+  assert.equal(co1!.cleanoutRequired, true);
+
+  // Weryfikacja przezbrojenia na ST-2 (reguła domyślna: 15 s)
+  const co2 = result.changeovers!.find(c => c.stationId === 'ST-2');
+  assert.ok(co2, 'Oczekiwano przezbrojenia na ST-2');
+  assert.equal(co2!.fromVariantId, 'VAR-A');
+  assert.equal(co2!.toVariantId, 'VAR-B');
+  assert.equal(co2!.durationSeconds, 15);
+  assert.equal(co2!.durationBasis, 'assumed');
+  assert.equal(co2!.cleanoutRequired, false);
+
+  // Weryfikacja biegów operacji — start job 2 na ST-1 musi nastąpić po ukończeniu job 1 (50 s) + przezbrojeniu (45 s) = 95 s
+  const runJob1St1 = result.runs.find(r => r.job === 1 && r.operationId === 'OP-1')!;
+  const runJob2St1 = result.runs.find(r => r.job === 2 && r.operationId === 'OP-1')!;
+  assert.equal(runJob1St1.endSeconds, 50);
+  assert.equal(runJob2St1.startSeconds, 95);
+  assert.equal(runJob2St1.variantId, 'VAR-B');
+  assert.equal(runJob2St1.changeoverBeforeSeconds, 45);
+
+  // 4. Weryfikacja generatora wykresu Gantta z paskami przezbrojeń
+  const stationsGantt = buildStationsGantt(project, result);
+  const st1Row = stationsGantt.find(row => row.id.includes('ST-1'));
+  assert.ok(st1Row, 'Oczekiwano wiersza ST-1 na Gantcie stanowisk');
+  const coBarStation = st1Row!.bars.find(bar => bar.kind === 'changeover');
+  assert.ok(coBarStation, 'Oczekiwano paska przezbrojenia na Gantcie stanowisk');
+  assert.equal(coBarStation!.startSeconds, 50);
+  assert.equal(coBarStation!.endSeconds, 95);
+  assert.ok(coBarStation!.label.includes('Przezbrojenie'));
+
+  const workersGantt = buildWorkersGantt(project, result);
+  const w1Row = workersGantt.find(row => row.id === 'worker-W-1');
+  assert.ok(w1Row, 'Oczekiwano wiersza pracownika W-1 na Gantcie pracowników');
+  const coBarWorker = w1Row!.bars.find(bar => bar.kind === 'changeover');
+  assert.ok(coBarWorker, 'Oczekiwano paska przezbrojenia na Gantcie pracownika');
+  assert.equal(coBarWorker!.startSeconds, 50);
+  assert.equal(coBarWorker!.endSeconds, 95);
+});
+
+
 
 
 

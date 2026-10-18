@@ -16,6 +16,7 @@ import {createWorkerReservationBook,reserveWorkerTeam,releaseWorkerTeam} from '.
 import {createBufferBook,applyBufferEvent,bufferHasSpace,type BufferRef,type BufferBook} from './bufferState';
 import type {StationCandidate} from './stationRouting';
 import type {WorkerScheduleRun,WorkerScheduleResult} from './workerSchedule';
+import {buildJobVariantMap, resolveChangeover, type ChangeoverRun} from './changeoverMatrix';
 import {ProcessStallError, diagnoseBufferedProcessStall} from './processStallDetection';
 
 export interface BufferedProcessEvent {job:number;atSeconds:number;kind:'input'|'output'|'handoff'|'blocked'|'released'|'local-wait'|'local-start';stationId:string;copy:number}
@@ -74,6 +75,10 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
   const jobs=Array.from({length:batch},(_,i)=>({id:i+1,arrival:i*interval,starts:Array(steps.length).fill(Infinity),ends:Array(steps.length).fill(Infinity),finish:Infinity}));
   const stages:Stage[]=jobs.map(job=>({job:job.id,step:0,ready:job.arrival,status:'outside',causes:new Set()}));
   const runs:WorkerScheduleRun[]=[],active=new Set<number>(),held=new Set<number>(),bufferEvents:BufferedProcessEvent[]=[];
+  const jobVariantMap=buildJobVariantMap(project,batch);
+  const changeovers:ChangeoverRun[]=[];
+  const lastProcessedOnCopy=new Map<string,{variantId:string;job:number;endSeconds:number}>();
+  const changeoverFreeAt=new Map<string,number>();
   let book=createWorkerReservationBook(physical?project.workers.map(worker=>worker.id):plan.teamWorkerIds),completed=0,sequence=0;
   const events:{at:number;order:number;kind:'arrival'|'completion'|'release'|'wake'|'transport';stage?:Stage;run?:number;dispatch?:AssemblyDispatch;purpose?:AssemblyTransportMovement['purpose']}[]=jobs.map(job=>({at:job.arrival,order:sequence++,kind:'arrival'}));
   const push=(at:number,kind:'completion'|'release'|'wake',stage?:Stage,run?:number)=>{if(!Number.isFinite(at))throw new Error('Bufory: niepoprawny czas zdarzenia.');events.push({at,kind,stage,run,order:sequence++});};
@@ -100,15 +105,37 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
     }
     log(stage,side,now,step);
   };
-  const recordRun=(stage:Stage,chosen:BufferedOperationChoice,start:number,holdFrom?:number)=>{
+  const recordRun=(stage:Stage,chosen:BufferedOperationChoice,start:number,holdFrom?:number,coDetails?:{duration:number;basis:'measured'|'assumed';cleanout:boolean;fromVar:string})=>{
     const runIndex=runs.length,id=`${stage.job}:${steps[stage.step].id}`,target=candidates[stage.step];
     book=reserveWorkerTeam(book,{reservationId:id,workerIds:chosen.workers,startSeconds:chosen.from,endSeconds:chosen.until});
     stock?.reserve(stage.job,steps[stage.step].id,start);
     const end=chosen.projection.end;
+    const currentVar=jobVariantMap.get(stage.job)??'DEFAULT';
+    const targetKey=copyKey(target);
+    if(coDetails&&coDetails.duration>0){
+      changeovers.push({
+        stationId:target.stationId,
+        copy:target.copy,
+        fromVariantId:coDetails.fromVar,
+        toVariantId:currentVar,
+        startSeconds:start-coDetails.duration,
+        endSeconds:start,
+        durationSeconds:coDetails.duration,
+        durationBasis:coDetails.basis,
+        workerIds:chosen.workers,
+        cleanoutRequired:coDetails.cleanout,
+        afterJob:lastProcessedOnCopy.get(targetKey)?.job??0,
+        beforeJob:stage.job
+      });
+      changeoverFreeAt.delete(targetKey);
+    }
+    lastProcessedOnCopy.set(targetKey,{variantId:currentVar,job:stage.job,endSeconds:end});
     runs.push({job:stage.job,operationId:steps[stage.step].id,stationId:target.stationId,copy:target.copy,workerIds:chosen.workers,
       equipmentIds:target.requiredEquipmentIds,readySeconds:stage.ready,startSeconds:start,endSeconds:end,
       waitSeconds:start-stage.ready-(stage.transport?stage.transport.endSeconds-stage.transport.startSeconds:0),
       waitCauses:[...stage.causes],reserveStartSeconds:chosen.from,reserveEndSeconds:chosen.until,workWindows:chosen.projection.workWindows,pauses:chosen.projection.pauses,
+      variantId:currentVar,
+      ...(coDetails&&coDetails.duration>0?{changeoverBeforeSeconds:coDetails.duration}:{}),
       ...(holdFrom!==undefined?{stationReserveStartSeconds:holdFrom}:{}),
       ...(physical?{bodyId:token(stage),...(stage.transport?{transport:stage.transport}:{})}:{})});
     stage.transport=undefined;stage.run=runIndex;stage.status='processing';active.add(runIndex);
@@ -281,6 +308,19 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
         const ignore=stage.status==='blocked'||stage.status==='local'?stage.run:undefined;
         if([...active].some(index=>index!==ignore&&copyKey(runs[index])===copyKey(target))){stage.causes.add('station');continue;}
         if([...active].some(index=>index!==ignore&&runs[index].equipmentIds?.some(id=>target.requiredEquipmentIds.includes(id)))){stage.causes.add('equipment');continue;}
+        const targetKey=copyKey(target);
+        const currentJobVariant=jobVariantMap.get(stage.job)??'DEFAULT';
+        const lastOnTarget=lastProcessedOnCopy.get(targetKey);
+        let coDetails:{duration:number;basis:'measured'|'assumed';cleanout:boolean;fromVar:string}|undefined=undefined;
+        if(project.changeoverMatrix&&lastOnTarget&&lastOnTarget.variantId!==currentJobVariant){
+          const co=resolveChangeover(project.changeoverMatrix,lastOnTarget.variantId,currentJobVariant,target.stationId);
+          if(co.durationSeconds>0){
+            const coBusyUntil=changeoverFreeAt.get(targetKey)??(Math.max(now,lastOnTarget.endSeconds)+co.durationSeconds);
+            if(!changeoverFreeAt.has(targetKey))changeoverFreeAt.set(targetKey,coBusyUntil);
+            if(now<coBusyUntil){stage.causes.add('station');wake(coBusyUntil);continue;}
+            coDetails={duration:co.durationSeconds,basis:co.durationBasis,cleanout:co.cleanoutRequired,fromVar:lastOnTarget.variantId};
+          }
+        }
         if(stock){
           try{const at=stock.earliest(steps[stage.step].id,now);if(at>now){stage.causes.add('material');wake(at);continue;}}
           catch{stage.causes.add('material');continue;}
@@ -314,7 +354,7 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
           bodyBook=next.bodies;buffers=next.buffers;bodyEvents.push(event);
         }else if(stage.status==='input'||stage.status==='output')buffers=applyBufferEvent(buffers,{kind:'remove',id:token(stage),atSeconds:now});
         if(stage.status!=='input'&&!local)log(stage,'handoff',now);
-        recordRun(stage,chosen,now);stock?.consume(stage.job,steps[stage.step].id,now);changed=true;
+        recordRun(stage,chosen,now,undefined,coDetails);stock?.consume(stage.job,steps[stage.step].id,now);changed=true;
       }
     }
     wakes.forEach(at=>push(at,'wake'));
@@ -334,6 +374,7 @@ export function scheduleBufferedProcess(input:DomainProjectV6,interval:number,ba
     }));
   }
   return {mode:project.resourceCalendars?'calendar':'logical',...(!physical?{transportMode:'just-in-time' as const}:{}),jobs,runs,reservations:book,operationIds:steps.map(step=>step.id),bufferBook:buffers,bufferEvents,
+    ...(changeovers.length?{changeovers}:{}),
     ...(physical?{bodyBook,bodyEvents,cartBook:carts,transportMovements,transportReservations:devices}:{}),
     ...(stock?{materialStocks:stock.stocks,materialEvents:stock.events}: {})};
 }

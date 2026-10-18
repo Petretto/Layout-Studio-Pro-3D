@@ -437,28 +437,36 @@ W widoku 3D (`6 Widok 3D i symulacja`) wprowadzono pełną synchronizację przes
 
 ![Karta inspekcji stanu detalu z postępem i wykazem BOM](../outputs/qa/verify_6_6_inspection_card_3d.png)
 
-### 5.5. Tryb uproszczony 3D (LOD) oraz praca wielomonitorowa (Popout Window) (6.7)
+### 5.6. Warianty wyrobów, macierz przezbrojeń i zlecenia partii produkcyjnych (Plan 7.3)
 
-Dla projektów o dużej skali oraz konfiguracji wielomonitorowych wdrożono dedykowane narzędzia poprawy wydajności i czytelności:
+W zaawansowanym modelu procesu (szkic 6) wprowadzono pełne wsparcie dla produkcji wielowariantowej (`ProductVariant`), macierzy czasów przezbrojeń (`ChangeoverMatrix`), sekwencjonowania zleceń partii produkcyjnych (`ProductionOrderBatch`) oraz ich integracji z symulacją i wykresem Gantta:
 
-- **Tryb uproszczony 3D (LOD / Bounding Box)**:
-  - W górnym pasku narzędziowym widoku 3D dostępny jest przycisk **Tryb uproszczony (LOD)**.
-  - Po aktywacji (`⚡ Tryb uproszczony: WŁ`) aplikacja automatycznie zastępuje złożone modele wyposażenia (stoły z nogami, regały z półkami i rolkami) lekkimi bryłami prostopadłościennymi o identycznych wymiarach zewnętrznych, zachowując kontrastowe linie krawędzi i oryginalne kolory.
-  - Ogranicza złożoność geometrii. Test syntetyczny na zintegrowanym Intel UHD Graphics porównał sceny 100 i 300 obiektów. Dla 300 obiektów liczba wywołań rysowania spadła z 9960 do 607, a trójkątów z 191176 do 3816. Płynność zależy od sprzętu, rozdzielczości i wyposażenia; szczegóły oraz warunki pomiaru zawiera `WERYFIKACJA_WYDAJNOSCI_I_OKIEN_6_7.md`. Wyniki testu headless nie gwarantują liczby klatek na monitorze.
-  - W większej hali użyj **Wybierz wyposażenie z listy**, następnie **Zbliż na wybrany obiekt**. **Dopasuj halę 3D** (`F`) przywraca kadr całej hali. Dopasowanie pomija niewidoczną płaszczyznę manipulatora. W LOD widoczna jest bryła zastępcza, więc szczegóły wyposażenia sprawdzaj po wyłączeniu tego trybu.
+- **Definiowanie wariantów produktów (`ProductVariant`)**:
+  - W module `Warianty wyrobów, macierz przezbrojeń i zlecenia partii` użytkownik definiuje unikalne warianty wyrobów (np. `VAR-A: Wariant standardowy`, `VAR-B: Wariant premium`).
+  - Każdy wariant posiada jawne identyfikatory (`id`), nazwy (`name`), kody (`code`), opcjonalny opis oraz kolor identyfikacyjny na wykresach.
 
-- **Otwieranie widoków w osobnym oknie monitora (Popout Window)**:
-  - Przycisk **`⧉ Otwórz ... w osobnym oknie`** pozwala przenieść kluczowe moduły do osobnego, niezależnego okna przeglądarki na drugi lub trzeci monitor:
-    - **Przepływ procesu (`2a Przepływ`)**: stały podgląd sieci powiązań technologicznych obok tabeli danych.
-    - **Hala i CAD 2D (`5 Hala i CAD`)**: pełnoekranowy edytor rzutu posadzki z siatką i wymiarowaniem.
-    - **Hala 3D i symulacja (`6 3D i symulacja`)**: pełnowymiarowy trójwymiarowy podgląd hali z odtwarzaniem partii.
-  - **Współdzielenie stanu**: Dodatkowe okno korzysta z tego samego projektu. Edycja, zaznaczenie i zapis nie powinny zamykać ani ponownie otwierać okna.
-  - **Skróty**: Skróty edytora CAD/3D działają w oknie danego widoku. `Ctrl+S` zapisuje projekt, a `Ctrl+Z` / `Ctrl+Y` obsługują wspólną historię. Przy edycji pola tekstowego cofanie pozostaje w tym polu.
-  - **Przywracanie do okna głównego**: Kliknięcie przycisku `✕ Przywróć do okna głównego` w nagłówku okna popout lub po prostu zamknięcie tego okna przywraca widok z powrotem do układu zintegrowanego.
+- **Macierz czasów przezbrojeń (`ChangeoverMatrix`) i hierarchia reguł**:
+  - Czasy przezbrojeń określają czas przygotowania linii lub poszczególnych stanowisk przy przejściu z jednego wariantu wyrobu na inny (`fromVariantId → toVariantId`).
+  - **Niezmiennik bazy czasu (Zasada 5)**: Każda reguła przezbrojenia wymaga jawnego określenia podstawy czasu: `measured` (czas zmierzony/potwierdzony) lub `assumed` (czas założony/szacowany). Zakaz zmyślania pomiarów produkcyjnych.
+  - **Hierarchia dopasowania reguł przejść (determinizm)**:
+    1. Reguła dedykowana dla konkretnego stanowiska i dokładnej pary wariantów (`stationId + fromVariantId → toVariantId`).
+    2. Reguła dedykowana dla stanowiska z symbolem uniwersalnym (`stationId + wildcard *`).
+    3. Ogólna reguła linii dla dokładnej pary wariantów (`line-wide + fromVariantId → toVariantId`).
+    4. Ogólna reguła linii z symbolem uniwersalnym (`line-wide + wildcard *`).
+    5. Czas domyślny macierzy (`defaultDurationSeconds`).
+    6. Brak przezbrojenia (0 s) dla tego samego wariantu wyrobu.
+  - Opcjonalne pole `cleanoutRequired` pozwala oznaczyć konieczność przeprowadzenia czyszczenia/mycia gniazda lub przedmuchania formy przed rozpoczęciem nowej partii.
 
-![Tryb uproszczony 3D — lekki render brył zastępczych LOD](../outputs/qa/verify_6_7_simplified_lod_mode_active.png)
+- **Zlecenia partii produkcyjnych (`ProductionOrderBatch`) i strategie szeregowania**:
+  - Zlecenia partii definiują sekwencję produkcyjną: identyfikator partii (`batchId`), wariant wyrobu (`variantId`), wielkość partii w sztukach (`quantity`) oraz priorytet.
+  - Dostępne strategie automatycznego szeregowania sekwencji (`orderBatches`):
+    - **`as-declared`**: zachowanie kolejności dokładnie według wprowadzonych zleceń w tabeli.
+    - **`minimize-changeover-greedy`**: heurystyka najbliższego sąsiada minimalizująca łączny czas przezbrojeń (grupowanie partii o tych samych lub zbliżonych wariantach).
+    - **`heijunka-leveling`**: równomierne poziomowanie miksu produkcyjnego poprzez przeplatanie partii różnych wariantów w cyklach powtarzalnych.
 
-![Przycisk otwarcia rzutu CAD w osobnym oknie](../outputs/qa/verify_6_7_popout_cad_btn.png)
+- **Wizualizacja przezbrojeń na wykresie Gantta**:
+  - W silniku harmonogramowania (`bufferedProcessSchedule`, `workerSchedule`) przejście na inny wariant automatycznie rezerwuje stanowisko i zespół na czas trwania przezbrojenia przed rozpoczęciem obróbki kolejnej sztuki (`changeovers`).
+  - Wykres Gantta (`GanttChart`) prezentuje dedykowane, pomarańczowe bloki przezbrojeń (`kind: changeover`), wyraźnie odróżniające się od pracy operacyjnej (`work`), transportu (`transfer`), oczekiwania buforowego (`blocked`) oraz przerw kalendarzowych (`pause`).
+  - Bloki przezbrojeń są w pełni widoczne zarówno w widoku stanowisk roboczych (`Widok stanowisk`), jak i w widoku pracowników (`Widok pracowników`).
 
-![Scena 300 obiektów — wybrany obiekt po zbliżeniu w trybie uproszczonym](../outputs/qa/benchmark_6_7/300_focused_lod.png)
 

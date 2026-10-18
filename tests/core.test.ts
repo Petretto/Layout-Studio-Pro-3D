@@ -65,8 +65,20 @@ import { deriveStationProject } from '../src/core/stationDerivation';
 import { prepareStationMigration, previewStationMigration } from '../src/core/stationMigration';
 import {archivedImportBlob, encodeImport} from '../src/core/importArchive';
 import {makePortableArchive, readPortableArchive} from '../src/core/portableArchive';
-import { DEFAULT_MOTOR_PROJECT as motor,DEFAULT_BATTERY_PROJECT as battery, DEFAULT_MOTOR_PROJECT, DEFAULT_BATTERY_PROJECT } from '../src/core/models/defaultProjects';
+import { DEFAULT_MOTOR_PROJECT as motor, DEFAULT_BATTERY_PROJECT as battery, DEFAULT_MOTOR_PROJECT, DEFAULT_BATTERY_PROJECT } from '../src/core/models/defaultProjects';
 import { ProcessStep } from '../src/core/models/types';
+import { previewDomainMigrationFromV4 } from '../src/core/domainMigrationPreview';
+import { prepareDomainMigration } from '../src/core/domainProject';
+import {
+  validateChangeoverMatrix,
+  validateProductionOrders,
+  resolveChangeover,
+  calculateSequenceChangeovers,
+  orderBatches,
+  type ChangeoverMatrix,
+  type ProductionOrderBatch
+} from '../src/core/changeoverMatrix';
+import { parseDomainProjectV6 } from '../src/core/domainProject';
 
 test('6.4: wygląd zachowuje geometrię i przypisania, trwa w auto i zapisie; odrzuca nieznany model',()=>{
   const source=derive(parseProject(JSON.stringify(motor))).project,original=structuredClone(source),id=source.layoutObjects[0].id;
@@ -1933,6 +1945,245 @@ test('6.7: niezmiennik trybu uproszczonego i popout window — brak wpływu na p
   assert.equal(JSON.stringify(p.balancing), initialBalancing, 'Bilans nie może ulec modyfikacji');
 });
 
+test('7.3a: walidacja macierzy przezbrojeń — odrzucanie duplikatów, błędnych czasów i nieznanych referencji', () => {
+  const validMatrix: ChangeoverMatrix = {
+    variants: [
+      { id: 'var-a', name: 'Wariant A (Standard)', code: 'SKU-001', color: '#3b82f6' },
+      { id: 'var-b', name: 'Wariant B (Eco)', code: 'SKU-002', color: '#10b981' }
+    ],
+    defaultVariantId: 'var-a',
+    transitions: [
+      {
+        id: 't-a-b',
+        fromVariantId: 'var-a',
+        toVariantId: 'var-b',
+        durationSeconds: 180,
+        durationBasis: 'measured',
+        requiredWorkers: 2,
+        cleanoutRequired: true,
+        description: 'Wymiana osprzętu stołu i przezbrojenie gniazda'
+      }
+    ],
+    defaultDurationSeconds: 60,
+    defaultDurationBasis: 'assumed'
+  };
 
+  const parsed = validateChangeoverMatrix(validMatrix, new Set(['ST1', 'ST2']));
+  assert.equal(parsed.variants.length, 2);
+  assert.equal(parsed.defaultVariantId, 'var-a');
+  assert.equal(parsed.transitions[0].durationSeconds, 180);
+  assert.equal(parsed.transitions[0].requiredWorkers, 2);
+  assert.equal(parsed.transitions[0].cleanoutRequired, true);
 
+  // Błędny format / nieznany wariant
+  assert.throws(() => validateChangeoverMatrix({
+    variants: [{ id: 'var-a', name: 'A' }],
+    transitions: [{ id: 't1', fromVariantId: 'var-x', toVariantId: 'var-a', durationSeconds: 60, durationBasis: 'assumed' }]
+  }), /nieznany wariant źródłowy 'var-x'/);
 
+  // Duplikat ID wariantu
+  assert.throws(() => validateChangeoverMatrix({
+    variants: [{ id: 'var-a', name: 'A' }, { id: 'var-a', name: 'A copy' }],
+    transitions: []
+  }), /powtórzone ID/);
+
+  // Ujemny czas przezbrojenia
+  assert.throws(() => validateChangeoverMatrix({
+    variants: [{ id: 'var-a', name: 'A' }],
+    transitions: [{ id: 't1', fromVariantId: 'var-a', toVariantId: '*', durationSeconds: -10, durationBasis: 'assumed' }]
+  }), /durationSeconds musi być liczbą nieujemną/);
+
+  // Niepoprawny durationBasis
+  assert.throws(() => validateChangeoverMatrix({
+    variants: [{ id: 'var-a', name: 'A' }],
+    transitions: [{ id: 't1', fromVariantId: 'var-a', toVariantId: '*', durationSeconds: 50, durationBasis: 'estimated' as any }]
+  }), /durationBasis musi być 'measured' lub 'assumed'/);
+
+  // Nieznane stanowisko
+  assert.throws(() => validateChangeoverMatrix({
+    variants: [{ id: 'var-a', name: 'A' }],
+    transitions: [{ id: 't1', fromVariantId: '*', toVariantId: '*', stationId: 'UNKNOWN_ST', durationSeconds: 60, durationBasis: 'assumed' }]
+  }, new Set(['ST1'])), /nieznane stanowisko 'UNKNOWN_ST'/);
+});
+
+test('7.3a: walidacja zleceń produkcyjnych — unikalne batchId, poprawne ilości i warianty', () => {
+  const matrix: ChangeoverMatrix = {
+    variants: [
+      { id: 'v1', name: 'Wariant 1' },
+      { id: 'v2', name: 'Wariant 2' }
+    ],
+    transitions: []
+  };
+
+  const validBatches: ProductionOrderBatch[] = [
+    { batchId: 'B1', variantId: 'v1', quantity: 10, priority: 1, notes: 'Pierwsza partia' },
+    { batchId: 'B2', variantId: 'v2', quantity: 5, priority: 2 }
+  ];
+
+  const parsed = validateProductionOrders(validBatches, matrix);
+  assert.equal(parsed.length, 2);
+  assert.equal(parsed[0].quantity, 10);
+
+  // Nieznany wariant
+  assert.throws(() => validateProductionOrders([
+    { batchId: 'B1', variantId: 'v_unknown', quantity: 5 }
+  ], matrix), /nieznany wariant 'v_unknown'/);
+
+  // Niepoprawna ilość (< 1 lub niecałkowita)
+  assert.throws(() => validateProductionOrders([
+    { batchId: 'B1', variantId: 'v1', quantity: 0 }
+  ], matrix), /quantity musi być dodatnią liczbą całkowitą/);
+
+  // Powtórzone batchId
+  assert.throws(() => validateProductionOrders([
+    { batchId: 'B1', variantId: 'v1', quantity: 5 },
+    { batchId: 'B1', variantId: 'v2', quantity: 10 }
+  ], matrix), /powtórzone batchId/);
+});
+
+test('7.3a: resolveChangeover — hierarchia priorytetów i deterministyczne reguły przejść', () => {
+  const matrix: ChangeoverMatrix = {
+    variants: [
+      { id: 'A', name: 'Produkt A' },
+      { id: 'B', name: 'Produkt B' },
+      { id: 'C', name: 'Produkt C' }
+    ],
+    transitions: [
+      // 1. Dedykowana reguła dla stacji ST_PRESS: A -> B = 300s (measured, 2 osoby)
+      { id: 't_press_ab', fromVariantId: 'A', toVariantId: 'B', stationId: 'ST_PRESS', durationSeconds: 300, durationBasis: 'measured', requiredWorkers: 2, cleanoutRequired: true },
+      // 2. Dedykowana reguła wildcard dla stacji ST_PRESS: * -> C = 200s (assumed)
+      { id: 't_press_any_c', fromVariantId: '*', toVariantId: 'C', stationId: 'ST_PRESS', durationSeconds: 200, durationBasis: 'assumed' },
+      // 3. Ogólna reguła liniowa: A -> B = 120s (assumed)
+      { id: 't_line_ab', fromVariantId: 'A', toVariantId: 'B', durationSeconds: 120, durationBasis: 'assumed' },
+      // 4. Ogólna reguła liniowa wildcard: * -> C = 90s (assumed)
+      { id: 't_line_any_c', fromVariantId: '*', toVariantId: 'C', durationSeconds: 90, durationBasis: 'assumed' }
+    ],
+    defaultDurationSeconds: 45,
+    defaultDurationBasis: 'assumed'
+  };
+
+  // Ten sam wariant: zero sekund przezbrojenia
+  const same = resolveChangeover(matrix, 'A', 'A', 'ST_PRESS');
+  assert.equal(same.durationSeconds, 0);
+
+  // Dedykowana stacja i dokładne dopasowanie A -> B na ST_PRESS: 300s
+  const pressAB = resolveChangeover(matrix, 'A', 'B', 'ST_PRESS');
+  assert.equal(pressAB.durationSeconds, 300);
+  assert.equal(pressAB.durationBasis, 'measured');
+  assert.equal(pressAB.requiredWorkers, 2);
+  assert.equal(pressAB.cleanoutRequired, true);
+
+  // Inna stacja A -> B (brak dedykowanej stacji, przejście do ogólnej liniowej): 120s
+  const otherAB = resolveChangeover(matrix, 'A', 'B', 'ST_ASSEMBLY');
+  assert.equal(otherAB.durationSeconds, 120);
+
+  // Dedykowana stacja ST_PRESS i wildcard B -> C: 200s
+  const pressBC = resolveChangeover(matrix, 'B', 'C', 'ST_PRESS');
+  assert.equal(pressBC.durationSeconds, 200);
+
+  // Inna stacja B -> C (ogólna liniowa wildcard * -> C): 90s
+  const otherBC = resolveChangeover(matrix, 'B', 'C', 'ST_ASSEMBLY');
+  assert.equal(otherBC.durationSeconds, 90);
+
+  // Brak dopasowania reguł (np. C -> A): fallback do defaultDurationSeconds 45s
+  const fallbackCA = resolveChangeover(matrix, 'C', 'A', 'ST_ASSEMBLY');
+  assert.equal(fallbackCA.durationSeconds, 45);
+});
+
+test('7.3a: calculateSequenceChangeovers i strategie szeregowania partii orderBatches', () => {
+  const matrix: ChangeoverMatrix = {
+    variants: [
+      { id: 'A', name: 'A' },
+      { id: 'B', name: 'B' },
+      { id: 'C', name: 'C' }
+    ],
+    transitions: [
+      // A -> B: 100s, B -> A: 200s, B -> C: 50s, C -> A: 50s
+      { id: 'ab', fromVariantId: 'A', toVariantId: 'B', durationSeconds: 100, durationBasis: 'assumed' },
+      { id: 'ba', fromVariantId: 'B', toVariantId: 'A', durationSeconds: 200, durationBasis: 'assumed' },
+      { id: 'bc', fromVariantId: 'B', toVariantId: 'C', durationSeconds: 50, durationBasis: 'assumed' },
+      { id: 'ca', fromVariantId: 'C', toVariantId: 'A', durationSeconds: 50, durationBasis: 'assumed' }
+    ],
+    defaultDurationSeconds: 150
+  };
+
+  const orders: ProductionOrderBatch[] = [
+    { batchId: 'O1', variantId: 'A', quantity: 10 },
+    { batchId: 'O2', variantId: 'B', quantity: 5 },
+    { batchId: 'O3', variantId: 'A', quantity: 8 },
+    { batchId: 'O4', variantId: 'B', quantity: 6 }
+  ];
+
+  // 1. Obliczenie czasu w sekwencji deklarowanej:
+  // O1(A) -> O2(B) = 100s
+  // O2(B) -> O3(A) = 200s
+  // O3(A) -> O4(B) = 100s
+  // Suma = 400s
+  const calcDeclared = calculateSequenceChangeovers(orders, matrix, ['ST1']);
+  assert.equal(calcDeclared.totalChangeoverSeconds, 400);
+  assert.equal(calcDeclared.transitionCount, 3);
+  assert.equal(calcDeclared.transitionsList.length, 3);
+
+  // 2. Optymalizacja greedy nearest neighbor (grupowanie partii o tym samym wariancie)
+  const optimizedGreedy = orderBatches(orders, matrix, 'minimize-changeover-greedy', ['ST1']);
+  // Powinno pogrupować A z A i B z B
+  const calcGreedy = calculateSequenceChangeovers(optimizedGreedy, matrix, ['ST1']);
+  // Tylko jedno przejście A -> B = 100s
+  assert.equal(calcGreedy.totalChangeoverSeconds, 100);
+  assert.equal(calcGreedy.transitionCount, 1);
+
+  // 3. Poziomowanie Heijunka (przeplatanie wariantów)
+  const heijunka = orderBatches(orders, matrix, 'heijunka-leveling');
+  assert.equal(heijunka.length, 4);
+  assert.equal(heijunka[0].variantId, 'A');
+  assert.equal(heijunka[1].variantId, 'B');
+  assert.equal(heijunka[2].variantId, 'A');
+  assert.equal(heijunka[3].variantId, 'B');
+});
+
+test('7.3a: integracja ze schematem DomainProjectV6 — zapis, odczyt i kompatybilność wsteczna', () => {
+  const migrated = prepareDomainMigration(previewDomainMigrationFromV4(JSON.stringify(motor))).project;
+  const baseProject = {
+    ...migrated,
+    product: { id: 'PROD_1', name: 'Wyrób podstawowy' },
+    changeoverMatrix: {
+      variants: [
+        { id: 'VAR_STD', name: 'Wariant Standard', code: 'STD' },
+        { id: 'VAR_PRO', name: 'Wariant Pro', code: 'PRO' }
+      ],
+      defaultVariantId: 'VAR_STD',
+      transitions: [
+        {
+          id: 'T1',
+          fromVariantId: 'VAR_STD',
+          toVariantId: 'VAR_PRO',
+          durationSeconds: 150,
+          durationBasis: 'measured' as const
+        }
+      ],
+      defaultDurationSeconds: 60,
+      defaultDurationBasis: 'assumed' as const
+    },
+    productionOrders: [
+      { batchId: 'B_001', variantId: 'VAR_STD', quantity: 20 },
+      { batchId: 'B_002', variantId: 'VAR_PRO', quantity: 15 }
+    ]
+  };
+
+  const parsed = parseDomainProjectV6(JSON.stringify(baseProject));
+  assert.ok(parsed.changeoverMatrix);
+  assert.equal(parsed.changeoverMatrix.variants.length, 2);
+  assert.equal(parsed.changeoverMatrix.transitions[0].durationSeconds, 150);
+  assert.ok(parsed.productionOrders);
+  assert.equal(parsed.productionOrders.length, 2);
+
+  // Kompatybilność wsteczna: projekt bez changeoverMatrix i productionOrders
+  const legacyProject = structuredClone(baseProject);
+  delete (legacyProject as any).changeoverMatrix;
+  delete (legacyProject as any).productionOrders;
+
+  const parsedLegacy = parseDomainProjectV6(JSON.stringify(legacyProject));
+  assert.equal(parsedLegacy.changeoverMatrix, undefined);
+  assert.equal(parsedLegacy.productionOrders, undefined);
+  assert.equal(parsedLegacy.name, migrated.name);
+});

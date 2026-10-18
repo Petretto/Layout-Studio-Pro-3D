@@ -11,7 +11,8 @@ export type GanttBarKind =
   | 'local-wait'         // Oczekiwanie na kontynuację na tej samej kopii
   | 'transport-transfer' // Przewóz korpusu lub partii podzespołów
   | 'transport-empty'    // Dojazd lub powrót wózka/osoby bez ładunku
-  | 'reserve';           // Wyprzedzająca rezerwacja celu transportu
+  | 'reserve'           // Wyprzedzająca rezerwacja celu transportu
+  | 'changeover';        // Przezbrojenie stanowiska między wariantami
 
 export interface GanttBar {
   id: string;
@@ -426,9 +427,28 @@ export function buildStationsGantt(project: DomainProjectV6, result: WorkerSched
       }
     }
 
+    // Changeover bars on station copy
+    if (result.changeovers && result.changeovers.length > 0) {
+      const stationChangeovers = result.changeovers.filter(c => c.stationId === item.stationId && c.copy === item.copy);
+      for (const co of stationChangeovers) {
+        bars.push({
+          id: `${rowId}-changeover-${co.afterJob}-${co.beforeJob}-${co.startSeconds}`,
+          startSeconds: co.startSeconds,
+          endSeconds: co.endSeconds,
+          durationSeconds: r3(co.endSeconds - co.startSeconds),
+          kind: 'changeover',
+          label: `Przezbrojenie: ${co.fromVariantId} → ${co.toVariantId}`,
+          tooltip: `${item.stationName} / kopia ${item.copy}: przezbrojenie ${co.fromVariantId} → ${co.toVariantId} (${co.durationSeconds} s, ${co.durationBasis === 'measured' ? 'pomiar' : 'założenie'}) po szt. ${co.afterJob} przed szt. ${co.beforeJob}`,
+          stationId: item.stationId,
+          copy: item.copy,
+          workerIds: co.workerIds,
+        });
+      }
+    }
+
     // Sort bars by startSeconds
     bars.sort((a, b) => a.startSeconds !== b.startSeconds ? a.startSeconds - b.startSeconds : a.endSeconds - b.endSeconds);
-    const totalActive = r3(bars.reduce((sum, b) => b.kind === 'work' ? sum + b.durationSeconds : sum, 0));
+    const totalActive = r3(bars.reduce((sum, b) => b.kind === 'work' || b.kind === 'changeover' ? sum + b.durationSeconds : sum, 0));
 
     rows.push({
       id: rowId,
@@ -609,8 +629,27 @@ export function buildWorkersGantt(project: DomainProjectV6, result: WorkerSchedu
       });
     });
 
+    // 3. Changeover tasks assigned to this worker
+    if (result.changeovers && result.changeovers.length > 0) {
+      const workerChangeovers = result.changeovers.filter(c => c.workerIds.includes(worker.workerId));
+      for (const co of workerChangeovers) {
+        bars.push({
+          id: `${rowId}-changeover-${co.stationId}-${co.copy}-${co.startSeconds}`,
+          startSeconds: co.startSeconds,
+          endSeconds: co.endSeconds,
+          durationSeconds: r3(co.endSeconds - co.startSeconds),
+          kind: 'changeover',
+          label: `Przezbrojenie: ${co.stationId}`,
+          tooltip: `${worker.workerName} (${worker.workerId}): udział w przezbrojeniu stanowiska ${co.stationId} (kopia ${co.copy}) ${co.fromVariantId} → ${co.toVariantId} (${co.durationSeconds} s)`,
+          stationId: co.stationId,
+          copy: co.copy,
+          workerIds: co.workerIds,
+        });
+      }
+    }
+
     bars.sort((a, b) => a.startSeconds !== b.startSeconds ? a.startSeconds - b.startSeconds : a.endSeconds - b.endSeconds);
-    const totalActive = r3(bars.reduce((sum, b) => b.kind === 'work' || b.kind === 'transport-transfer' || b.kind === 'transport-empty' ? sum + b.durationSeconds : sum, 0));
+    const totalActive = r3(bars.reduce((sum, b) => b.kind === 'work' || b.kind === 'changeover' || b.kind === 'transport-transfer' || b.kind === 'transport-empty' ? sum + b.durationSeconds : sum, 0));
 
     rows.push({
       id: rowId,
