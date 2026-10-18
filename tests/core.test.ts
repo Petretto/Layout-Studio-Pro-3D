@@ -5,17 +5,19 @@ import * as XLSX from 'xlsx';
 import { calculateTaktTime } from '../src/core/algorithms/taktCalculator';
 import { runLineBalancing } from '../src/core/algorithms/lineBalancingEngine';
 import { generate3DLayout,layoutWarnings,corners } from '../src/core/algorithms/layoutEngine';
-import {alignLayoutObjects,analyzeGeometricLayoutWarnings,BHP_GEOMETRY_DISCLAIMER,BHP_SAFE_STATE_NOTE,calibrateUnderlayScale,classifyLayoutObjectLayer,computeFunctionalZones,expandMoveSelection,expandVisualSelection,groupLayoutObjects,copyLayoutObjects,lockLayoutObjects,measureObjectsDistance,measurePointsDistance,moveLayoutObjects,nudgeLayoutObjects,objectConnectionPoints,snapLayoutTranslation,underlayDimensionsMm,workstationAssemblyIds,LAYOUT_SHORTCUTS} from '../src/core/algorithms/layoutSelection';
+import {alignLayoutObjects,analyzeGeometricLayoutWarnings,BHP_GEOMETRY_DISCLAIMER,BHP_SAFE_STATE_NOTE,calibrateUnderlayScale,classifyLayoutObjectLayer,computeFunctionalZones,expandMoveSelection,expandVisualSelection,groupLayoutObjects,copyLayoutObjects,lockLayoutObjects,measureObjectsDistance,measurePointsDistance,moveLayoutObjects,nudgeLayoutObjects,objectConnectionPoints,snapLayoutTranslation,underlayDimensionsMm,workstationAssemblyIds,LAYOUT_SHORTCUTS,VISUAL_ASSUMPTION_DISCLAIMER,FACILITY_UNCONFIRMED_NOTE} from '../src/core/algorithms/layoutSelection';
 import {layoutRoutes} from '../src/core/algorithms/routing';
 import { simulate,simulationAt,SIMULATION_SPEEDS,stepSimulationTime } from '../src/core/algorithms/simulation';
 import { importProcess,importBOM,processRows,bomRows,templateWorkbookBytes,TEMPLATE_PROCESS_STEPS,TEMPLATE_BOM_COMPONENTS,PROCESS_COLUMN_DOCS,BOM_COLUMN_DOCS } from '../src/core/export/excelImporter';
 import { exportToDxf } from '../src/core/export/dxfExporter';
 import { parseDxfImport, applyDxfImportToProject, DXF_UNITS } from '../src/core/export/dxfImporter';
 import { parseProject,processErrors,topologicalSort,validateProject } from '../src/core/validation';
-import { derive } from '../src/core/project';
+import { derive, newProject } from '../src/core/project';
+import { deriveStationProject } from '../src/core/stationDerivation';
+import { prepareStationMigration, previewStationMigration } from '../src/core/stationMigration';
 import {archivedImportBlob, encodeImport} from '../src/core/importArchive';
 import {makePortableArchive, readPortableArchive} from '../src/core/portableArchive';
-import { DEFAULT_MOTOR_PROJECT as motor,DEFAULT_BATTERY_PROJECT as battery } from '../src/core/models/defaultProjects';
+import { DEFAULT_MOTOR_PROJECT as motor,DEFAULT_BATTERY_PROJECT as battery, DEFAULT_MOTOR_PROJECT, DEFAULT_BATTERY_PROJECT } from '../src/core/models/defaultProjects';
 import { ProcessStep } from '../src/core/models/types';
 import { moveOperation, connectOperations, disconnectOperations, addOperation, removeOperation, editOperation, flowPositions } from '../src/core/editing';
 import { toSeconds, fromSeconds, convertTime, formatTimeValue, formatTimeWithUnit, TIME_UNITS } from '../src/core/time';
@@ -870,6 +872,76 @@ test('5.10: nudgeLayoutObjects przesuwa obiekty w 4 kierunkach z ochroną locked
   // 6. Invalid step check
   assert.throws(() => nudgeLayoutObjects(objects, [table.id], 'right', 0), /dodatnią liczbą/);
   assert.throws(() => nudgeLayoutObjects(objects, [table.id], 'right', -50), /dodatnią liczbą/);
+});
+
+test('5.13: automatyczna pierwsza propozycja layoutu oparta na grafie i bilansie z uwzględnieniem BOM i założeń wizualnych', () => {
+  // Test na projekcie silnika EV (niezależnym od Eko)
+  const emptyProject = newProject();
+  assert.equal(emptyProject.layoutObjects.length, 0);
+
+  // Dodajemy operacje i BOM z projektu silnika EV
+  const populated = {
+    ...emptyProject,
+    processSteps: structuredClone(DEFAULT_MOTOR_PROJECT.processSteps),
+    bom: structuredClone(DEFAULT_MOTOR_PROJECT.bom),
+    demand: structuredClone(DEFAULT_MOTOR_PROJECT.demand),
+    facility: structuredClone(DEFAULT_MOTOR_PROJECT.facility),
+    targetLayoutType: 'ProcessFlow' as const,
+  };
+
+  // 1. derive() automatycznie tworzy pierwszą propozycję layoutu bez konieczności klikania przycisku
+  const derived = derive(populated);
+  const layout = derived.project.layoutObjects;
+  assert.ok(layout.length > 0, 'Pierwsza propozycja layoutu powinna zostać wygenerowana automatycznie');
+  assert.ok(derived.project.balancing, 'Wstępny bilans powinien być wyznaczony');
+
+  // 2. Wszystkie wygenerowane obiekty są oznaczone jako założenia wizualne (isVisualAssumption: true)
+  assert.ok(layout.every(o => o.isVisualAssumption === true), 'Każdy automatycznie wygenerowany obiekt powinien być oznaczony jako założenie wizualne');
+
+  // 3. BOM jest uwzględniony w prezentacji przepływu materiałów (regały FIFO)
+  const fifoWs1 = layout.find(o => o.id === 'FIFO-WS-1');
+  assert.ok(fifoWs1, 'Powinien istnieć regał FIFO dla WS-1');
+  assert.ok(fifoWs1.name.includes('MOT-ST-01'), 'Regał FIFO dla WS-1 powinien uwzględniać numer części z BOM powiązany z krokiem 1');
+
+  // 4. Brak BOM nie blokuje wyznaczenia szkicu rozmieszczenia stanowisk
+  const noBomProject = { ...populated, bom: [] };
+  const derivedNoBom = derive(noBomProject);
+  assert.ok(derivedNoBom.project.layoutObjects.length > 0, 'Brak BOM nie może blokować szkicu layoutu');
+  const fifoNoBom = derivedNoBom.project.layoutObjects.find(o => o.id === 'FIFO-WS-1');
+  assert.ok(fifoNoBom && fifoNoBom.name === 'FIFO WS-1', 'Regał FIFO bez BOM generuje się standardowo');
+
+  // 5. Stałe ostrzeżeń i założeń wizualnych
+  assert.ok(VISUAL_ASSUMPTION_DISCLAIMER.includes('założenia wizualne'), 'VISUAL_ASSUMPTION_DISCLAIMER musi wyjaśniać charakter założeń');
+  assert.ok(FACILITY_UNCONFIRMED_NOTE.includes('brak potwierdzonych wymiarów'), 'FACILITY_UNCONFIRMED_NOTE musi informować o braku potwierdzenia rzeczywistej przestrzeni');
+});
+
+test('5.13: automatyczna propozycja w docelowym modelu stanowisk v5 oraz ochrona pozycji ręcznych (baterie EV)', () => {
+  // Test na procesie modułów baterii EV (całkowicie niezależnym od Eko)
+  const batteryProject = structuredClone(DEFAULT_BATTERY_PROJECT);
+  // Przygotuj v5 project z pustą geometrią
+  const v5Migration = prepareStationMigration(previewStationMigration(JSON.stringify(batteryProject)));
+  const v5Clean = { ...v5Migration.project, layoutObjects: [] };
+
+  // 1. deriveStationProject automatycznie tworzy pierwszą propozycję layoutu, gdy layoutObjects jest puste
+  const derivedV5 = deriveStationProject(v5Clean);
+  assert.ok(derivedV5.project.layoutObjects.length > 0, 'Docelowy model v5 powinien automatycznie wygenerować pierwszą propozycję layoutu');
+  const v5Tables = derivedV5.project.layoutObjects.filter(o => o.type.includes('Table'));
+  assert.equal(v5Tables.length, derivedV5.project.balancing.workstations.length, 'Liczba stołów w pierwszej propozycji musi odpowiadać stanowiskom v5');
+  assert.ok(derivedV5.issues.every(i => !i.message.includes('layout ma 0 stołów')), 'Nie powinno być błędów o braku stołów przy automatycznej propozycji');
+
+  // 2. Ręczne pozycje są bezwzględnie chronione przed automatycznym nadpisaniem
+  const customTableX = 99999;
+  const customTableY = 88888;
+  const manualV5 = {
+    ...v5Clean,
+    layoutMode: 'manual' as const,
+    layoutObjects: derivedV5.project.layoutObjects.map(o => o.id === v5Tables[0].id ? { ...o, xMm: customTableX, yMm: customTableY } : o),
+  };
+
+  const derivedManual = deriveStationProject(manualV5);
+  const preservedTable = derivedManual.project.layoutObjects.find(o => o.id === v5Tables[0].id)!;
+  assert.equal(preservedTable.xMm, customTableX, 'Ręczna pozycja X stołu nie może być nadpisana');
+  assert.equal(preservedTable.yMm, customTableY, 'Ręczna pozycja Y stołu nie może być nadpisana');
 });
 
 

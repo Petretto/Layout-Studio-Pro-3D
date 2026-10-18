@@ -11,6 +11,8 @@ export interface GeometricLayoutWarning{id:string;kind:GeometricWarningKind;scop
 export interface GeometricWarningReport{disclaimer:string;safeStateNote:string;zones:FunctionalZone[];warnings:GeometricLayoutWarning[];affectedObjectIds:string[];}
 export const BHP_GEOMETRY_DISCLAIMER = 'Kontrola ma wyłącznie charakter geometryczny (obrysy 2D, granice hali, kolizje prostokątów i zadane prześwity modelowe w mm) i NIE stanowi oceny zgodności z przepisami BHP, ergonomii, ochrony przeciwpożarowej ani dopuszczenia stanowisk do eksploatacji.';
 export const BHP_SAFE_STATE_NOTE = 'Brak ostrzeżeń geometrycznych oznacza wyłącznie brak nakładania się prostokątnych obrysów 2D i zachowanie zadanych prześwitów modelowych — nie potwierdza spełnienia wymogów BHP ani dopuszczenia stanowisk do eksploatacji.';
+export const VISUAL_ASSUMPTION_DISCLAIMER = 'Domyślne wymiary i wyposażenie stanowią założenia wizualne (koncepcyjne) i nie definiują zdolności technologicznej stanowisk.';
+export const FACILITY_UNCONFIRMED_NOTE = 'Koncepcyjny szkic rozmieszczenia — brak potwierdzonych wymiarów rzeczywistej hali; nie deklaruje dopasowania do rzeczywistej przestrzeni.';
 export interface SnapOptions{grid?:boolean;edges?:boolean;connections?:boolean;gridSizeMm?:number;thresholdMm?:number;}
 export interface ConnectionPoint{objectId:string;kind:'center'|'left'|'right'|'top'|'bottom';x:number;y:number;}
 export interface SnapGuide{kind:'edge'|'connection';axis:'x'|'y'|'point';x1:number;y1:number;x2:number;y2:number;targetId:string;}

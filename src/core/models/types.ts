@@ -74,6 +74,8 @@ export interface LayoutObject {
   visualGroupId?: string;
   /** Prevents moving, aligning, resizing, rotating or deleting this layout object in the CAD editor. */
   locked?: boolean;
+  /** Visual assumption marker: dimensions & equipment are conceptual layout assumptions, not certified technological capacities. */
+  isVisualAssumption?: boolean;
 }
 
 export interface FacilityUnderlay {
@@ -96,6 +98,8 @@ export interface FacilityConfig {
   heightMm: number;
   gridSizeMm: number;
   underlay?: FacilityUnderlay;
+  /** True if facility dimensions were confirmed/calibrated against actual site/drawing; false or undefined means conceptual default. */
+  isConfirmed?: boolean;
 }
 
 export interface Obstacle {

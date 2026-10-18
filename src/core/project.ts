@@ -11,7 +11,9 @@ export function derive(p:ProjectData){
   if(!issues.some(i=>i.area==='demand'||i.area==='process'))try{
     project.balancing=applyResources(runLineBalancing(p.processSteps,calculateTaktTime(p.demand).taktTimeSeconds,p.algorithm??'RPW'),p.workstationSettings);
   }catch(e){issues.push({area:'process',severity:'error',message:String((e as Error).message)});}
-  if(p.layoutMode!=='manual')project.layoutObjects=project.balancing&&!issues.some(i=>i.area==='facility')?generate3DLayout(project.balancing.workstations,p.targetLayoutType,p.facility,p.layoutSettings??defaultLayoutSettings,p.processSteps):[];
+  if(p.layoutMode!=='manual'||!p.layoutObjects||p.layoutObjects.length===0){
+    project.layoutObjects=project.balancing&&!issues.some(i=>i.area==='facility')?generate3DLayout(project.balancing.workstations,p.targetLayoutType,p.facility,p.layoutSettings??defaultLayoutSettings,p.processSteps,p.bom):[];
+  }
   if(p.layoutMode==='manual'&&project.balancing){const expected=new Set(project.balancing.workstations.map(s=>s.id));const actual=project.layoutObjects.filter(o=>o.type.includes('Table')).map(o=>o.workstationId);if(actual.some(id=>!id||!expected.has(id))||project.balancing.workstations.some(s=>actual.filter(id=>id===s.id).length!==(s.parallelStations??1)))issues.push({area:'layout',severity:'error',message:'Ręczny layout nie odpowiada stanowiskom. Wygeneruj layout ponownie.'});}
   layoutWarnings(project).forEach(message=>issues.push({area:'layout',severity:'warning',message}));
   return {project,issues};

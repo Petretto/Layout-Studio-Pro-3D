@@ -5,7 +5,8 @@ import { calculateTaktTime } from './algorithms/taktCalculator';
 
 export const successorsOf = (steps: ProcessStep[], id: string) => steps.filter(s=>s.predecessorIds.includes(id)).map(s=>s.id);
 export function replaceImportedProcess(p:ProjectData,steps:ProcessStep[]){
-  return updateProcess({...p,algorithm:'RPW',workstationSettings:{}},steps);
+  const layoutMode=(!p.layoutObjects||p.layoutObjects.length===0)?'auto':p.layoutMode;
+  return updateProcess({...p,algorithm:'RPW',workstationSettings:{},layoutMode},steps);
 }
 export function setOperationLinks(steps: ProcessStep[], id: string, predecessors: string[], successors: string[]) {
   const ids = new Set(steps.map(s=>s.id));

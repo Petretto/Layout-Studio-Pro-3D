@@ -4,17 +4,30 @@ import {parseStationProjectV5} from './stationProject';
 import {runStationBalancing} from './stationBalancing';
 import {applyStationResources} from './resources';
 import {calculateTaktTime} from './algorithms/taktCalculator';
-import {layoutWarnings} from './algorithms/layoutEngine';
+import {layoutWarnings, generate3DLayout, defaultLayoutSettings} from './algorithms/layoutEngine';
 
 /** Compute schema-5 results without replacing saved equipment or geometry.
- * Missing copies are reported so the editor can request an explicit decision.
+ * When no equipment exists yet, generate initial layout proposal automatically.
+ * Missing copies in existing equipment are reported so the editor can request an explicit decision.
  */
 export function deriveStationProject(input: StationProjectV5) {
   const source = parseStationProjectV5(JSON.stringify(input));
   const target = calculateTaktTime(source.demand).taktTimeSeconds;
   const balancing = applyStationResources(runStationBalancing(source, target), source.workstationSettings);
-  const layoutObjects = source.layoutObjects;
-  const project = {...source, balancing, layoutObjects};
+  let layoutObjects = source.layoutObjects;
+  let layoutMode = source.layoutMode;
+  if ((!layoutObjects || layoutObjects.length === 0) && balancing.workstations.length > 0) {
+    layoutObjects = generate3DLayout(
+      balancing.workstations,
+      source.targetLayoutType ?? 'ProcessFlow',
+      source.facility,
+      source.layoutSettings ?? defaultLayoutSettings,
+      source.processSteps,
+      source.bom
+    );
+    layoutMode = 'auto';
+  }
+  const project = {...source, balancing, layoutObjects, layoutMode};
   const issues: Issue[] = [];
   const tables = layoutObjects.filter(o => o.type.includes('Table'));
   for (const station of balancing.workstations) {
