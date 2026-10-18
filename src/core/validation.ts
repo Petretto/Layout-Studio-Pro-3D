@@ -60,6 +60,12 @@ export function validateProject(p:ProjectData):Issue[]{
   });
   const f=p.facility;
   if(![f.widthMm,f.lengthMm,f.heightMm].every(v=>finite(v,100)&&v<=500000)||!finite(f.gridSizeMm,100)||f.gridSizeMm>Math.min(f.widthMm,f.lengthMm))error('facility','Wymiary hali: 100–500000 mm; siatka ≥ 100 mm i nie większa od hali.');
+  if(f.underlay!==undefined){
+    const u=f.underlay;
+    const validUrl=typeof u?.dataUrl==='string'&&u.dataUrl.length<=4000000&&/^data:image\/(png|jpeg|jpg|webp|svg\+xml);base64,[A-Za-z0-9+/=\s]+$/i.test(u.dataUrl);
+    const validCal=(u?.calibratedDistanceMm===undefined||finite(u.calibratedDistanceMm,1))&&(u?.calibratedSpanPx===undefined||finite(u.calibratedSpanPx,0.01));
+    if(!u||typeof u!=='object'||typeof u.name!=='string'||!u.name.trim()||!validUrl||!finite(u.imageWidthPx,1)||u.imageWidthPx>50000||!finite(u.imageHeightPx,1)||u.imageHeightPx>50000||!finite(u.mmPerPixel,0.01)||u.mmPerPixel>10000||!finite(u.xMm,-500000)||u.xMm>500000||!finite(u.yMm,-500000)||u.yMm>500000||!finite(u.opacity,0.05)||u.opacity>1||(u.visible!==undefined&&typeof u.visible!=='boolean')||!validCal)error('facility','Podkład hali: wymagany poprawny obraz (do 4 MB), wymiary 1–50000 px, skala 0,01–10000 mm/px i przezroczystość 0,05–1.');
+  }
   if(p.layoutSettings&&![p.layoutSettings.tableWidthMm,p.layoutSettings.tableLengthMm,p.layoutSettings.spacingMm,p.layoutSettings.aisleMm].every(v=>finite(v,100)&&v<=50000))error('facility','Wymiary wyposażenia i odstępy: 100–50000 mm.');
   const obsIds=new Set<string>();
   p.obstacles.forEach(o=>{

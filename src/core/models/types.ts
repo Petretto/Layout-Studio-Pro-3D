@@ -76,11 +76,26 @@ export interface LayoutObject {
   locked?: boolean;
 }
 
+export interface FacilityUnderlay {
+  name: string;
+  dataUrl: string;
+  imageWidthPx: number;
+  imageHeightPx: number;
+  mmPerPixel: number;
+  xMm: number;
+  yMm: number;
+  opacity: number;
+  visible?: boolean;
+  calibratedDistanceMm?: number;
+  calibratedSpanPx?: number;
+}
+
 export interface FacilityConfig {
   widthMm: number;
   lengthMm: number;
   heightMm: number;
   gridSizeMm: number;
+  underlay?: FacilityUnderlay;
 }
 
 export interface Obstacle {

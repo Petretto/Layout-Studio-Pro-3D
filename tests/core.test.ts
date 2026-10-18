@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import { calculateTaktTime } from '../src/core/algorithms/taktCalculator';
 import { runLineBalancing } from '../src/core/algorithms/lineBalancingEngine';
 import { generate3DLayout,layoutWarnings,corners } from '../src/core/algorithms/layoutEngine';
-import {alignLayoutObjects,classifyLayoutObjectLayer,expandMoveSelection,expandVisualSelection,groupLayoutObjects,copyLayoutObjects,lockLayoutObjects,measureObjectsDistance,measurePointsDistance,moveLayoutObjects,objectConnectionPoints,snapLayoutTranslation,workstationAssemblyIds} from '../src/core/algorithms/layoutSelection';
+import {alignLayoutObjects,calibrateUnderlayScale,classifyLayoutObjectLayer,expandMoveSelection,expandVisualSelection,groupLayoutObjects,copyLayoutObjects,lockLayoutObjects,measureObjectsDistance,measurePointsDistance,moveLayoutObjects,objectConnectionPoints,snapLayoutTranslation,underlayDimensionsMm,workstationAssemblyIds} from '../src/core/algorithms/layoutSelection';
 import {layoutRoutes} from '../src/core/algorithms/routing';
 import { simulate,simulationAt,SIMULATION_SPEEDS,stepSimulationTime } from '../src/core/algorithms/simulation';
 import { importProcess,importBOM,processRows,bomRows,templateWorkbookBytes,TEMPLATE_PROCESS_STEPS,TEMPLATE_BOM_COMPONENTS,PROCESS_COLUMN_DOCS,BOM_COLUMN_DOCS } from '../src/core/export/excelImporter';
@@ -324,6 +324,56 @@ test('5.6: klasyfikacja warstw oraz dokładny pomiar odległości między obiekt
   // Pomiar punkt-punkt (np. przekątna 3000 x 4000 = 5000 mm)
   const ptDist=measurePointsDistance({x:1000,y:1500},{x:4000,y:5500});
   assert.deepEqual(ptDist,{x1:1000,y1:1500,x2:4000,y2:5500,dxMm:3000,dyMm:4000,distanceMm:5000});
+});
+test('5.7: podkład hali — wymiary w mm oraz dwupunktowa kalibracja skali z obsługą błędów',()=>{
+  const sampleSvgBase64=Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800"></svg>','utf8').toString('base64');
+  const underlay={
+    name:'rzut_hali.svg',
+    dataUrl:`data:image/svg+xml;base64,${sampleSvgBase64}`,
+    imageWidthPx:1200,
+    imageHeightPx:800,
+    mmPerPixel:10,
+    xMm:0,
+    yMm:0,
+    opacity:0.45,
+    visible:true
+  };
+  assert.deepEqual(underlayDimensionsMm(underlay),{widthMm:12000,lengthMm:8000});
+  // Odcinek na rzucie od (1000, 1000) do (4000, 5000) ma długość 5000 mm na ekranie, co przy 10 mm/px odpowiada 500 px obrazu.
+  // Jeżeli rzeczywista odległość wynosi 10000 mm, nowa skala to 10000 / 500 = 20 mm/px.
+  const calibrated=calibrateUnderlayScale(underlay,{x:1000,y:1000},{x:4000,y:5000},10000);
+  assert.equal(calibrated.calibratedSpanPx,500);
+  assert.equal(calibrated.calibratedDistanceMm,10000);
+  assert.equal(calibrated.mmPerPixel,20);
+  assert.deepEqual(underlayDimensionsMm(calibrated),{widthMm:24000,lengthMm:16000});
+  // Błędy kalibracji: niedodatni wymiar rzeczywisty, zbyt krótki odcinek (<1 px), skala poza zakresem
+  assert.throws(()=>calibrateUnderlayScale(underlay,{x:0,y:0},{x:1000,y:0},0),/musi być dodatnia/);
+  assert.throws(()=>calibrateUnderlayScale(underlay,{x:100,y:100},{x:103,y:104},5000),/dwa różne punkty na podkładzie/);
+  assert.throws(()=>calibrateUnderlayScale(underlay,{x:0,y:0},{x:100,y:0},200000),/poza zakresem/);
+});
+test('5.7: walidacja i persystencja podkładu hali w projekcie JSON',()=>{
+  const base=derive(structuredClone(motor)).project;
+  const sampleSvgBase64=Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="600"></svg>','utf8').toString('base64');
+  const validUnderlay={
+    name:'hala_produkcyjna.svg',
+    dataUrl:`data:image/svg+xml;base64,${sampleSvgBase64}`,
+    imageWidthPx:1000,
+    imageHeightPx:600,
+    mmPerPixel:15.5,
+    xMm:500,
+    yMm:-250,
+    opacity:0.5,
+    visible:true,
+    calibratedDistanceMm:6200,
+    calibratedSpanPx:400
+  };
+  const parsed=parseProject(JSON.stringify({...base,facility:{...base.facility,underlay:validUnderlay}}));
+  assert.deepEqual(parsed.facility.underlay,validUnderlay);
+  // Niepoprawne dane podkładu są odrzucane przez walidator
+  assert.throws(()=>parseProject(JSON.stringify({...base,facility:{...base.facility,underlay:{...validUnderlay,dataUrl:'http://example.com/plan.png'}}})),/Podkład hali: wymagany poprawny obraz/);
+  assert.throws(()=>parseProject(JSON.stringify({...base,facility:{...base.facility,underlay:{...validUnderlay,mmPerPixel:0}}})),/Podkład hali: wymagany poprawny obraz/);
+  assert.throws(()=>parseProject(JSON.stringify({...base,facility:{...base.facility,underlay:{...validUnderlay,opacity:1.5}}})),/Podkład hali: wymagany poprawny obraz/);
+  assert.throws(()=>parseProject(JSON.stringify({...base,facility:{...base.facility,underlay:{...validUnderlay,imageWidthPx:-10}}})),/Podkład hali: wymagany poprawny obraz/);
 });
 test('JSON starych projektów migruje, zły schemat odrzucany',()=>{for(const p of [motor,battery]){const parsed=parseProject(JSON.stringify(p));assert.equal(parsed.schemaVersion,4);assert.ok(derive(parsed).project.balancing);}assert.throws(()=>parseProject('{}'));assert.throws(()=>parseProject(JSON.stringify({...motor,schemaVersion:999})));assert.throws(()=>parseProject(JSON.stringify({...motor,demand:{...motor.demand,plannedBreaksMinutesPerShift:600}})));});
 test('archiwum importu zachowuje bajty starszego JSON także z BOM i poza granicą bloku',async()=>{

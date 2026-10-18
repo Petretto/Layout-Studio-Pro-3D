@@ -44,7 +44,9 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 5.6: cały plan 42/67 = **62,7%**; pierwsze wydanie 42/65 = **64,6%**; Etap 5: 8/13 = **61,5%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po 5.7: cały plan 43/67 = **64,2%**; pierwsze wydanie 43/65 = **66,2%**; Etap 5: 9/13 = **69,2%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+
+Stan historyczny po 5.6: cały plan 42/67 = **62,7%**; pierwsze wydanie 42/65 = **64,6%**; Etap 5: 8/13 = **61,5%**.
 
 Stan historyczny po 5.5: cały plan 41/67 = **61,2%**; pierwsze wydanie 41/65 = **63,1%**; Etap 5: 7/13 = **53,8%**.
 
@@ -98,6 +100,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+5.7 (2026-10-18): wdrożone — podkład hali z kalibracją skali (`FacilityUnderlay` w `facility.underlay`: obraz PNG/JPEG/SVG/WebP w rzucie CAD 2D, warstwa `Warstwa: Podkład hali`, `underlayDimensionsMm`, interaktywna dwupunktowa kalibracja skali na rzucie `calibrateUnderlayScale`, ręczna edycja `mmPerPixel`, przesunięcie X/Y, przezroczystość, dopasowanie wymiarów hali do podkładu oraz walidacja i persystencja w `parseProject`/`validateProject`). Backup `backup/v0.4.0_przed_5_7_20261018` (323 pliki z SHA256). Testy celowane 10/10 PASS (`5.3`–`5.7`), build PASS, Edge CDP UI 5.7 PASS (`tests/qa/verify_5_7.mjs`, 1440/600 px) oraz regresja UI 5.2–5.6 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 26 stron/26 obrazów (`outputs/qa/manual_5_7`). Raport `WERYFIKACJA_PODKLADU_HALI_5_7.md`. Następny punkt: 5.8. Postęp: cały plan 43/67 = 64,2%, pierwsze wydanie 43/65 = 66,2%, Etap 5: 9/13 = 69,2%. Vercel nie zweryfikowano.
 
 5.6 (2026-10-18): wdrożone — wymiarowanie obiektów i przeszkód (`.cad-object-dimension`, `.cad-obstacle-dimension`), automatyczne pomiary odległości między dwoma zaznaczonymi obiektami (`measureObjectsDistance`: prześwit obróconych obrysów `edgeGapMm`, odległość `środek–środek`, `ΔX`, `ΔY`, linia wymiarowa `.cad-dimension-overlay`), interaktywny pomiar odległości punkt–punkt na rzucie (`Mierz odległość`, `measurePointsDistance`, `.cad-ruler-overlay`), widoczność 6 warstw (`Stanowiska`, `Bufory i logistyka`, `Strefy operatorów`, `Relacje technologiczne`, `Przeszkody`, `Wymiary i pomiary`) oraz trwałe blokowanie obiektów (`LayoutObject.locked`, `lockLayoutObjects`, ochrona przed przesunięciem, zmianą wymiarów, wyrównaniem i usunięciem). Backup `backup/v0.4.0_przed_5_6_20261018` (321 plików z SHA256). Testy celowane 8/8 PASS (`5.3`–`5.6`), okresowa pełna regresja 315/315 PASS (trzeci pakiet od `5.3`), build PASS, Edge CDP UI 5.6 PASS (`tests/qa/verify_5_6.mjs`, 1440/600 px) oraz regresja UI 5.2–5.5 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 25 stron/25 obrazów (`outputs/qa/manual_5_6`). Raport `WERYFIKACJA_WYMIAROW_I_WARSTW_5_6.md`. Następny punkt: 5.7. Postęp: cały plan 42/67 = 62,7%, pierwsze wydanie 42/65 = 64,6%, Etap 5: 8/13 = 61,5%. Vercel nie zweryfikowano.
 
@@ -514,7 +518,7 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 | 5.4 | Przenosić stanowisko razem z przypisanym FIFO i strefą obsługi bez utraty relacji technologicznych. | wdrożone |
 | 5.5 | Dodać przyciąganie do siatki, krawędzi i punktów połączeń oraz możliwość jego wyłączenia. | wdrożone |
 | 5.6 | Dodać wymiarowanie, pomiary odległości, warstwy i blokowanie obiektów. | wdrożone |
-| 5.7 | Obsłużyć podkład hali z kalibracją skali. | nierozpoczęte |
+| 5.7 | Obsłużyć podkład hali z kalibracją skali. | wdrożone |
 | 5.8 | Ustalić i wdrożyć obsługiwany podzbiór importu DXF, z raportem pominiętej geometrii i sprawdzeniem jednostek. | nierozpoczęte |
 | 5.9 | Czytelnie pokazywać strefy obsługi, odkładania i komunikacji; ostrzeżenia geometryczne odróżnić od oceny zgodności BHP. | nierozpoczęte |
 | 5.10 | Zapewnić wspólne zaznaczenie i dane 2D–3D, spójne skróty, nazwy narzędzi i podpowiedzi. | nierozpoczęte |

@@ -1,9 +1,9 @@
-import type {LayoutObject,Obstacle} from '../models/types';
+import type {FacilityUnderlay,LayoutObject,Obstacle} from '../models/types';
 import {corners} from './layoutEngine';
 
 export type Alignment = 'left'|'right'|'top'|'bottom';
 export type SnapSource = 'none'|'grid'|'edge'|'connection';
-export type LayoutLayerId = 'stations'|'buffers'|'operators'|'routes'|'obstacles'|'dimensions';
+export type LayoutLayerId = 'underlay'|'stations'|'buffers'|'operators'|'routes'|'obstacles'|'dimensions';
 export interface SnapOptions{grid?:boolean;edges?:boolean;connections?:boolean;gridSizeMm?:number;thresholdMm?:number;}
 export interface ConnectionPoint{objectId:string;kind:'center'|'left'|'right'|'top'|'bottom';x:number;y:number;}
 export interface SnapGuide{kind:'edge'|'connection';axis:'x'|'y'|'point';x1:number;y1:number;x2:number;y2:number;targetId:string;}
@@ -222,5 +222,19 @@ export function measurePointsDistance(a:{x:number;y:number},b:{x:number;y:number
   const x1=Math.round(a.x),y1=Math.round(a.y),x2=Math.round(b.x),y2=Math.round(b.y);
   const dxMm=x2-x1,dyMm=y2-y1,distanceMm=Math.round(Math.hypot(dxMm,dyMm));
   return {x1,y1,x2,y2,dxMm,dyMm,distanceMm};
+}
+export function underlayDimensionsMm(u:Pick<FacilityUnderlay,'imageWidthPx'|'imageHeightPx'|'mmPerPixel'>):{widthMm:number;lengthMm:number}{
+  if(!Number.isFinite(u.imageWidthPx)||u.imageWidthPx<1||!Number.isFinite(u.imageHeightPx)||u.imageHeightPx<1||!Number.isFinite(u.mmPerPixel)||u.mmPerPixel<0.01)throw new Error('Nieprawidłowe parametry wymiarowe podkładu hali');
+  return {widthMm:Math.max(1,Math.round(u.imageWidthPx*u.mmPerPixel)),lengthMm:Math.max(1,Math.round(u.imageHeightPx*u.mmPerPixel))};
+}
+export function calibrateUnderlayScale(u:FacilityUnderlay,p1Mm:{x:number;y:number},p2Mm:{x:number;y:number},actualDistanceMm:number):FacilityUnderlay{
+  if(!Number.isFinite(actualDistanceMm)||actualDistanceMm<=0)throw new Error('Rzeczywista odległość kalibracji musi być dodatnia [mm]');
+  if(!Number.isFinite(u.mmPerPixel)||u.mmPerPixel<0.01)throw new Error('Nieprawidłowa bieżąca skala podkładu');
+  const canvasDistMm=Math.hypot(p2Mm.x-p1Mm.x,p2Mm.y-p1Mm.y);
+  const spanPx=canvasDistMm/u.mmPerPixel;
+  if(!Number.isFinite(spanPx)||spanPx<1)throw new Error('Wskaż dwa różne punkty na podkładzie (odległość ≥ 1 px)');
+  const nextMmPerPixel=Number((actualDistanceMm/spanPx).toFixed(6));
+  if(nextMmPerPixel<0.01||nextMmPerPixel>10000)throw new Error('Skala podkładu poza zakresem 0,01–10000 mm/px');
+  return {...u,mmPerPixel:nextMmPerPixel,calibratedDistanceMm:Math.round(actualDistanceMm),calibratedSpanPx:Number(spanPx.toFixed(2))};
 }
 
