@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ProjectData } from '../../core/models/types';
 import { calculateTaktTime } from '../../core/algorithms/taktCalculator';
-import { Clock, TrendingUp, Calendar, Zap, AlertCircle, ArrowRight } from 'lucide-react';
+import { analyzeExplicitProjectLosses, decomposeOee } from '../../core/oeeLossDecomposition';
+import { readDomainDraft } from '../../core/domainDraftStorage';
+import { Clock, TrendingUp, Calendar, Zap, AlertCircle, ArrowRight, ShieldAlert, CheckCircle2 } from 'lucide-react';
 
 interface DemandWizardViewProps {
   project: ProjectData;
@@ -12,6 +14,23 @@ interface DemandWizardViewProps {
 export const DemandWizardView: React.FC<DemandWizardViewProps> = ({ project, setProject, onNext }) => {
   const { demand } = project;
   const taktResult = calculateTaktTime(demand);
+
+  // Read draft project if available to inspect explicit simulation losses
+  const targetProject = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      const draft = readDomainDraft(localStorage);
+      if (draft.status === 'valid') return draft.saved.project;
+    }
+    return project;
+  }, [project]);
+
+  const explicitLosses = useMemo(() => {
+    return analyzeExplicitProjectLosses(targetProject, demand);
+  }, [targetProject, demand]);
+
+  const oeeDecomposition = useMemo(() => {
+    return decomposeOee(demand, explicitLosses);
+  }, [demand, explicitLosses]);
 
   const updateDemand = (partial: Partial<typeof demand>) => {
     setProject((prev) => ({
@@ -162,6 +181,75 @@ export const DemandWizardView: React.FC<DemandWizardViewProps> = ({ project, set
               </div>
             </div>
           </div>
+
+          {/* Card 3: OEE Loss Decomposition & Double Counting Protection (Plan 7.5) */}
+          <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider flex items-center space-x-2">
+                <ShieldAlert className="w-4 h-4 text-indigo-400" />
+                <span>3. Dekompozycja Strat OEE (Plan 7.5)</span>
+              </h3>
+              <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${
+                oeeDecomposition.doubleCountingRisk === 'high'
+                  ? 'bg-red-500/10 text-red-400 border-red-500/30'
+                  : oeeDecomposition.doubleCountingRisk === 'moderate'
+                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+              }`}>
+                {oeeDecomposition.doubleCountingRisk === 'high' ? '⚠️ Ryzyko dublowania strat: Wysokie' :
+                 oeeDecomposition.doubleCountingRisk === 'moderate' ? '⚡ Ryzyko dublowania strat: Umiarkowane' :
+                 '✓ Rozdział strat: Spójny'}
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Oddziela straty modelowane <strong>dynamicznie w symulacji</strong> (awarie MTBF/MTTR, przezbrojenia, kalendarze) od <strong>ryczałtowej rezerwy OEE</strong> w takcie. Zapobiega podwójnemu zaniżaniu wydajności i zawyżaniu liczby stanowisk.
+            </p>
+
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50 space-y-1.5">
+                <span className="text-slate-400 font-medium block">Straty Jawne w Symulacji:</span>
+                <span className="text-base font-bold text-amber-400">{explicitLosses.totalExplicitLossPercent}%</span>
+                <ul className="text-[11px] text-slate-400 space-y-0.5 pt-1 border-t border-slate-700/30">
+                  <li>• Awarie (MTBF/MTTR): {explicitLosses.availability.breakdownPercent}%</li>
+                  <li>• Przezbrojenia partii: {explicitLosses.availability.changeoverPercent}%</li>
+                  <li>• Przerwy kalendarza: {explicitLosses.availability.calendarBreaksPercent}%</li>
+                  <li>• Transport i bufory: {explicitLosses.performance.totalPerformanceLossPercent}%</li>
+                </ul>
+              </div>
+
+              <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50 space-y-1.5">
+                <span className="text-slate-400 font-medium block">Rezerwa Rezydualna OEE:</span>
+                <span className="text-base font-bold text-emerald-400">{oeeDecomposition.residualOeePercent}%</span>
+                <p className="text-[11px] text-slate-400 pt-1 border-t border-slate-700/30 leading-tight">
+                  Bufor na straty niemodelowane w symulacji (jakość / braki, drobne zaburzenia organizacyjne).
+                </p>
+              </div>
+            </div>
+
+            {oeeDecomposition.doubleCountingRisk === 'high' && (
+              <div className="p-3.5 bg-red-950/30 border border-red-500/40 rounded-xl space-y-2 text-xs">
+                <div className="flex items-start space-x-2 text-red-300">
+                  <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  <p className="leading-relaxed">
+                    {oeeDecomposition.explanation}
+                  </p>
+                </div>
+                <div className="pt-2 border-t border-red-500/20 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-300">
+                    Sugerowane OEE netto: <strong>{oeeDecomposition.residualOeePercent}%</strong> (Takt: <strong>{oeeDecomposition.taktComparison.adjustedTaktSeconds}s</strong>)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => updateDemand({ oeePercent: oeeDecomposition.residualOeePercent })}
+                    className="bg-red-600/30 hover:bg-red-600/50 text-red-200 border border-red-500/40 text-[11px] font-semibold px-2.5 py-1 rounded-lg transition"
+                  >
+                    Dostosuj OEE ({oeeDecomposition.residualOeePercent}%)
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right Column: Calculated Results & Big Cards (5 cols) */}
@@ -187,6 +275,17 @@ export const DemandWizardView: React.FC<DemandWizardViewProps> = ({ project, set
               <p className="text-xs text-slate-400 mt-2">
                 Co tyle sekund linia musi ukończyć 1 gotowy produkt, aby zaspokoić popyt.
               </p>
+              {oeeDecomposition.taktComparison.deltaSeconds > 0 && (
+                <div className="mt-3 text-[11px] text-amber-300 bg-amber-950/40 border border-amber-500/30 rounded-lg p-2.5 space-y-1">
+                  <div className="font-semibold flex items-center space-x-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Takt netto bez podwójnego naliczania:</span>
+                  </div>
+                  <div>
+                    <strong>{oeeDecomposition.taktComparison.adjustedTaktSeconds} s/szt.</strong> (różnica +{oeeDecomposition.taktComparison.deltaSeconds} s, z uwzględnieniem jawnych strat symulacji).
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Sub metrics grid */}

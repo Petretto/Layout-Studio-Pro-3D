@@ -2351,3 +2351,79 @@ test('7.4: walidacja i integracja konfiguracji stochastycznej w DomainProjectV6'
   assert.equal(parsed.stochasticConfig.operationVariability?.[0].operationId, motorOpId);
 });
 
+test('7.5: dekompozycja strat OEE, wykrywanie ryzyka podwójnego naliczenia strat i skorygowany Takt Time', () => {
+  const { analyzeExplicitProjectLosses, decomposeOee } = require('../src/core/oeeLossDecomposition');
+
+  const demand = {
+    yearlyDemand: 100000,
+    workingDaysPerYear: 250,
+    shiftsPerDay: 2,
+    hoursPerShift: 8,
+    plannedBreaksMinutesPerShift: 30,
+    oeePercent: 80, // 20% ogólnej rezerwy OEE
+  };
+
+  // 1. Projekt bazowy bez awarii i przezbrojeń
+  const emptyProject = {
+    stations: [{ id: 'ST-1', name: 'Stanowisko 1', operationIds: ['OP-1'] }],
+    operations: [{ id: 'OP-1', name: 'Operacja 1', standardTimeSeconds: 60 }],
+  };
+
+  const emptyLosses = analyzeExplicitProjectLosses(emptyProject as any, demand);
+  assert.equal(emptyLosses.availability.breakdownPercent, 0);
+  assert.equal(emptyLosses.availability.changeoverPercent, 0);
+  // Przerwy z demand (30 min / 8h = 6.25% ~ 6.3%)
+  assert.ok(emptyLosses.availability.calendarBreaksPercent > 5);
+
+  const resEmpty = decomposeOee(demand, emptyLosses);
+  assert.equal(resEmpty.lumpedOeePercent, 80);
+  assert.ok(resEmpty.residualOeePercent > 80);
+
+  // 2. Projekt ze szczegółowymi awariami MTBF/MTTR i przezbrojeniami
+  const projectWithLosses = {
+    stations: [{ id: 'ST-1', name: 'Gniazdo zrobotyzowane', operationIds: ['OP-1'] }],
+    operations: [{ id: 'OP-1', name: 'Operacja 1', standardTimeSeconds: 60 }],
+    stochasticConfig: {
+      enabled: true,
+      seed: 42,
+      iterations: 20,
+      breakdowns: [
+        {
+          stationId: 'ST-1',
+          mtbfSeconds: 900,
+          mttrSeconds: 100, // 100 / 1000 = 10% czasu to awarie!
+          repairDistribution: 'exponential' as const,
+        }
+      ]
+    },
+    changeoverMatrix: {
+      variants: [{ id: 'V1', name: 'Wariant 1' }, { id: 'V2', name: 'Wariant 2' }],
+      defaultDurationSeconds: 1200, // 20 minut przezbrojenia
+      defaultDurationBasis: 'assumed' as const,
+    },
+    productionOrders: [
+      { batchId: 'B1', variantId: 'V1', quantity: 100, priority: 1 },
+      { batchId: 'B2', variantId: 'V2', quantity: 100, priority: 2 },
+    ]
+  };
+
+  const explicitLosses = analyzeExplicitProjectLosses(projectWithLosses as any, demand);
+  assert.ok(explicitLosses.availability.breakdownPercent >= 9.0, 'Oczekiwano ok. 10% udziału awarii');
+  assert.ok(explicitLosses.availability.changeoverPercent > 0, 'Oczekiwano dodatniego udziału przezbrojeń');
+  assert.ok(explicitLosses.totalExplicitLossPercent >= 15.0, 'Łączne modelowane straty powinny wynosić >= 15%');
+
+  // 3. Dekompozycja i ryzyko double-counting
+  const res = decomposeOee(demand, explicitLosses);
+  assert.equal(res.doubleCountingRisk, 'high', 'Oczekiwano wysokiego ryzyka podwójnego naliczenia strat');
+  assert.ok(res.explanation.includes('Wykryto wysokie ryzyko podwójnego naliczenia strat'));
+  assert.ok(res.recommendation.includes('Zalecenie Lean'));
+
+  // 4. Porównanie Taksu
+  // Nominalny takt z pełnym ryczałtem OEE 80% jest silnie obniżony
+  assert.ok(res.taktComparison.nominalTaktSeconds < res.taktComparison.customerTaktSeconds);
+  // Skorygowany takt (który nie dubluje jawnie symulowanych awarii) jest wyższy
+  assert.ok(res.taktComparison.adjustedTaktSeconds > res.taktComparison.nominalTaktSeconds);
+  assert.ok(res.taktComparison.deltaSeconds > 0);
+});
+
+

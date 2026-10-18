@@ -502,5 +502,28 @@ W zaawansowanym modelu procesu (szkic 6) wprowadzono moduł symulacji stochastyc
     - **Częstotliwość występowania wąskich gardeł (Bottleneck Frequency)**: wykaz stanowisk, które najczęściej stawały się ograniczeniem przepływu, wraz z procentowym udziałem w replikacjach.
     - **Szczegółową tabelę replikacji**: zestawienie wyników każdego pojedynczego przebiegu serii (Makespan, Przepustowość, łączny czas awarii, zidentyfikowane wąskie gardło).
 
+### 5.8. Dekompozycja strat OEE i ochrona przed podwójnym naliczaniem strat (Plan 7.5)
+
+W module planowania zapotrzebowania i czasu taktu (`DemandWizardView`) wprowadzono automatyczną dekompozycję strat OEE oraz mechanizm ochrony przed podwójnym buforowaniem strat:
+
+- **Zrozumienie zjawiska podwójnego naliczania strat (*Double Counting of Operational Losses*)**:
+  - Tradycyjny wzór na czas taktu wykorzystuje ogólny wskaźnik OEE (np. 80%), który zakłada ryczałtowe 20% strat na dostępność, wydajność i jakość.
+  - W zaawansowanym modelu procesu (szkic 6) straty te są modelowane bezpośrednio na osi czasu:
+    - awarie maszyn (MTBF / MTTR w symulacji stochastycznej),
+    - przezbrojenia partii (`changeoverMatrix`),
+    - przerwy obiadowe i technologiczne (`resourceCalendars`),
+    - czasy dojazdu wózków i oczekiwanie na odjazd transportu (`assemblyTransport`),
+    - blokady buforów wyjściowych (`bbas`).
+  - Zastosowanie jednocześnie ryczałtowego OEE 80% w takcie oraz modelowania tych samych awarii w symulacji prowadziło do podwójnego obniżenia tempa i sztucznego przewymiarowania liczby operatorów i stanowisk roboczych.
+
+- **Dekompozycja na straty jawne i rezerwę rezydualną**:
+  - Karta `3. Dekompozycja Strat OEE` w widoku popytu w czasie rzeczywistym analizuje projekt i prezentuje:
+    - **Straty jawne w symulacji**: dokładny procent czasu tracony na awarie, przezbrojenia, przerwy i transport.
+    - **Rezerwę rezydualną OEE**: część wskaźnika OEE przeznaczoną wyłącznie na straty niemodelowane dynamicznie (np. braki jakościowe, drobne opóźnienia organizacyjne).
+    - **Wskaźnik ryzyka podwójnego naliczenia**: alert zielony (`Spójny`), bursztynowy (`Umiarkowane`) lub czerwony (`Wysokie`).
+  - **Przycisk szybkiej korekty Lean**: pozwala jednym kliknięciem dostosować suwak OEE do sugerowanego poziomu rezydualnego, eliminując dublowanie strat.
+  - **Podgląd Taksu netto**: prezentacja Taksu skorygowanego (`adjustedTaktSeconds`) w karcie głównej ze wskazaniem zysku czasu cyklu.
+
+
 
 

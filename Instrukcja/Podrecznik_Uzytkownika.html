@@ -531,5 +531,27 @@
 <li><strong>Częstotliwość występowania wąskich gardeł (Bottleneck Frequency)</strong>: wykaz stanowisk, które najczęściej stawały się ograniczeniem przepływu, wraz z procentowym udziałem w replikacjach.</li>
 <li><strong>Szczegółową tabelę replikacji</strong>: zestawienie wyników każdego pojedynczego przebiegu serii (Makespan, Przepustowość, łączny czas awarii, zidentyfikowane wąskie gardło).</li>
 </ul>
+<h3>5.8. Dekompozycja strat OEE i ochrona przed podwójnym naliczaniem strat (Plan 7.5)</h3>
+<p>W module planowania zapotrzebowania i czasu taktu (<code>DemandWizardView</code>) wprowadzono automatyczną dekompozycję strat OEE oraz mechanizm ochrony przed podwójnym buforowaniem strat:</p>
+<ul>
+<li><strong>Zrozumienie zjawiska podwójnego naliczania strat (<em>Double Counting of Operational Losses</em>)</strong>:</li>
+<li>Tradycyjny wzór na czas taktu wykorzystuje ogólny wskaźnik OEE (np. 80%), który zakłada ryczałtowe 20% strat na dostępność, wydajność i jakość.</li>
+<li>W zaawansowanym modelu procesu (szkic 6) straty te są modelowane bezpośrednio na osi czasu:</li>
+<li>awarie maszyn (MTBF / MTTR w symulacji stochastycznej),</li>
+<li>przezbrojenia partii (<code>changeoverMatrix</code>),</li>
+<li>przerwy obiadowe i technologiczne (<code>resourceCalendars</code>),</li>
+<li>czasy dojazdu wózków i oczekiwanie na odjazd transportu (<code>assemblyTransport</code>),</li>
+<li>blokady buforów wyjściowych (<code>bbas</code>).</li>
+<li>Zastosowanie jednocześnie ryczałtowego OEE 80% w takcie oraz modelowania tych samych awarii w symulacji prowadziło do podwójnego obniżenia tempa i sztucznego przewymiarowania liczby operatorów i stanowisk roboczych.</li>
+</ul>
+<ul>
+<li><strong>Dekompozycja na straty jawne i rezerwę rezydualną</strong>:</li>
+<li>Karta <code>3. Dekompozycja Strat OEE</code> w widoku popytu w czasie rzeczywistym analizuje projekt i prezentuje:</li>
+<li><strong>Straty jawne w symulacji</strong>: dokładny procent czasu tracony na awarie, przezbrojenia, przerwy i transport.</li>
+<li><strong>Rezerwę rezydualną OEE</strong>: część wskaźnika OEE przeznaczoną wyłącznie na straty niemodelowane dynamicznie (np. braki jakościowe, drobne opóźnienia organizacyjne).</li>
+<li><strong>Wskaźnik ryzyka podwójnego naliczenia</strong>: alert zielony (<code>Spójny</code>), bursztynowy (<code>Umiarkowane</code>) lub czerwony (<code>Wysokie</code>).</li>
+<li><strong>Przycisk szybkiej korekty Lean</strong>: pozwala jednym kliknięciem dostosować suwak OEE do sugerowanego poziomu rezydualnego, eliminując dublowanie strat.</li>
+<li><strong>Podgląd Taksu netto</strong>: prezentacja Taksu skorygowanego (<code>adjustedTaktSeconds</code>) w karcie głównej ze wskazaniem zysku czasu cyklu.</li>
+</ul>
 </body>
 </html>
