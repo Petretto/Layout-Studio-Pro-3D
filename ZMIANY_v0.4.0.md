@@ -1,5 +1,10 @@
 # Zmiany v0.4.0 — 29.09.2026
 
+## Aktualizacja dokumentacji 18.10.2026 — 7.8.2 (Finalny odbiór Etapów 5–7)
+
+Podręcznik użytkownika Markdown/HTML/PDF został całościowo zaktualizowany po zakończeniu Etapów 5–7 (nowy edytor hali CAD 2D/3D, automatyczna propozycja layoutu 5.13, manipulatory 3D przesuwania i obrotu 6.5, deterministyczna animacja 3D z kartą inspekcji 6.6, tryb uproszczony LOD i Popout Windows 6.7, symulacja stochastyczna Monte Carlo 7.4, dekompozycja strat OEE 7.5, dystrybucja offline-first z backupem SHA-256 7.6, audyt licencji i bezpieczeństwa 7.7, profesjonalny raport inżynierski PDF z wykresem Yamazumi 7.10 oraz uniwersalność procesowa na bateriach i silnikach EV 7.11).
+Podręcznik liczy 45 stron PDF (5,56 MB) i 39 zweryfikowanych ilustracji; zaktualizowano pełny opis funkcji `FUNKCJE_PROGRAMU.md`, rejestr zmian oraz znane ograniczenia. Raport odbioru: `WERYFIKACJA_AKTUALIZACJI_DOKUMENTACJI_7_8_2.md`.
+
 ## Aktualizacja dokumentacji 18.10.2026 — 7.8.1
 
 Podręcznik użytkownika Markdown/HTML/PDF uzupełniono po Etapach 1–4 o pełną ścieżkę szkicu 6 i porównywania wariantów. Zawiera 21 obrazów i 21 stron PDF; rozróżnia lokalne zapisy 4/5/6, pomiary/założenia, JIT, statyczny bilans i wyniki symulacji. Generacja i odbiór renderów PASS, raport `WERYFIKACJA_INSTRUKCJI_7_8_1.md`. Bez zmian kodu aplikacji, modeli i schematu; bez regresji automatycznej aplikacji w tym pakiecie. Starszy Word v0.2 pozostaje historyczny. Finalna instrukcja po Etapach 5–7 nadal w 7.8.2.

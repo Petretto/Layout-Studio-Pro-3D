@@ -1,5 +1,7 @@
 # Layout Studio Pro 3D v0.4.0 — funkcje programu
 
+Aktualizacja 7.8.2 (2026-10-18): finalna aktualizacja pełnego opisu funkcji, instrukcji, rejestru zmian i znanych ograniczeń po zakończeniu Etapów 5–7 (nowy edytor hali CAD 2D/3D, automatyczna propozycja layoutu, manipulatory 3D, animacja 3D z inspekcją, optymalizacja LOD, Popout Windows, zaawansowany model stochastyczny Monte Carlo z awariami maszyn, przezbrojenia i warianty wyrobów, dekompozycja strat OEE, architektura offline-first z pełnym backupem i disaster recovery SHA-256, audyt licencji i bezpieczeństwa, profesjonalny raport inżynierski PDF A4 z wykresem Yamazumi oraz weryfikacja uniwersalności na procesach baterii i silników EV). Podręcznik użytkownika `Instrukcja/Podrecznik_Uzytkownika.md` (HTML i 45-stronicowy PDF) stanowi kompletne źródło wiedzy inżynierskiej. Raport odbioru: `WERYFIKACJA_AKTUALIZACJI_DOKUMENTACJI_7_8_2.md`.
+
 Uzupełnienie źródeł Eko 7.1b (2026-10-18): potwierdzono 13 osób łącznie w procesie ramy 1.4; mierzone OP10–OP20 po jednej osobie, pakowanie OP21 w dwie osoby przy zachowaniu 1320 s (22 min). To zapis pochodzenia i liczebności w rejestrze, bez automatycznych przydziałów osób lub zmiany aplikacji. Tożsamości, współdzielenie i profile obecności nadal wymagają danych; obsady OP22–OP25 nie określono.
 
 Aktualizacja danych Eko 7.1a (2026-10-18): użytkownik potwierdził rzeczywiste pochodzenie arkuszy procesu/BOM, pomiary z lipca 2026 i wariant ramy 1.4; OP22–OP25 pozostają przykładami (600/600/480/480 s). Audyt obejmuje 12 pozostałych czasów i 60 BOM oraz rejestr braków obsady, profili, geometrii, transportu, buforów, kalendarzy i wyników produkcji. Karty pomocnicze CSV i rejestr źródeł w `dane/eko/7_1`, raport `DANE_EKO_7_1.md`. Nie jest to nowa funkcja importera, zmiana przykładu ani odbiór modelu produkcyjnego. 7.1 pozostaje w trakcie.
@@ -582,5 +584,37 @@ W ramach optymalizacji wydajności i czytelności wielomonitorowej wdrożono:
   - Bezpieczne przywracanie widoku do okna głównego (`✕ Przywróć do okna głównego` lub automatycznie przy zamknięciu okna).
 - **Niezmiennik Zasady 6**:
   - Tryb uproszczony i okna Popout nie modyfikują danych technologicznych procesu, bilansu ani wyników symulacji. Szczegóły: `WERYFIKACJA_WYDAJNOSCI_I_OKIEN_6_7.md`.
+
+### Zaawansowane funkcje i przygotowanie komercyjne — Etap 7 (2026-10-18)
+
+W ramach Etapu 7 wdrożono zestaw modułów inżynierskich przygotowujących aplikację do zastosowań przemysłowych i audytów Lean:
+
+1. **Warianty wyrobów, macierz przezbrojeń i zlecenia partii (Plan 7.3)**:
+   - Definiowanie wielu wariantów wyrobów (`ProductVariant`) z kolorami i kodami.
+   - Macierz czasów przezbrojeń (`ChangeoverMatrix`) ze wskazaniem podstawy czasu (`measured` vs `assumed`) zgodnie z Zasadą 5.
+   - Sekwencjonowanie zleceń partii produkcyjnych (`ProductionOrderBatch`) oraz deterministyczna symulacja z blokami przezbrojeń na wykresie Gantta.
+2. **Symulacja stochastyczna Monte Carlo i awarie maszyn (Plan 7.4)**:
+   - Deterministyczny generator PRNG (SplitMix32/Mulberry32) z powtarzalnością wyników dla tego samego ziarna losowego.
+   - Obsługa rozkładów zmienności czasów operacji (trójkątny, normalny, lognormalny, jednostajny) oraz modelowania awarii MTBF / MTTR.
+   - Statystyki niepewności (min, max, mean, median, stdDev, p10, p90, p95) dla Makespanu i Throughputu oraz częstotliwość występowania wąskich gardeł (Bottleneck Frequency).
+3. **Dekompozycja strat OEE i ochrona przed podwójnym naliczaniem strat (Plan 7.5)**:
+   - Analityczny podział na straty modelowane dynamicznie na osi czasu (awarie, przezbrojenia, kalendarze, bufory, transport) oraz rezerwę rezydualną OEE.
+   - Wskaźnik ryzyka podwójnego buforowania strat (*Double Counting Risk*).
+   - Kalkulator taktu skorygowanego (*Adjusted Takt Time*) z jednoklikową harmonizacją Lean.
+4. **Architektura 100% Offline-First i Disaster Recovery (Plan 7.6)**:
+   - Brak jakichkolwiek zewnętrznych zależności CDN w trakcie działania.
+   - Narzędzie kompleksowego backupu środowiska roboczego (`.lsbackup.json`) z kryptograficzną sumą kontrolną SHA-256 (FIPS 180-4).
+   - Automatyczny Rollback Snapshot przed odzyskaniem danych chroniący przed utratą projektów.
+5. **Audyt licencji i bezpieczeństwa kodu (Plan 7.7)**:
+   - 100% zależności produkcyjnych na licencjach permisywnych (MIT, Apache-2.0, ISC), brak zakażenia Copyleft (GPL/AGPL).
+   - Wynik audytu: 0 podatności bezpieczeństwa (0 vulnerabilities).
+6. **Profesjonalny raport inżynierski PDF i wykres Yamazumi (Plan 7.10)**:
+   - Dokumentacja w formacie A4 portrait z regułami `@media print` zapobiegającymi łamaniu tabel i kart KPI.
+   - Wektorowy wykres Yamazumi (SVG/CSS) z dynamiczną linią Takt Time.
+   - Tabele KPI, marszruty, zestawienia materiałowego BOM z kosztami, parametrów hali oraz metryka formalnych podpisów akceptacyjnych.
+7. **Uniwersalność procesowa niezależna od Eko (Plan 7.11)**:
+   - Potwierdzona praca na modułach baterii EV (przepływ liniowy) oraz silnikach EV (układ U).
+   - Import procesów z arkuszy XLSX, budowa wariantu bazowego i usprawnionego, izolacja danych i jawne odnotowywanie braków danych hali.
+
 
 
