@@ -592,6 +592,33 @@ Poniższe kroki należą do kolejnej wersji (np. 1.5 lub 2.0). Nie są warunkiem
 | --- | --- | --- |
 | 8.1 | Dodać VSM: mapę obecnego i docelowego strumienia wartości z przepływem materiału i informacji, zapasami, czasami oraz jawnymi źródłami danych. Przed implementacją ustalić zakres symboli, poziom agregacji i kryteria odbioru. | nierozpoczęte |
 | 8.2 | Dodać kartę A3 analizy problemu powiązaną z projektem i wariantami: stan obecny, cel, rozpoznanie przyczyn, proponowane działania, odpowiedzialność i termin, wyniki weryfikacji oraz eksport czytelny do omówienia z klientem. Przed implementacją ustalić zakres danych i kryteria odbioru. | nierozpoczęte |
+| 8.3 | Dodać w głównej aplikacji konfigurator parametrów i modułów wyposażenia po wybraniu obiektu: stoły, wózki, regały i pozostałe wspierane rodziny, z przebudową modelu 3D, spójnym obrysem 2D, historią, zapisem i biblioteką własnych konfiguracji. Zakres i pakiety poniżej; kolejna wersja po pierwszym wydaniu. | nierozpoczęte |
+
+### 8.3 — Konfigurator wyposażenia w kolejnej wersji
+
+**Decyzja użytkownika 2026-10-18.** W bieżącej aplikacji można zmieniać gabaryty całego obiektu, współrzędne i obrót. Określenie „parametryczne modele” w 6.2 dotyczy generatorów kodowych korzystających również ze stałych i proporcji; nie oznacza dostępnego użytkownikowi konfiguratora wszystkich części. Koncepty Blender/GLB z 6.3b są statycznymi assetami demonstracyjnymi. Oddzielenie wyglądu od technologii w 6.4 nie obejmuje automatycznie pełnego edytora modułów. Konfigurator jest nowym zakresem kolejnej wersji, bez blokowania odbioru pierwszego wydania. Nie zmienia statusów ani zakresu dotychczasowych 6.2–6.4.
+
+**Przepływ użytkownika:** wybrać wyposażenie na rzucie, w 3D albo w drzewie → otworzyć właściwości jego rodziny → zmienić wymiary lub dodać/usunąć moduł → obejrzeć podgląd → zatwierdzić konfigurację jedną akcją historii. Udostępnić zapis jako własny wariant wyposażenia oraz ponowne użycie w projekcie. Rozróżnić wymiary zewnętrzne całego zestawu, poziom powierzchni roboczej i wymiary poszczególnych części.
+
+Minimalny zakres parametrów dla wspieranych rodzin (ostateczny kontrakt i ograniczenia ustalić w pakiecie A):
+
+| Rodzina / element | Parametry i opcje do udostępnienia |
+| --- | --- |
+| Wspólne | Nazwa, rodzina i wariant konstrukcji; jednostki mm; punkt bazowy, orientacja i poziom podstawy; materiały/kolory elementów; jawne źródło wymiarów i rozróżnienie pomiaru, katalogu oraz założenia; identyfikatory modułów i sposób ich mocowania. |
+| Stoły i stanowiska | Szerokość, głębokość, grubość, materiał i opcjonalna nakładka blatu; wysokość powierzchni roboczej; konstrukcja ramy, nogi, stopy lub koła; stała wysokość albo regulacja ręczna/korbowa/elektryczna, jej min/max i bieżące ustawienie. Regulacja wizualna nie nadaje zdolności technologicznej. |
+| Nadbudowa stołu | Liczba, rozstaw i wysokość słupów/szyn; liczba i położenia półek, ich szerokość/głębokość/grubość, nachylenie i mocowania; oświetlenie (obecność, typ, liczba, gabaryty, położenie); ścianka pełna/perforowana (gabaryty, położenie i wzór wizualny); listwy pojemnikowe, uchwyty, szafki/szuflady i ich układ. |
+| Wózki | Szerokość/głębokość/grubość powierzchni odkładania; liczba półek i osobne wysokości/odstępy; wysokość całkowita; rama, uchwyt i jego położenie; burty, przegrody, pojemniki; liczba/średnica/szerokość kół, koła stałe/skrętne i hamulec jako cecha konstrukcji; opcjonalna regulacja półek. |
+| Regały i pojemniki | Gabaryty ramy, liczba/rozstaw słupów; liczba i poziomy półek/listw, gabaryty i nachylenia; układ rzędów/kolumn pojemników oraz ich wymiary; opcjonalne rolki i prowadnice. Wygląd regału nie aktywuje automatycznie FIFO ani pojemności bufora. |
+| Pozostałe wspierane rodziny | Dla szaf: korpus, drzwi, szuflady i przegrody; dla przenośników: gabaryty, wysokość robocza, podpory, rolki/taśma i osłony; dla innych rodzin jawny katalog dostępnych komponentów i ich parametrów. Brak obsługi rodziny lub elementu zgłaszać wprost, zamiast udawać dowolny CAD. |
+
+**Pakiety wdrożenia (4):**
+
+1. **A — Kontrakt konfiguracji i zgodności.** Zdefiniować wersjonowane konfiguracje rodzin, komponentów i mocowań, zależności parametrów, dopuszczalne zakresy, jednostki i pochodzenie wartości. Rozdzielić dane konstrukcji, wygląd i niezależne parametry technologiczne. Zaplanować migrację starszych obiektów bez zgadywania ich budowy; chronić źródło i zachować ID/powiązania stanowisk. Określić sposób wykorzystania kart 6.3a i receptur 6.3b, bez uznawania ich za gotowy schemat projektu.
+2. **B — Generatory modułów.** Przebudować generatory parametryczne na jawne konfiguracje komponentów, najpierw stołów i wózków, potem pozostałych zadeklarowanych rodzin. Przeliczać geometrię, mocowania, obrysy i całkowite gabaryty po zmianie części. Dla statycznego GLB udostępniać wyłącznie faktycznie wspierane transformacje; zmiana liczby półek lub konstrukcji wymaga generatora/modułów albo ponownego wygenerowania assetu, nie samego skalowania siatki. Strefy/porty wymagają jawnych reguł aktualizacji; brakujących danych nie uzupełniać domyślnymi wartościami przedstawionymi jako pomiary.
+3. **C — Edytor w aplikacji i biblioteka.** Dodać właściwości zależne od rodziny, dodawanie/usuwanie i rozmieszczanie modułów, czytelny podgląd 3D i obrys 2D, walidację przed zatwierdzeniem, anulowanie, Cofnij/Ponów, kopiowanie i zapis własnych konfiguracji. Ograniczenia i opcje nieobsługiwane przez dany model pokazywać jednoznacznie. Dla zmiany gabarytów umożliwić sprawdzenie kolizji i zachować stabilny punkt bazowy.
+4. **D — Trwałość i odbiór.** Zweryfikować zapis/odczyt, eksport/import, migracje, tożsamości i wspólne dane 2D–3D, większą scenę i budżet geometrii; zapewnić poziom uproszczenia. Sprawdzić niezmienność wyników symulacji przy samej zmianie wyglądu oraz jawną obsługę wpływu zmiany geometrii na modelowane trasy. Zaktualizować instrukcję, szablony i ograniczenia.
+
+**Kryteria odbioru 8.3:** bez edycji plików skonfigurować stół (blat, poziom roboczy i zakres regulacji, szyny/półki, oświetlenie, ścianka perforowana) oraz wózek (blaty, liczba/poziomy półek, wysokość i koła); zatwierdzić, cofnąć/ponowić, skopiować, zapisać, ponownie otworzyć oraz wyeksportować/importować konfiguracje. Geometria i obrysy 2D/3D odpowiadają konfiguracji, elementy nie przenikają wskutek błędu mocowania, a gabaryty obejmują wystające dodatki. Niepoprawne kombinacje i opcje niedostępne dla statycznego assetu są zgłoszone. Wyniki technologiczne pozostają niezależne od samego wyglądu; brak deklaracji zgodności ESD, BHP lub nośności na podstawie modelu wizualnego. Odbiór także na własnym wyposażeniu innym niż przykład Eko.
 
 Wspólne logowanie i jednoczesna edycja online również pozostają poza zakresem pierwszego wydania; nie są automatyczną częścią 8.1 ani 8.2.
 
@@ -609,6 +636,8 @@ Braki nie blokują stabilizacji. Nie należy zastępować ich domysłami przedst
 | Dystrybucja | Docelowe komputery/przeglądarki, praca offline, sposób aktualizacji i licencjonowania produktu | Do ustalenia przed 7.6 |
 
 ## Rejestr wykonanych prac i zmian statusów
+
+2026-10-18 — dodano **8.3, konfigurator parametrów i modułów wyposażenia**, na życzenie użytkownika do kolejnej wersji po pierwszym wydaniu. Status nierozpoczęte; 4 pakiety A–D i kryteria odbioru dla stołów, wózków oraz dalszych rodzin. Bieżące 6.4 nie oznacza takiego konfiguratora. Zmiana wyłącznie planistyczna, bez zmian aplikacji i bez testów regresji/builda. `node scripts/plan_progress.mjs`: 49/68 = 72,1% całego powiększonego planu, pierwsze wydanie bez zmiany 49/65 = 75,4%.
 
 Aktualizacja 2026-10-08: **3.1** nierozpoczęte → w trakcie, **3.1.1** wdrożone w zakresie szkicu 6. Worker/protokół/postęp/anulowanie, 137/137 testów, build, rzeczywiste UI i regresje; backup 193 zgodny SHA256, raport `WERYFIKACJA_TLA_3_1.md`. **2.6** w trakcie → wdrożone: pozostały zakres gałęzi odebrany w 2.7–2.9; zbiorcze domknięcie w `WERYFIKACJA_STANOWISK_2_6.md`. Poprzednie wpisy pozostają historią.
 
