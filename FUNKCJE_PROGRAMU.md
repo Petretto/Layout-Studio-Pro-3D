@@ -508,3 +508,6 @@ W edytorze hali CAD 2D (`src/components/studio/LayoutEditor.tsx`, `src/core/algo
 
 
 
+
+### Pomocnicza karta wyposażenia — 6.3a (2026-10-18)
+Samodzielny edytor lokalny w tools/equipment-editor/index.html: formularz znanych wymiarów i ich źródeł, opis wyglądu, punkt bazowy, referencje i uprawnienia; eksport/import osobnego JSON i pusty szablon. Bez automatycznych wymiarów i bez zmiany projektu/zdolności/symulacji. Szczegóły obsługi w tools/equipment-editor/README.md. To przygotowanie danych do 6.3, nie wdrożenie modeli Blender.

@@ -1,0 +1,53 @@
+{
+  "kind": "layout-equipment-modeling-brief",
+  "version": 1,
+  "equipment": {
+    "id": "",
+    "name": "",
+    "objectType": null,
+    "manufacturer": "",
+    "model": ""
+  },
+  "coordinates": {
+    "units": "mm",
+    "verticalAxis": "z",
+    "frontAxis": "+y",
+    "anchor": "",
+    "groundContactZMm": {
+      "value": null,
+      "basis": "unknown",
+      "source": ""
+    }
+  },
+  "dimensionsMm": {
+    "width": {
+      "value": null,
+      "basis": "unknown",
+      "source": ""
+    },
+    "length": {
+      "value": null,
+      "basis": "unknown",
+      "source": ""
+    },
+    "height": {
+      "value": null,
+      "basis": "unknown",
+      "source": ""
+    }
+  },
+  "appearance": {
+    "colorHex": null,
+    "distinctiveFeatures": ""
+  },
+  "references": [],
+  "rights": {
+    "author": "",
+    "license": "",
+    "permissionNotes": ""
+  },
+  "modeling": {
+    "triangleBudget": null,
+    "serviceAndTransportNotes": ""
+  }
+}
