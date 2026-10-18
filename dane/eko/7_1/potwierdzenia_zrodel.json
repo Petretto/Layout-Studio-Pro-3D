@@ -25,6 +25,16 @@
       "operationIds": ["OP22", "OP23", "OP24", "OP25"],
       "timeEvidence": "synthetic-test",
       "notes": "Wartości 600, 600, 480 i 480 s pozostają przykładami. Prawdopodobieństwo nie jest potwierdzeniem pomiaru."
+    },
+    {
+      "id": "EKO-U3",
+      "recordedOn": "2026-10-18",
+      "authority": "użytkownik projektu — odpowiedź w tej rozmowie",
+      "statement": "Pomiar dla 13 osób",
+      "reportedPersonCount": 13,
+      "personCountScope": null,
+      "operationCrewAssignments": null,
+      "notes": "Liczba podana w odpowiedzi na pytanie o obsadę pomiarów OP10–OP21. Zakres (cały proces albo zespół każdej operacji) wymaga doprecyzowania EKO-C2; nie przypisano 13 osób automatycznie do operacji."
     }
   ],
   "clarifications": [
@@ -35,6 +45,13 @@
       "question": "Czy potwierdzenie lipcowych pomiarów ramy 1.4 obejmuje również 600, 600, 480 i 480 s oznaczone w arkuszu jako syntetyczne?",
       "resolution": "remain-synthetic",
       "confirmationId": "EKO-U2"
+    },
+    {
+      "id": "EKO-C2",
+      "status": "pending",
+      "question": "Czy 13 osób to łączna obsada procesu Eko, czy wszystkie 13 osób wspólnie wykonywało każdą mierzoną operację?",
+      "resolution": null,
+      "sourceConfirmationId": "EKO-U3"
     }
   ]
 }

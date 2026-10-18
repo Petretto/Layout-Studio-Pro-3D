@@ -8,6 +8,8 @@ Użytkownik potwierdził rzeczywiste pochodzenie `tests/Test Eko.xlsx` i `tests/
 
 Dowody odpowiedzi są zapisane w `potwierdzenia_zrodel.json`; pełny audyt i identyfikatory źródeł zawiera `../../../outputs/data_audit/eko_7_1.json`. Rejestr braków: `../../../DANE_EKO_7_1.md`.
 
+Podano również **13 osób** (EKO-U3). Do wyjaśnienia EKO-C2 nie wiadomo, czy jest to łączna obsada procesu, czy zespół każdej operacji. Karty przydziałów pozostają puste; czasów nie dzielimy ani nie mnożymy przez tę liczbę.
+
 ## Jak uzupełniać karty
 
 1. Skopiuj pliki CSV do własnego katalogu pomiarów. Otwórz w Excelu jako **UTF-8**, separator **średnik**; kolumny identyfikatorów ustaw jako tekst. Pliki w tym katalogu są pustymi wzorcami — zachowaj je do następnych pomiarów.

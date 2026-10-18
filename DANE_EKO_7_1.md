@@ -6,6 +6,7 @@ Data: 2026-10-18. Zakres: **rama 1.4, pomiary z lipca 2026**, zgodnie z potwierd
 
 - **EKO-U1:** użytkownik potwierdził, że `tests/Test Eko.xlsx` i `tests/Test Eko BOM.xlsx` zawierają rzeczywiste dane, pomiary czasu wykonano w lipcu 2026 i dotyczą wariantu ramy 1.4. Nie podano metody pomiaru, liczby prób, szczegółowych dni ani obsady.
 - **EKO-U2:** OP22–OP25 mają czasy „przykładowe, ale prawdopodobne”. Wartości **600, 600, 480 i 480 s pozostają założeniami**, zgodnie z adnotacjami arkusza. Wyjaśnienie zamyka sprzeczność z ogólnym potwierdzeniem rzeczywistego pochodzenia danych; nie podnosi tych czterech wartości do rangi pomiaru.
+- **EKO-U3:** użytkownik podał „Pomiar dla 13 osób”. Liczba 13 została zapisana; jej zakres wymaga doprecyzowania EKO-C2 (łączna obsada procesu czy zespół każdej operacji). Nie utworzono osób ani przypisań, nie przeliczano czasów przez 13.
 - Potwierdzenie czasu całej operacji nie potwierdza oddzielnie profilu pracy ręcznej, automatu lub obecności operatora. Podział VA/NVA nie zastępuje tych profili. Nie nadano automatycznie statusu pomiaru każdej kolumnie arkusza.
 - Potwierdzenie plików procesu i BOM nie obejmuje demonstracyjnego popytu, wymiarów hali, OEE, obsady, grup równoległości ani początkowej ramy z fixture 2.9. Dane testowych scenariuszy pozostają testowe.
 
@@ -45,7 +46,7 @@ Raport JSON zachowuje wartości z arkusza jako `declaredStandardTimeSeconds`. Po
 | EKO-B02 | Metoda i próby czasu | Standardy 12 operacji z potwierdzonych danych; brak surowych prób, metody agregacji i liczby obserwacji. | Uzupełnić metrykę pomiaru i dostępne obserwacje; wskazać, czy wartość jest pojedynczą próbą, średnią czy normą po obróbce pomiarów. |
 | EKO-B03 | OP22–OP25 | Czasy przykładowe, wyjaśnienie zamknięte; pomiarów brak. | Dostarczyć pomiary dla ramy 1.4 i wskazanej obsady albo wyłączyć je z uzgodnionego zakresu odbioru 7.2. |
 | EKO-B04 | Praca ręczna/automat/obecność | Podział VA/NVA nie określa wymaganych przedziałów. | Jawne odcinki pracy ręcznej, pracy maszyny i obecności każdej osoby dla właściwej obsady. |
-| EKO-B05 | Obsada i kompetencje | Osoby z fixture są założone. Brak rzeczywistej listy zespołów, dopuszczeń i wymagań kompetencji. | Rzeczywiste ID osób, kompetencje, wymagania operacji i zespoły oraz ich czasy. Kompetencje całej obsady mogą się uzupełniać. |
+| EKO-B05 | Obsada i kompetencje | Podano 13 osób (EKO-U3); zakres liczby wymaga wyjaśnienia EKO-C2. Osoby z fixture są założone. Brak rzeczywistej listy zespołów, dopuszczeń i wymagań kompetencji. | Określić zakres liczby 13, rzeczywiste ID osób, kompetencje, wymagania operacji i zespoły oraz ich czasy. Kompetencje całej obsady mogą się uzupełniać. |
 | EKO-B06 | Równoległość i rama | Graf i testy nie potwierdzają fizycznego dostępu. | Potwierdzić dopuszczone grupy, wykluczenia i warunki pracy na wspólnej ramie. |
 | EKO-B07 | Kopie i wyposażenie | Przykładowy layout nie potwierdza rzeczywistych zasobów. | ID rzeczywistych kopii, wyposażenie i dopuszczenia operacji; nie tworzyć zdolności przez kopię geometrii. |
 | EKO-B08 | Geometria | Hala 40000×40000×6000 mm i generowane stoły są demonstracyjne. | Pomierzone gabaryty, pozycje, jednostki i źródło CAD/pomiaru. |
@@ -65,7 +66,7 @@ W [katalogu zbierania danych](dane/eko/7_1/README.md) znajdują się:
 - `pomiary_operacji.csv` — 16 wierszy z istniejącymi ID i wariantem 1.4; wszystkie wartości pomiarów pozostają puste;
 - `przedzialy_aktywnosci.csv` — osobne przedziały ręczne, maszyny, obecności, oczekiwań i blokad;
 - `obsada_i_zasoby.csv` — osoby, kompetencje, wymagania, konkretne kopie i wyposażenie;
-- `potwierdzenia_zrodel.json` — rejestr pochodzenia i dwóch rozstrzygnięć użytkownika.
+- `potwierdzenia_zrodel.json` — rejestr pochodzenia, potwierdzeń i wyjaśnień użytkownika.
 
 CSV ma UTF-8 z BOM i separator średnik, aby można było wygodnie otworzyć go w Excelu. Puste pole oznacza brak danych. Karty nie są obsługiwane przez importer procesu/BOM aplikacji; po uzupełnieniu wymagają przeglądu i mapowania do istniejących pól.
 
@@ -78,3 +79,5 @@ Odczyt kart CSV przez SheetJS: sprawdzono kompletność 16 ID, puste wartości p
 Bez zmian aplikacji, schematu, importera lub zapisu projektu: nie uruchamiano builda, UI ani regresji. Brak potrzeby strukturalnego backupu — źródła czytane bez ich modyfikacji. Zaktualizowano instrukcję pomocniczego pakietu i rejestr funkcji/statusu. Podręcznik aplikacji i PDF nie wymagają regeneracji, ponieważ działanie programu i jego interakcje się nie zmieniły. Nie weryfikowano Vercel.
 
 Status: **7.1a odebrane, główne 7.1 w trakcie**. Potwierdzone źródła nie wystarczają do rzetelnego odbioru 7.2. Następna praca 7.1b: uzupełnienie braków z rzeczywistych rejestrów, zaczynając od obsady i znaczenia zarejestrowanych czasów. Postęp głównych ID nie rośnie za sam pakiet przygotowawczy.
+
+Uzupełnienie 7.1b: zapisano EKO-U3 (13 osób) i pytanie EKO-C2 o zakres liczby. Ponowiony audyt źródeł PASS; kontrola JSON potwierdziła 13 oraz puste przypisania osób do operacji. Zmiana dotyczy wyłącznie rejestru danych; bez regresji/builda/UI. Postęp nadal 53/69 = 76,8% i 53/65 = 81,5% pierwszego wydania.
