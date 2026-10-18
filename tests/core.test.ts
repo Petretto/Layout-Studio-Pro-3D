@@ -59,7 +59,7 @@ import { importProcess,importBOM,processRows,bomRows,templateWorkbookBytes,TEMPL
 import { exportToDxf } from '../src/core/export/dxfExporter';
 import { parseDxfImport, applyDxfImportToProject, DXF_UNITS } from '../src/core/export/dxfImporter';
 import { parseProject,processErrors,topologicalSort,validateProject } from '../src/core/validation';
-import { derive, newProject } from '../src/core/project';
+import { derive, newProject, engineeringReport } from '../src/core/project';
 import {applyEquipmentAppearance,EQUIPMENT_VISUAL_MODELS} from '../src/core/equipment/equipmentAppearance';
 import {createConceptVisual} from '../src/core/equipment/conceptVisual';
 import { deriveStationProject } from '../src/core/stationDerivation';
@@ -2606,6 +2606,120 @@ test('7.10: weryfikacja spójności danych raportu inżynierskiego PDF dla krót
   assert.ok(reportText.includes('OP10'), 'reportText has OP10');
   assert.ok(reportText.includes('OP21'), 'reportText has OP21');
 });
+
+test('7.11: odbiór uniwersalności na dwóch odmiennych procesach niezależnych od Eko (baterie EV i silniki EV)', () => {
+  // 1. PROCES 1: Baterie EV — import z XLSX, walidacja, bilansowanie i eksport/import JSON
+  const batProcBuf = readFileSync(resolve('./tests/fixtures/baterie_proces.xlsx'));
+  const batBOMBuf = readFileSync(resolve('./tests/fixtures/baterie_bom.xlsx'));
+
+  const batProcRes = importProcess(batProcBuf.buffer.slice(batProcBuf.byteOffset, batProcBuf.byteOffset + batProcBuf.byteLength));
+  assert.equal(batProcRes.errors.length, 0, `Błędy importu procesu baterii: ${batProcRes.errors.join(', ')}`);
+  assert.equal(batProcRes.items.length, 6, 'Baterie: zaimportowano 6 operacji');
+
+  const batStepIds = new Set(batProcRes.items.map(s => s.id));
+  const batBOMRes = importBOM(batBOMBuf.buffer.slice(batBOMBuf.byteOffset, batBOMBuf.byteOffset + batBOMBuf.byteLength), batStepIds);
+  assert.equal(batBOMRes.errors.length, 0, `Błędy importu BOM baterii: ${batBOMRes.errors.join(', ')}`);
+  assert.equal(batBOMRes.items.length, 6, 'Baterie: zaimportowano 6 pozycji BOM');
+
+  // Tworzenie projektu baterii i weryfikacja braku założeń zakodowanych pod Eko
+  const batteryProject = newProject();
+  batteryProject.id = 'PROJ-BATTERY-711';
+  batteryProject.name = 'Nowa Linia Produkcyjna Pakietów Baterii EV';
+  batteryProject.currency = 'EUR';
+  batteryProject.targetLayoutType = 'Linear';
+  batteryProject.demand = {
+    yearlyDemand: 40000,
+    workingDaysPerYear: 250,
+    shiftsPerDay: 2,
+    hoursPerShift: 8,
+    plannedBreaksMinutesPerShift: 30,
+    oeePercent: 85
+  };
+  batteryProject.processSteps = batProcRes.items;
+  batteryProject.bom = batBOMRes.items;
+
+  // Wariant bazowy baterii (RPW)
+  batteryProject.algorithm = 'RPW';
+  const { project: batBaseDerived, issues: batBaseIssues } = derive(batteryProject);
+  assert.ok(batBaseDerived.balancing, 'Baterie baza: bilansowanie wyliczone');
+  assert.ok(batBaseDerived.layoutObjects.length > 0, 'Baterie baza: layout wygenerowany automatycznie');
+  assert.ok(batBaseDerived.layoutObjects.every(o => o.isVisualAssumption), 'Baterie baza: obiekty oznaczone jako założenia wizualne');
+  const batTakt = calculateTaktTime(batBaseDerived.demand).taktTimeSeconds;
+  assert.ok(batTakt > 0, 'Baterie: takt poprawny');
+
+  // Wariant usprawniony baterii (LCR ze zwiększonym popytem)
+  const batteryImproved = structuredClone(batteryProject);
+  batteryImproved.id = 'PROJ-BATTERY-711-IMP';
+  batteryImproved.name = 'Usprawniona Linia Baterii EV (Wariant B - Wyższa przepustowość)';
+  batteryImproved.algorithm = 'LCR';
+  batteryImproved.demand.yearlyDemand = 60000;
+  const { project: batImpDerived, issues: batImpIssues } = derive(batteryImproved);
+  assert.ok(batImpDerived.balancing, 'Baterie usprawnione: bilansowanie wyliczone');
+  assert.ok(batImpDerived.balancing.workstations.length >= batBaseDerived.balancing.workstations.length, 'Baterie: wariant o wyższym popycie wymaga co najmniej tylu samo stanowisk');
+
+  // Eksport i re-import projektu baterii w formacie JSON
+  const batJson = JSON.stringify(batBaseDerived);
+  const batReimported = parseProject(batJson);
+  assert.equal(batReimported.id, 'PROJ-BATTERY-711');
+  assert.equal(batReimported.processSteps.length, 6);
+  assert.equal(batReimported.bom.length, 6);
+  assert.equal(batReimported.currency, 'EUR');
+
+  // 2. PROCES 2: Silniki elektryczne EV — import z XLSX, walidacja, bilansowanie i eksport/import JSON
+  const motProcBuf = readFileSync(resolve('./tests/fixtures/silniki_proces.xlsx'));
+  const motBOMBuf = readFileSync(resolve('./tests/fixtures/silniki_bom.xlsx'));
+
+  const motProcRes = importProcess(motProcBuf.buffer.slice(motProcBuf.byteOffset, motProcBuf.byteOffset + motProcBuf.byteLength));
+  assert.equal(motProcRes.errors.length, 0, `Błędy importu procesu silników: ${motProcRes.errors.join(', ')}`);
+  assert.equal(motProcRes.items.length, 6, 'Silniki: zaimportowano 6 operacji');
+
+  const motStepIds = new Set(motProcRes.items.map(s => s.id));
+  const motBOMRes = importBOM(motBOMBuf.buffer.slice(motBOMBuf.byteOffset, motBOMBuf.byteOffset + motBOMBuf.byteLength), motStepIds);
+  assert.equal(motBOMRes.errors.length, 0, `Błędy importu BOM silników: ${motBOMRes.errors.join(', ')}`);
+  assert.equal(motBOMRes.items.length, 5, 'Silniki: zaimportowano 5 pozycji BOM');
+
+  // Tworzenie projektu silników i weryfikacja
+  const motorProject = newProject();
+  motorProject.id = 'PROJ-MOTOR-711';
+  motorProject.name = 'Nowa Linia Silników Trakcyjnych EV (Układ U)';
+  motorProject.currency = 'USD';
+  motorProject.targetLayoutType = 'UShape';
+  motorProject.demand = {
+    yearlyDemand: 80000,
+    workingDaysPerYear: 250,
+    shiftsPerDay: 2,
+    hoursPerShift: 8,
+    plannedBreaksMinutesPerShift: 20,
+    oeePercent: 92
+  };
+  motorProject.processSteps = motProcRes.items;
+  motorProject.bom = motBOMRes.items;
+
+  // Wariant bazowy silników
+  motorProject.algorithm = 'RPW';
+  const { project: motBaseDerived, issues: motBaseIssues } = derive(motorProject);
+  assert.ok(motBaseDerived.balancing, 'Silniki baza: bilansowanie wyliczone');
+  assert.ok(motBaseDerived.layoutObjects.length > 0, 'Silniki baza: layout wygenerowany');
+
+  // Eksport i re-import projektu silników w formacie JSON
+  const motJson = JSON.stringify(motBaseDerived);
+  const motReimported = parseProject(motJson);
+  assert.equal(motReimported.id, 'PROJ-MOTOR-711');
+  assert.equal(motReimported.processSteps.length, 6);
+  assert.equal(motReimported.bom.length, 5);
+  assert.equal(motReimported.currency, 'USD');
+
+  // 3. Weryfikacja separacji danych: obiekty i id nie przenikają między projektami
+  assert.notEqual(batReimported.id, motReimported.id);
+  assert.notEqual(batReimported.currency, motReimported.currency);
+  assert.ok(batReimported.processSteps.every(s => s.id.startsWith('OP-BAT')));
+  assert.ok(motReimported.processSteps.every(s => s.id.startsWith('OP-MOT')));
+
+  // 4. Jawne wskazywanie brakujących danych (np. brak wymiarów hali / isConfirmed = false)
+  assert.ok(!batBaseDerived.facility.isConfirmed, 'Baterie: brak potwierdzonych wymiarów hali jest jawnie odnotowany');
+  assert.ok(!motBaseDerived.facility.isConfirmed, 'Silniki: brak potwierdzonych wymiarów hali jest jawnie odnotowany');
+});
+
 
 
 

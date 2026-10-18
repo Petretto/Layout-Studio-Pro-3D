@@ -600,6 +600,31 @@ W zakładce `4 Raport inżynierski` udostępniono zaawansowany generator dokumen
   - Domyślny widok A4 prezentuje sformatowany dokument inżynierski.
   - Tryb surowego tekstu Markdown umożliwia szybkie skopiowanie raportu do systemów ERP/MES lub edytorów zewnętrznych.
 
+### 5.12. Uniwersalność procesowa: baterie EV i silniki elektryczne (Plan 7.11)
+
+Aplikacja Layout Studio Pro 3D została zaprojektowana jako uniwersalne narzędzie dla Inżynierów Procesu oraz Konsultantów Lean Management, pracujących z wieloma różnorodnymi klientami i procesami przemysłowymi:
+
+- **Brak założeń zakodowanych pod strukturę Eko**:
+  - Silniki obliczeniowe (balansowanie RPW/LCR, wyznaczanie taktu, generowanie propozycji layoutu, harmonogramowanie sieciowe i symulacja partii) nie polegają na stałych, nazwach czy hierarchii przykładu Eko.
+  - Dowolny proces o strukturze liniowej, zbieżnej, rozbieżnej lub gniazdowej może zostać wprowadzony ręcznie bądź zaimportowany ze standardowych arkuszy kalkulacyjnych Excel (`.xlsx`) lub plików `.csv`.
+
+- **Procesy wzorcowe niezależne od Eko**:
+  - **Montaż modułów baterii EV (Linear Continuous Flow)**:
+    - Przepływ liniowy ciągły: 6 operacji technologicznych (sortowanie ogniw 21700, aplikacja pasty TIM, laserowe zgrzewanie busbarów, montaż BMS, skręcanie pokrywy kompozytowej, test HV i próba helowa).
+    - 6 pozycji w zestawieniu materiałowym BOM (ogniwa, pasta termoprzewodząca, szyny Cu, PCBA sterownika, obudowa IP68, uszczelka).
+    - Dedykowany pulpit startowy umożliwia natychmiastowe załadowanie wariantu bateryjnego (`Przykład — baterie EV`).
+  - **Montaż silników trakcyjnych EV (U-Shape Assembly)**:
+    - Układ gniazdowy U-kształtny: 6 operacji montażowych (pakiety blach stojana, nawijanie miedzi, wyważanie wirnika, montaż łożysk i wirnika w korpusie, dokręcanie śrub z kontrolą momentu, test EOL).
+    - Zestawienie materiałowe oparte na drutach emaliowanych, magnesach NdFeB i korpusach odlewanych ciśnieniowo.
+    - Szybki dostęp z pulpitu (`Przykład — silniki EV`).
+
+- **Zadania Inżyniera Procesu i Konsultanta Lean**:
+  - **Budowa wariantu bazowego**: import danych klienta, analiza wąskich gardeł, identyfikacja stacji przeciążonych ($CT > TT$), automatyczne wygenerowanie wstępnego rozmieszczenia stanowisk.
+  - **Budowa wariantu usprawnionego**: modyfikacja wielkości partii lub popytu, dodanie równoległych stanowisk lub dodatkowego operatora, porównanie wskaźników Line Efficiency i Makespanu.
+  - **Pełna izolacja danych**: projekty posiadają unikalne identyfikatory UUID, odrębne waluty (PLN / EUR / USD), niezależne biblioteki wariantów oraz niekolidujące przestrzenie geometryczne layoutu.
+  - **Jawne braki danych**: w przypadku braku potwierdzonych pomiarów hali aplikacja jawnie oznacza wymiary jako niepotwierdzone (`isConfirmed: false`), a wygenerowane stanowiska oznacza etykietą założenia wizualnego (`isVisualAssumption: true`), chroniąc przed fałszowaniem danych inżynierskich (Zasada 5).
+
+
 
 
 
