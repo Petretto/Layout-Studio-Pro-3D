@@ -469,4 +469,38 @@ W zaawansowanym modelu procesu (szkic 6) wprowadzono pełne wsparcie dla produkc
   - Wykres Gantta (`GanttChart`) prezentuje dedykowane, pomarańczowe bloki przezbrojeń (`kind: changeover`), wyraźnie odróżniające się od pracy operacyjnej (`work`), transportu (`transfer`), oczekiwania buforowego (`blocked`) oraz przerw kalendarzowych (`pause`).
   - Bloki przezbrojeń są w pełni widoczne zarówno w widoku stanowisk roboczych (`Widok stanowisk`), jak i w widoku pracowników (`Widok pracowników`).
 
+### 5.7. Symulacja stochastyczna Monte Carlo, zmienność czasów i awarie maszyn (Plan 7.4)
+
+W zaawansowanym modelu procesu (szkic 6) wprowadzono moduł symulacji stochastycznej Monte Carlo (`StochasticSimulationConfig`), umożliwiający rzetelne badanie odporności linii produkcyjnej na niepewność i losowe zaburzenia:
+
+- **Deterministyczny generator liczb pseudolosowych (Zasada 5 & Niezmiennik determinizmu)**:
+  - Zastosowano wysokiej jakości algorytm PRNG (SplitMix32 / Mulberry32), który dla podanego ziarna (`seed`) gwarantuje w 100% identyczny, bitowo powtarzalny przebieg eksperymentu.
+  - Dzięki temu inżynier procesu może przekazać współpracownikom dokładną wartość ziarna (np. `seed: 42`), uzyskując identyczne serie replikacji i identyczne przedziały statystyczne na dowolnym komputerze.
+  - Wygodny przycisk `🎲 Losuj` umożliwia natychmiastowe wylosowanie nowego ziarna w celu przetestowania innego scenariusza losowego.
+
+- **Modelowanie zmienności czasów operacji (`DurationVariabilityConfig`)**:
+  - Użytkownik ma do wyboru uznane w inżynierii przemysłowej rozkłady prawdopodobieństwa:
+    - **Trójkątny (`triangular`)**: parametryzowany mnożnikiem minimalnym (np. 0.85 = -15%), modalnym (1.0) i maksymalnym (1.15 = +15%). Idealny do modelowania naturalnej zmienności manualnej pracy operatora.
+    - **Normalny Gaussa (`normal`)**: parametryzowany współczynnikiem zmienności / odchyleniem standardowym w procentach czasu nominalnego.
+    - **Jednostajny (`uniform`)**: równomierne rozproszenie w zadanym przedziale `[min, max]`.
+    - **Lognormalny (`lognormal`)**: rozkład asymetryczny z wydłużonym prawym ogonem, typowy dla trudnych manualnych operacji montażowych podatnych na incydentalne opóźnienia.
+    - **Stały (`none`)**: brak zaburzeń (wartości nominalne).
+  - Skalowanie czasu proporcjonalnie zachowuje relacje pracy ręcznej (`manualWork`) i maszynowej (`machineRun`).
+
+- **Model awarii i napraw maszyn — MTBF / MTTR (`EquipmentBreakdownModel`)**:
+  - Możliwość zdefiniowania niezawodności dla pojedynczych stanowisk lub globalnie dla całej linii:
+    - **MTBF (Mean Time Between Failures)**: średni czas bezawaryjnej pracy w sekundach (czas do awarii generowany jest z rozkładu wykładniczego).
+    - **MTTR (Mean Time To Repair)**: średni czas naprawy / usuwania przestoju w sekundach.
+    - **Rozkład czasu naprawy**: stały (`constant`), wykładniczy (`exponential`) lub normalny (`normal`).
+  - W trakcie symulacji awarie generują dynamiczne przerwy w kalendarzu stanowiska, blokując jego dostępność i wstrzymując obróbkę do chwili ukończenia naprawy.
+
+- **Wielokrotne replikacje i agregacja statystyczna (`StochasticSummaryReport`)**:
+  - Użytkownik określa liczbę replikacji (np. od 5 do 100 powtórzeń). Silnik wykonuje symulacje z postępem w czasie rzeczywistym.
+  - Raport statystyczny wyznacza:
+    - **Czas całkowity partii (Makespan [s])**: wartość minimalną, maksymalną, średnią arytmetyczną, medianę, odchylenie standardowe, 90% przedział ufności `[p10–p90]` oraz kwantyl 95% pewności (`p95`).
+    - **Przepustowość linii (Throughput [szt./h])**: średnią przepustowość oraz zakresy niepewności w warunkach zmienności i awaryjności.
+    - **Częstotliwość występowania wąskich gardeł (Bottleneck Frequency)**: wykaz stanowisk, które najczęściej stawały się ograniczeniem przepływu, wraz z procentowym udziałem w replikacjach.
+    - **Szczegółową tabelę replikacji**: zestawienie wyników każdego pojedynczego przebiegu serii (Makespan, Przepustowość, łączny czas awarii, zidentyfikowane wąskie gardło).
+
+
 

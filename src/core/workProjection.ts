@@ -1,5 +1,7 @@
 import type {CalendarWindow} from './resourceCalendar';
 
+const EPSILON = 1e-9;
+
 export function projectWork(windows: readonly CalendarWindow[], now: number, duration: number) {
   const workWindows: CalendarWindow[] = [];
   let remaining = duration;
@@ -10,9 +12,9 @@ export function projectWork(windows: readonly CalendarWindow[], now: number, dur
     const endSeconds = Math.min(window.endSeconds, startSeconds + remaining);
     workWindows.push({startSeconds, endSeconds});
     remaining -= endSeconds - startSeconds;
-    if (remaining <= 0) break;
+    if (remaining <= EPSILON) break;
   }
-  if (remaining > 0) return null;
+  if (remaining > EPSILON) return null;
   const pauses = workWindows.slice(1).map((window, i) => ({
     startSeconds: workWindows[i].endSeconds, endSeconds: window.startSeconds,
   })).filter(window => window.startSeconds < window.endSeconds);

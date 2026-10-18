@@ -16,6 +16,7 @@ import {validateStationBuffers, type StationBuffersV6} from './stationBuffers';
 import {validateMaterialSupply, type MaterialSupplyV6} from './materialSupply';
 import {validateCompetencyRequirements, type CompetencyRequirements} from './competencies';
 import {validateChangeoverMatrix, validateProductionOrders, type ChangeoverMatrix, type ProductionOrderBatch} from './changeoverMatrix';
+import {validateStochasticConfig, type StochasticSimulationConfig} from './stochasticSimulation';
 import {topologicalSort} from './validation';
 
 export type DomainTimeBasis = 'measured' | 'assumed';
@@ -72,6 +73,7 @@ export interface DomainProjectV6 extends Omit<StationProjectV5,
   competencyRequirements?: CompetencyRequirements;
   changeoverMatrix?: ChangeoverMatrix;
   productionOrders?: ProductionOrderBatch[];
+  stochasticConfig?: StochasticSimulationConfig;
 }
 
 export interface PreparedDomainMigration {
@@ -223,7 +225,7 @@ export function parseDomainProjectV6(text: string): DomainProjectV6 {
   if (has(raw, 'resourceCalendars')) {
     validateResourceCalendars(raw.resourceCalendars, workerIds, stationIds);
   }
-  const operationIds = new Set(operations.map(operation => operation.id));
+  const operationIds = new Set<string>(operations.map(operation => String(operation.id)));
   const layoutObjects = raw.layoutObjects as {id: string; workstationId?: string}[];
   const layoutById = new Map(layoutObjects.map(object => [object.id, object]));
   const usedVisualIds = new Set<string>();
@@ -303,6 +305,7 @@ export function parseDomainProjectV6(text: string): DomainProjectV6 {
   if (has(raw, 'materialSupply')) validateMaterialSupply(raw as unknown as DomainProjectV6, raw.materialSupply);
   if (has(raw, 'changeoverMatrix')) validateChangeoverMatrix(raw.changeoverMatrix, stationIds);
   if (has(raw, 'productionOrders')) validateProductionOrders(raw.productionOrders, raw.changeoverMatrix as ChangeoverMatrix | undefined);
+  if (has(raw, 'stochasticConfig')) validateStochasticConfig(raw.stochasticConfig, stationIds, operationIds);
   return raw as unknown as DomainProjectV6;
 }
 
@@ -313,8 +316,9 @@ export function prepareDomainMigration(preview: DomainMigrationPreview): Prepare
     bodyRunInput: _unsupportedBodies, physicalConcurrency: _unsupportedConcurrency, materialNetwork: _unsupportedMaterialNetwork,
     assemblyTransport: _unsupportedAssemblyTransport, subassemblyFlow: _unsupportedSubassemblyFlow,
     stationBuffers: _unsupportedBuffers, materialSupply: _unsupportedSupply, competencyRequirements: _unsupportedCompetencies,
-    changeoverMatrix: _unsupportedChangeoverMatrix, productionOrders: _unsupportedProductionOrders, ...source} =
-    checked.stationProject as StationProjectV5 & {stationRouting?: unknown; bodyRunInput?: unknown; physicalConcurrency?: unknown; materialNetwork?: unknown; assemblyTransport?: unknown; subassemblyFlow?: unknown; stationBuffers?: unknown; materialSupply?: unknown; competencyRequirements?: unknown; changeoverMatrix?: unknown; productionOrders?: unknown};
+    changeoverMatrix: _unsupportedChangeoverMatrix, productionOrders: _unsupportedProductionOrders,
+    stochasticConfig: _unsupportedStochastic, ...source} =
+    checked.stationProject as StationProjectV5 & {stationRouting?: unknown; bodyRunInput?: unknown; physicalConcurrency?: unknown; materialNetwork?: unknown; assemblyTransport?: unknown; subassemblyFlow?: unknown; stationBuffers?: unknown; materialSupply?: unknown; competencyRequirements?: unknown; changeoverMatrix?: unknown; productionOrders?: unknown; stochasticConfig?: unknown};
   const operations = processSteps.map(step => {
     const {assignedWorkstationId: _assignment, timeProfile: _unsupportedProfile,
       staffing: _unsupportedStaffing, physicalRole: _unsupportedRole, ...operation} =

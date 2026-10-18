@@ -2187,3 +2187,167 @@ test('7.3a: integracja ze schematem DomainProjectV6 — zapis, odczyt i kompatyb
   assert.equal(parsedLegacy.productionOrders, undefined);
   assert.equal(parsedLegacy.name, migrated.name);
 });
+
+test('7.4: DeterministicRNG — powtarzalność ziarna, rozkłady i rozbieżność dla różnych ziaren', () => {
+  const { DeterministicRNG, sampleDuration } = require('../src/core/stochasticSimulation');
+
+  // 1. Ten sam seed daje 100% identyczną sekwencję losowań (Zasada 5 i Plan 7.4)
+  const rng1 = new DeterministicRNG(12345);
+  const rng2 = new DeterministicRNG(12345);
+  const seq1 = Array.from({length: 20}, () => rng1.next());
+  const seq2 = Array.from({length: 20}, () => rng2.next());
+  assert.deepEqual(seq1, seq2, 'Ten sam seed musi generować identyczne liczby');
+
+  // 2. Inny seed daje inną sekwencję
+  const rng3 = new DeterministicRNG(54321);
+  const seq3 = Array.from({length: 20}, () => rng3.next());
+  assert.notDeepEqual(seq1, seq3, 'Różne seedy muszą dawać różne sekwencje');
+
+  // 3. Rozkład normalny — średnia zbliżona do zadanej
+  const rngNorm = new DeterministicRNG(42);
+  const normalSamples = Array.from({length: 1000}, () => rngNorm.normal(100, 10));
+  const meanNorm = normalSamples.reduce((a, b) => a + b, 0) / normalSamples.length;
+  assert.ok(Math.abs(meanNorm - 100) < 1.5, `Średnia z rozkładu normalnego (${meanNorm}) powinna być bliska 100`);
+
+  // 4. Rozkład trójkątny — wartości w granicach [min, max]
+  const rngTri = new DeterministicRNG(42);
+  const triSamples = Array.from({length: 500}, () => rngTri.triangular(50, 80, 120));
+  assert.ok(triSamples.every(v => v >= 50 && v <= 120), 'Próbki trójkątne muszą mieścić się w [min, max]');
+
+  // 5. Rozkład jednostajny — wartości w granicach [min, max]
+  const rngUni = new DeterministicRNG(42);
+  const uniSamples = Array.from({length: 500}, () => rngUni.uniform(10, 20));
+  assert.ok(uniSamples.every(v => v >= 10 && v <= 20), 'Próbki jednostajne muszą mieścić się w [min, max]');
+
+  // 6. sampleDuration zachowuje baseSeconds dla constant
+  const constSample = sampleDuration(60, {distribution: 'constant'}, new DeterministicRNG(42));
+  assert.equal(constSample, 60);
+
+  // 7. sampleDuration z rozkładem trójkątnym
+  const triSample = sampleDuration(100, {distribution: 'triangular', minMultiplier: 0.9, modeMultiplier: 1.0, maxMultiplier: 1.1}, new DeterministicRNG(42));
+  assert.ok(triSample >= 90 && triSample <= 110, `Sample (${triSample}) powinien mieścić się w granicach [90, 110]`);
+});
+
+test('7.4: statystyki kwantylowe i raport podsumowania stochastycznego', () => {
+  const { computePercentileStats, buildStochasticSummary } = require('../src/core/stochasticSimulation');
+
+  // 1. computePercentileStats
+  const values = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+  const stats = computePercentileStats(values);
+  assert.equal(stats.min, 10);
+  assert.equal(stats.max, 100);
+  assert.equal(stats.mean, 55);
+  assert.equal(stats.median, 55);
+  assert.ok(stats.p10 <= stats.median && stats.median <= stats.p90);
+
+  // 2. buildStochasticSummary
+  const mockIterations = [
+    { iterationIndex: 1, seed: 100, makespanSeconds: 200, throughputPerHour: 18, bottleneckStationId: 'ST-A', totalBreakdownSeconds: 0, totalWaitSeconds: 10 },
+    { iterationIndex: 2, seed: 101, makespanSeconds: 250, throughputPerHour: 14.4, bottleneckStationId: 'ST-A', totalBreakdownSeconds: 20, totalWaitSeconds: 30 },
+    { iterationIndex: 3, seed: 102, makespanSeconds: 220, throughputPerHour: 16.36, bottleneckStationId: 'ST-B', totalBreakdownSeconds: 0, totalWaitSeconds: 15 },
+  ];
+  const summary = buildStochasticSummary(mockIterations, 42);
+  assert.equal(summary.iterationsCount, 3);
+  assert.equal(summary.seed, 42);
+  assert.equal(summary.bottleneckFrequency.length, 2);
+  assert.equal(summary.bottleneckFrequency[0].stationId, 'ST-A');
+  assert.equal(summary.bottleneckFrequency[0].count, 2);
+  assert.equal(summary.bottleneckFrequency[0].percentage, 66.7);
+  assert.equal(summary.bottleneckFrequency[1].stationId, 'ST-B');
+  assert.equal(summary.bottleneckFrequency[1].count, 1);
+  assert.equal(summary.bottleneckFrequency[1].percentage, 33.3);
+});
+
+test('7.4: walidacja i integracja konfiguracji stochastycznej w DomainProjectV6', () => {
+  const { validateStochasticConfig } = require('../src/core/stochasticSimulation');
+  const stationIds = new Set(['ST-1', 'ST-2']);
+  const operationIds = new Set(['OP-1', 'OP-2']);
+
+  // Poprawna konfiguracja
+  const validConfig = {
+    enabled: true,
+    seed: 42,
+    iterations: 20,
+    defaultOperationVariability: {
+      distribution: 'triangular',
+      minMultiplier: 0.85,
+      modeMultiplier: 1.0,
+      maxMultiplier: 1.2
+    },
+    operationVariability: [
+      {
+        operationId: 'OP-1',
+        config: {
+          distribution: 'normal',
+          relativeStdDev: 0.1
+        }
+      }
+    ],
+    breakdowns: [
+      {
+        stationId: 'ST-1',
+        mtbfSeconds: 3600,
+        mttrSeconds: 300,
+        repairDistribution: 'exponential'
+      }
+    ]
+  };
+
+  const validated = validateStochasticConfig(validConfig, stationIds, operationIds);
+  assert.equal(validated.enabled, true);
+  assert.equal(validated.seed, 42);
+  assert.equal(validated.iterations, 20);
+  assert.equal(validated.operationVariability?.length, 1);
+  assert.equal(validated.breakdowns?.length, 1);
+
+  // Odrzucenie nieznanego stanowiska w awariach
+  assert.throws(() => {
+    validateStochasticConfig({
+      ...validConfig,
+      breakdowns: [{ stationId: 'ST-UNKNOWN', mtbfSeconds: 1000, mttrSeconds: 100, repairDistribution: 'exponential' }]
+    }, stationIds, operationIds);
+  }, /nieznane stanowisko 'ST-UNKNOWN'/);
+
+  // Odrzucenie nieznanej operacji w zmienności
+  assert.throws(() => {
+    validateStochasticConfig({
+      ...validConfig,
+      operationVariability: [{ operationId: 'OP-UNKNOWN', config: { distribution: 'normal' } }]
+    }, stationIds, operationIds);
+  }, /nieznana operacja 'OP-UNKNOWN'/);
+
+  // Zapis i odczyt projektu V6 z konfiguracją stochastyczną
+  const migrated = prepareDomainMigration(previewDomainMigrationFromV4(JSON.stringify(motor))).project;
+  const motorStationId = migrated.stations[0].id;
+  const motorOpId = migrated.operations[0].id;
+  const motorStochasticConfig = {
+    ...validConfig,
+    operationVariability: [
+      {
+        operationId: motorOpId,
+        config: {
+          distribution: 'normal' as const,
+          relativeStdDev: 0.1
+        }
+      }
+    ],
+    breakdowns: [
+      {
+        stationId: motorStationId,
+        mtbfSeconds: 3600,
+        mttrSeconds: 300,
+        repairDistribution: 'exponential' as const
+      }
+    ]
+  };
+  const projectWithStochastic = {
+    ...migrated,
+    stochasticConfig: motorStochasticConfig
+  };
+  const parsed = parseDomainProjectV6(JSON.stringify(projectWithStochastic));
+  assert.ok(parsed.stochasticConfig);
+  assert.equal(parsed.stochasticConfig.enabled, true);
+  assert.equal(parsed.stochasticConfig.seed, 42);
+  assert.equal(parsed.stochasticConfig.operationVariability?.[0].operationId, motorOpId);
+});
+

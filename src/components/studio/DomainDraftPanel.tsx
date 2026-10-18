@@ -34,6 +34,7 @@ import {editDomainSubassemblyFlow} from '../../core/domainSubassemblyEditing';
 import {DomainBuffersEditor} from './DomainBuffersEditor';
 import {DomainSupplyEditor} from './DomainSupplyEditor';
 import {DomainChangeoverEditor} from './DomainChangeoverEditor';
+import {DomainStochasticSimulationPanel} from './DomainStochasticSimulationPanel';
 import {editDomainStationBuffers, editDomainMaterialSupply} from '../../core/domainBuffersEditing';
 import {editDomainMaterialNetwork} from '../../core/domainMaterialEditing';
 import {editDomainPhysicalRole} from '../../core/domainPhysicalRoleEditing';
@@ -268,6 +269,14 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
       canUndo={past.length > 0} canRedo={future.length > 0} />}
     {draft.status === 'valid' && <DomainWorkerSchedulePanel key={`schedule-${draft.raw}`} project={draft.saved.project} />}
+    {draft.status === 'valid' && <DomainStochasticSimulationPanel key={`stochastic-${draft.raw}`}
+      project={draft.saved.project}
+      onApply={config => applyDraftChange(project => {
+        const {stochasticConfig: _old, ...rest} = project;
+        return config === undefined ? rest : {...rest, stochasticConfig: config};
+      }, 'Zapisano konfigurację symulacji stochastycznej w szkicu 6 (Plan 7.4).')}
+      onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
+      canUndo={past.length > 0} canRedo={future.length > 0} />}
     {draft.status === 'valid' && <DomainVariantComparisonPanel key={`variants-${draft.saved.originalJson}`}
       project={draft.saved.project} originalJson={draft.saved.originalJson}
       onRestoreVariant={(next, name) => applyDraftChange(() => next, `Wczytano wariant „${name}” do szkicu 6.`)}

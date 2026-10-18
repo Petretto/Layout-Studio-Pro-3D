@@ -489,13 +489,18 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
             const next = windows.find(window => window.endSeconds > now);
             if (!next) { if (calendars) calendarWait = true; return; }
             if (next.startSeconds > now) {
-              const future = projectWork(windows, next.startSeconds, operation.durationSeconds);
-              if (future) { calendarWait = true; wakeAt(next.startSeconds, now); }
-              else if (calendars) calendarWait = true;
+              if (calendars) { calendarWait = true; wakeAt(next.startSeconds, now); }
               return;
             }
             const projected = projectWork(windows, now, operation.durationSeconds);
-            if (!projected) { if (calendars) calendarWait = true; return; }
+            if (!projected) {
+              if (calendars) {
+                calendarWait = true;
+                const following = windows.find(w => w.startSeconds > now);
+                if (following) wakeAt(following.startSeconds, now);
+              }
+              return;
+            }
             const reserveStart = projected.atOffset(operation.reserveFromSeconds, false);
             const reserveEnd = projected.atOffset(operation.reserveUntilSeconds, true);
             if (![reserveStart, reserveEnd, projected.end].every(Number.isFinite)) {
@@ -649,6 +654,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
         }
         events.push({kind: 'release', at: reserveEnd, reservationId});
         events.push({kind: 'completion', at: end, job: task.job, step: task.step, stationId, copy});
+        if (start > now) wakeAt(start, now);
         waiting.splice(i, 1);
         started = true;
         break;

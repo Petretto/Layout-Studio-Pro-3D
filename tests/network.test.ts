@@ -6818,6 +6818,165 @@ test('7.3b: symulacja wielowariantowa, wstawianie bloków przezbrojeń, opóźni
   assert.equal(coBarWorker!.endSeconds, 95);
 });
 
+test('7.4: symulacja stochastyczna Monte Carlo — serie replikacji, powtarzalność ziarna, zmienność i statystyki', () => {
+  const { runMonteCarloSimulation } = require('../src/core/stochasticSimulation');
+
+  const originalJson = JSON.stringify(derive(parseProject(JSON.stringify({
+    ...base,
+    processSteps: [
+      {id: 'OP-1', name: 'Montaż korpusu', standardTimeSeconds: 50, vaTimeSeconds: 40, nvaTimeSeconds: 10, sequenceNumber: 1, predecessorIds: []},
+      {id: 'OP-2', name: 'Kontrola końcowa', standardTimeSeconds: 30, vaTimeSeconds: 25, nvaTimeSeconds: 5, sequenceNumber: 2, predecessorIds: ['OP-1']}
+    ],
+    bom: [],
+  }))).project);
+
+  let idSeq = 0;
+  const project = prepareDomainMigration(previewDomainMigrationFromV4(originalJson, () => `ST-74-${++idSeq}`)).project;
+  project.stations = [
+    {id: 'ST-1', name: 'Stanowisko 1', operationIds: ['OP-1']},
+    {id: 'ST-2', name: 'Stanowisko 2', operationIds: ['OP-2']}
+  ];
+  project.layoutObjects = [
+    {id: 'TBL-1', name: 'Stół montażowy', type: 'Table', xMm: 1000, yMm: 1000, zMm: 0, widthMm: 1500, lengthMm: 1000, heightMm: 900, rotationDeg: 0, colorHex: '#444444', workstationId: 'ST-1'},
+    {id: 'TBL-2', name: 'Stół kontrolny', type: 'Table', xMm: 3000, yMm: 1000, zMm: 0, widthMm: 1500, lengthMm: 1000, heightMm: 900, rotationDeg: 0, colorHex: '#444444', workstationId: 'ST-2'}
+  ];
+  project.operations = [
+    {
+      id: 'OP-1',
+      name: 'Operacja 1',
+      standardTimeSeconds: 50,
+      sequenceNumber: 1,
+      vaTimeSeconds: 40,
+      nvaTimeSeconds: 10,
+      predecessorIds: [],
+      staffing: {
+        requiredWorkers: 1,
+        timeVariants: [{
+          workerCount: 1,
+          timeProfile: {
+            durationSeconds: 50,
+            durationBasis: 'assumed',
+            manualWork: [{startSeconds: 0, endSeconds: 50, basis: 'assumed'}],
+            machineRun: [],
+            operatorPresence: [{startSeconds: 0, endSeconds: 50, basis: 'assumed'}],
+          }
+        }]
+      }
+    },
+    {
+      id: 'OP-2',
+      name: 'Operacja 2',
+      standardTimeSeconds: 30,
+      sequenceNumber: 2,
+      vaTimeSeconds: 25,
+      nvaTimeSeconds: 5,
+      predecessorIds: ['OP-1'],
+      staffing: {
+        requiredWorkers: 1,
+        timeVariants: [{
+          workerCount: 1,
+          timeProfile: {
+            durationSeconds: 30,
+            durationBasis: 'assumed',
+            manualWork: [{startSeconds: 0, endSeconds: 30, basis: 'assumed'}],
+            machineRun: [],
+            operatorPresence: [{startSeconds: 0, endSeconds: 30, basis: 'assumed'}],
+          }
+        }]
+      }
+    }
+  ];
+  project.stationSettings = {
+    'ST-1': {operators: 1, parallelStations: 1},
+    'ST-2': {operators: 1, parallelStations: 1}
+  };
+  project.workers = [
+    {id: 'W-1', name: 'Jan Kowalski'},
+    {id: 'W-2', name: 'Piotr Nowak'}
+  ];
+  project.workerRunSelection = {
+    teamWorkerIds: ['W-1', 'W-2'],
+    operations: [
+      {operationId: 'OP-1', workerCount: 1, eligibleWorkerIds: ['W-1']},
+      {operationId: 'OP-2', workerCount: 1, eligibleWorkerIds: ['W-2']}
+    ]
+  };
+  project.stationRouting = {
+    selectionRule: 'earliest-start-then-shortest-route',
+    equipmentPlacements: [],
+    operations: [
+      {operationId: 'OP-1', candidates: [{stationId: 'ST-1', copy: 1, requiredEquipmentIds: []}]},
+      {operationId: 'OP-2', candidates: [{stationId: 'ST-2', copy: 1, requiredEquipmentIds: []}]}
+    ],
+    routes: []
+  };
+
+  // Dodajemy konfigurację stochastyczną:
+  // - 15 powtórzeń Monte Carlo
+  // - ziarno 42
+  // - zmienność operacji trójkątna (+- 15%)
+  // - awaria na ST-1 z MTBF = 120s i naprawą 20s
+  project.stochasticConfig = {
+    enabled: true,
+    seed: 42,
+    iterations: 15,
+    defaultOperationVariability: {
+      distribution: 'triangular',
+      minMultiplier: 0.85,
+      modeMultiplier: 1.0,
+      maxMultiplier: 1.15
+    },
+    breakdowns: [
+      {
+        stationId: 'ST-1',
+        mtbfSeconds: 120,
+        mttrSeconds: 20,
+        repairDistribution: 'constant'
+      }
+    ]
+  };
+
+  // 1. Wykonanie symulacji Monte Carlo
+  let progressCount = 0;
+  const summary1 = runMonteCarloSimulation(project, 4, 10, {
+    transportMode: 'just-in-time',
+    onIterationProgress: (completed, total) => {
+      progressCount = completed;
+      assert.ok(completed <= total);
+    }
+  });
+
+  assert.equal(progressCount, 15);
+  assert.equal(summary1.iterationsCount, 15);
+  assert.equal(summary1.seed, 42);
+  assert.ok(summary1.makespan.min > 0);
+  assert.ok(summary1.makespan.max >= summary1.makespan.min);
+  assert.ok(summary1.makespan.mean >= summary1.makespan.min && summary1.makespan.mean <= summary1.makespan.max);
+  assert.ok(summary1.makespan.p10 <= summary1.makespan.median && summary1.makespan.median <= summary1.makespan.p90);
+  assert.ok(summary1.bottleneckFrequency.length > 0);
+
+  // 2. Weryfikacja powtarzalności z tym samym ziarnem (Zasada 5 i Plan 7.4)
+  const summary2 = runMonteCarloSimulation(project, 4, 10, {
+    transportMode: 'just-in-time'
+  });
+  assert.deepEqual(summary1.makespan, summary2.makespan, 'Identyczny seed musi dawać identyczne statystyki makespan');
+  assert.deepEqual(summary1.bottleneckFrequency, summary2.bottleneckFrequency, 'Identyczny seed musi dawać identyczną listę wąskich gardeł');
+
+  // 3. Weryfikacja dla innego ziarna (powinno dać inne wyniki próbek)
+  const projectDiffSeed = {
+    ...project,
+    stochasticConfig: {
+      ...project.stochasticConfig,
+      seed: 9999
+    }
+  };
+  const summaryDiff = runMonteCarloSimulation(projectDiffSeed, 4, 10, {
+    transportMode: 'just-in-time'
+  });
+  assert.notEqual(summary1.makespan.mean, summaryDiff.makespan.mean, 'Inne ziarno losowe powinno generować inne statystyki');
+});
+
+
 
 
 

@@ -44,9 +44,9 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po odbiorze 7.3: cały plan 54/69 = **78,3%**; pierwsze wydanie 54/65 = **83,1%**; Etap 7: 1/11 = **9,1%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po odbiorze 7.4: cały plan 55/69 = **79,7%**; pierwsze wydanie 55/65 = **84,6%**; Etap 7: 2/11 = **18,2%**. Weryfikacja: `node scripts/plan_progress.mjs`.
 
-Stan historyczny po 6.7b: cały plan 53/69 = **76,8%**; pierwsze wydanie 53/65 = **81,5%**; Etap 6: 6/7 = **85,7%**.
+Stan historyczny po 7.3: cały plan 54/69 = **78,3%**; pierwsze wydanie 54/65 = **83,1%**; Etap 7: 1/11 = **9,1%**.
 
 Stan historyczny po 6.5: cały plan 51/69 = **73,9%**; pierwsze wydanie 51/65 = **78,5%**; Etap 6: 4/7 = **57,1%**.
 
@@ -115,7 +115,9 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 
 ## Bieżący pakiet
 
-7.3a (2026-10-18): w trakcie — rozpoczęcie wdrażania ID 7.3 (Przezbrojenia i warianty produktów, z regułami kolejności oraz czasami przejść). Pakiet 7.3a: model danych i kontrakt przezbrojeń oraz wariantów produktów (`ProductVariant`, `ChangeoverMatrix`, `ProductionOrderBatch`, reguły kolejności partii, walidacja i roundtrip zapisu w szkicu 6). Kopia zapasowa: `v0.4.0_przed_7_3_20261018` (817 plików z SHA256).
+7.4 (2026-10-18): wdrożone — symulacja stochastyczna Monte Carlo, zmienność czasów i awarie maszyn (MTBF/MTTR) z deterministyczną powtarzalnością ziarna losowego (PRNG) i zakresem niepewności wyników (`src/core/stochasticSimulation.ts`, `src/core/domainProject.ts`, `src/components/studio/DomainStochasticSimulationPanel.tsx`, `src/components/studio/DomainDraftPanel.tsx`). Generator PRNG (SplitMix32/Mulberry32) z obsługą rozkładów trójkątnego, normalnego, jednostajnego, wykładniczego i lognormalnego. Niezmiennik Zasady 5: to samo ziarno daje w 100% identyczny wynik; naprawiono tolerancję float (EPSILON = 1e-9) w `src/core/workProjection.ts` zapobiegając fałszywym zakleszczeniom kalendarza. Statystyki min, max, mean, median, stdDev, p10, p90, p95 dla Makespanu i Throughputu oraz częstotliwość występowania wąskich gardeł (Bottleneck Frequency). Integracja z UI szkicu 6 (konfigurator, losowanie ziarna, tabela MTBF/MTTR, pasek postępu replikacji, karty wyników, historia Cofnij/Ponów). Kopia zapasowa: `backup/v0.4.0_przed_7_4_20261018` (1638 plików z SHA256). Testy 365/365 PASS (89 core + 276 network), build `tsc && vite build` PASS, manual HTML/PDF zaktualizowany. Raport `WERYFIKACJA_ZMIENNOSCI_I_AWARII_7_4.md`. Postęp: cały plan 55/69 = 79,7%, pierwsze wydanie 55/65 = 84,6%, Etap 7: 2/11 = 18,2%.
+
+7.3 (2026-10-18): wdrożone — przezbrojenia i warianty produktów, reguły kolejności, macierz czasów przejść, sekwencjonowanie zleceń partii oraz integracja z symulacją i wykresem Gantta (`src/core/changeoverMatrix.ts`, `src/components/studio/DomainChangeoverEditor.tsx`). Kopia zapasowa: `v0.4.0_przed_7_3_20261018` (817 plików z SHA256). Raport `WERYFIKACJA_PRZEZBROJEN_7_3.md`.
 
 7.1b (2026-10-18): w trakcie — po EKO-U3 użytkownik doprecyzował EKO-U4: 13 osób łącznie w procesie, tylko pakowanie OP21 w 2 osoby, pozostałe mierzone OP10–OP20 po 1. Zamknięto EKO-C2. Czas pakowania 1320 s pozostaje bez skalowania. W rejestrze/audycie przypisano liczebności do 12 mierzonych operacji; nie nadano tożsamości osób, współdzielenia, kalendarzy ani obsady testowym OP22–OP25. Audyt, zgodność źródeł i kontrola liczebności/czasu OP21 PASS. Bez zmian aplikacji i projektów, bez builda/regresji/UI. 7.1 pozostaje w trakcie; postęp 53/69 = 76,8%, pierwsze wydanie 53/65 = 81,5%. Dowody w `dane/eko/7_1/potwierdzenia_zrodel.json` i `DANE_EKO_7_1.md`.
 
@@ -591,7 +593,7 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 | 7.1 | Zebrać rzeczywiste dane Eko: obsada, czasy ręczne/maszynowe, równoległość, wymiary, trasy, bufory, kalendarz i wyniki produkcji; oznaczyć braki oraz źródła. | w trakcie |
 | 7.2 | Zastąpić przykładowe czasy pomiarami i porównać model z produkcją; przed odbiorem uzgodnić tolerancje i warunki porównania. | nierozpoczęte |
 | 7.3 | Dodać przezbrojenia i warianty produktów, z regułami kolejności oraz czasami przejść. | wdrożone |
-| 7.4 | Dodać zmienność czasów i awarie oraz powtarzalne serie eksperymentów z ziarnem losowym i zakresem niepewności wyników. | nierozpoczęte |
+| 7.4 | Dodać zmienność czasów i awarie oraz powtarzalne serie eksperymentów z ziarnem losowym i zakresem niepewności wyników. | wdrożone |
 | 7.5 | Rozdzielić szczegółowo modelowane straty od rezerwy OEE, aby nie naliczać tych samych strat dwukrotnie. | nierozpoczęte |
 | 7.6 | Ustalić sposób dystrybucji i wdrożyć instalację/uruchamianie, aktualizacje oraz kopie i odzyskiwanie projektu; sprawdzić na czystym komputerze. | nierozpoczęte |
 | 7.7 | Przeprowadzić przegląd zależności, licencji kodu i modeli oraz bezpieczeństwa adekwatnego do sposobu dystrybucji. | nierozpoczęte |

@@ -496,5 +496,40 @@
 <li>Wykres Gantta (<code>GanttChart</code>) prezentuje dedykowane, pomarańczowe bloki przezbrojeń (<code>kind: changeover</code>), wyraźnie odróżniające się od pracy operacyjnej (<code>work</code>), transportu (<code>transfer</code>), oczekiwania buforowego (<code>blocked</code>) oraz przerw kalendarzowych (<code>pause</code>).</li>
 <li>Bloki przezbrojeń są w pełni widoczne zarówno w widoku stanowisk roboczych (<code>Widok stanowisk</code>), jak i w widoku pracowników (<code>Widok pracowników</code>).</li>
 </ul>
+<h3>5.7. Symulacja stochastyczna Monte Carlo, zmienność czasów i awarie maszyn (Plan 7.4)</h3>
+<p>W zaawansowanym modelu procesu (szkic 6) wprowadzono moduł symulacji stochastycznej Monte Carlo (<code>StochasticSimulationConfig</code>), umożliwiający rzetelne badanie odporności linii produkcyjnej na niepewność i losowe zaburzenia:</p>
+<ul>
+<li><strong>Deterministyczny generator liczb pseudolosowych (Zasada 5 & Niezmiennik determinizmu)</strong>:</li>
+<li>Zastosowano wysokiej jakości algorytm PRNG (SplitMix32 / Mulberry32), który dla podanego ziarna (<code>seed</code>) gwarantuje w 100% identyczny, bitowo powtarzalny przebieg eksperymentu.</li>
+<li>Dzięki temu inżynier procesu może przekazać współpracownikom dokładną wartość ziarna (np. <code>seed: 42</code>), uzyskując identyczne serie replikacji i identyczne przedziały statystyczne na dowolnym komputerze.</li>
+<li>Wygodny przycisk <code>🎲 Losuj</code> umożliwia natychmiastowe wylosowanie nowego ziarna w celu przetestowania innego scenariusza losowego.</li>
+</ul>
+<ul>
+<li><strong>Modelowanie zmienności czasów operacji (<code>DurationVariabilityConfig</code>)</strong>:</li>
+<li>Użytkownik ma do wyboru uznane w inżynierii przemysłowej rozkłady prawdopodobieństwa:</li>
+<li><strong>Trójkątny (<code>triangular</code>)</strong>: parametryzowany mnożnikiem minimalnym (np. 0.85 = -15%), modalnym (1.0) i maksymalnym (1.15 = +15%). Idealny do modelowania naturalnej zmienności manualnej pracy operatora.</li>
+<li><strong>Normalny Gaussa (<code>normal</code>)</strong>: parametryzowany współczynnikiem zmienności / odchyleniem standardowym w procentach czasu nominalnego.</li>
+<li><strong>Jednostajny (<code>uniform</code>)</strong>: równomierne rozproszenie w zadanym przedziale <code>[min, max]</code>.</li>
+<li><strong>Lognormalny (<code>lognormal</code>)</strong>: rozkład asymetryczny z wydłużonym prawym ogonem, typowy dla trudnych manualnych operacji montażowych podatnych na incydentalne opóźnienia.</li>
+<li><strong>Stały (<code>none</code>)</strong>: brak zaburzeń (wartości nominalne).</li>
+<li>Skalowanie czasu proporcjonalnie zachowuje relacje pracy ręcznej (<code>manualWork</code>) i maszynowej (<code>machineRun</code>).</li>
+</ul>
+<ul>
+<li><strong>Model awarii i napraw maszyn — MTBF / MTTR (<code>EquipmentBreakdownModel</code>)</strong>:</li>
+<li>Możliwość zdefiniowania niezawodności dla pojedynczych stanowisk lub globalnie dla całej linii:</li>
+<li><strong>MTBF (Mean Time Between Failures)</strong>: średni czas bezawaryjnej pracy w sekundach (czas do awarii generowany jest z rozkładu wykładniczego).</li>
+<li><strong>MTTR (Mean Time To Repair)</strong>: średni czas naprawy / usuwania przestoju w sekundach.</li>
+<li><strong>Rozkład czasu naprawy</strong>: stały (<code>constant</code>), wykładniczy (<code>exponential</code>) lub normalny (<code>normal</code>).</li>
+<li>W trakcie symulacji awarie generują dynamiczne przerwy w kalendarzu stanowiska, blokując jego dostępność i wstrzymując obróbkę do chwili ukończenia naprawy.</li>
+</ul>
+<ul>
+<li><strong>Wielokrotne replikacje i agregacja statystyczna (<code>StochasticSummaryReport</code>)</strong>:</li>
+<li>Użytkownik określa liczbę replikacji (np. od 5 do 100 powtórzeń). Silnik wykonuje symulacje z postępem w czasie rzeczywistym.</li>
+<li>Raport statystyczny wyznacza:</li>
+<li><strong>Czas całkowity partii (Makespan [s])</strong>: wartość minimalną, maksymalną, średnią arytmetyczną, medianę, odchylenie standardowe, 90% przedział ufności <code>[p10–p90]</code> oraz kwantyl 95% pewności (<code>p95</code>).</li>
+<li><strong>Przepustowość linii (Throughput [szt./h])</strong>: średnią przepustowość oraz zakresy niepewności w warunkach zmienności i awaryjności.</li>
+<li><strong>Częstotliwość występowania wąskich gardeł (Bottleneck Frequency)</strong>: wykaz stanowisk, które najczęściej stawały się ograniczeniem przepływu, wraz z procentowym udziałem w replikacjach.</li>
+<li><strong>Szczegółową tabelę replikacji</strong>: zestawienie wyników każdego pojedynczego przebiegu serii (Makespan, Przepustowość, łączny czas awarii, zidentyfikowane wąskie gardło).</li>
+</ul>
 </body>
 </html>
