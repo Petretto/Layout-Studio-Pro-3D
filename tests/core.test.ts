@@ -42,8 +42,16 @@ import {
   degreesToWorldRotation,
   worldRotationToDegrees,
 } from '../src/core/algorithms/layoutSelection';
-import {layoutRoutes} from '../src/core/algorithms/routing';
+import { layoutRoutes } from '../src/core/algorithms/routing';
 import { simulate,simulationAt,SIMULATION_SPEEDS,stepSimulationTime } from '../src/core/algorithms/simulation';
+import {
+  computeSimulationAnimationSnapshot,
+  getJobInspectionDetails,
+  findStationTableObject,
+  findStationBufferObject,
+  getObjectSurfaceCoords,
+} from '../src/core/algorithms/simulationAnimation';
+import { simulateNetwork } from '../src/core/algorithms/networkSimulation';
 import { importProcess,importBOM,processRows,bomRows,templateWorkbookBytes,TEMPLATE_PROCESS_STEPS,TEMPLATE_BOM_COMPONENTS,PROCESS_COLUMN_DOCS,BOM_COLUMN_DOCS } from '../src/core/export/excelImporter';
 import { exportToDxf } from '../src/core/export/dxfExporter';
 import { parseDxfImport, applyDxfImportToProject, DXF_UNITS } from '../src/core/export/dxfImporter';
@@ -1781,5 +1789,83 @@ test('6.5: niezmiennik symulacji i technologii przy manipulacji i ukrywaniu (Zas
     assert.equal(step.nvaTimeSeconds, origStep.nvaTimeSeconds);
   }
 });
+
+test('6.6: wyznaczanie snapshotu animacji 3D wyrobów i podzespołów w czasie symulacji', () => {
+  const p = derive(parseProject(JSON.stringify(motor))).project;
+  const result = simulateNetwork(p, p.balancing?.taktTimeSeconds ?? 60, 5);
+
+  assert.ok(result.jobs.length === 5, 'Powinno być 5 zadań w partii');
+  assert.ok(result.runs.length > 0, 'Powinny być przebiegi operacji');
+
+  const firstArrival = result.jobs[0].arrival;
+  const firstFinish = result.jobs[0].finish;
+
+  // 1. Snapshot przed startem partii
+  const snapBefore = computeSimulationAnimationSnapshot(p, result, firstArrival - 1);
+  assert.equal(snapBefore.jobs.length, 0, 'Żadne zadanie nie powinno jeszcze pojawić się w linii');
+
+  // 2. Snapshot w trakcie wykonywania pierwszej operacji
+  const firstRun = result.runs.find(r => r.job === 1)!;
+  const midOpTime = firstRun.start + 5;
+  const snapMidOp = computeSimulationAnimationSnapshot(p, result, midOpTime);
+
+  assert.ok(snapMidOp.jobs.length >= 1, 'Co najmniej 1 zadanie powinno być widoczne');
+  const job1 = snapMidOp.jobs.find(j => j.jobId === 1);
+  assert.ok(job1, 'Zadanie 1 powinno istnieć');
+  assert.equal(job1.phase, 'processing', 'Faza zadania powinna wynosić processing');
+  assert.equal(job1.carrierType, 'table', 'Produkt powinien spoczywać na stole roboczym');
+  assert.ok(job1.progress > 0 && job1.progress < 1, 'Postęp operacji powinien być w przedziale (0, 1)');
+  assert.ok(job1.positionMm.zMm > 500, 'Zadanie na stole powinno znajdować się na wysokości blatu');
+
+  // 3. Snapshot po ukończeniu pierwszego zadania
+  const snapAfterFirst = computeSimulationAnimationSnapshot(p, result, firstFinish + 1);
+  const job1Finished = snapAfterFirst.jobs.find(j => j.jobId === 1);
+  assert.ok(job1Finished, 'Ukończone zadanie 1 powinno być obecne');
+  assert.equal(job1Finished.phase, 'finished', 'Faza zadania 1 po zakończeniu to finished');
+  assert.equal(job1Finished.carrierType, 'pallet', 'Ukończony wyrób spoczywa na palecie wyjściowej');
+  assert.equal(job1Finished.progress, 1, 'Postęp ukończonego wyrobu wynosi 1');
+});
+
+test('6.6: karta inspekcji stanu wyrobu (JobInspectionDetails)', () => {
+  const p = derive(parseProject(JSON.stringify(motor))).project;
+  const result = simulateNetwork(p, p.balancing?.taktTimeSeconds ?? 60, 5);
+
+  const firstRun = result.runs.find(r => r.job === 1)!;
+  const midOpTime = firstRun.start + 5;
+
+  const details = getJobInspectionDetails(p, result, 1, midOpTime);
+  assert.ok(details, 'Szczegóły inspekcji zadania 1 powinny być wyznaczone');
+  assert.equal(details.jobId, 1);
+  assert.equal(details.phase, 'processing');
+  assert.equal(details.stepId, firstRun.stepId);
+  assert.ok(details.progressPercent > 0 && details.progressPercent < 100);
+  assert.ok(details.timeRemaining! > 0);
+  assert.ok(Array.isArray(details.bomComponents));
+
+  // Niezmiennik: inspekcja nieistniejącego zadania zwraca undefined
+  const nonExistent = getJobInspectionDetails(p, result, 999, midOpTime);
+  assert.equal(nonExistent, undefined);
+});
+
+test('6.6: niezmiennik Zasady 6 — czysta deterministyczna animacja nie modyfikuje symulacji ani procesu', () => {
+  const p = derive(parseProject(JSON.stringify(motor))).project;
+  const result = simulateNetwork(p, p.balancing?.taktTimeSeconds ?? 60, 5);
+
+  const initialRunsJson = JSON.stringify(result.runs);
+  const initialJobsJson = JSON.stringify(result.jobs);
+  const initialStepsJson = JSON.stringify(p.processSteps);
+
+  // Wielokrotne obliczenie snapshotu i inspekcji
+  for (let t = 0; t <= 100; t += 10) {
+    computeSimulationAnimationSnapshot(p, result, t);
+    getJobInspectionDetails(p, result, 1, t);
+  }
+
+  // Weryfikacja nienaruszalności danych
+  assert.equal(JSON.stringify(result.runs), initialRunsJson, 'Przebiegi runs nie mogą ulec zmianie');
+  assert.equal(JSON.stringify(result.jobs), initialJobsJson, 'Zadania jobs nie mogą ulec zmianie');
+  assert.equal(JSON.stringify(p.processSteps), initialStepsJson, 'Struktura operacji procesu nie może ulec zmianie');
+});
+
 
 

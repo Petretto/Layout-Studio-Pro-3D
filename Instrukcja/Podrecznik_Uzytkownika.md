@@ -401,3 +401,39 @@ W widoku 3D (`6 Widok 3D i symulacja`) edycja położenia obiektów wyposażenia
 
 ![Ochrona obiektów zablokowanych przed podłączeniem manipulatora — syntetyczny odbiór 6.5](../outputs/qa/verify_6_5_locked_protection_3d.png)
 
+### 5.4. Animacja 3D produktów, podzespołów i transportu oraz inspekcja stanu (6.6)
+
+W widoku 3D (`6 Widok 3D i symulacja`) wprowadzono pełną synchronizację przestrzenną z deterministycznym harmonogramem symulacji partii:
+
+- **Deterministyczna animacja przepływu na osi czasu**:
+  - Każda sztuka z partii produkcyjnej jest reprezentowana w przestrzeni hali jako trójwymiarowy wyrób poruszający się ściśle według harmonogramu symulacji.
+  - Wyroby w trakcie montażu lub obróbki (`processing`) spoczywają stabilnie na powierzchni stołu roboczego danego stanowiska (wysokość blatu $Z \approx 890\text{ mm}$).
+  - Transport międzyoperacyjny (`in_transit`) oraz wprowadzenie na linię (`entering`) poruszają się po posadzce za pośrednictwem wózków platformowych (`CartTuggerPlatform`) lub autonomicznych wózków podnośnikowych (`AGVMiniLifter`).
+  - Ukończone wyroby (`finished`) są automatycznie odkładane na palecie wyrobów gotowych (`FinishedGoods`).
+  - Płynny scrubbing: przesunięcie suwaka czasu natychmiast przestawia pozycje wszystkich detali i pojazdów do dokładnego stanu z danej sekundy symulacji.
+
+- **Mini-pasek sterowania odtwarzaniem w 3D (`.sim-mini-playback-bar`)**:
+  - Bezpośrednio w oknie widoku 3D dostępny jest kompaktowy panel sterowania:
+    - Przyciski `▶ Start` / `⏸ Pauza` oraz `⏮ Reset`.
+    - Suwak czasu animacji z dokładnością do $0.1\text{ s}$.
+    - Licznik czasu bieżącego i całkowitego partii.
+    - Przycisk szybkiego włączania inspekcji `🔍 Inspekcja 3D`.
+
+- **Karta inspekcji stanu detalu (`.simulation-inspector-card`)**:
+  - Kliknięcie bezpośrednio w dowolny detal w widoku 3D lub naciśnięcie przycisku inspekcji wyświetla szczegółową kartę stanu:
+    - **Numer sztuki**: Identyfikator wyrobu w partii (np. `Sztuka #1`).
+    - **Faza cyklu życia**: Aktualny stan (`W toku`, `Transport`, `Kolejka / Bufor`, `Ukończono`).
+    - **Stanowisko i kopia**: Nazwa stacji i numer równoległej kopii, na której detal się znajduje.
+    - **Operacja technologiczna**: Kod i nazwa aktualnie realizowanego kroku procesu.
+    - **Postęp etapu**: Pasek graficzny oraz wartość procentowa postępu.
+    - **Pozostały czas**: Dokładny czas do ukończenia operacji oraz łączny czas trwania kroku.
+    - **Części z BOM**: Wykaz komponentów i materiałów pobieranych w bieżącej operacji.
+  - Badana sztuka zostaje w przestrzeni 3D oznaczona jaskrawoczerwonym pierścieniem inspekcyjnym.
+
+- **Niezmiennik Zasady 6**:
+  - Animacja 3D i inspekcja wyrobu mają charakter czysto odczytowy. Wyliczanie snapshotu animacji nie modyfikuje w żaden sposób wyników symulacji, czasów operacji ani struktury bilansu.
+
+![Animacja 3D przepływu i mini-pasek odtwarzania](../outputs/qa/verify_6_6_3d_playback_scrubbed.png)
+
+![Karta inspekcji stanu detalu z postępem i wykazem BOM](../outputs/qa/verify_6_6_inspection_card_3d.png)
+

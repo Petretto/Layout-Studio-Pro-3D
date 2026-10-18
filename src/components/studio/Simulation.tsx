@@ -8,8 +8,42 @@ import { spreadsheet } from '../../core/export/excelImporter';
 import { NumberField,TimeField,Metric,fmt,formatTimeValue,formatTimeWithUnit } from './Fields';
 export { SIMULATION_SPEEDS };
 export type { SimulationSpeed };
+export interface SimulationPlaybackState {
+  time: number;
+  isRunning: boolean;
+  speed: number;
+  endTime: number;
+  batch: number;
+  interval: number;
+  result: NetworkResult;
+}
+export interface SimulationControlCommand {
+  type: 'toggle_run' | 'set_time' | 'reset' | 'finish';
+  time?: number;
+  epoch: number;
+}
 const EMPTY_RESULT: NetworkResult = {jobs:[],runs:[],stepIds:[]};
-export function Simulation({project:p,notify,onActive,exportedResultKey,onExportResult,initialBatch=30,showStableIds=false}:{project:ProjectData;notify:(m:string)=>void;onActive:(runs:OperationRun[])=>void;exportedResultKey:string|null;onExportResult:(key:string)=>void;initialBatch?:number;showStableIds?:boolean}){
+export function Simulation({
+  project:p,
+  notify,
+  onActive,
+  exportedResultKey,
+  onExportResult,
+  initialBatch=30,
+  showStableIds=false,
+  onPlaybackChange,
+  controlCommand
+}:{
+  project:ProjectData;
+  notify:(m:string)=>void;
+  onActive:(runs:OperationRun[])=>void;
+  exportedResultKey:string|null;
+  onExportResult:(key:string)=>void;
+  initialBatch?:number;
+  showStableIds?:boolean;
+  onPlaybackChange?:(state:SimulationPlaybackState)=>void;
+  controlCommand?:SimulationControlCommand|null;
+}){
   const unit=p.timeUnit??'s';
   const [batch,setBatch]=useState(initialBatch),[interval,setIntervalValue]=useState(p.balancing?.taktTimeSeconds??60),[speed,setSpeed]=useState(10),[time,setTime]=useState(0),[running,setRunning]=useState(false);
   const timeRef=useRef(0),last=useRef(0);
@@ -36,6 +70,36 @@ export function Simulation({project:p,notify,onActive,exportedResultKey,onExport
   useEffect(()=>{setRunning(false);setTime(0);timeRef.current=0;},[result,resultKey,retry]);
   useEffect(()=>{if(!running)return;last.current=performance.now();let frame=0;const tick=(now:number)=>{const deltaSeconds=(now-last.current)/1000;last.current=now;timeRef.current=stepSimulationTime(timeRef.current,deltaSeconds,speed,end);setTime(timeRef.current);if(timeRef.current>=end)setRunning(false);else frame=requestAnimationFrame(tick);};frame=requestAnimationFrame(tick);return()=>cancelAnimationFrame(frame);},[running,speed,end]);
   useEffect(()=>{onActive(result.runs.filter(r=>r.start<=time&&r.end>time));},[result,time,onActive]);
+  useEffect(()=>{
+    onPlaybackChange?.({
+      time,
+      isRunning: running,
+      speed,
+      endTime: end,
+      batch,
+      interval,
+      result
+    });
+  },[time,running,speed,end,batch,interval,result,onPlaybackChange]);
+  useEffect(()=>{
+    if(!controlCommand)return;
+    if(controlCommand.type==='toggle_run'){
+      if(end&&time<end)setRunning(r=>!r);
+    }else if(controlCommand.type==='set_time'&&controlCommand.time!==undefined){
+      setRunning(false);
+      const clamped=Math.max(0,Math.min(end||0,controlCommand.time));
+      timeRef.current=clamped;
+      setTime(clamped);
+    }else if(controlCommand.type==='reset'){
+      setRunning(false);
+      timeRef.current=0;
+      setTime(0);
+    }else if(controlCommand.type==='finish'){
+      setRunning(false);
+      timeRef.current=end;
+      setTime(end);
+    }
+  },[controlCommand,end,time]);
   const stats=simulationAt(result.jobs,time);
   const exportCSV=()=>{spreadsheet(result.jobs.map(j=>({'Sztuka':j.id,'Wejście [s]':j.arrival,'Wyjście [s]':j.finish,'Przejście [s]':j.finish-j.arrival,...Object.fromEntries(j.starts.flatMap((s,i)=>[[`${result.stepIds[i]} start [s]`,s],[`${result.stepIds[i]} koniec [s]`,j.ends[i]]]))})),'Symulacja_partii','csv');onExportResult(resultKey);notify('Przekazano Symulacja_partii.csv do pobrania.');};
   return <div className="panel"><h2>Symulacja przepływu produkcji</h2><p className="muted">Model grafowy: gałęzie wykonują się równolegle, operacja czeka na wszystkich poprzedników tej samej sztuki. Każda kopia stanowiska wykonuje jedną operację naraz. Kolejki bez limitu, kolejność gotowości (remisy: numer sztuki i sekwencja). Cykl zespołu skaluje czasy jego operacji proporcjonalnie. Zerowy czas transportu; operatorzy są dedykowani, bez współdzielenia między stanowiskami. OEE służy do wyznaczenia celu cyklu i nie jest ponownie odejmowane w symulacji. Parametry opisują założenia, a nie prognozę awarii.</p><div className="form-grid"><NumberField label="Cel partii [szt.]" min={1} max={10000} step="1" value={batch} onChange={setBatch}/><TimeField label="Odstęp uruchamiania sztuk" min={.001} seconds={interval} unit={unit} onChange={setIntervalValue}/><label className="field">Szybkość odtwarzania<select aria-label="Szybkość odtwarzania" value={speed} onChange={e=>setSpeed(Number(e.target.value))}>{SIMULATION_SPEEDS.map(v=><option key={v} value={v}>{v}×</option>)}</select></label></div>{current?.error&&<p role="alert" className="error">{current.error}</p>}

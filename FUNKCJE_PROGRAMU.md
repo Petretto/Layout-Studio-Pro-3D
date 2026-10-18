@@ -537,3 +537,27 @@ W widoku 3D (`Scene.tsx` oraz `Factory3DView.tsx`) wdrożono:
 - **Niezmiennik technologiczny (Zasada 6 i Plan 6.4)**:
   - Operacje manipulacji wizualnej, ukrywania warstw i obiektów nie wpływają na strukturę procesu, czasy operacji, bilans ani wyniki symulacji. Szczegóły: `WERYFIKACJA_MANIPULATOROW_I_WARSTW_6_5.md`.
 
+### Animacja 3D produktów, podzespołów i transportu oraz inspekcja stanu — 6.6 (2026-10-18)
+W widoku 3D (`Scene.tsx`) oraz module symulacji (`simulationAnimation.ts`) wdrożono:
+- **Deterministyczną animację przepływu wyrobów z osią czasu symulacji**:
+  - Stan każdego detalu w czasie `t` wyliczany czystą funkcją `computeSimulationAnimationSnapshot(project, result, time)` na podstawie wyników symulacji dyskretnej (`NetworkResult`).
+  - Pełny cykl życia wyrobu w hali: `not_arrived` (przed przybyciem), `entering` (wprowadzanie z wejścia materiału), `processing` (obróbka na stole montażowym stacji), `waiting_local` (kontynuacja na tej samej kopii), `in_transit` (transport międzyoperacyjny wózkiem lub AGV), `waiting_queue` (oczekiwanie w buforze stacji docelowej) oraz `finished` (odłożenie na palecie wyjściowej wyrobów gotowych).
+  - Płynne odwzorowanie wysokości: obróbka na wysokości blatu stołu roboczego (`zMm = table.zMm + heightMm + 40`), transport na wysokości platformy wózka (280–300 mm), palety wejścia i wyjścia (200 mm).
+  - Dynamiczna wizualizacja transportu wózkami platformowymi (`CartTuggerPlatform`/`AGVMiniLifter`) z obrotem w kierunku jazdy i statusem przewozu konkretnej sztuki.
+- **Kartę inspekcji stanu detalu (`.simulation-inspector-card`)**:
+  - Kliknięcie w detal na scenie 3D (raycasting Three.js) lub przycisk `🔍 Inspekcja 3D` otwiera pływającą kartę z dokładnym stanem badanej sztuki:
+    - Identyfikator wyrobu (`Sztuka #ID`), etykieta i odznaka fazy.
+    - Stanowisko i numer kopii stacji, aktualnie wykonywana operacja procesu.
+    - Pasek i wartość procentowa postępu obróbki, pozostały czas w operacji.
+    - Całkowity czas spędzony w linii od momentu wejścia partii.
+    - Wykaz części z zestawienia materiałowego (BOM) zużywanych w bieżącej operacji.
+  - Czerwony pierścień podświetlenia (`inspectRingMesh`) wyróżniający badany detal bezpośrednio w przestrzeni 3D.
+- **Mini-pasek sterowania odtwarzaniem w 3D (`.sim-mini-playback-bar`)**:
+  - Dostępny bezpośrednio w widoku hali 3D bez konieczności przełączania na panel tabelaryczny:
+    - Przyciski `▶ Start` / `⏸ Pauza` oraz `⏮ Reset`.
+    - Płynny suwak osi czasu (scrubbing) z dokładnością do 0.1 s.
+    - Wyświetlanie aktualnego czasu symulacji oraz czasu całkowitego partii.
+    - Szybki przełącznik inspekcji wyrobu (`🔍 Inspekcja 3D` / `Detal #ID ✓`).
+- **Niezmiennik Zasady 6**:
+  - Czysto odczytowy charakter animacji 3D — snapshoty i inspekcja nie modyfikują struktury procesu, bilansu ani wyników symulacji. Szczegóły: `WERYFIKACJA_ANIMACJI_I_INSPEKCJI_6_6.md`.
+

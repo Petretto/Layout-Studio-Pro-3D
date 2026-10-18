@@ -23,6 +23,14 @@ import {
   worldRotationToDegrees,
 } from '../../core/algorithms/layoutSelection';
 import { createParametricEquipmentGroup, disposeEquipmentGroup } from '../../core/equipment/parametricEquipmentModels';
+import type { SimulationPlaybackState, SimulationControlCommand } from './Simulation';
+import {
+  computeSimulationAnimationSnapshot,
+  getJobInspectionDetails,
+  type SimulationAnimationSnapshot,
+  type JobInspectionDetails,
+  type AnimatedJobItem,
+} from '../../core/algorithms/simulationAnimation';
 
 export function Scene({
   project: p,
@@ -31,6 +39,8 @@ export function Scene({
   readOnly = false,
   selectedIds,
   onSelect,
+  simulationPlayback,
+  onSimulationCommand,
 }: {
   project: ProjectData;
   change: (p: ProjectData) => void;
@@ -38,6 +48,8 @@ export function Scene({
   readOnly?: boolean;
   selectedIds?: string[];
   onSelect?: (ids: string[]) => void;
+  simulationPlayback?: SimulationPlaybackState | null;
+  onSimulationCommand?: (cmd: SimulationControlCommand) => void;
 }) {
   const host=useRef<HTMLDivElement>(null),fit=useRef<()=>void>(()=>{}),[error,setError]=useState('');
   const [editing,setEditing]=useState(false),[snap,setSnap]=useState(true),[draft,setDraft]=useState<LayoutObject|null>(null);
@@ -45,7 +57,10 @@ export function Scene({
   const [gizmoMode,setGizmoMode]=useState<TransformGizmoMode>('translate');
   const [layers3D,setLayers3D]=useState<Layout3DLayersState>(DEFAULT_3D_LAYERS);
   const [hiddenIds,setHiddenIds]=useState<string[]>([]);
+  const [inspectedJobId,setInspectedJobId]=useState<number|null>(null);
+  const [showInspector,setShowInspector]=useState(true);
   const activity=useRef(activeRuns);activity.current=activeRuns;
+  const simPlaybackRef=useRef(simulationPlayback);simPlaybackRef.current=simulationPlayback;
   const topView=useRef<()=>void>(()=>{}),focusObject=useRef<(id:string)=>void>(()=>{});
   const pose=useRef<{position:THREE.Vector3;target:THREE.Vector3}|null>(null),commit=useRef(change);commit.current=change;
 
@@ -318,6 +333,36 @@ export function Scene({
     const ray=new THREE.Raycaster(),plane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
     let drag:{group:THREE.Group;start:THREE.Vector3;origin:THREE.Vector3}|null=null;
     let pointerDownPos={x:0,y:0};
+    // Products & Vehicle 3D meshes for simulation animation
+    const productsGroup=new THREE.Group();
+    scene.add(productsGroup);
+    const vehiclesGroup=new THREE.Group();
+    scene.add(vehiclesGroup);
+
+    // Reusable geometry and materials for products
+    const productGeom=new THREE.BoxGeometry(0.35,0.18,0.25);
+    const productMatDefault=new THREE.MeshStandardMaterial({color:'#38bdf8',metalness:0.3,roughness:0.4});
+    const productMatActive=new THREE.MeshStandardMaterial({color:'#22c55e',emissive:'#15803d',emissiveIntensity:0.6,metalness:0.3,roughness:0.3});
+    const productMatTransit=new THREE.MeshStandardMaterial({color:'#f59e0b',emissive:'#b45309',emissiveIntensity:0.4,metalness:0.3,roughness:0.3});
+    const productMatQueue=new THREE.MeshStandardMaterial({color:'#a855f7',metalness:0.3,roughness:0.5});
+    const productMatFinished=new THREE.MeshStandardMaterial({color:'#64748b',metalness:0.2,roughness:0.8});
+    const productMatSelected=new THREE.MeshStandardMaterial({color:'#f43f5e',emissive:'#e11d48',emissiveIntensity:0.8,metalness:0.4,roughness:0.2});
+
+    // Ring indicator for inspected job
+    const inspectRingGeom=new THREE.RingGeometry(0.24,0.30,24);
+    inspectRingGeom.rotateX(-Math.PI/2);
+    const inspectRingMat=new THREE.MeshBasicMaterial({color:'#f43f5e',side:THREE.DoubleSide});
+    const inspectRingMesh=new THREE.Mesh(inspectRingGeom,inspectRingMat);
+    inspectRingMesh.visible=false;
+    scene.add(inspectRingMesh);
+
+    // Vehicle mesh templates (platform cart)
+    const vehicleGeom=new THREE.BoxGeometry(0.7,0.18,0.5);
+    const vehicleMat=new THREE.MeshStandardMaterial({color:'#f97316',metalness:0.4,roughness:0.5});
+
+    const productMeshPool:Map<number,THREE.Mesh>=new Map();
+    const vehicleMeshPool:Map<string,THREE.Mesh>=new Map();
+
     const cast=(e:PointerEvent)=>{const r=renderer.domElement.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);};
     const down=(e:PointerEvent)=>{
       if(readOnly||e.button!==0)return;
@@ -357,18 +402,32 @@ export function Scene({
         return;
       }
       const dist=Math.hypot(e.clientX-pointerDownPos.x,e.clientY-pointerDownPos.y);
-      if(dist<5&&!readOnly&&e.button===0){
+      if(dist<5&&e.button===0){
         cast(e);
-        let picked:THREE.Object3D|undefined=ray.intersectObjects(groups.filter(g=>g.visible),true)[0]?.object;
-        while(picked&&!picked.userData.id)picked=picked.parent??undefined;
-        if(picked){
-          const clickedId=picked.userData.id as string;
-          const isMulti=e.shiftKey||e.ctrlKey||e.metaKey;
-          const current=selectedIds??[];
-          const nextIds=isMulti?(current.includes(clickedId)?current.filter(id=>id!==clickedId):[...current,clickedId]):[clickedId];
-          onSelect?.(nextIds);
-          const clickedObj=p.layoutObjects.find(o=>o.id===clickedId);
-          if(clickedObj)setDraft({...clickedObj});
+        // Check for product pickup first (simulation inspection)
+        const hitProducts=ray.intersectObjects(productsGroup.children.filter(c=>c.visible),true);
+        if(hitProducts.length>0){
+          let prodObj:THREE.Object3D|undefined=hitProducts[0].object;
+          while(prodObj&&typeof prodObj.userData.jobId!=='number')prodObj=prodObj.parent??undefined;
+          if(prodObj&&typeof prodObj.userData.jobId==='number'){
+            const clickedJobId=prodObj.userData.jobId as number;
+            setInspectedJobId(prev=>prev===clickedJobId?null:clickedJobId);
+            return;
+          }
+        }
+
+        if(!readOnly){
+          let picked:THREE.Object3D|undefined=ray.intersectObjects(groups.filter(g=>g.visible),true)[0]?.object;
+          while(picked&&!picked.userData.id)picked=picked.parent??undefined;
+          if(picked){
+            const clickedId=picked.userData.id as string;
+            const isMulti=e.shiftKey||e.ctrlKey||e.metaKey;
+            const current=selectedIds??[];
+            const nextIds=isMulti?(current.includes(clickedId)?current.filter(id=>id!==clickedId):[...current,clickedId]):[clickedId];
+            onSelect?.(nextIds);
+            const clickedObj=p.layoutObjects.find(o=>o.id===clickedId);
+            if(clickedObj)setDraft({...clickedObj});
+          }
         }
       }
     };
@@ -385,6 +444,75 @@ export function Scene({
         const isVisible=obj?isLayoutObjectVisible3D(obj,layers3D,hiddenIds):true;
         m.marker.visible=isVisible&&activity.current.some(r=>r.stationId===m.station&&r.copy===m.copy);
       }
+
+      // Animate products and vehicles based on deterministic simulation snapshot
+      const currentPlayback=simPlaybackRef.current;
+      if(currentPlayback&&currentPlayback.result&&currentPlayback.result.jobs.length>0){
+        const snapshot=computeSimulationAnimationSnapshot(p,currentPlayback.result,currentPlayback.time);
+        
+        // Hide all existing product meshes initially
+        productMeshPool.forEach(mesh=>{mesh.visible=false;});
+        
+        // Update/create meshes for active jobs in snapshot
+        let activeInspectedPos:THREE.Vector3|null=null;
+        for(const job of snapshot.jobs){
+          let mesh=productMeshPool.get(job.jobId);
+          if(!mesh){
+            mesh=new THREE.Mesh(productGeom,productMatDefault);
+            mesh.userData.jobId=job.jobId;
+            productsGroup.add(mesh);
+            productMeshPool.set(job.jobId,mesh);
+          }
+          // Coordinate mapping: X=xMm/1000, Y=zMm/1000 (elevation), Z=yMm/1000 (floor depth)
+          mesh.position.set(job.positionMm.xMm/1000,job.positionMm.zMm/1000,job.positionMm.yMm/1000);
+          mesh.visible=true;
+
+          // Material selection by phase
+          const isInspected=job.jobId===inspectedJobId;
+          if(isInspected){
+            mesh.material=productMatSelected;
+            activeInspectedPos=mesh.position.clone();
+          }else if(job.phase==='processing'){
+            mesh.material=productMatActive;
+          }else if(job.phase==='in_transit'||job.phase==='entering'){
+            mesh.material=productMatTransit;
+          }else if(job.phase==='waiting_queue'||job.phase==='waiting_local'){
+            mesh.material=productMatQueue;
+          }else if(job.phase==='finished'){
+            mesh.material=productMatFinished;
+          }else{
+            mesh.material=productMatDefault;
+          }
+        }
+
+        // Update inspection ring
+        if(activeInspectedPos){
+          inspectRingMesh.position.copy(activeInspectedPos);
+          inspectRingMesh.position.y+=0.12;
+          inspectRingMesh.visible=true;
+        }else{
+          inspectRingMesh.visible=false;
+        }
+
+        // Update vehicle positions
+        vehicleMeshPool.forEach(vm=>{vm.visible=false;});
+        for(const v of snapshot.vehicles){
+          let vm=vehicleMeshPool.get(v.id);
+          if(!vm){
+            vm=new THREE.Mesh(vehicleGeom,vehicleMat);
+            vehiclesGroup.add(vm);
+            vehicleMeshPool.set(v.id,vm);
+          }
+          vm.position.set(v.positionMm.xMm/1000,0.1,v.positionMm.yMm/1000);
+          vm.rotation.y=-v.rotationDeg*Math.PI/180;
+          vm.visible=true;
+        }
+      }else{
+        productMeshPool.forEach(mesh=>{mesh.visible=false;});
+        vehicleMeshPool.forEach(vm=>{vm.visible=false;});
+        inspectRingMesh.visible=false;
+      }
+
       renderer.render(scene,camera);
     };
     loop();
@@ -502,7 +630,118 @@ export function Scene({
       {!isFacilityConfirmed&&<p className="notice facility-unconfirmed-note" role="note"><strong>Wymiary hali (5.13):</strong> {FACILITY_UNCONFIRMED_NOTE}</p>}
       {error&&<p role="alert" className="error">{error}</p>}
 
-      <div className="scene" ref={host} aria-label="Widok hali 3D"/>
+      <div className="scene-container" style={{position:'relative'}}>
+        <div className="scene" ref={host} aria-label="Widok hali 3D"/>
+
+        {/* 6.6: Simulation Inspector Card */}
+        {showInspector&&inspectedJobId!==null&&simulationPlayback?.result&&(
+          (() => {
+            const details = getJobInspectionDetails(p, simulationPlayback.result, inspectedJobId, simulationPlayback.time);
+            if (!details) return null;
+            return (
+              <div className="simulation-inspector-card" role="region" aria-label={`Inspekcja sztuki Job #${details.jobId}`}>
+                <div className="sim-inspector-header">
+                  <strong>Sztuka #{details.jobId}</strong>
+                  <span className={`sim-phase-badge sim-phase-${details.phase}`}>{details.statusLabel}</span>
+                  <button className="sim-inspector-close" onClick={()=>setInspectedJobId(null)} aria-label="Zamknij kartę inspekcji">×</button>
+                </div>
+                <div className="sim-inspector-body">
+                  <div className="sim-inspector-row">
+                    <span className="sim-prop-label">Stanowisko:</span>
+                    <span className="sim-prop-val">{details.workstationName || details.stationId || '—'} {details.copy ? `(kopia ${details.copy})` : ''}</span>
+                  </div>
+                  <div className="sim-inspector-row">
+                    <span className="sim-prop-label">Operacja:</span>
+                    <span className="sim-prop-val">{details.stepName ? `${details.stepId} · ${details.stepName}` : details.stepId || '—'}</span>
+                  </div>
+                  <div className="sim-inspector-row">
+                    <span className="sim-prop-label">Postęp etapu:</span>
+                    <span className="sim-prop-val">{Math.round(details.progressPercent)}%</span>
+                  </div>
+                  <div className="sim-progress-track">
+                    <div className="sim-progress-fill" style={{width: `${Math.max(0, Math.min(100, details.progressPercent))}%`}}/>
+                  </div>
+                  {details.runDuration !== undefined && (
+                    <div className="sim-inspector-row">
+                      <span className="sim-prop-label">Pozostało w operacji:</span>
+                      <span className="sim-prop-val">{details.timeRemaining?.toFixed(1)} s / {details.runDuration.toFixed(1)} s</span>
+                    </div>
+                  )}
+                  <div className="sim-inspector-row">
+                    <span className="sim-prop-label">Czas w linii:</span>
+                    <span className="sim-prop-val">{details.totalCycleTimeSoFar.toFixed(1)} s</span>
+                  </div>
+                  {details.bomComponents.length > 0 && (
+                    <div className="sim-inspector-bom">
+                      <span className="sim-prop-label">Części z BOM:</span>
+                      <div className="sim-bom-tags">
+                        {details.bomComponents.map((b, idx) => (
+                          <span key={idx} className="sim-bom-tag">{b}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()
+        )}
+
+        {/* 6.6: Simulation Mini Playback Controls in 3D View */}
+        {simulationPlayback && simulationPlayback.endTime > 0 && (
+          <div className="sim-mini-playback-bar" role="toolbar" aria-label="Sterowanie animacją symulacji 3D">
+            <button
+              className="primary"
+              onClick={() => onSimulationCommand?.({ type: 'toggle_run', epoch: Date.now() })}
+              title={simulationPlayback.isRunning ? 'Zatrzymaj animację (Pauza)' : 'Uruchom animację 3D'}
+            >
+              {simulationPlayback.isRunning ? '⏸ Pauza' : '▶ Start'}
+            </button>
+            <button
+              onClick={() => onSimulationCommand?.({ type: 'reset', epoch: Date.now() })}
+              title="Resetuj czas symulacji do 0s"
+            >
+              ⏮ Reset
+            </button>
+            <div className="sim-playback-time">
+              <span>{simulationPlayback.time.toFixed(1)} s</span>
+              <span className="muted"> / {simulationPlayback.endTime.toFixed(1)} s</span>
+            </div>
+            <input
+              type="range"
+              aria-label="Suwak czasu animacji symulacji 3D"
+              min={0}
+              max={simulationPlayback.endTime}
+              step={0.1}
+              value={simulationPlayback.time}
+              onChange={(e) => {
+                onSimulationCommand?.({
+                  type: 'set_time',
+                  time: Number(e.target.value),
+                  epoch: Date.now()
+                });
+              }}
+            />
+            {inspectedJobId !== null ? (
+              <button
+                className="sim-inspector-toggle active"
+                onClick={() => setInspectedJobId(null)}
+                title="Odznacz podgląd detalu"
+              >
+                Detal #{inspectedJobId} ✓
+              </button>
+            ) : (
+              <button
+                className="sim-inspector-toggle"
+                onClick={() => setInspectedJobId(1)}
+                title="Włącz inspekcję detalu (wybierz detal #1)"
+              >
+                🔍 Inspekcja 3D
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
       <p className="muted">
         Lewy przycisk: obrót kamery · Prawy: przesuwanie kamery · Kółko: zoom.
