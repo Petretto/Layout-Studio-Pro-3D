@@ -44,9 +44,11 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 6.2: cały plan 49/67 = **73,1%**; pierwsze wydanie 49/65 = **75,4%**; Etap 6: 2/7 = **28,6%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po 6.5: cały plan 51/69 = **73,9%**; pierwsze wydanie 51/65 = **78,5%**; Etap 6: 4/7 = **57,1%**. Weryfikacja: `node scripts/plan_progress.mjs`.
 
-Stan historyczny po 6.1: cały plan 48/67 = **71,6%**; pierwsze wydanie 48/65 = **73,8%**; Etap 6: 1/7 = **14,3%**.
+Stan historyczny po 6.4: cały plan 50/69 = **72,5%**; pierwsze wydanie 50/65 = **76,9%**; Etap 6: 3/7 = **42,9%**.
+
+Stan historyczny po 6.2: cały plan 49/67 = **73,1%**; pierwsze wydanie 49/65 = **75,4%**; Etap 6: 2/7 = **28,6%**.
 
 Stan historyczny po 5.13 (odbiór Etapu 5): cały plan 47/67 = **70,1%**; pierwsze wydanie 47/65 = **72,3%**; Etap 5: 13/13 = **100,0%**.
 
@@ -108,6 +110,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+6.5 (2026-10-18): wdrożone — dodanie wygodnych manipulatorów przesuwania i obrotu (Three.js TransformControls) oraz ukrywania warstw i obiektów w 3D (`src/core/algorithms/layoutSelection.ts`, `src/components/studio/Scene.tsx`, `src/components/viewport3d/Factory3DView.tsx`, `src/components/studio/HallWorkspace.css`). Translacja w płaszczyźnie posadzki w osiach X, Z (odpowiadających współrzędnym CAD X, Y w mm) ze stałą elewacją posadzki (blokada osi Y), obrót wokół osi pionowej (Yaw, rotationDeg 0–360°), skróty klawiszowe W (przesuwanie), E / R (obrót), Q (wyłączenie manipulatora), G (przyciąganie do siatki posadzki i skoków kąta 15°). Ścisła ochrona obiektów zablokowanych (locked): brak podłączenia manipulatora, odznaka `🔒 Zablokowany (brak manipulacji)` w formularzu 3D. Jednokrokowa historia operacji (Ctrl+Z / Ctrl+Y) rejestrowana wyłącznie na zakończenie manipulacji myszą (dragging-changed / mouseUp). Rozwijane menu „Warstwy 3D” na pasku narzędziowym z niezależnym filtrowaniem 5 warstw (Stanowiska, Bufory i logistyka, Strefy operatorów, Przeszkody, Połączenia procesu / spaghetti) spójnym z CAD 2D oraz ukrywanie zaznaczonego obiektu (H), przywracanie ukrytych (Shift+H / N). Brak wpływu modeli i manipulatorów na parametry technologiczne, czasy i symulację (Zasada 6). Kopia zapasowa: `backup/v0.4.0_przed_6_5_20261018` (391 plików z SHA256). Testy celowane 75/75 PASS (w tym 6 nowych testów w `tests/core.test.ts`), kompilacja produkcyjna `npm.cmd run build` PASS, weryfikacja automatyczna Edge CDP (`tests/qa/verify_6_5.mjs`) PASS (5 zrzutów ekranu w `outputs/qa/`: translate, rotate, layers dropdown, locked protection, mobile 600px). Podręcznik użytkownika Markdown/HTML zaktualizowany (opis skrótów, nowa sekcja 5.3 ze screenshotami). Kontrakt i raport: `WERYFIKACJA_MANIPULATOROW_I_WARSTW_6_5.md`. Postęp: cały plan 51/69 = 73,9%, pierwsze wydanie 51/65 = 78,5%, Etap 6: 4/7 = 57,1%. Następny punkt: 6.6 (Animacja produktów, podzespołów i transportu zgodnie z harmonogramem symulacji; pauza i inspekcja stanu).
 
 6.4 (2026-10-18): wdrożone — osobne opcjonalne `LayoutObject.visualModelId`, wybór 3 wbudowanych konceptów 6.3b/powrót do generatora w aktywnych właściwościach 2D/3D. Bez zmiany typu, ID, przypisań, geometrii, zasobów i trybu layoutu; wybór zachowany dla tych samych ID w auto. Koncept zachowuje proporcje i mieści się w obrysie, a nakładki nadal wynikają ze standardu/typu. Wspólny renderer Scene/Factory3DView, osobne zasoby instancji. Zapis 4/5/6 kompatybilny, nieznane ID odrzucane; bez przełączania schematu. Backup `backup/v0.4.0_przed_6_4_20261018` (384 SHA256). Testy celowane 11/11 PASS (generatory, zapis/migracja, pełne wyniki 4/5/6 bez zmiany), build PASS, Edge WebGL/historia/zapis-odczyt/ochrona niezapisanych wymiarów/1440-600 px PASS. Instrukcja Markdown/HTML/PDF uzupełniona, 36 stron/34 obrazy, kontrola i odbiór dodanej sekcji PASS. Kontrakt `MODEL_WYGLADU_WYPOSAZENIA_6_4.md`, raport `WERYFIKACJA_WYGLADU_WYPOSAZENIA_6_4.md`. Pozostaje ostrzeżenie dużego pakietu sceny; większa scena w 6.7. Konfigurator 8.3/import CAD 8.4 poza zakresem. 6.3 nadal w trakcie dla maszyn/Eko. Następny punkt 6.5; Vercel nie zweryfikowano.
 
@@ -558,7 +562,7 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 | 6.2 | Przygotować parametryczne stoły, regały, palety, pojemniki, wózki i przenośniki. | wdrożone |
 | 6.3 | Przygotować charakterystyczne modele Eko/maszyn w Blenderze tam, gdzie prosta geometria nie wystarcza; sprawdzić skalę i budżet złożoności. | w trakcie |
 | 6.4 | Oddzielić model wizualny od parametrów technologicznych, aby wymiana wyglądu nie zmieniała zdolności produkcyjnej. | wdrożone |
-| 6.5 | Dodać wygodne manipulatory przesuwania i obrotu oraz ukrywanie warstw i obiektów. | nierozpoczęte |
+| 6.5 | Dodać wygodne manipulatory przesuwania i obrotu oraz ukrywanie warstw i obiektów. | wdrożone |
 | 6.6 | Animować produkty, podzespoły i transport zgodnie z harmonogramem symulacji; umożliwić pauzę i inspekcję stanu. | nierozpoczęte |
 | 6.7 | Sprawdzić czytelność oraz wydajność większej sceny i zapewnić użyteczny tryb uproszczony. | nierozpoczęte |
 

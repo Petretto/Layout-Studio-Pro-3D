@@ -164,7 +164,8 @@ Cyfrowy bliźniak i symulator zdarzeniowy:
 - **Ochrona obiektów zablokowanych (`locked`) w 3D**: Obiekty oznaczone jako zablokowane nie mogą być przypadkowo przesunięte przeciąganiem myszy w widoku 3D ani 2D. Formularz edycji 3D zawiera pole wyboru blokady oraz blokuje edycję pól współrzędnych.
 - **Spójne skróty klawiszowe**:
   - Globalne: `Ctrl+Z` (Cofnij), `Ctrl+Y` (Ponów), `Ctrl+S` (Zapisz lokalnie w pamięci przeglądarki).
-  - Nawigacja i rzut: `F` (Dopasuj cały layout / Dopasuj halę 3D), `T` (Widok prostopadle z góry w 3D), `G` (Przełącz przyciąganie do siatki), `M` (Przełącz tryb przesuwania / edycji), `L` (Zablokuj / odblokuj zaznaczone obiekty), `S` (Relacje technologiczne procesu w 3D), `Strzałki` (Precyzyjne przesunięcie zaznaczonych obiektów o krok siatki; z klawiszem `Shift` krok 5×), `Escape` (Odznacz / zamknij panel / anuluj pomiar).
+  - Nawigacja i rzut: `F` (Dopasuj cały layout / Dopasuj halę 3D), `T` (Widok prostopadle z góry w 3D), `G` (Przełącz przyciąganie do siatki / skoków kątowych), `M` (Przełącz tryb edycji / przesuwania myszą), `L` (Zablokuj / odblokuj zaznaczone obiekty), `S` (Relacje technologiczne procesu w 3D), `Strzałki` (Precyzyjne przesunięcie zaznaczonych obiektów o krok siatki; z klawiszem `Shift` krok 5×), `Escape` (Odznacz / zamknij panel / anuluj pomiar).
+  - Manipulatory 3D (Gizmo) i widoczność (6.5): `W` (Manipulator przesuwania w osiach posadzki X, Z), `E` / `R` (Manipulator obrotu Yaw wokół osi pionowej), `Q` (Wyłącz manipulator 3D), `H` (Ukryj zaznaczone obiekty w widoku 3D), `Shift+H` / `N` (Pokaż wszystkie ukryte obiekty w 3D).
 - **Spójne nazwy i podpowiedzi narzędzi**: Wszystkie przyciski pasków narzędziowych 2D i 3D posiadają atrybuty `title` z przypisanymi skrótami klawiszowymi.
 - **Ściągawka skrótów pod rzutem i widokiem 3D**: Rozwijana sekcja **Skróty klawiszowe CAD i 3D** prezentuje pełną listę skrótów z czytelnymi oznaczeniami `<kbd>`.
 
@@ -370,4 +371,33 @@ Działają **Cofnij/Ponów**, zapis lokalny i JSON oraz ponowne otwarcie. Zmiana
 ![Wybór wyglądu wyposażenia — syntetyczny odbiór 6.4](../outputs/qa/verify_6_4_controls_1440.png)
 
 ![Koncept stanowiska w rzeczywistym widoku 3D — syntetyczny odbiór 6.4](../outputs/qa/verify_6_4_bench_3d.png)
+
+### 5.3. Manipulatory 3D przesuwania i obrotu oraz ukrywanie warstw i obiektów (6.5)
+
+W widoku 3D (`6 Widok 3D i symulacja`) edycja położenia obiektów wyposażenia odbywa się za pomocą wygodnych manipulatorów przestrzennych (Three.js TransformControls) oraz precyzyjnych filtrów widoczności warstw:
+
+- **Manipulatory 3D przesuwania i obrotu (Gizmo)**:
+  - **Przesuwanie w osiach posadzki (`W`)**: Manipulator translacji pozwala płynnie przesuwać zaznaczony stół, regał czy wózek wzdłuż osi posadzki $X$ i $Z$ (odpowiadających współrzędnym CAD $X, Y$ w milimetrach). Przesuwanie w osi pionowej $Y$ jest zablokowane, dzięki czemu wyposażenie zawsze spoczywa stabilnie na poziomie posadzki hali ($Y=0$) i nie ma ryzyka niekontrolowanego uniesienia obiektu w powietrze.
+  - **Obrót wokół osi pionowej (`E` / `R`)**: Manipulator rotacji (zielony pierścień Yaw) umożliwia precyzyjne obracanie obiektu wokół osi pionowej (kąt `rotationDeg` 0–360°).
+  - **Wyłączenie manipulatora (`Q`)**: Klawisz `Q` lub przycisk `Wyłącz manipulator 3D (Q)` ukrywa gizmo, przywracając czysty podgląd bryły 3D.
+  - **Przyciąganie do siatki i kątów 15° (`G`)**: Gdy włączony jest przełącznik `Siatka 3D (G)`, przesuwanie przyciąga pozycję do siatki posadzki (`gridSizeMm` w metrach), a obrót skokowo przyciąga do wielokrotności kąta 15°.
+  - **Ochrona obiektów zablokowanych (`locked`)**: Jeżeli zaznaczony obiekt posiada aktywną blokadę (`locked: true`), manipulator 3D nie zostaje do niego podłączony, zapobiegając przypadkowemu przesunięciu. W nagłówku formularza 3D wyświetlana jest czytelna odznaka `🔒 Zablokowany (brak manipulacji)`.
+  - **Jednokrokowa historia operacji (`Ctrl+Z` / `Ctrl+Y`)**: Przeciąganie manipulatora aktualizuje podgląd na żywo na ekranie, natomiast zapis do historii następuje wyłącznie na zakończenie ruchu (po zwolnieniu przycisku myszy). Pojedyncze przesunięcie lub obrót cofa się jednym naciśnięciem `Ctrl+Z`.
+
+- **Ukrywanie i widoczność warstw w 3D**:
+  - Rozwijane menu **Warstwy 3D** na górnym pasku narzędziowym widoku 3D pozwala niezależnie włączać i wyłączać widoczność 5 logicznych warstw zgodnych z rzutem CAD 2D: `Stanowiska`, `Bufory i logistyka`, `Strefy operatorów`, `Przeszkody` oraz `Połączenia procesu (spaghetti)`.
+  - Przycisk menu dynamicznie informuje o liczbie ukrytych warstw (np. `Warstwy 3D (2 ukryte)`), a wewnątrz menu dostępne są przyciski szybkiego zaznaczenia `Wszystkie` oraz `Domyślne`.
+
+- **Ukrywanie pojedynczych i zaznaczonych obiektów w 3D**:
+  - Przycisk **Ukryj w 3D (H)** oraz skrót klawiszowy `H` natychmiast ukrywają aktualnie zaznaczony obiekt na scenie trójwymiarowej.
+  - Przycisk **Pokaż ukryte w 3D (N)** oraz skrót `Shift+H` natychmiast przywracają widoczność wszystkich indywidualnie ukrytych obiektów.
+
+- **Niezmiennik technologiczny (Zasada 6 i Plan 6.4)**:
+  - Manipulatory 3D, wizualne obrysy oraz ukrywanie warstw i obiektów mają charakter wyłącznie ergonomiczno-wizualny. Nie wpływają na czasy operacji, marszrutę technologiczną, obsadę stanowisk ani wyniki symulacji partii.
+
+![Manipulator 3D przesuwania w osiach posadzki — syntetyczny odbiór 6.5](../outputs/qa/verify_6_5_gizmo_translate_3d.png)
+
+![Manipulator 3D obrotu i menu rozwijane warstw 3D — syntetyczny odbiór 6.5](../outputs/qa/verify_6_5_gizmo_rotate_3d.png)
+
+![Ochrona obiektów zablokowanych przed podłączeniem manipulatora — syntetyczny odbiór 6.5](../outputs/qa/verify_6_5_locked_protection_3d.png)
 

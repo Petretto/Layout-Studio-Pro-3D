@@ -25,6 +25,107 @@ export function classifyLayoutObjectLayer(o:Pick<LayoutObject,'type'>):'stations
   if(o.type==='Table'||o.type==='TableESD'||o.type==='TableToolRail'||o.type==='QualityGate'||o.type==='ReworkStation')return 'stations';
   return 'buffers';
 }
+
+export type LayoutLayer3DId = 'stations'|'buffers'|'operators'|'routes'|'obstacles';
+
+export interface Layout3DLayersState {
+  stations: boolean;
+  buffers: boolean;
+  operators: boolean;
+  routes: boolean;
+  obstacles: boolean;
+}
+
+export const DEFAULT_3D_LAYERS: Layout3DLayersState = {
+  stations: true,
+  buffers: true,
+  operators: true,
+  routes: true,
+  obstacles: true,
+};
+
+export type TransformGizmoMode = 'translate' | 'rotate' | 'off';
+
+export function isLayoutObjectVisible3D(
+  object: LayoutObject,
+  layers: Layout3DLayersState,
+  hiddenObjectIds: readonly string[] | ReadonlySet<string> = []
+): boolean {
+  const hidden = hiddenObjectIds instanceof Set ? hiddenObjectIds : new Set(hiddenObjectIds);
+  if (hidden.has(object.id)) return false;
+  const layerKey = classifyLayoutObjectLayer(object);
+  return !!layers[layerKey];
+}
+
+export function hideObjectIds(currentHidden: readonly string[], objectIds: readonly string[]): string[] {
+  const set = new Set(currentHidden);
+  for (const id of objectIds) set.add(id);
+  return Array.from(set);
+}
+
+export function showObjectIds(currentHidden: readonly string[], objectIds: readonly string[]): string[] {
+  const set = new Set(currentHidden);
+  for (const id of objectIds) set.delete(id);
+  return Array.from(set);
+}
+
+export function toggleHiddenObjectIds(currentHidden: readonly string[], objectIds: readonly string[]): string[] {
+  const set = new Set(currentHidden);
+  for (const id of objectIds) {
+    if (set.has(id)) set.delete(id);
+    else set.add(id);
+  }
+  return Array.from(set);
+}
+
+export function canManipulate3D(object?: Pick<LayoutObject, 'locked'> | null): boolean {
+  return !!object && !object.locked;
+}
+
+export function layoutToWorldCoordinates(
+  xMm: number,
+  yMm: number,
+  widthMm: number,
+  lengthMm: number
+): { posX: number; posZ: number } {
+  return {
+    posX: Number(((xMm + widthMm / 2) / 1000).toFixed(6)),
+    posZ: Number(((yMm + lengthMm / 2) / 1000).toFixed(6)),
+  };
+}
+
+export function worldToLayoutCoordinates(
+  posX: number,
+  posZ: number,
+  widthMm: number,
+  lengthMm: number,
+  snapGridMm?: number
+): { xMm: number; yMm: number } {
+  let xMm = Math.round(posX * 1000 - widthMm / 2);
+  let yMm = Math.round(posZ * 1000 - lengthMm / 2);
+  if (snapGridMm && snapGridMm > 1) {
+    xMm = Math.round(xMm / snapGridMm) * snapGridMm;
+    yMm = Math.round(yMm / snapGridMm) * snapGridMm;
+  }
+  return { xMm, yMm };
+}
+
+export function degreesToWorldRotation(rotationDeg: number): number {
+  return (-rotationDeg * Math.PI) / 180;
+}
+
+export function worldRotationToDegrees(rotationYRad: number, snapAngleDeg?: number): number {
+  let deg = (-rotationYRad * 180) / Math.PI;
+  deg = Math.round(deg) % 360;
+  if (deg < 0) deg += 360;
+  if (deg === 360) deg = 0;
+  if (snapAngleDeg && snapAngleDeg > 0) {
+    deg = (Math.round(deg / snapAngleDeg) * snapAngleDeg) % 360;
+    if (deg < 0) deg += 360;
+    if (deg === 360) deg = 0;
+  }
+  return deg;
+}
 export function lockLayoutObjects(objects:LayoutObject[],ids:string[],locked:boolean):LayoutObject[]{
   const chosen=new Set(ids);
   return objects.map(o=>{if(!chosen.has(o.id))return o;const {locked:_,...rest}=o;return locked?{...rest,locked:true}:rest;});
@@ -466,6 +567,11 @@ export const LAYOUT_SHORTCUTS: readonly ShortcutDefinition[] = [
   { key: 'Ctrl+S', label: 'Zapisz lokalnie', description: 'Zapisuje projekt w pamięci przeglądarki', context: 'all' },
   { key: 'F', label: 'Dopasuj widok', description: 'Dopasowuje powiększenie do obrysu hali lub wybranego obiektu', context: 'all' },
   { key: 'T', label: 'Widok z góry', description: 'Ustawia kamerę 3D bezpośrednio nad halą', context: '3d' },
+  { key: 'W', label: 'Przesuwanie 3D', description: 'Włącza manipulator przesuwania wyposażenia po posadzce', context: '3d' },
+  { key: 'E', label: 'Obrót 3D', description: 'Włącza manipulator obrotu wyposażenia wokół osi pionowej', context: '3d' },
+  { key: 'Q', label: 'Wyłącz manipulator', description: 'Ukrywa manipulator 3D i przełącza na standardową nawigację', context: '3d' },
+  { key: 'H', label: 'Ukryj w 3D', description: 'Ukrywa zaznaczone obiekty w widoku 3D', context: '3d' },
+  { key: 'Shift+H', label: 'Pokaż ukryte w 3D', description: 'Przywraca widoczność wszystkich ukrytych obiektów w 3D', context: '3d' },
   { key: 'G', label: 'Przyciąganie do siatki', description: 'Włącza lub wyłącza przyciąganie do siatki', context: 'all' },
   { key: 'M', label: 'Przesuwanie wyposażenia', description: 'Przełącza tryb przesuwania wyposażenia i widoku', context: 'all' },
   { key: 'L', label: 'Zablokuj / odblokuj', description: 'Blokuje lub odblokowuje pozycję i wymiary zaznaczonych obiektów', context: 'all' },

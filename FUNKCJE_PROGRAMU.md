@@ -517,3 +517,23 @@ Galeria pomocniczego edytora zawiera stanowisko montażowe z nadbudową, wózek 
 
 ### Niezależny wybór wyglądu wyposażenia — 6.4 (2026-10-18)
 Aktywny edytor 2D/3D pozwala przypisać zapisanym obiektom jeden z 3 konceptów 6.3b lub przywrócić generator według typu. Wygląd nie zmienia ID, typu, przypisania stanowiska, gabarytów, czasu, obsady, zdolności ani trybu layoutu. Zachowuje proporcje wewnątrz obrysu. Osobne zatwierdzenie, ochrona niezapisanych wymiarów, historia i zapis/odczyt; metadane czytane przez schematy 4/5/6. Konfigurator części jest w 8.3, import CAD w 8.4. Kontrakt i granice: MODEL_WYGLADU_WYPOSAZENIA_6_4.md.
+
+### Manipulatory 3D przesuwania i obrotu oraz ukrywanie warstw i obiektów — 6.5 (2026-10-18)
+W widoku 3D (`Scene.tsx` oraz `Factory3DView.tsx`) wdrożono:
+- **Interaktywne manipulatory 3D (Three.js TransformControls)**:
+  - *Przesuwanie 3D (W)*: manipulator osiowy w płaszczyźnie posadzki hali (osie X/Z w Three.js odpowiadające X/Y w rzucie CAD 2D), z zachowaniem wysokości obiektu Z=0 lub zadanej elewacji.
+  - *Obrót 3D (E / R)*: manipulator obrotu wokół osi pionowej (Yaw, `rotationDeg` 0–360°), z przyciąganiem do kątów co 15° przy włączonej siatce.
+  - *Wyłącz manipulator (Q)*: powrót do swobodnej nawigacji i obrotu kamery.
+  - *Przyciąganie do siatki (G)*: przyciąganie przesunięcia do `gridSizeMm` w milimetrach oraz obrotu do dyskretnych kątów 15°.
+  - *Ochrona obiektów zablokowanych (L)*: dla obiektów z `locked: true` manipulator zostaje natychmiast odłączony, pola numeryczne są wyłączone, a w pasku pojawia się odznaka `🔒 Zablokowany (brak manipulacji)`.
+  - *Jednokrokowa historia zmian (Ctrl+Z / Ctrl+Y)*: rejestracja operacji w historii następuje wyłącznie na `mouseUp` (zakończenie przeciągania), zapobiegając zaśmiecaniu historii mikroramkami pętli Three.js.
+- **Filtrowanie warstw w 3D**:
+  - Rozwijany panel *Warstwy 3D* spójny z CAD 2D (`5.6`): `Stanowiska`, `Bufory i logistyka`, `Strefy operatorów`, `Przeszkody` i `Połączenia procesu` (spaghetti).
+  - Niezależne przełączanie widoczności elementów w scenie 3D.
+- **Ukrywanie i odkrywanie obiektów w 3D**:
+  - Przycisk *Ukryj w 3D (H)* pozwala ukryć wybrany obiekt w gęstym układzie linii produkcyjnej.
+  - Przycisk *Pokaż ukryte w 3D (N)* oraz skrót *Shift+H* przywracają widoczność wszystkich ukrytych obiektów.
+  - Obiekty ukryte są ignorowane przez raycaster i natychmiast odłączają manipulator 3D.
+- **Niezmiennik technologiczny (Zasada 6 i Plan 6.4)**:
+  - Operacje manipulacji wizualnej, ukrywania warstw i obiektów nie wpływają na strukturę procesu, czasy operacji, bilans ani wyniki symulacji. Szczegóły: `WERYFIKACJA_MANIPULATOROW_I_WARSTW_6_5.md`.
+

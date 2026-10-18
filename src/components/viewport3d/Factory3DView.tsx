@@ -3,6 +3,11 @@ import * as THREE from 'three';
 import { ProjectData, LayoutObject } from '../../core/models/types';
 import { createParametricEquipmentGroup } from '../../core/equipment/parametricEquipmentModels';
 import {
+  isLayoutObjectVisible3D,
+  DEFAULT_3D_LAYERS,
+  type Layout3DLayersState,
+} from '../../core/algorithms/layoutSelection';
+import {
   Play,
   Pause,
   RotateCcw,
@@ -16,12 +21,13 @@ import {
 
 interface Factory3DViewProps {
   project: ProjectData;
-  setProject: React.Dispatch<React.SetStateAction<ProjectData>>;
+  setProject?: React.Dispatch<React.SetStateAction<ProjectData>>;
 }
 
 export const Factory3DView: React.FC<Factory3DViewProps> = ({ project }) => {
   const mountRef = useRef<HTMLDivElement>(null);
   const [showSpaghetti, setShowSpaghetti] = useState(true);
+  const [layers3D, setLayers3D] = useState<Layout3DLayersState>(DEFAULT_3D_LAYERS);
   const [isSimRunning, setIsSimRunning] = useState(false);
   const [simSpeed, setSimSpeed] = useState(1);
   const [targetBatch, setTargetBatch] = useState(30);
@@ -127,14 +133,18 @@ export const Factory3DView: React.FC<Factory3DViewProps> = ({ project }) => {
     scene.add(objectsGroup);
 
     project.layoutObjects.forEach((obj) => {
-      build3DObject(objectsGroup, obj);
+      if (isLayoutObjectVisible3D(obj, layers3D)) {
+        build3DObject(objectsGroup, obj);
+      }
     });
 
     // 7. Spaghetti Trajectory Group
     const spaghettiGroup = new THREE.Group();
     spaghettiGroupRef.current = spaghettiGroup;
     scene.add(spaghettiGroup);
-    buildSpaghettiLines(spaghettiGroup, project.layoutObjects);
+    if (layers3D.routes) {
+      buildSpaghettiLines(spaghettiGroup, project.layoutObjects);
+    }
 
     // 8. Products Group for Simulation
     const productsGroup = new THREE.Group();
@@ -303,13 +313,13 @@ export const Factory3DView: React.FC<Factory3DViewProps> = ({ project }) => {
         mountRef.current.removeChild(renderer.domElement);
       }
     };
-  }, [project]);
+  }, [project, layers3D]);
 
   useEffect(() => {
     if (spaghettiGroupRef.current) {
-      spaghettiGroupRef.current.visible = showSpaghetti;
+      spaghettiGroupRef.current.visible = showSpaghetti && layers3D.routes;
     }
-  }, [showSpaghetti]);
+  }, [showSpaghetti, layers3D.routes]);
 
   const handleStartSim = () => {
     setIsBatchFinished(false);
@@ -429,11 +439,46 @@ export const Factory3DView: React.FC<Factory3DViewProps> = ({ project }) => {
             ))}
           </div>
 
+          {/* 3D Layers */}
+          <div className="flex items-center space-x-1 bg-slate-800/80 p-1 rounded-xl border border-slate-700/60 text-xs">
+            <span className="text-slate-400 px-1 font-medium">Warstwy:</span>
+            <button
+              onClick={() => setLayers3D(l => ({ ...l, stations: !l.stations }))}
+              className={`px-2 py-1 rounded-lg font-bold transition ${
+                layers3D.stations ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Przełącz widoczność stanowisk"
+            >
+              Stanowiska
+            </button>
+            <button
+              onClick={() => setLayers3D(l => ({ ...l, buffers: !l.buffers }))}
+              className={`px-2 py-1 rounded-lg font-bold transition ${
+                layers3D.buffers ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Przełącz widoczność buforów i logistyki"
+            >
+              Bufory
+            </button>
+            <button
+              onClick={() => setLayers3D(l => ({ ...l, operators: !l.operators }))}
+              className={`px-2 py-1 rounded-lg font-bold transition ${
+                layers3D.operators ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Przełącz widoczność stref operatorów"
+            >
+              Strefy
+            </button>
+          </div>
+
           {/* Spaghetti Toggle */}
           <button
-            onClick={() => setShowSpaghetti(!showSpaghetti)}
+            onClick={() => {
+              setShowSpaghetti(!showSpaghetti);
+              setLayers3D(l => ({ ...l, routes: !showSpaghetti }));
+            }}
             className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold transition ${
-              showSpaghetti
+              showSpaghetti && layers3D.routes
                 ? 'bg-purple-600/30 text-purple-300 border border-purple-500/40'
                 : 'bg-slate-800 text-slate-400 hover:text-slate-200'
             }`}

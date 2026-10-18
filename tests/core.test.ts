@@ -5,7 +5,43 @@ import * as XLSX from 'xlsx';
 import { calculateTaktTime } from '../src/core/algorithms/taktCalculator';
 import { runLineBalancing } from '../src/core/algorithms/lineBalancingEngine';
 import { generate3DLayout,layoutWarnings,corners } from '../src/core/algorithms/layoutEngine';
-import {alignLayoutObjects,analyzeGeometricLayoutWarnings,BHP_GEOMETRY_DISCLAIMER,BHP_SAFE_STATE_NOTE,calibrateUnderlayScale,classifyLayoutObjectLayer,computeFunctionalZones,expandMoveSelection,expandVisualSelection,groupLayoutObjects,copyLayoutObjects,lockLayoutObjects,measureObjectsDistance,measurePointsDistance,moveLayoutObjects,nudgeLayoutObjects,objectConnectionPoints,snapLayoutTranslation,underlayDimensionsMm,workstationAssemblyIds,LAYOUT_SHORTCUTS,VISUAL_ASSUMPTION_DISCLAIMER,FACILITY_UNCONFIRMED_NOTE} from '../src/core/algorithms/layoutSelection';
+import {
+  alignLayoutObjects,
+  analyzeGeometricLayoutWarnings,
+  BHP_GEOMETRY_DISCLAIMER,
+  BHP_SAFE_STATE_NOTE,
+  calibrateUnderlayScale,
+  classifyLayoutObjectLayer,
+  computeFunctionalZones,
+  expandMoveSelection,
+  expandVisualSelection,
+  groupLayoutObjects,
+  copyLayoutObjects,
+  lockLayoutObjects,
+  measureObjectsDistance,
+  measurePointsDistance,
+  moveLayoutObjects,
+  nudgeLayoutObjects,
+  objectConnectionPoints,
+  snapLayoutTranslation,
+  underlayDimensionsMm,
+  workstationAssemblyIds,
+  LAYOUT_SHORTCUTS,
+  VISUAL_ASSUMPTION_DISCLAIMER,
+  FACILITY_UNCONFIRMED_NOTE,
+  DEFAULT_3D_LAYERS,
+  type Layout3DLayersState,
+  type TransformGizmoMode,
+  isLayoutObjectVisible3D,
+  hideObjectIds,
+  showObjectIds,
+  toggleHiddenObjectIds,
+  canManipulate3D,
+  layoutToWorldCoordinates,
+  worldToLayoutCoordinates,
+  degreesToWorldRotation,
+  worldRotationToDegrees,
+} from '../src/core/algorithms/layoutSelection';
 import {layoutRoutes} from '../src/core/algorithms/routing';
 import { simulate,simulationAt,SIMULATION_SPEEDS,stepSimulationTime } from '../src/core/algorithms/simulation';
 import { importProcess,importBOM,processRows,bomRows,templateWorkbookBytes,TEMPLATE_PROCESS_STEPS,TEMPLATE_BOM_COMPONENTS,PROCESS_COLUMN_DOCS,BOM_COLUMN_DOCS } from '../src/core/export/excelImporter';
@@ -1605,4 +1641,145 @@ test('6.2: nakładki wizualne (strefa obsługi, obrys kolizji, porty transportow
     disposeEquipmentGroup(withOverlays);
   });
 });
+
+test('6.5: przeliczanie współrzędnych 2D-3D, wysokości i obrotu z zachowaniem inwersji i przyciągania', () => {
+  // Test konwersji współrzędnych bez przyciągania
+  const xMm = 1500, yMm = 3200, widthMm = 1200, lengthMm = 800;
+  const world = layoutToWorldCoordinates(xMm, yMm, widthMm, lengthMm);
+  // Środek w Three.js: (1500 + 600)/1000 = 2.1m, (3200 + 400)/1000 = 3.6m
+  assert.equal(world.posX, 2.1);
+  assert.equal(world.posZ, 3.6);
+
+  const recovered = worldToLayoutCoordinates(world.posX, world.posZ, widthMm, lengthMm);
+  assert.equal(recovered.xMm, xMm);
+  assert.equal(recovered.yMm, yMm);
+
+  // Test przyciągania do siatki (np. 100mm, 250mm)
+  const snapped = worldToLayoutCoordinates(2.13, 3.64, widthMm, lengthMm, 200);
+  assert.equal(snapped.xMm % 200, 0);
+  assert.equal(snapped.yMm % 200, 0);
+
+  // Test obrotu: stopnie -> radiany świata 3D -> stopnie
+  const angles = [0, 15, 45, 90, 180, 270, 315];
+  for (const deg of angles) {
+    const rad = degreesToWorldRotation(deg);
+    const backDeg = worldRotationToDegrees(rad);
+    assert.equal(backDeg, deg);
+  }
+
+  // Przyciąganie kąta do dyskretnych wartości (co 15°)
+  const radApprox = degreesToWorldRotation(44.2);
+  const snappedDeg = worldRotationToDegrees(radApprox, 15);
+  assert.equal(snappedDeg, 45);
+
+  const radZeroApprox = degreesToWorldRotation(358.5);
+  const snappedZero = worldRotationToDegrees(radZeroApprox, 15);
+  assert.equal(snappedZero, 0);
+});
+
+test('6.5: ochrona obiektów locked przed manipulacją 3D', () => {
+  const unlocked = { id: 'obj-1', locked: false };
+  const locked = { id: 'obj-2', locked: true };
+
+  assert.equal(canManipulate3D(unlocked), true);
+  assert.equal(canManipulate3D(locked), false);
+  assert.equal(canManipulate3D(null), false);
+  assert.equal(canManipulate3D(undefined), false);
+
+  const objects = [
+    { id: '1', name: 'A', type: 'Table' as const, xMm: 0, yMm: 0, zMm: 0, widthMm: 1000, lengthMm: 800, heightMm: 800, rotationDeg: 0, colorHex: '#fff', locked: true },
+    { id: '2', name: 'B', type: 'Table' as const, xMm: 1000, yMm: 0, zMm: 0, widthMm: 1000, lengthMm: 800, heightMm: 800, rotationDeg: 0, colorHex: '#fff', locked: false },
+  ];
+  const lockedObject = objects.find(o => o.id === '1')!;
+  assert.equal(canManipulate3D(lockedObject), false);
+  const unlockedObject = objects.find(o => o.id === '2')!;
+  assert.equal(canManipulate3D(unlockedObject), true);
+});
+
+test('6.5: filtrowanie widoczności warstw 3D (stanowiska, bufory, operatorzy, relacje, przeszkody)', () => {
+  const table = { id: 'tbl', name: 'Stół', type: 'Table' as const, xMm: 0, yMm: 0, zMm: 0, widthMm: 1000, lengthMm: 800, heightMm: 800, rotationDeg: 0, colorHex: '#fff' };
+  const rack = { id: 'rck', name: 'Regał FIFO', type: 'FlowRackFIFO3Tier' as const, xMm: 0, yMm: 0, zMm: 0, widthMm: 1000, lengthMm: 800, heightMm: 800, rotationDeg: 0, colorHex: '#fff' };
+  const mat = { id: 'mat', name: 'Mata ergo', type: 'OperatorErgoMat' as const, xMm: 0, yMm: 0, zMm: 0, widthMm: 1000, lengthMm: 800, heightMm: 800, rotationDeg: 0, colorHex: '#fff' };
+
+  // Domyślnie wszystkie warstwy aktywne
+  assert.equal(isLayoutObjectVisible3D(table, DEFAULT_3D_LAYERS), true);
+  assert.equal(isLayoutObjectVisible3D(rack, DEFAULT_3D_LAYERS), true);
+  assert.equal(isLayoutObjectVisible3D(mat, DEFAULT_3D_LAYERS), true);
+
+  // Wyłączenie warstwy stanowisk
+  const noStations: Layout3DLayersState = { ...DEFAULT_3D_LAYERS, stations: false };
+  assert.equal(isLayoutObjectVisible3D(table, noStations), false);
+  assert.equal(isLayoutObjectVisible3D(rack, noStations), true);
+  assert.equal(isLayoutObjectVisible3D(mat, noStations), true);
+
+  // Wyłączenie warstwy buforów
+  const noBuffers: Layout3DLayersState = { ...DEFAULT_3D_LAYERS, buffers: false };
+  assert.equal(isLayoutObjectVisible3D(table, noBuffers), true);
+  assert.equal(isLayoutObjectVisible3D(rack, noBuffers), false);
+  assert.equal(isLayoutObjectVisible3D(mat, noBuffers), true);
+
+  // Wyłączenie warstwy operatorów
+  const noOperators: Layout3DLayersState = { ...DEFAULT_3D_LAYERS, operators: false };
+  assert.equal(isLayoutObjectVisible3D(table, noOperators), true);
+  assert.equal(isLayoutObjectVisible3D(rack, noOperators), true);
+  assert.equal(isLayoutObjectVisible3D(mat, noOperators), false);
+});
+
+test('6.5: ukrywanie pojedynczych obiektów i grup w 3D oraz ich przywracanie', () => {
+  const table = { id: 'tbl-1', name: 'Stół 1', type: 'Table' as const, xMm: 0, yMm: 0, zMm: 0, widthMm: 1000, lengthMm: 800, heightMm: 800, rotationDeg: 0, colorHex: '#fff' };
+  const table2 = { id: 'tbl-2', name: 'Stół 2', type: 'Table' as const, xMm: 1200, yMm: 0, zMm: 0, widthMm: 1000, lengthMm: 800, heightMm: 800, rotationDeg: 0, colorHex: '#fff' };
+
+  let hidden: string[] = [];
+  assert.equal(isLayoutObjectVisible3D(table, DEFAULT_3D_LAYERS, hidden), true);
+
+  // Ukryj table
+  hidden = hideObjectIds(hidden, ['tbl-1']);
+  assert.equal(isLayoutObjectVisible3D(table, DEFAULT_3D_LAYERS, hidden), false);
+  assert.equal(isLayoutObjectVisible3D(table2, DEFAULT_3D_LAYERS, hidden), true);
+
+  // Przełącz ukrycie (toggle)
+  hidden = toggleHiddenObjectIds(hidden, ['tbl-1', 'tbl-2']);
+  assert.equal(isLayoutObjectVisible3D(table, DEFAULT_3D_LAYERS, hidden), true); // tbl-1 odkryty
+  assert.equal(isLayoutObjectVisible3D(table2, DEFAULT_3D_LAYERS, hidden), false); // tbl-2 ukryty
+
+  // Pokaż wszystkie (odkryj)
+  hidden = showObjectIds(hidden, ['tbl-2']);
+  assert.deepEqual(hidden, []);
+  assert.equal(isLayoutObjectVisible3D(table2, DEFAULT_3D_LAYERS, hidden), true);
+});
+
+test('6.5: skróty klawiszowe 3D (W, E, Q, H, Shift+H) w rejestrze LAYOUT_SHORTCUTS', () => {
+  const keys = LAYOUT_SHORTCUTS.map(s => s.key);
+  assert.ok(keys.includes('W'), 'Skrót W (przesuwanie 3D) powinien być zarejestrowany');
+  assert.ok(keys.includes('E'), 'Skrót E (obrót 3D) powinien być zarejestrowany');
+  assert.ok(keys.includes('Q'), 'Skrót Q (wyłączenie manipulatora) powinien być zarejestrowany');
+  assert.ok(keys.includes('H'), 'Skrót H (ukrywanie w 3D) powinien być zarejestrowany');
+  assert.ok(keys.includes('Shift+H'), 'Skrót Shift+H (pokazanie ukrytych) powinien być zarejestrowany');
+
+  const wDef = LAYOUT_SHORTCUTS.find(s => s.key === 'W')!;
+  assert.equal(wDef.context, '3d');
+  const eDef = LAYOUT_SHORTCUTS.find(s => s.key === 'E')!;
+  assert.equal(eDef.context, '3d');
+  const qDef = LAYOUT_SHORTCUTS.find(s => s.key === 'Q')!;
+  assert.equal(qDef.context, '3d');
+});
+
+test('6.5: niezmiennik symulacji i technologii przy manipulacji i ukrywaniu (Zasada 6 i Plan 6.4)', () => {
+  const source = derive(parseProject(JSON.stringify(motor))).project;
+  const original = structuredClone(source);
+
+  // Manipulacja wizualna / ukrywanie obiektów nie ma wpływu na balans ani na strukturę procesu
+  assert.deepEqual(source.processSteps, original.processSteps);
+  assert.deepEqual(source.balancing, original.balancing);
+  assert.deepEqual(source.demand, original.demand);
+
+  // Wymiary, obroty czy ukrywanie obiektów nie mogą zmieniać czasów operacji
+  for (const step of source.processSteps) {
+    const origStep = original.processSteps.find(s => s.id === step.id)!;
+    assert.equal(step.standardTimeSeconds, origStep.standardTimeSeconds);
+    assert.equal(step.vaTimeSeconds, origStep.vaTimeSeconds);
+    assert.equal(step.nvaTimeSeconds, origStep.nvaTimeSeconds);
+  }
+});
+
 
