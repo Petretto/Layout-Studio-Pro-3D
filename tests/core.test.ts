@@ -13,12 +13,38 @@ import { exportToDxf } from '../src/core/export/dxfExporter';
 import { parseDxfImport, applyDxfImportToProject, DXF_UNITS } from '../src/core/export/dxfImporter';
 import { parseProject,processErrors,topologicalSort,validateProject } from '../src/core/validation';
 import { derive, newProject } from '../src/core/project';
+import {applyEquipmentAppearance,EQUIPMENT_VISUAL_MODELS} from '../src/core/equipment/equipmentAppearance';
+import {createConceptVisual} from '../src/core/equipment/conceptVisual';
+import {Box3,Vector3} from 'three';
 import { deriveStationProject } from '../src/core/stationDerivation';
 import { prepareStationMigration, previewStationMigration } from '../src/core/stationMigration';
 import {archivedImportBlob, encodeImport} from '../src/core/importArchive';
 import {makePortableArchive, readPortableArchive} from '../src/core/portableArchive';
 import { DEFAULT_MOTOR_PROJECT as motor,DEFAULT_BATTERY_PROJECT as battery, DEFAULT_MOTOR_PROJECT, DEFAULT_BATTERY_PROJECT } from '../src/core/models/defaultProjects';
 import { ProcessStep } from '../src/core/models/types';
+
+test('6.4: wygląd zachowuje geometrię i przypisania, trwa w auto i zapisie; odrzuca nieznany model',()=>{
+  const source=derive(parseProject(JSON.stringify(motor))).project,original=structuredClone(source),id=source.layoutObjects[0].id;
+  const objects=applyEquipmentAppearance(source.layoutObjects,id,'concept-parts-rack');
+  assert.deepEqual(source,original);
+  const changed=objects.find(o=>o.id===id)!;const {visualModelId,...geometry}=changed;
+  assert.equal(visualModelId,'concept-parts-rack');assert.deepEqual(geometry,source.layoutObjects[0]);
+  const saved=parseProject(JSON.stringify({...source,layoutMode:'auto',layoutObjects:objects}));
+  assert.equal(derive(saved).project.layoutObjects.find(o=>o.id===id)?.visualModelId,visualModelId);
+  assert.equal(saved.layoutMode,'auto');assert.deepEqual(derive(saved).project.balancing,source.balancing);
+  assert.ok(!applyEquipmentAppearance(objects,id,undefined).find(o=>o.id===id)?.visualModelId);
+  assert.throws(()=>parseProject(JSON.stringify({...source,layoutObjects:[{...source.layoutObjects[0],visualModelId:'unavailable-model'}]})),/model wizualny/);
+});
+test('6.4: koncepty zachowują proporcje, mieszczą się w obrysie, instancje mają niezależne zasoby',()=>{
+  for(const {id} of EQUIPMENT_VISUAL_MODELS){
+    const a=createConceptVisual(id,2,.8,.9),b=createConceptVisual(id,2,.8,.9);
+    a.updateMatrixWorld(true);const box=new Box3().setFromObject(a),size=box.getSize(new Vector3());
+    assert.ok(size.x<=2.000001&&size.z<=.800001&&size.y<=.900001);assert.ok(Math.abs(box.min.y)<.000001);
+    assert.equal(a.scale.x,a.scale.y);assert.equal(a.scale.y,a.scale.z);
+    const meshesA:any[]=[],meshesB:any[]=[];a.traverse(o=>{if((o as any).isMesh)meshesA.push(o);});b.traverse(o=>{if((o as any).isMesh)meshesB.push(o);});
+    assert.notEqual(meshesA[0].geometry,meshesB[0].geometry);assert.notEqual(meshesA[0].material,meshesB[0].material);
+  }
+});
 import { moveOperation, connectOperations, disconnectOperations, addOperation, removeOperation, editOperation, flowPositions } from '../src/core/editing';
 import { toSeconds, fromSeconds, convertTime, formatTimeValue, formatTimeWithUnit, TIME_UNITS } from '../src/core/time';
 import {

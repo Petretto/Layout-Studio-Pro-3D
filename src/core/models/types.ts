@@ -58,6 +58,8 @@ export interface Workstation {
 }
 
 export interface LayoutObject {
+  /** Optional bundled appearance; independent of type, geometry and technological role. */
+  visualModelId?: import('../equipment/equipmentAppearance').EquipmentVisualModelId;
   id: string;
   name: string;
   type: ObjectType;

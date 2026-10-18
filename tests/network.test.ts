@@ -67,6 +67,31 @@ import {ProcessStep,ProjectData} from '../src/core/models/types';
 import {derive} from '../src/core/project';
 import {setOperationLinks,successorsOf,replaceImportedProcess,removeOperation} from '../src/core/editing';
 import {simulateNetwork} from '../src/core/algorithms/networkSimulation';
+import {applyEquipmentAppearance} from '../src/core/equipment/equipmentAppearance';
+
+test('6.4: wymiana wyglądu nie zmienia wyników 4/5 ani źródła; odczyt i migracja 6 zachowują wybór',()=>{
+  const projects=[derive(parseProject(JSON.stringify(base))).project,
+    deriveStationProject(parseStationProjectV5(readFileSync('tests/qa/Eko_D5_actual_export_v5.json','utf8'))).project];
+  for(const project of projects){
+    const original=structuredClone(project),baseline=simulateNetwork(project,4050,3),id=project.layoutObjects[0].id;
+    const next={...project,layoutObjects:applyEquipmentAppearance(project.layoutObjects,id,'concept-shelf-cart')};
+    assert.deepEqual(simulateNetwork(next,4050,3),baseline);assert.deepEqual(project,original);
+    if(project.schemaVersion===5){
+      const reopened=parseStationProjectV5(JSON.stringify(next));assert.equal(reopened.layoutObjects[0].visualModelId,'concept-shelf-cart');
+      const prepared=prepareDomainMigration(previewDomainMigrationFromV5(JSON.stringify(reopened)));
+      assert.equal(parseDomainProjectV6(JSON.stringify(prepared.project)).layoutObjects[0].visualModelId,'concept-shelf-cart');
+      assert.throws(()=>parseDomainProjectV6(JSON.stringify({...prepared.project,layoutObjects:prepared.project.layoutObjects.map((o,i)=>i?o:{...o,visualModelId:'unknown'})})),/model wizualny/);
+    }
+  }
+});
+test('6.4: wygląd nie zmienia harmonogramu szkicu 6, zajęć zasobów ani lokalizacji korpusu',()=>{
+  const project=concurrentBodyFixture(),input=bodyInputFor();
+  project.layoutObjects=[{id:'VISUAL-QA',name:'Geometria testowa',type:'QualityGate',xMm:0,yMm:0,zMm:0,widthMm:1000,lengthMm:1000,heightMm:1000,rotationDeg:0,colorHex:'#123456'}];
+  const before=structuredClone(project),baseline=scheduleWorkerRun(project,1,1,input);
+  const changed={...project,layoutObjects:applyEquipmentAppearance(project.layoutObjects,'VISUAL-QA','concept-parts-rack')};
+  const reopened=parseDomainProjectV6(JSON.stringify(changed));
+  assert.deepEqual(scheduleWorkerRun(reopened,1,1,input),baseline);assert.deepEqual(project,before);
+});
 import {resourceKey} from '../src/core/resources';
 import {parseProject} from '../src/core/validation';
 import {layoutWarnings} from '../src/core/algorithms/layoutEngine';

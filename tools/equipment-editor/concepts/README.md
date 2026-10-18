@@ -29,4 +29,4 @@ node tests/qa/verify_6_3a.mjs --concepts
 
 `--python-exit-code 1` jest konieczne: Blender domyślnie może zakończyć proces kodem 0 mimo błędu skryptu Python. Generatory nadpisują wyłącznie pliki konceptów o stałych nazwach w tym katalogu. Zmiany ręcznie edytowane w `.blend` zachowaj pod inną nazwą przed ponowną generacją.
 
-Koncepty są udostępnione w pomocniczym edytorze. Nie zostały automatycznie wstawione do projektów 4/5/6 ani podmienione w głównym generatorze; powiązanie wyglądu z obiektem wymaga odrębnego kontraktu (6.4). Główne 6.3 pozostaje w trakcie w zakresie charakterystycznych maszyn/Eko i docelowego odbioru.
+Koncepty są udostępnione w pomocniczym edytorze. Nie są automatycznie wstawiane do projektów 4/5/6. W 6.4 dodano ręczny wybór ich wyglądu dla zapisanego wyposażenia w aktywnym edytorze, bez zmiany typu/roli/gabarytów; renderer mieści model w obrysie z zachowaniem proporcji. Kontrakt: `MODEL_WYGLADU_WYPOSAZENIA_6_4.md` w katalogu projektu. Kompilacja assetów aplikacji po zmianie GLB: `node scripts/generate_concept_render_assets.mjs`. Główne 6.3 pozostaje w trakcie w zakresie charakterystycznych maszyn/Eko i docelowego odbioru.

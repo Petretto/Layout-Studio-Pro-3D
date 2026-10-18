@@ -18,6 +18,7 @@
 
 import * as THREE from 'three';
 import { LayoutObject, ObjectType } from '../models/types';
+import {createConceptVisual} from './conceptVisual';
 import {
   DEFAULT_EQUIPMENT_SPECS,
   EquipmentStandardSpec,
@@ -1094,7 +1095,9 @@ export function createParametricEquipmentGroup(
   group.rotation.y = (-object.rotationDeg * Math.PI) / 180;
 
   // Build the characteristic 3D visual equipment model
-  switch (object.type as string) {
+  if(object.visualModelId){
+    group.add(createConceptVisual(object.visualModelId,w,l,h,wire));
+  }else switch (object.type as string) {
     case 'Table':
       buildParametricTable(group, w, l, h, colorHex, false, false, wire);
       break;

@@ -353,7 +353,21 @@ W pomocniczym edytorze rozwiń **Trzy autorskie koncepty wyposażenia — inspir
 
 **Użyj karty koncepcyjnej** ładuje przykład do formularza. Wszystkie jego gabaryty i uproszczone detale są autorskimi założeniami demonstracyjnymi — nie wymiarami katalogowymi ani parametrami stanowiska klienta. Dopasuj je do własnych danych i pobierz własny JSON. Niezapisana karta jest chroniona potwierdzeniem zastąpienia. Pliki GLB są w metrach, z osią Y pionowo; pliki Blender mają Z pionowo, a formularz wymiary w mm. Wysokość stanowiska obejmuje nadbudowę, nie tylko poziom blatu.
 
-Koncepty nie są automatycznie wstawiane do głównej aplikacji, nie tworzą stanowisk technologicznych ani nie zwiększają zdolności linii. Obsługa przypisywania wyglądu do obiektów jest odrębną pracą w 6.4. Specyfikacja, źródła inspiracji i sposób odtworzenia są w **tools/equipment-editor/concepts/README.md**.
+Koncepty nie są automatycznie wstawiane do głównej aplikacji, nie tworzą stanowisk technologicznych ani nie zwiększają zdolności linii. Wybór ich wyglądu dla zapisanego obiektu opisano w 6.4 poniżej. Specyfikacja, źródła inspiracji i sposób odtworzenia są w **tools/equipment-editor/concepts/README.md**.
 
 ![Galeria autorskich konceptów — demonstracyjne założenia 6.3b](../outputs/qa/verify_6_3b_gallery_1440.png)
+
+### 5.2. Zmiana wyglądu wyposażenia w aplikacji (6.4)
+
+W aktywnym projekcie wybierz zapisany obiekt na rzucie 2D, w drzewie albo w widoku 3D. W sekcji **Wygląd wyposażenia** wybierz model i kliknij **Zastosuj wygląd**. Sam wybór w polu nie zapisuje zmiany. Dostępne są dotychczasowy generator według typu oraz trzy koncepty 6.3b: stanowisko z nadbudową, wózek półkowy i regał na części. Nowy obiekt najpierw zapisz w projekcie.
+
+Wybór modyfikuje tylko wygląd — dotychczasowy typ, ID, przypisanie do stanowiska, gabaryty, czasy, obsada i zdolności pozostają bez zmiany. Nawet wygląd wózka na obiekcie stołu nie zamienia stołu w środek transportu. Przy niezapisanych zmianach obiektu przycisk zatwierdzania wyglądu jest zablokowany; najpierw zapisz albo anuluj zmiany geometrii, aby ich nie utracić.
+
+Koncept zachowuje proporcje i mieści się w zapisanych gabarytach, więc może być mniejszy od obrysu CAD. Wysoki model stanowiska wybrany dla niskiego obiektu zostanie zmniejszony w całości — aplikacja nie podnosi samodzielnie zapisanej wysokości. Fizyczne wymiary zmieniasz osobno, świadomie w edycji geometrii. Nakładki stref/portów i znaczniki operacji nadal korzystają z istniejących przypisań, a nie z wyglądu siatki.
+
+Działają **Cofnij/Ponów**, zapis lokalny i JSON oraz ponowne otwarcie. Zmiana wyglądu zachowuje tryb automatyczny/ręczny. Aby wrócić do poprzedniego generatora, wybierz **Generowany według typu obiektu** i zatwierdź. Podgląd warsztatu v5 odczytuje zapisany wygląd, ale zachowuje swój dotychczasowy tryb tylko do odczytu; edycja jest dostępna w aktywnym edytorze projektu 4. Konfigurator konstrukcji/półek jest zaplanowany w 8.3, a import plików CAD w 8.4.
+
+![Wybór wyglądu wyposażenia — syntetyczny odbiór 6.4](../outputs/qa/verify_6_4_controls_1440.png)
+
+![Koncept stanowiska w rzeczywistym widoku 3D — syntetyczny odbiór 6.4](../outputs/qa/verify_6_4_bench_3d.png)
 

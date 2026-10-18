@@ -514,3 +514,6 @@ Samodzielny edytor lokalny w tools/equipment-editor/index.html: formularz znanyc
 
 ### Autorskie koncepty wyposażenia — 6.3b (2026-10-18)
 Galeria pomocniczego edytora zawiera stanowisko montażowe z nadbudową, wózek półkowy i regał na części: własne pliki Blender/GLB/rendery i edytowalne karty JSON. Inspiracja ogólnymi kategoriami materiałów Jabama; wszystkie gabaryty i detale są jawnymi założeniami demonstracyjnymi, bez kopiowania materiałów producenta i bez automatycznej zmiany głównego projektu lub zdolności linii. Źródła i szczegóły: tools/equipment-editor/concepts/README.md.
+
+### Niezależny wybór wyglądu wyposażenia — 6.4 (2026-10-18)
+Aktywny edytor 2D/3D pozwala przypisać zapisanym obiektom jeden z 3 konceptów 6.3b lub przywrócić generator według typu. Wygląd nie zmienia ID, typu, przypisania stanowiska, gabarytów, czasu, obsady, zdolności ani trybu layoutu. Zachowuje proporcje wewnątrz obrysu. Osobne zatwierdzenie, ochrona niezapisanych wymiarów, historia i zapis/odczyt; metadane czytane przez schematy 4/5/6. Konfigurator części jest w 8.3, import CAD w 8.4. Kontrakt i granice: MODEL_WYGLADU_WYPOSAZENIA_6_4.md.
