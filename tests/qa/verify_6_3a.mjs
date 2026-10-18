@@ -48,7 +48,22 @@ try{
   await set('equipment.name','Niezapisana zmiana');await upload(file);await send('Page.handleJavaScriptDialog',{accept:false});await sleep(100);strictEqual((await model()).equipment.name,'Niezapisana zmiana');
   await upload(file);await send('Page.handleJavaScriptDialog',{accept:true});await sleep(100);strictEqual(JSON.stringify(await model()),JSON.stringify(expected));
   await set('dimensionsMm.width.value','-3');await click('#export');ok((await evaluate(`document.getElementById('message').textContent`)).includes('Popraw'));await set('dimensionsMm.width.value','1200');
-  for(const width of [1440,600]){await viewport(width);ok(await noOverflow());await evaluate(`window.scrollTo(0,0)`);await screenshot(`verify_6_3a_${width}`);}
+  if(process.argv.includes('--concepts')){
+    await evaluate(`document.getElementById('concept-gallery').closest('details').open=true`);
+    await evaluate(`[...document.querySelectorAll('#concept-gallery img')].forEach(i=>i.loading='eager')`);
+    await until(()=>evaluate(`[...document.querySelectorAll('#concept-gallery img')].every(i=>i.complete&&i.naturalWidth>0)`));
+    strictEqual(await evaluate(`document.querySelectorAll('#concept-gallery img').length`),3);
+    for(const id of ['concept-assembly-bench','concept-shelf-cart','concept-parts-rack']){
+      const pendingClick=click(`[data-concept="${id}"]`);await sleep(100);await send('Page.handleJavaScriptDialog',{accept:true});await pendingClick;
+      const card=await model();strictEqual(card.equipment.id,id);ok(Object.values(card.dimensionsMm).every(m=>m.basis==='assumed'));strictEqual(card.equipment.manufacturer,'');
+    }
+    const keep=await model(),pendingClick=click('[data-concept="concept-assembly-bench"]');await sleep(100);await send('Page.handleJavaScriptDialog',{accept:false});await pendingClick;strictEqual(JSON.stringify(await model()),JSON.stringify(keep));
+    await click('#export');await until(()=>existsSync(join(downloads,'concept-parts-rack_karta.json')));
+    for(const width of [1440,600]){await viewport(width);ok(await noOverflow());await evaluate(`document.getElementById('concept-gallery').closest('details').scrollIntoView({block:'start'})`);await screenshot(`verify_6_3b_gallery_${width}`);}
+    console.log('PASS 6.3b: trzy rendery lokalne, wybór kart, założenia zachowane, ochrona niezapisanych danych, eksport konceptu i galeria 1440/600 px.');
+  }else{
+    for(const width of [1440,600]){await viewport(width);ok(await noOverflow());await evaluate(`window.scrollTo(0,0)`);await screenshot(`verify_6_3a_${width}`);}
+  }
   ok(!errors.length,errors.join('; '));
   console.log('PASS 6.3a: lokalny file://, brak domyślnych wymiarów, formularz/kompletność, pobrany JSON/szablon, import roundtrip, odmowa złej wersji, anulowanie zastąpienia, walidacja liczb, 1440/600 px.');
 }finally{ws?.close();browser.kill();}

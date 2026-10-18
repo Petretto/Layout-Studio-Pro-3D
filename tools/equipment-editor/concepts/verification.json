@@ -1,0 +1,50 @@
+{
+  "blenderVersion": "5.2.1 LTS",
+  "models": [
+    {
+      "id": "concept-assembly-bench",
+      "basis": "assumed",
+      "dimensionsMm": [
+        1500.0,
+        800.000011920929,
+        1850.000023841858
+      ],
+      "floorZMm": 0.0,
+      "triangles": 576,
+      "triangleBudget": 5000,
+      "meshObjects": 48,
+      "glbBytes": 74972,
+      "blendBytes": 113230
+    },
+    {
+      "id": "concept-shelf-cart",
+      "basis": "assumed",
+      "dimensionsMm": [
+        1000.0,
+        600.0000238418579,
+        1049.9999532997904
+      ],
+      "floorZMm": -9.835062764196323e-07,
+      "triangles": 508,
+      "triangleBudget": 5000,
+      "meshObjects": 21,
+      "glbBytes": 46408,
+      "blendBytes": 103372
+    },
+    {
+      "id": "concept-parts-rack",
+      "basis": "assumed",
+      "dimensionsMm": [
+        949.999988079071,
+        450.00000298023224,
+        1649.999976158142
+      ],
+      "floorZMm": 0.0,
+      "triangles": 1068,
+      "triangleBudget": 5000,
+      "meshObjects": 89,
+      "glbBytes": 138076,
+      "blendBytes": 126399
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+import {readFileSync,writeFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
+const root='tools/equipment-editor',context={};
+for(const path of ['catalog.js','brief.js'])runInNewContext(readFileSync(`${root}/${path}`,'utf8'),context);
+const recipe=JSON.parse(readFileSync(`${root}/concepts/recipes.json`,'utf8'));
+const concepts=recipe.models.map(model=>{
+  const brief=context.EquipmentBrief.blank();
+  brief.equipment={id:model.id,name:model.name,objectType:model.objectType,manufacturer:'',model:''};
+  for(const [key,field] of [['width','widthMm'],['length','lengthMm'],['height','heightMm']])brief.dimensionsMm[key]={value:model[field],basis:'assumed',source:recipe.dimensionSource};
+  brief.coordinates.anchor='footprint-center';brief.coordinates.groundContactZMm={value:0,basis:'assumed',source:'Umowny model demonstracyjny z podstawą na Z=0; nie jest to pomiar wyposażenia klienta.'};
+  brief.appearance={colorHex:null,distinctiveFeatures:model.features+' Model ma autorską paletę kilku materiałów; pojedynczy kolor nie jest zadeklarowany.'};
+  brief.modeling.triangleBudget=model.triangleBudget;
+  brief.rights={author:'Layout Studio — autorska geometria proceduralna',license:'',permissionNotes:'Własny model koncepcyjny. Strona producenta jest wyłącznie inspiracją kategorii; nie skopiowano zdjęć, znaków, tekstur ani plików modeli. Nie jest to deklaracja praw do materiałów producenta.'};
+  brief.references=[{kind:'url',location:model.referenceUrl,description:'Inspiracja ogólną kategorią wyposażenia; nie źródło gabarytów konceptu.'},{kind:'cad',location:`tools/equipment-editor/concepts/${model.id}.blend`,description:'Autorski koncept Blender; gabaryty i detale oznaczone jako założenia.'}];
+  context.EquipmentBrief.validate(brief,context.EquipmentCatalog);
+  writeFileSync(`${root}/concepts/${model.id}.json`,JSON.stringify(brief,null,2)+'\n');
+  return {id:model.id,name:model.name,image:`concepts/${model.id}.png`,blend:`concepts/${model.id}.blend`,glb:`concepts/${model.id}.glb`,card:`concepts/${model.id}.json`,source:model.referenceUrl,brief};
+});
+writeFileSync(`${root}/concepts.js`,'// Generated; all concept dimensions are assumptions, never client measurements.\nglobalThis.EquipmentConcepts = '+JSON.stringify(concepts,null,2)+';\n');
+console.log(`Generated ${concepts.length} original concept briefs; all dimensions assumed.`);

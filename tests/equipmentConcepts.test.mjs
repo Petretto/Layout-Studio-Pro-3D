@@ -1,0 +1,24 @@
+import {test} from 'node:test';
+import {strict as assert} from 'node:assert';
+import {readFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
+import {Box3} from 'three';
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
+const root='tools/equipment-editor',recipe=JSON.parse(readFileSync(`${root}/concepts/recipes.json`,'utf8')),context={};
+for(const file of ['catalog.js','brief.js','concepts.js'])runInNewContext(readFileSync(`${root}/${file}`,'utf8'),context);
+for(const model of recipe.models)test(`6.3b: ${model.id} — rzeczywisty GLB, skala, osie, budżet i karta bez zdolności`,async()=>{
+  const buffer=readFileSync(`${root}/concepts/${model.id}.glb`);
+  const gltf=await new Promise((resolve,reject)=>new GLTFLoader().parse(buffer.buffer.slice(buffer.byteOffset,buffer.byteOffset+buffer.byteLength),'',resolve,reject));
+  gltf.scene.updateMatrixWorld(true);
+  const bounds=new Box3().setFromObject(gltf.scene),actual=[bounds.max.x-bounds.min.x,bounds.max.z-bounds.min.z,bounds.max.y-bounds.min.y];
+  for(const [i,key] of ['widthMm','lengthMm','heightMm'].entries())assert.ok(Math.abs(actual[i]*1000-model[key])<.1,`${key}: ${actual[i]}`);
+  assert.ok(Math.abs(bounds.min.y)<1e-6,'Podstawa glTF Y=0');
+  assert.ok(Math.abs(bounds.min.x+bounds.max.x)<1e-6,'Punkt bazowy w środku X');
+  assert.ok(Math.abs(bounds.min.z+bounds.max.z)<1e-6,'Punkt bazowy w środku rzutu');
+  let triangles=0;gltf.scene.traverse(o=>{if(o.isMesh)triangles+=(o.geometry.index?.count??o.geometry.attributes.position.count)/3;assert.ok(!o.isCamera&&!o.isLight,'Studio nie może wejść do assetu');});
+  assert.ok(triangles>0&&triangles<=model.triangleBudget);
+  const report=JSON.parse(readFileSync(`${root}/concepts/verification.json`,'utf8')).models.find(r=>r.id===model.id);assert.equal(triangles,report.triangles);
+  const brief=JSON.parse(readFileSync(`${root}/concepts/${model.id}.json`,'utf8'));context.EquipmentBrief.validate(brief,context.EquipmentCatalog);
+  assert.ok(Object.values(brief.dimensionsMm).every(m=>m.basis==='assumed'));assert.equal(brief.equipment.manufacturer,'');assert.equal(brief.coordinates.groundContactZMm.basis,'assumed');
+  assert.ok(!Object.hasOwn(brief,'capacity')&&!Object.hasOwn(brief,'workstationId'));
+});

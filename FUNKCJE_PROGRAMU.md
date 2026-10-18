@@ -511,3 +511,6 @@ W edytorze hali CAD 2D (`src/components/studio/LayoutEditor.tsx`, `src/core/algo
 
 ### Pomocnicza karta wyposażenia — 6.3a (2026-10-18)
 Samodzielny edytor lokalny w tools/equipment-editor/index.html: formularz znanych wymiarów i ich źródeł, opis wyglądu, punkt bazowy, referencje i uprawnienia; eksport/import osobnego JSON i pusty szablon. Bez automatycznych wymiarów i bez zmiany projektu/zdolności/symulacji. Szczegóły obsługi w tools/equipment-editor/README.md. To przygotowanie danych do 6.3, nie wdrożenie modeli Blender.
+
+### Autorskie koncepty wyposażenia — 6.3b (2026-10-18)
+Galeria pomocniczego edytora zawiera stanowisko montażowe z nadbudową, wózek półkowy i regał na części: własne pliki Blender/GLB/rendery i edytowalne karty JSON. Inspiracja ogólnymi kategoriami materiałów Jabama; wszystkie gabaryty i detale są jawnymi założeniami demonstracyjnymi, bez kopiowania materiałów producenta i bez automatycznej zmiany głównego projektu lub zdolności linii. Źródła i szczegóły: tools/equipment-editor/concepts/README.md.

@@ -51,6 +51,15 @@
     $('#json-preview').textContent=JSON.stringify(state,null,2);preview();
   }
   function fill(){for(const el of document.querySelectorAll('[data-path]'))el.value=get(state,el.dataset.path)??'';renderReferences();update();}
+  for(const concept of globalThis.EquipmentConcepts??[]){
+    const card=field('article'),image=field('img',{src:concept.image,alt:concept.name,loading:'lazy'});image.style.width='100%';
+    const heading=field('h3');heading.textContent=concept.name;
+    const load=field('button',{type:'button','data-concept':concept.id});load.textContent='Użyj karty koncepcyjnej';
+    load.addEventListener('click',()=>{try{const next=api.validate(concept.brief,catalog);if(dirty&&!confirm('Wczytać koncept zamiast niezapisanej karty?'))return;state=next;dirty=true;fill();message('Wczytano koncept. Wymiary są założeniami — sprawdź je i pobierz własny JSON.');}catch(error){message(error.message);}});
+    const links=field('p');
+    for(const [text,path] of [['Blender',concept.blend],['GLB',concept.glb],['JSON',concept.card],['Inspiracja',concept.source]]){const a=field('a',{href:path});a.textContent=text;if(text==='Inspiracja'){a.target='_blank';a.rel='noopener noreferrer';}else a.setAttribute('download','');links.append(a,document.createTextNode(' · '));}
+    card.append(image,heading,load,links);$('#concept-gallery').append(card);
+  }
   function download(data,name){const blob=new Blob([JSON.stringify(data,null,2)+'\n'],{type:'application/json;charset=utf-8'});if(blob.size>1024*1024)throw new Error('Karta przekracza limit 1 MB. Skróć opisy lub zmniejsz liczbę referencji przed eksportem.');const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   function exportBrief(){
     readFields();

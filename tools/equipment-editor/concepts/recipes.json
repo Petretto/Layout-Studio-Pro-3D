@@ -1,0 +1,45 @@
+{
+  "kind": "layout-original-equipment-concepts",
+  "version": 1,
+  "basis": "assumed",
+  "dimensionSource": "Autorskie gabaryty demonstracyjne do wizualizacji; nie są pomiarem, wymiarem katalogowym Jabama ani danymi stanowiska użytkownika. Detale proceduralne są umowne.",
+  "models": [
+    {
+      "id": "concept-assembly-bench",
+      "name": "Stanowisko montażowe z nadbudową — koncept",
+      "family": "bench",
+      "objectType": "TableToolRail",
+      "widthMm": 1500,
+      "lengthMm": 800,
+      "heightMm": 1850,
+      "worktopHeightMm": 850,
+      "triangleBudget": 5000,
+      "referenceUrl": "https://jabama.pl/stol-montazowy-z-centralnym-oswietleniem-polka-tylna-scianka-i-szafka-z-trzema-szufladami-smpk1c",
+      "features": "Własna kompozycja ramy, blatu, niskiej szafki, panelu narzędziowego, półki i belki świetlnej. Przód +Y. Wysokość całkowita obejmuje nadbudowę; blat w demonstracji na 850 mm. Inspiracja wyłącznie kategorią modułowego stanowiska, nie odwzorowanie produktu producenta."
+    },
+    {
+      "id": "concept-shelf-cart",
+      "name": "Wózek półkowy — koncept",
+      "family": "cart",
+      "objectType": null,
+      "widthMm": 1000,
+      "lengthMm": 600,
+      "heightMm": 1050,
+      "triangleBudget": 5000,
+      "referenceUrl": "https://jabama.pl/wozek-z-regulowanym-blatem-wer-01-02-dwie-polki",
+      "features": "Własny wózek z trzema poziomami odkładania, czterema kołami i tylnym uchwytem. Przód +Y. Inspiracja kategorią wózków półkowych; liczba półek, rama i detale są autorskim uproszczeniem. Brak deklaracji nośności, regulacji czy parametrów transportu."
+    },
+    {
+      "id": "concept-parts-rack",
+      "name": "Regał na drobne części — koncept",
+      "family": "rack",
+      "objectType": null,
+      "widthMm": 950,
+      "lengthMm": 450,
+      "heightMm": 1650,
+      "triangleBudget": 5000,
+      "referenceUrl": "https://jabama.pl/pl/p/-Regal-z-pojemnikami-RP1800-jednostronny-1800x1000x400/792",
+      "features": "Autorski regał jednostronny z ramą, listwami i otwartymi pojemnikami w czterech rzędach. Dostęp od +Y. Inspiracja kategorią organizacji drobnych części, bez kopiowania układu produktu, pojemności ani nośności. To nie jest regał przepływowy FIFO."
+    }
+  ]
+}

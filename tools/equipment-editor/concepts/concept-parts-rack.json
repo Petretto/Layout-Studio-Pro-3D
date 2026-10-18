@@ -1,0 +1,64 @@
+{
+  "kind": "layout-equipment-modeling-brief",
+  "version": 1,
+  "equipment": {
+    "id": "concept-parts-rack",
+    "name": "Regał na drobne części — koncept",
+    "objectType": null,
+    "manufacturer": "",
+    "model": ""
+  },
+  "coordinates": {
+    "units": "mm",
+    "verticalAxis": "z",
+    "frontAxis": "+y",
+    "anchor": "footprint-center",
+    "groundContactZMm": {
+      "value": 0,
+      "basis": "assumed",
+      "source": "Umowny model demonstracyjny z podstawą na Z=0; nie jest to pomiar wyposażenia klienta."
+    }
+  },
+  "dimensionsMm": {
+    "width": {
+      "value": 950,
+      "basis": "assumed",
+      "source": "Autorskie gabaryty demonstracyjne do wizualizacji; nie są pomiarem, wymiarem katalogowym Jabama ani danymi stanowiska użytkownika. Detale proceduralne są umowne."
+    },
+    "length": {
+      "value": 450,
+      "basis": "assumed",
+      "source": "Autorskie gabaryty demonstracyjne do wizualizacji; nie są pomiarem, wymiarem katalogowym Jabama ani danymi stanowiska użytkownika. Detale proceduralne są umowne."
+    },
+    "height": {
+      "value": 1650,
+      "basis": "assumed",
+      "source": "Autorskie gabaryty demonstracyjne do wizualizacji; nie są pomiarem, wymiarem katalogowym Jabama ani danymi stanowiska użytkownika. Detale proceduralne są umowne."
+    }
+  },
+  "appearance": {
+    "colorHex": null,
+    "distinctiveFeatures": "Autorski regał jednostronny z ramą, listwami i otwartymi pojemnikami w czterech rzędach. Dostęp od +Y. Inspiracja kategorią organizacji drobnych części, bez kopiowania układu produktu, pojemności ani nośności. To nie jest regał przepływowy FIFO. Model ma autorską paletę kilku materiałów; pojedynczy kolor nie jest zadeklarowany."
+  },
+  "references": [
+    {
+      "kind": "url",
+      "location": "https://jabama.pl/pl/p/-Regal-z-pojemnikami-RP1800-jednostronny-1800x1000x400/792",
+      "description": "Inspiracja ogólną kategorią wyposażenia; nie źródło gabarytów konceptu."
+    },
+    {
+      "kind": "cad",
+      "location": "tools/equipment-editor/concepts/concept-parts-rack.blend",
+      "description": "Autorski koncept Blender; gabaryty i detale oznaczone jako założenia."
+    }
+  ],
+  "rights": {
+    "author": "Layout Studio — autorska geometria proceduralna",
+    "license": "",
+    "permissionNotes": "Własny model koncepcyjny. Strona producenta jest wyłącznie inspiracją kategorii; nie skopiowano zdjęć, znaków, tekstur ani plików modeli. Nie jest to deklaracja praw do materiałów producenta."
+  },
+  "modeling": {
+    "triangleBudget": 5000,
+    "serviceAndTransportNotes": ""
+  }
+}

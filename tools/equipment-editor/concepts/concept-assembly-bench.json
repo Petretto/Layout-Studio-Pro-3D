@@ -1,0 +1,64 @@
+{
+  "kind": "layout-equipment-modeling-brief",
+  "version": 1,
+  "equipment": {
+    "id": "concept-assembly-bench",
+    "name": "Stanowisko montażowe z nadbudową — koncept",
+    "objectType": "TableToolRail",
+    "manufacturer": "",
+    "model": ""
+  },
+  "coordinates": {
+    "units": "mm",
+    "verticalAxis": "z",
+    "frontAxis": "+y",
+    "anchor": "footprint-center",
+    "groundContactZMm": {
+      "value": 0,
+      "basis": "assumed",
+      "source": "Umowny model demonstracyjny z podstawą na Z=0; nie jest to pomiar wyposażenia klienta."
+    }
+  },
+  "dimensionsMm": {
+    "width": {
+      "value": 1500,
+      "basis": "assumed",
+      "source": "Autorskie gabaryty demonstracyjne do wizualizacji; nie są pomiarem, wymiarem katalogowym Jabama ani danymi stanowiska użytkownika. Detale proceduralne są umowne."
+    },
+    "length": {
+      "value": 800,
+      "basis": "assumed",
+      "source": "Autorskie gabaryty demonstracyjne do wizualizacji; nie są pomiarem, wymiarem katalogowym Jabama ani danymi stanowiska użytkownika. Detale proceduralne są umowne."
+    },
+    "height": {
+      "value": 1850,
+      "basis": "assumed",
+      "source": "Autorskie gabaryty demonstracyjne do wizualizacji; nie są pomiarem, wymiarem katalogowym Jabama ani danymi stanowiska użytkownika. Detale proceduralne są umowne."
+    }
+  },
+  "appearance": {
+    "colorHex": null,
+    "distinctiveFeatures": "Własna kompozycja ramy, blatu, niskiej szafki, panelu narzędziowego, półki i belki świetlnej. Przód +Y. Wysokość całkowita obejmuje nadbudowę; blat w demonstracji na 850 mm. Inspiracja wyłącznie kategorią modułowego stanowiska, nie odwzorowanie produktu producenta. Model ma autorską paletę kilku materiałów; pojedynczy kolor nie jest zadeklarowany."
+  },
+  "references": [
+    {
+      "kind": "url",
+      "location": "https://jabama.pl/stol-montazowy-z-centralnym-oswietleniem-polka-tylna-scianka-i-szafka-z-trzema-szufladami-smpk1c",
+      "description": "Inspiracja ogólną kategorią wyposażenia; nie źródło gabarytów konceptu."
+    },
+    {
+      "kind": "cad",
+      "location": "tools/equipment-editor/concepts/concept-assembly-bench.blend",
+      "description": "Autorski koncept Blender; gabaryty i detale oznaczone jako założenia."
+    }
+  ],
+  "rights": {
+    "author": "Layout Studio — autorska geometria proceduralna",
+    "license": "",
+    "permissionNotes": "Własny model koncepcyjny. Strona producenta jest wyłącznie inspiracją kategorii; nie skopiowano zdjęć, znaków, tekstur ani plików modeli. Nie jest to deklaracja praw do materiałów producenta."
+  },
+  "modeling": {
+    "triangleBudget": 5000,
+    "serviceAndTransportNotes": ""
+  }
+}

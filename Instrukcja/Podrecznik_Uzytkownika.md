@@ -347,3 +347,13 @@ Do wykonania modelu przekaż kartę i wskazane materiały osobno: JSON zawiera �
 
 ![Pomocnicza karta wyposażenia — syntetyczny odbiór 6.3a](../outputs/qa/verify_6_3a_1440.png)
 
+### 5.1. Autorskie koncepty wyposażenia inspirowane kategoriami Jabama (6.3b)
+
+W pomocniczym edytorze rozwiń **Trzy autorskie koncepty wyposażenia — inspiracje Jabama**. Są tam stanowisko montażowe z nadbudową, wózek półkowy i regał na drobne części. Każdy ma własny render oraz pliki Blender, GLB i JSON; odnośnik **Inspiracja** prowadzi do strony użytej jako odniesienie do ogólnego rodzaju wyposażenia. Nie skopiowano zdjęć, tekstur, oznaczeń ani modeli producenta.
+
+**Użyj karty koncepcyjnej** ładuje przykład do formularza. Wszystkie jego gabaryty i uproszczone detale są autorskimi założeniami demonstracyjnymi — nie wymiarami katalogowymi ani parametrami stanowiska klienta. Dopasuj je do własnych danych i pobierz własny JSON. Niezapisana karta jest chroniona potwierdzeniem zastąpienia. Pliki GLB są w metrach, z osią Y pionowo; pliki Blender mają Z pionowo, a formularz wymiary w mm. Wysokość stanowiska obejmuje nadbudowę, nie tylko poziom blatu.
+
+Koncepty nie są automatycznie wstawiane do głównej aplikacji, nie tworzą stanowisk technologicznych ani nie zwiększają zdolności linii. Obsługa przypisywania wyglądu do obiektów jest odrębną pracą w 6.4. Specyfikacja, źródła inspiracji i sposób odtworzenia są w **tools/equipment-editor/concepts/README.md**.
+
+![Galeria autorskich konceptów — demonstracyjne założenia 6.3b](../outputs/qa/verify_6_3b_gallery_1440.png)
+

@@ -2,6 +2,8 @@
 
 Otwórz `index.html` w Edge/Chrome, także bez serwera i internetu. Nie wymaga npm ani uruchomienia głównej aplikacji. Uzupełnij znane pola i wybierz **Pobierz JSON**. Aby wrócić do pracy, użyj **Wczytaj kartę JSON**. Nie ma automatycznego zapisu; niezapisana karta wyświetla ostrzeżenie przy opuszczaniu strony. Pusty plik do ręcznego wypełnienia: `szablon_wyposazenia.json` (dostępny również przez przycisk).
 
+W sekcji **Trzy autorskie koncepty wyposażenia — inspiracje Jabama** dostępne są własne modele stanowiska montażowego, wózka półkowego i regału na części. Przycisk **Użyj karty koncepcyjnej** ładuje edytowalny przykład z jawnymi założeniami demonstracyjnymi. Są też pliki Blender, GLB i JSON oraz odnośnik do strony inspiracji. To nie są produkty producenta ani parametry Twojej linii. Szczegóły: `concepts/README.md`. Wczytanie konceptu chroni niezapisane zmiany potwierdzeniem; po dopasowaniu pobierz własny JSON.
+
 ## Niezbędne dane
 
 - ID i nazwa, opcjonalnie producent i model; najbliższy typ aplikacji albo model indywidualny.
