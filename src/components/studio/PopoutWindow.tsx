@@ -23,6 +23,9 @@ export const PopoutWindow: React.FC<PopoutWindowProps> = ({
 }) => {
   const [containerEl, setContainerEl] = useState<HTMLDivElement | null>(null);
   const externalWindowRef = useRef<Window | null>(null);
+  // Parent callbacks change during edits and playback; they must not recreate the window.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     // Calculate centered popup coordinates
@@ -37,7 +40,7 @@ export const PopoutWindow: React.FC<PopoutWindowProps> = ({
 
     if (!win) {
       alert('Przeglądarka zablokowała wyskakujące okno. Zezwól na wyskakujące okienka dla tej witryny, aby korzystać z widoku wielomonitorowego.');
-      onClose();
+      onCloseRef.current();
       return;
     }
 
@@ -67,7 +70,7 @@ export const PopoutWindow: React.FC<PopoutWindowProps> = ({
     setContainerEl(container);
 
     const handleBeforeUnload = () => {
-      onClose();
+      onCloseRef.current();
     };
 
     win.addEventListener('beforeunload', handleBeforeUnload);
@@ -79,7 +82,7 @@ export const PopoutWindow: React.FC<PopoutWindowProps> = ({
       }
       externalWindowRef.current = null;
     };
-  }, [title, width, height, onClose]);
+  }, [title, width, height]);
 
   if (!containerEl) return null;
 

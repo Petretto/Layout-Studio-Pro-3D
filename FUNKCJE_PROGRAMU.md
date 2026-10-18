@@ -566,7 +566,7 @@ W ramach optymalizacji wydajności i czytelności wielomonitorowej wdrożono:
 - **Tryb uproszczony 3D (LOD / Bounding Box)**:
   - Opcja `simplifiedBox` w `createParametricEquipmentGroup` zastępująca złożone, wieloczęściowe geometrie parametryczne lekkimi bryłami prostopadłościennymi z kontrastowymi liniami krawędzi (`LineSegments`).
   - Przycisk przełączający `Tryb uproszczony (LOD)` / `⚡ Tryb uproszczony: WŁ` w toolbarze widoku 3D.
-  - Zapewnia płynne wyświetlanie i edycję rozległych hal fabrycznych ze znaczną liczbą stanowisk na słabszych układach GPU (zintegrowana grafika biurowa).
+  - Zmniejsza złożoność geometrii. Wydajność większej sceny na słabszych GPU wymaga pomiaru; 6.7 pozostaje w trakcie odbioru.
 - **Otwieranie widoków w osobnym oknie monitora (Popout Window via React Portals)**:
   - Komponent `PopoutWindow` renderujący widok do natywnego okna przeglądarki (`window.open` + `createPortal`).
   - Przycisk `⧉ Otwórz w osobnym oknie` dostępny w:

@@ -9,7 +9,7 @@ const edge=['C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
 if(!edge)throw new Error('Brak Edge');
 
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(port)},stdio:'ignore',windowsHide:true});
-const browser=spawn(edge,[`--remote-debugging-port=${cdp}`,`--user-data-dir=${mkdtempSync(join(tmpdir(),'layout-qa-6-7-'))}`,'--headless=new','--no-first-run','--disable-gpu','about:blank'],{stdio:'ignore',windowsHide:true});
+const browser=spawn(edge,[`--remote-debugging-port=${cdp}`,`--user-data-dir=${mkdtempSync(join(tmpdir(),'layout-qa-6-7-'))}`,'--headless=new','--disable-popup-blocking','--no-first-run','--disable-gpu','about:blank'],{stdio:'ignore',windowsHide:true});
 let ws;
 
 try{
@@ -45,7 +45,7 @@ try{
   });
 
   const evaluate=async expression=>{
-    const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
+    const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true}).catch(error=>{throw new Error(expression.slice(0,220)+': '+error.message);});
     if(r.exceptionDetails)throw new Error(r.exceptionDetails.exception?.description??r.exceptionDetails.text);
     return r.result.value;
   };
@@ -116,6 +116,60 @@ try{
   ok(hasPopoutCadBtn, 'Przycisk Otwórz CAD w osobnym oknie powinien być dostępny w zakładce Hala i CAD');
   await screenshot('verify_6_7_popout_cad_btn');
 
+  // Exercise real native windows, not only the presence of their launch buttons.
+  await evaluate(`(()=>{const open=window.open.bind(window);window.qaWindows=[];window.open=(...args)=>{const w=open(...args);if(w)window.qaWindows.push(w);return w;};})()`);
+  await click('Otwórz CAD w osobnym oknie');
+  await until(`window.qaWindows.length===1&&!!window.qaWindows[0].document.querySelector('[data-object-id]')`);
+  const savedBefore=await evaluate(`JSON.parse(localStorage.getItem('layout-studio-v3')).project`);
+  await evaluate(`(()=>{const w=window.qaWindows[0];const o=w.document.querySelector('[data-object-id]');window.qaObjectId=o.dataset.objectId;window.qaPolygon=o.querySelector('polygon').getAttribute('points');o.dispatchEvent(new w.PointerEvent('pointerdown',{bubbles:true}));})()`);
+  await sleep(300);
+  await evaluate(`(()=>{const w=window.qaWindows[0];w.document.activeElement?.blur();w.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));})()`);
+  await sleep(400);
+  ok(await evaluate(`window.qaWindows.length===1&&!window.qaWindows[0].closed`),'CAD selection/edit must keep the same window alive');
+  // App history shortcuts must bubble from the portal into the owning React tree.
+  await evaluate(`(()=>{const w=window.qaWindows[0];w.document.body.querySelector('.hall-workspace').dispatchEvent(new w.KeyboardEvent('keydown',{key:'s',ctrlKey:true,bubbles:true}));})()`);
+  await sleep(300);
+  const savedMoved=await evaluate(`JSON.parse(localStorage.getItem('layout-studio-v3')).project`);
+  const objectId=await evaluate('window.qaObjectId');
+  ok(savedMoved.layoutObjects.some(o=>o.id===objectId),'Arrow key must save explicit geometry');
+  ok(await evaluate(`window.qaWindows[0].document.querySelector('[data-object-id="'+window.qaObjectId+'"] polygon').getAttribute('points')!==window.qaPolygon`),'Arrow key must move the CAD polygon');
+  await evaluate(`(()=>{const w=window.qaWindows[0];w.document.querySelector('.hall-workspace').dispatchEvent(new w.KeyboardEvent('keydown',{key:'z',ctrlKey:true,bubbles:true}));})()`);
+  await sleep(300);
+  ok(await evaluate(`window.qaWindows.length===1&&!window.qaWindows[0].closed`),'Undo must not reopen popup');
+  await evaluate(`(()=>{const w=window.qaWindows[0];w.document.querySelector('.hall-workspace').dispatchEvent(new w.KeyboardEvent('keydown',{key:'s',ctrlKey:true,bubbles:true}));})()`);
+  await sleep(200);
+  const savedUndone=await evaluate(`JSON.parse(localStorage.getItem('layout-studio-v3')).project`);
+  ok(JSON.stringify(savedUndone.layoutObjects)===JSON.stringify(savedBefore.layoutObjects),'Undo from popup must restore geometry');
+  await evaluate(`[...window.qaWindows[0].document.querySelectorAll('button')].find(b=>b.textContent.includes('Przywróć do okna głównego')).click()`);
+  await until(`window.qaWindows[0].closed&&!!document.querySelector('.hall-workspace')`);
+  await evaluate(`document.body.dispatchEvent(new KeyboardEvent('keydown',{key:'y',ctrlKey:true,bubbles:true}))`);
+  await sleep(150);
+  await evaluate(`document.body.dispatchEvent(new KeyboardEvent('keydown',{key:'s',ctrlKey:true,bubbles:true}))`);
+  ok(await evaluate(`JSON.parse(localStorage.getItem('layout-studio-v3')).project.layoutObjects.some(o=>o.id===window.qaObjectId)`),'Main body Ctrl+Y/S must retain global history/save');
+  await evaluate(`document.body.dispatchEvent(new KeyboardEvent('keydown',{key:'z',ctrlKey:true,bubbles:true}))`);
+  await sleep(150);
+
+  await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(b=>b.textContent.includes('2a Przepływ')).click()`);
+  await click('Otwórz w osobnym oknie');
+  await until(`window.qaWindows.length===2&&!!window.qaWindows[1].document.querySelector('.popout-window-root')`);
+  // A parent edit previously caused onClose dependency cleanup and window recreation.
+  await evaluate(`(()=>{const e=document.querySelector('[aria-label="Nazwa projektu"]');const setter=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;setter.call(e,e.value+' QA');e.dispatchEvent(new Event('input',{bubbles:true}));})()`);
+  await sleep(400);
+  ok(await evaluate(`window.qaWindows.length===2&&!window.qaWindows[1].closed`),'Parent update must keep flow window alive');
+  await evaluate('window.qaWindows[1].close()');
+  await until(`!document.body.textContent.includes('Widok przepływu procesu jest otwarty')`);
+
+  await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(b=>b.textContent.includes('6 3D i symulacja')).click()`);
+  await click('Otwórz 3D w osobnym oknie');
+  await until(`window.qaWindows.length===3&&!!window.qaWindows[2].document.querySelector('.scene canvas')`);
+  const gridBefore=await evaluate(`window.qaWindows[2].document.querySelector('label[title*="(G)"] input').checked`);
+  await evaluate(`window.qaWindows[2].dispatchEvent(new window.qaWindows[2].KeyboardEvent('keydown',{key:'g',bubbles:true}))`);
+  await sleep(300);
+  ok(await evaluate(`window.qaWindows[2].document.querySelector('label[title*="(G)"] input').checked`)!==gridBefore,'G must toggle grid inside the 3D window');
+  ok(await evaluate(`window.qaWindows.length===3&&!window.qaWindows[2].closed`),'3D shortcuts must not recreate popup');
+  await click('Przywróć do okna głównego');
+  await until(`window.qaWindows[2].closed&&!!document.querySelector('.scene canvas')`);
+
   // 6. Test Mobile Viewport (600px)
   await viewport(600);
   await sleep(300);
@@ -125,7 +179,7 @@ try{
   // Sprawdź brak błędów konsoli
   ok(!errors.length, 'Błędy konsoli w trakcie testu: ' + errors.join('; '));
 
-  console.log('PASS 6.7: Tryb uproszczony 3D (LOD/Bounding Box), przyciski otwarcia w osobnym oknie (Popout) dla 3D, CAD i Przepływu, responsywność 1440/600px, brak błędów konsoli.');
+  console.log('PASS 6.7a: LOD, real CAD/flow/3D popups, stable window on edit/undo, CAD arrow, Ctrl+S/Z, return/native close, 1440/600px, no runtime errors.');
 } finally {
   ws?.close();
   browser.kill();

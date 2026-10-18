@@ -44,7 +44,9 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po 6.5: cały plan 51/69 = **73,9%**; pierwsze wydanie 51/65 = **78,5%**; Etap 6: 4/7 = **57,1%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po przeglądzie 6.7a: cały plan 52/69 = **75,4%**; pierwsze wydanie 52/65 = **80,0%**; Etap 6: 5/7 = **71,4%**. 6.7 przywrócono do „w trakcie”: brak pomiaru większej sceny. Weryfikacja: `node scripts/plan_progress.mjs`.
+
+Stan historyczny po 6.5: cały plan 51/69 = **73,9%**; pierwsze wydanie 51/65 = **78,5%**; Etap 6: 4/7 = **57,1%**.
 
 Stan historyczny po 6.4: cały plan 50/69 = **72,5%**; pierwsze wydanie 50/65 = **76,9%**; Etap 6: 3/7 = **42,9%**.
 
@@ -110,6 +112,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+6.7a (2026-10-18): odebrano poprawkę okien — stabilny cykl życia mimo zmian callbacku rodzica, skróty CAD/3D w dokumencie danego widoku, wspólna historia i zapis przez zdarzenia React portalu. Rzeczywiste okna Edge: CAD/edycja strzałką/zapis/Cofnij/przywrócenie, przepływ/zmiana w rodzicu/natywne zamknięcie, 3D/skrót G/przywrócenie PASS; 1440/600 px, brak wyjątków. Pełna okresowa regresja po pakietach 6.5–6.7: 354/354 PASS, build PASS. Instrukcja MD/HTML/PDF: 44 strony/41 obrazów, kontrola automatyczna i wizualna dodanych stron PASS. Dotychczasowy test 6.7 sprawdzał przyciski, nie działanie okna. Przywrócono główne 6.7 do „w trakcie”: nadal brak pomiaru większej sceny i docelowego słabszego GPU. Raport `WERYFIKACJA_WYDAJNOSCI_I_OKIEN_6_7.md`, sekcja 6.7a. Postęp 52/69 = 75,4%; pierwsze wydanie 52/65 = 80,0%. Vercel nie zweryfikowano. Następny pakiet: pomiar większej sceny w 6.7.
 
 6.6 (2026-10-18): w trakcie — animacja produktów, podzespołów i transportu zgodnie z harmonogramem symulacji; pauza i inspekcja stanu (`src/components/studio/Scene.tsx`, `src/components/studio/Simulation.tsx`, `src/core/algorithms/simulationAnimation.ts`, `src/App.tsx`). Synchronizacja pozycji 3D produktów z czasem symulacji (czas rzeczywisty / suwak osi czasu), animacja produktów na blatach stanowisk w trakcie operacji, płynne przemieszczanie międzyoperacyjne po trasach transportowych z użyciem wózków/palet, prezentacja stanu kolejki i buforów. Funkcja pauzy, interaktywna inspekcja stanu kliknięciem obiektu w 3D (numer sztuki, operacja, stanowisko, czasy, postęp). Niezmiennik Zasady 6: animacja i wizualizacja nie zmieniają wyników symulacji. Kopia zapasowa: `backup/v0.4.0_przed_6_6_20261018` (399 plików z SHA256).
 
@@ -566,7 +570,7 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 | 6.4 | Oddzielić model wizualny od parametrów technologicznych, aby wymiana wyglądu nie zmieniała zdolności produkcyjnej. | wdrożone |
 | 6.5 | Dodać wygodne manipulatory przesuwania i obrotu oraz ukrywanie warstw i obiektów. | wdrożone |
 | 6.6 | Animować produkty, podzespoły i transport zgodnie z harmonogramem symulacji; umożliwić pauzę i inspekcję stanu. | wdrożone |
-| 6.7 | Sprawdzić czytelność oraz wydajność większej sceny i zapewnić użyteczny tryb uproszczony (LOD/Bounding Box dla słabszych GPU) oraz możliwość otwierania widoków (3D, rzut CAD, przepływ procesu) w osobnym oknie (Popout Window). | wdrożone |
+| 6.7 | Sprawdzić czytelność oraz wydajność większej sceny i zapewnić użyteczny tryb uproszczony (LOD/Bounding Box dla słabszych GPU) oraz możliwość otwierania widoków (3D, rzut CAD, przepływ procesu) w osobnym oknie (Popout Window). | w trakcie |
 
 **Odbiór etapu:** 3D pozwala zlokalizować problem i edytować układ, a animacja pozostaje zgodna z harmonogramem. Model wizualny nie jest źródłem czasów operacji ani niezależną kopią danych procesu.
 

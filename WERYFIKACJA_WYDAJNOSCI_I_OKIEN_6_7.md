@@ -1,7 +1,7 @@
 # Raport Weryfikacji — ID 6.7: Wydajność dużej sceny, tryb uproszczony 3D (LOD) oraz otwieranie widoków w osobnym oknie (Popout Window)
 
 Data weryfikacji: 2026-10-18  
-Status: **Wdrożone (PASS)**  
+Status po przeglądzie 6.7a: **w trakcie — poprawka okien odebrana; pomiar większej sceny pozostaje do wykonania**
 Powiązany punkt planu: `PLAN_ROZWOJU.md` — **ID 6.7** (*„Sprawdzić czytelność oraz wydajność większej sceny i zapewnić użyteczny tryb uproszczony (LOD/Bounding Box dla słabszych GPU) oraz możliwość otwierania widoków (3D, rzut CAD, przepływ procesu) w osobnym oknie (Popout Window).”*)  
 Środowisko: Windows 11, Node.js v24.14.0, Microsoft Edge CDP, Three.js 0.160+  
 Kopia zapasowa przed wdrożeniem: `backup/v0.4.0_przed_6_7_20261018` (402 pliki z sumami SHA256)
@@ -80,3 +80,23 @@ Wynik testu:
 ```
 PASS 6.7: Tryb uproszczony 3D (LOD/Bounding Box), przyciski otwarcia w osobnym oknie (Popout) dla 3D, CAD i Przepływu, responsywność 1440/600px, brak błędów konsoli.
 ```
+
+## 6.7a — przegląd i poprawka okien, 2026-10-18
+
+Przegląd commitu `5c73561` wykazał brak rzeczywistego otwarcia dodatkowych okien w dotychczasowym teście. Zmienny callback `onClose` znajdował się w zależnościach efektu tworzącego okno; każde odświeżenie rodzica (edycja, zaznaczenie, odtwarzanie) uruchamiało jego zamknięcie i ponowne utworzenie. Callback jest teraz czytany przez ref, bez zmiany czasu życia okna. Lokalne skróty CAD i 3D korzystają z `ownerDocument.defaultView`, a wspólne Ctrl+S/Z/Y obsługuje zdarzenie React na korzeniu aplikacji, obejmujące także portale. Ochrona edycji pól obejmuje również contenteditable.
+
+Zmiany obejmują wyłącznie UI, test i dokumentację; bez przebudowy modułów, zmiany schematu lub reguł procesu. Nie było potrzeby nowej migracji ani strukturalnego backupu. Zachowano istniejące lokalne pliki użytkownika i wcześniejsze kopie.
+
+### Dowody aktualnego odbioru
+
+- `npm.cmd run build`: PASS, 157 modułów; dotychczasowe ostrzeżenie pakietów ponad 500 kB pozostaje.
+- `npm.cmd run test -- --run`: pełna okresowa regresja po trzech pakietach 6.5–6.7, **354/354 PASS**, 0 pominiętych. Uruchomiona raz po głównych poprawkach. Po końcowym zachowaniu globalnych skrótów przy fokusie na body ponownie wykonano build i odpowiednią regresję UI (Ctrl+Y/S/Z w oknie głównym oraz dodatkowe okna); PASS. Nie powtarzano pełnego zestawu dla tej izolowanej poprawki UI.
+- `node tests/qa/verify_6_7.mjs`: **PASS** w rzeczywistym Edge headless/CDP. Nowe okna CAD, przepływu i 3D faktycznie otwarte. CAD: zaznaczenie, przesunięcie strzałką zmienia obrys i zapis projektu; Ctrl+S, Ctrl+Z i ponowny zapis odtwarzają wcześniejszą geometrię. To samo okno pozostaje otwarte podczas edycji i cofania. Przepływ: aktualizacja nazwy projektu w rodzicu zachowuje okno; natywne zamknięcie przywraca widok główny. 3D: canvas i skrót G przełączający siatkę w dodatkowym oknie; powrót przyciskiem. LOD, 1440/600 px i brak wyjątków runtime również PASS.
+- Test przeglądarkowy wymagał wykonania poza piaskownicą. Pierwsze próby zakończyły się timeoutami CDP; do sterowania oknami w headless dodano `--disable-popup-blocking`. Następnie poprawiono odczyt wrappera `project` oraz odniesienie do geometrii początkowej w trybie auto w samym teście. Końcowy przebieg PASS.
+- Instrukcja MD/HTML/PDF uzupełniona o skróty i poprawne ograniczenia wydajności; usunięto niepopartą pomiarem obietnicę płynnej pracy na słabszych GPU. `generate_pdf_html.mjs`, `print_manual_cdp.mjs`: PASS. `verify_manual.py outputs/qa/manual_6_7a`: **44 strony, 41 obrazów**, brak brakujących obrazów/sekcji, pustych stron i tekstu poza stroną. Odbiór wizualny contact_3 (strony 33–44): PASS. Biblioteka PDF wypisuje dotychczasowe ostrzeżenie FontBBox.
+
+### Pozostały zakres i status
+
+Pakiet naprawczy 6.7a jest odebrany. Główne **6.7 pozostaje w trakcie**: wcześniejszy raport nie zawierał pomiaru większej sceny, FPS/czasu klatki ani próby na docelowym słabszym GPU. Zmniejszenie geometrii nie dowodzi wymaganej płynności. Obecny test nie potwierdza również wielomonitorowego odbioru na sprzęcie użytkownika ani wszystkich narzędzi edycji w dodatkowych oknach. Blokada pop-upów w ustawieniach użytkownika nadal wymaga zezwolenia w przeglądarce. Brak weryfikacji wdrożenia Vercel.
+
+`node scripts/plan_progress.mjs`: cały plan **52/69 = 75,4%**, pierwsze wydanie **52/65 = 80,0%**. Poprzedni odbiór 6.7 powyżej pozostaje historycznym zapisem; niniejsza sekcja koryguje jego zakres.

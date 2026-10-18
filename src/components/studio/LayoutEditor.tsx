@@ -27,6 +27,7 @@ export function LayoutEditor({project:p,change,confirm,simulation,selectedIds:pr
   const [copyX,setCopyX]=useState<number>(NaN),[copyY,setCopyY]=useState<number>(NaN),[selectionError,setSelectionError]=useState('');
   const copySelection=(e:React.FormEvent)=>{e.preventDefault();try{const result=copyLayoutObjects(p.layoutObjects,selectedIds,copyX,copyY,()=>crypto.randomUUID());change({...p,layoutMode:'manual',layoutObjects:result.objects});updateSelectedIds(result.ids);setSelected(result.ids[0]??'');setSelectionError('');}catch(error){setSelectionError((error as Error).message);}};
   const panelToggle=useRef<HTMLButtonElement|null>(null);
+  const workspace=useRef<HTMLElement|null>(null);
   const [showResults,setShowResults]=useState(false);
   const closePanel=()=>{setPanel(null);panelToggle.current?.focus();};
   useEffect(()=>{
@@ -42,8 +43,10 @@ export function LayoutEditor({project:p,change,confirm,simulation,selectedIds:pr
     }
   },[selectedIds,p.layoutObjects]);
   useEffect(()=>{
+    const ownerDocument=workspace.current?.ownerDocument??document;
+    const ownerWindow=ownerDocument.defaultView??window;
     const handleKeyDown=(e:KeyboardEvent)=>{
-      const active=document.activeElement;
+      const active=ownerDocument.activeElement;
       const isInput=active&&(active.tagName==='INPUT'||active.tagName==='TEXTAREA'||active.tagName==='SELECT'||(active as HTMLElement).isContentEditable);
       if(e.key==='Escape'){
         if(panel){closePanel();return;}
@@ -80,8 +83,8 @@ export function LayoutEditor({project:p,change,confirm,simulation,selectedIds:pr
         change({...p,layoutMode:'manual',layoutObjects:next});
       }
     };
-    window.addEventListener('keydown',handleKeyDown);
-    return ()=>window.removeEventListener('keydown',handleKeyDown);
+    ownerWindow.addEventListener('keydown',handleKeyDown);
+    return ()=>ownerWindow.removeEventListener('keydown',handleKeyDown);
   },[panel,calibrateMode,measureMode,selectedIds,snap,snapEdges,snapConnections,stationAssembly,p]);
   // A history/import change invalidates unsaved geometry drafts.
   useEffect(()=>{setDraft(null);setObs(null);if(!propSelectedIds)setInternalSelectedIds(ids=>ids.filter(id=>p.layoutObjects.some(o=>o.id===id)));},[p]);
@@ -181,7 +184,7 @@ export function LayoutEditor({project:p,change,confirm,simulation,selectedIds:pr
   const commZonesCount=geoReport.zones.filter(z=>z.kind==='communication').length;
   const hasVisualAssumptions=p.layoutObjects.some(o=>o.isVisualAssumption);
   const isFacilityConfirmed=!!(p.facility.underlay?.calibratedDistanceMm||p.facility.isConfirmed);
-  return <section className="page hall-workspace"><h1>Hala i edytor CAD 2D</h1><p className="muted">Wymiary w milimetrach. Wybierz obiekt na rzucie, aby zmienić jego geometrię. Przesuwanie wyposażenia włącza tryb ręczny.</p>
+  return <section ref={workspace} className="page hall-workspace"><h1>Hala i edytor CAD 2D</h1><p className="muted">Wymiary w milimetrach. Wybierz obiekt na rzucie, aby zmienić jego geometrię. Przesuwanie wyposażenia włącza tryb ręczny.</p>
   {hasVisualAssumptions&&<p className="notice visual-assumption-note" role="note"><strong>Założenie wizualne (5.13):</strong> {VISUAL_ASSUMPTION_DISCLAIMER}</p>}
   {!isFacilityConfirmed&&<p className="notice facility-unconfirmed-note" role="note"><strong>Wymiary hali (5.13):</strong> {FACILITY_UNCONFIRMED_NOTE}</p>}
   <div className="toolbar hall-panel-controls">{([['tree','Biblioteka i drzewo'],['hall','Parametry hali'],['properties','Właściwości']] as const).map(([id,label])=><button key={id} aria-expanded={panel===id} aria-controls={`hall-${id}`} onClick={e=>{panelToggle.current=e.currentTarget;setPanel(panel===id?null:id);}}>{label}</button>)}</div>

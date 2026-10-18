@@ -444,14 +444,15 @@ Dla projektów o dużej skali oraz konfiguracji wielomonitorowych wdrożono dedy
 - **Tryb uproszczony 3D (LOD / Bounding Box)**:
   - W górnym pasku narzędziowym widoku 3D dostępny jest przycisk **Tryb uproszczony (LOD)**.
   - Po aktywacji (`⚡ Tryb uproszczony: WŁ`) aplikacja automatycznie zastępuje złożone modele wyposażenia (stoły z nogami, regały z półkami i rolkami) lekkimi bryłami prostopadłościennymi o identycznych wymiarach zewnętrznych, zachowując kontrastowe linie krawędzi i oryginalne kolory.
-  - Pozwala na płynne manipulowanie i odtwarzanie animacji symulacji rozległych fabryk nawet na zintegrowanych kartach graficznych biurowych laptopów.
+  - Ogranicza złożoność geometrii. Płynność większej sceny zależy od sprzętu i liczby obiektów; pomiary na słabszych GPU pozostają do odbioru w 6.7.
 
 - **Otwieranie widoków w osobnym oknie monitora (Popout Window)**:
   - Przycisk **`⧉ Otwórz ... w osobnym oknie`** pozwala przenieść kluczowe moduły do osobnego, niezależnego okna przeglądarki na drugi lub trzeci monitor:
     - **Przepływ procesu (`2a Przepływ`)**: stały podgląd sieci powiązań technologicznych obok tabeli danych.
     - **Hala i CAD 2D (`5 Hala i CAD`)**: pełnoekranowy edytor rzutu posadzki z siatką i wymiarowaniem.
     - **Hala 3D i symulacja (`6 3D i symulacja`)**: pełnowymiarowy trójwymiarowy podgląd hali z odtwarzaniem partii.
-  - **Współdzielenie stanu na żywo**: Dzięki technologii React Portals wszelkie zmiany wprowadzane w oknie głównym (np. przesunięcie stacji, edycja czasu operacji, zmiana obsady) są natychmiast, bez żadnych opóźnień odzwierciedlane w oknie popout.
+  - **Współdzielenie stanu**: Dodatkowe okno korzysta z tego samego projektu. Edycja, zaznaczenie i zapis nie powinny zamykać ani ponownie otwierać okna.
+  - **Skróty**: Skróty edytora CAD/3D działają w oknie danego widoku. `Ctrl+S` zapisuje projekt, a `Ctrl+Z` / `Ctrl+Y` obsługują wspólną historię. Przy edycji pola tekstowego cofanie pozostaje w tym polu.
   - **Przywracanie do okna głównego**: Kliknięcie przycisku `✕ Przywróć do okna głównego` w nagłówku okna popout lub po prostu zamknięcie tego okna przywraca widok z powrotem do układu zintegrowanego.
 
 ![Tryb uproszczony 3D — lekki render brył zastępczych LOD](../outputs/qa/verify_6_7_simplified_lod_mode_active.png)

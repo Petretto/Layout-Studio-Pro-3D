@@ -96,8 +96,10 @@ export function Scene({
   };
 
   useEffect(()=>{
+    const ownerDocument=host.current?.ownerDocument??document;
+    const ownerWindow=ownerDocument.defaultView??window;
     const handleKeyDown=(e:KeyboardEvent)=>{
-      const active=document.activeElement;
+      const active=ownerDocument.activeElement;
       const isInput=active&&(active.tagName==='INPUT'||active.tagName==='TEXTAREA'||active.tagName==='SELECT'||(active as HTMLElement).isContentEditable);
       if(e.key==='Escape'){
         if(selectedIds&&selectedIds.length>0){
@@ -161,8 +163,8 @@ export function Scene({
         change({...p,layoutMode:'manual',layoutObjects:next});
       }
     };
-    window.addEventListener('keydown',handleKeyDown);
-    return ()=>window.removeEventListener('keydown',handleKeyDown);
+    ownerWindow.addEventListener('keydown',handleKeyDown);
+    return ()=>ownerWindow.removeEventListener('keydown',handleKeyDown);
   },[selectedIds,draft,readOnly,p,gizmoMode]);
 
   useEffect(()=>{

@@ -78,13 +78,13 @@ export function App(){
   const exportScenario=(s:Saved)=>{download(JSON.stringify(s.project,null,2),`${s.name.replace(/[^\p{L}\p{N}_-]/gu,'_')}.json`,'application/json');setScenarioExportIds(ids=>ids.includes(s.id)?ids:[...ids,s.id]);notify(`Przekazano JSON wariantu „${s.name}” do pobrania. Sprawdź folder pobierania.`);};
   const undo=()=>{if(!past.length)return;setFuture([{project:raw,importSourceBase64},...future]);setRaw(past[past.length-1].project);setImportSourceBase64(past[past.length-1].importSourceBase64);setPast(past.slice(0,-1));};
   const redo=()=>{if(!future.length)return;setPast([...past,{project:raw,importSourceBase64}]);setRaw(future[0].project);setImportSourceBase64(future[0].importSourceBase64);setFuture(future.slice(1));};
-  useEffect(()=>{
-    const handleGlobalShortcuts=(e:KeyboardEvent)=>{
+  const handleGlobalShortcuts=(e:KeyboardEvent|React.KeyboardEvent<HTMLDivElement>)=>{
+      if(e.defaultPrevented)return;
       const isCtrlOrMeta=e.ctrlKey||e.metaKey;
       if(!isCtrlOrMeta)return;
       const key=e.key.toLowerCase();
-      const active=document.activeElement;
-      const isInput=active&&(active.tagName==='INPUT'||active.tagName==='TEXTAREA'||active.tagName==='SELECT');
+      const active=e.target as HTMLElement;
+      const isInput=active&&(active.tagName==='INPUT'||active.tagName==='TEXTAREA'||active.tagName==='SELECT'||active.isContentEditable);
       if(key==='z'&&!e.shiftKey){
         if(!isInput){e.preventDefault();undo();}
       }else if(key==='y'||(key==='z'&&e.shiftKey)){
@@ -94,14 +94,20 @@ export function App(){
         if(writeSave(raw))notify('Zapisano lokalnie. JSON pozwala przenieść projekt.');
       }
     };
-    window.addEventListener('keydown',handleGlobalShortcuts);
-    return ()=>window.removeEventListener('keydown',handleGlobalShortcuts);
+  useEffect(()=>{
+    // Portals bubble through React. Retain global shortcuts when the main document body has focus.
+    const handleOutsideRoot=(e:KeyboardEvent)=>{
+      if(e.target instanceof Node&&document.getElementById('root')?.contains(e.target))return;
+      handleGlobalShortcuts(e);
+    };
+    window.addEventListener('keydown',handleOutsideRoot);
+    return()=>window.removeEventListener('keydown',handleOutsideRoot);
   },[raw,past,future,allowSave,importSourceBase64]);
   const errorArea=(areas:string[])=>issues.some(i=>i.severity==='error'&&areas.includes(i.area));
   const ready:Record<string,boolean>={demand:!errorArea(['demand']),process:!!p.processSteps.length&&!errorArea(['process']),flow:!!p.processSteps.length&&!errorArea(['process']),bom:!errorArea(['bom']),balance:!!b?.workstations.length&&!b.workstations.some(s=>s.isBottleneck),layout:!!p.layoutObjects.length&&!issues.some(i=>['facility','layout'].includes(i.area)),simulation:!!b?.workstations.length,report:!!b?.workstations.length&&!issues.length};
   const exportBalance=()=>{if(!b)return;spreadsheet(b.workstations.map(s=>({'Stanowisko':s.id,'Operacje':s.assignedStepIds.join(', '),'Cykl zespołu [s]':s.cycleTimeSeconds,'Kopie':s.parallelStations??1,'Obsada na kopię':s.operators??1,'Odstęp zdolności [s]':effectiveCycle(s),'Cel [s]':b.taktTimeSeconds,'Obciążenie [%]':effectiveCycle(s)/b.taktTimeSeconds*100,'Status':s.isBottleneck?'PRZEKROCZENIE':'W NORMIE'})),`${filename(p)}_Bilans`,'csv');markExport('balance');notify('Przekazano raport bilansu CSV do pobrania.');};
   const staleExports=(Object.keys(exportLabels) as (keyof typeof exportLabels)[]).filter(kind=>exportRecords[kind]&&!isExportCurrent(kind)).map(kind=>exportLabels[kind]);
-  return <div className="studio"><header className="studio-header"><div className="brand">LAYOUT STUDIO <span>Pro 3D · 0.4.0</span></div><label className="project-name">Nazwa projektu<input aria-label="Nazwa projektu" value={raw.name} onChange={e=>change({...raw,name:e.target.value})}/></label><label className="project-name">Jednostka czasu<select aria-label="Jednostka czasu" value={p.timeUnit??'s'} onChange={e=>change({...p,timeUnit:e.target.value as TimeUnit})}>{TIME_UNITS.map(u=><option key={u.value} value={u.value}>{u.label}</option>)}</select></label><div className="toolbar"><button disabled={!past.length} onClick={undo} title="Cofnij (Ctrl+Z)">Cofnij</button><button disabled={!future.length} onClick={redo} title="Ponów (Ctrl+Y)">Ponów</button><button onClick={()=>{if(writeSave(raw))notify('Zapisano lokalnie. JSON pozwala przenieść projekt.');}} title="Zapisz lokalnie w pamięci przeglądarki (Ctrl+S)">Zapisz lokalnie</button><button className="primary" onClick={json}>Eksport JSON</button><button onClick={portableJson}>Eksport archiwum v4</button><button disabled={!importSourceBase64} onClick={()=>download(archivedImportBlob(importSourceBase64),'Pierwotnie_importowany_projekt.json')}>Pobierz pierwotny import</button><button disabled={!p.layoutObjects.length} onClick={dxf}>Eksport DXF</button></div></header>
+  return <div className="studio" onKeyDown={handleGlobalShortcuts}><header className="studio-header"><div className="brand">LAYOUT STUDIO <span>Pro 3D · 0.4.0</span></div><label className="project-name">Nazwa projektu<input aria-label="Nazwa projektu" value={raw.name} onChange={e=>change({...raw,name:e.target.value})}/></label><label className="project-name">Jednostka czasu<select aria-label="Jednostka czasu" value={p.timeUnit??'s'} onChange={e=>change({...p,timeUnit:e.target.value as TimeUnit})}>{TIME_UNITS.map(u=><option key={u.value} value={u.value}>{u.label}</option>)}</select></label><div className="toolbar"><button disabled={!past.length} onClick={undo} title="Cofnij (Ctrl+Z)">Cofnij</button><button disabled={!future.length} onClick={redo} title="Ponów (Ctrl+Y)">Ponów</button><button onClick={()=>{if(writeSave(raw))notify('Zapisano lokalnie. JSON pozwala przenieść projekt.');}} title="Zapisz lokalnie w pamięci przeglądarki (Ctrl+S)">Zapisz lokalnie</button><button className="primary" onClick={json}>Eksport JSON</button><button onClick={portableJson}>Eksport archiwum v4</button><button disabled={!importSourceBase64} onClick={()=>download(archivedImportBlob(importSourceBase64),'Pierwotnie_importowany_projekt.json')}>Pobierz pierwotny import</button><button disabled={!p.layoutObjects.length} onClick={dxf}>Eksport DXF</button></div></header>
   <div className="save-bar"><span className={saveError?'bad':''}>{saveError||(dirty?'Niezapisane zmiany…':`Zapis lokalny: ${savedAt?new Date(savedAt).toLocaleString('pl-PL'):'oczekuje'}`)}</span><span className={exportRecords.json&&!isExportCurrent('json')?'bad':''}>Eksport JSON w sesji: {exportRecords.json?`${new Date(exportRecords.json.at).toLocaleTimeString('pl-PL')} · ${isExportCurrent('json')?'aktualny':'nieaktualny — pobierz ponownie'}`:'—'}</span>{staleExports.length>0&&<span className="bad">Pobierz ponownie: {staleExports.join(', ')}</span>}{printRequest&&printRequest.project!==raw&&<span className="bad">Dane zmienione od ostatniego wywołania drukowania — uruchom druk ponownie.</span>}</div>
   {!allowSave&&<div className="notice"><button onClick={()=>{const original=localStorage.getItem(KEY);if(original===null){notify('Nie znaleziono zapisu do pobrania.');return;}download(original,initial.recoveryKind==='legacy'?'Starszy_zapis_lokalny.json':'Odzyskiwanie_zapisu.json','application/json');setRecoveryDownloaded(true);}}>{initial.recoveryKind==='legacy'?'Pobierz starszy zapis':'Pobierz kopię odzyskiwania'}</button><button disabled={initial.recoveryKind==='legacy'&&!recoveryDownloaded} onClick={()=>confirm(initial.recoveryKind==='legacy'?'Zastąpić starszy zapis lokalny projektem w schemacie 4? Upewnij się, że pobrana kopia jest dostępna.':'Zezwolić na zastąpienie uszkodzonego zapisu bieżącym projektem?',()=>setAllowSave(true))}>{initial.recoveryKind==='legacy'?'Potwierdź migrację i zapis':'Włącz zapis'}</button></div>}
   <nav className="studio-nav" aria-label="Etapy projektu">{tabs.map(([id,label])=><button key={id} className={tab===id?'active':''} onClick={()=>setTab(id)} aria-current={tab===id?'step':undefined}>{label}{id!=='dashboard'&&id!=='stations'&&<span title={ready[id]?'Dane gotowe':'Wymaga danych lub kontroli'}>{ready[id]?' ✓':' ○'}</span>}</button>)}</nav>
