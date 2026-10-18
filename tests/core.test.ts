@@ -1,4 +1,6 @@
 import { strict as assert } from 'node:assert';
+import {Box3,Group,Mesh,BoxGeometry,PlaneGeometry,MeshBasicMaterial,Vector3} from 'three';
+import {sceneContentBounds} from '../src/core/equipment/sceneFraming';
 import { test } from 'node:test';
 import { readFileSync } from 'node:fs';
 import * as XLSX from 'xlsx';
@@ -59,7 +61,6 @@ import { parseProject,processErrors,topologicalSort,validateProject } from '../s
 import { derive, newProject } from '../src/core/project';
 import {applyEquipmentAppearance,EQUIPMENT_VISUAL_MODELS} from '../src/core/equipment/equipmentAppearance';
 import {createConceptVisual} from '../src/core/equipment/conceptVisual';
-import {Box3,Vector3} from 'three';
 import { deriveStationProject } from '../src/core/stationDerivation';
 import { prepareStationMigration, previewStationMigration } from '../src/core/stationMigration';
 import {archivedImportBlob, encodeImport} from '../src/core/importArchive';
@@ -1865,6 +1866,21 @@ test('6.6: niezmiennik Zasady 6 — czysta deterministyczna animacja nie modyfik
   assert.equal(JSON.stringify(result.runs), initialRunsJson, 'Przebiegi runs nie mogą ulec zmianie');
   assert.equal(JSON.stringify(result.jobs), initialJobsJson, 'Zadania jobs nie mogą ulec zmianie');
   assert.equal(JSON.stringify(p.processSteps), initialStepsJson, 'Struktura operacji procesu nie może ulec zmianie');
+});
+
+test('6.7b: dopasowanie kamery pomija płaszczyznę manipulatora i ukryte obiekty',()=>{
+  const scene=new Group(),floor=new Mesh(new BoxGeometry(100,.05,100),new MeshBasicMaterial());
+  floor.position.set(50,0,50);scene.add(floor);
+  const controls=new Group(),plane=new Mesh(new PlaneGeometry(100000,100000),new MeshBasicMaterial({visible:false}));
+  controls.add(plane);scene.add(controls);
+  const hidden=new Mesh(new BoxGeometry(200000,200000,200000),new MeshBasicMaterial());hidden.visible=false;scene.add(hidden);
+  assert.ok(new Box3().setFromObject(scene).getSize(new Vector3()).x>100000,'old whole-scene bounds include interaction geometry');
+  assert.equal(sceneContentBounds(scene,[controls]).getSize(new Vector3()).x,100);
+  controls.visible=false;
+  assert.equal(sceneContentBounds(scene,[controls]).getSize(new Vector3()).z,100);
+  scene.remove(floor);
+  assert.ok(sceneContentBounds(scene,[controls]).isEmpty());
+  for(const mesh of [floor,plane,hidden]){mesh.geometry.dispose();(mesh.material as MeshBasicMaterial).dispose();}
 });
 
 test('6.7: tryb uproszczony 3D (simplifiedBox LOD) redukuje geometrię do lekkich brył zastępczych', () => {

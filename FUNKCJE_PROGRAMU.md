@@ -566,7 +566,8 @@ W ramach optymalizacji wydajności i czytelności wielomonitorowej wdrożono:
 - **Tryb uproszczony 3D (LOD / Bounding Box)**:
   - Opcja `simplifiedBox` w `createParametricEquipmentGroup` zastępująca złożone, wieloczęściowe geometrie parametryczne lekkimi bryłami prostopadłościennymi z kontrastowymi liniami krawędzi (`LineSegments`).
   - Przycisk przełączający `Tryb uproszczony (LOD)` / `⚡ Tryb uproszczony: WŁ` w toolbarze widoku 3D.
-  - Zmniejsza złożoność geometrii. Wydajność większej sceny na słabszych GPU wymaga pomiaru; 6.7 pozostaje w trakcie odbioru.
+  - Pomiar 6.7b na zintegrowanym Intel UHD Graphics: dla 300 syntetycznych obiektów 9960→607 wywołań rysowania i 191176→3816 trójkątów. Mediana odstępów klatek 121,3–139,6→12,0 ms w Edge headless, bez odtwarzania animacji; nie jest to gwarancja FPS na monitorze lub innym sprzęcie. Warunki i ograniczenia w raporcie 6.7.
+  - Dopasowanie kamery pomija niewidoczną płaszczyznę manipulatora, dzięki czemu nie oddala kadru poza zakres renderowania. W większej scenie sprawdzono wybór z listy, zbliżenie, ukrycie/przywrócenie i ponowne dopasowanie hali.
 - **Otwieranie widoków w osobnym oknie monitora (Popout Window via React Portals)**:
   - Komponent `PopoutWindow` renderujący widok do natywnego okna przeglądarki (`window.open` + `createPortal`).
   - Przycisk `⧉ Otwórz w osobnym oknie` dostępny w:

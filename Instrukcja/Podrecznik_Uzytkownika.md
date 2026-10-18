@@ -444,7 +444,8 @@ Dla projektów o dużej skali oraz konfiguracji wielomonitorowych wdrożono dedy
 - **Tryb uproszczony 3D (LOD / Bounding Box)**:
   - W górnym pasku narzędziowym widoku 3D dostępny jest przycisk **Tryb uproszczony (LOD)**.
   - Po aktywacji (`⚡ Tryb uproszczony: WŁ`) aplikacja automatycznie zastępuje złożone modele wyposażenia (stoły z nogami, regały z półkami i rolkami) lekkimi bryłami prostopadłościennymi o identycznych wymiarach zewnętrznych, zachowując kontrastowe linie krawędzi i oryginalne kolory.
-  - Ogranicza złożoność geometrii. Płynność większej sceny zależy od sprzętu i liczby obiektów; pomiary na słabszych GPU pozostają do odbioru w 6.7.
+  - Ogranicza złożoność geometrii. Test syntetyczny na zintegrowanym Intel UHD Graphics porównał sceny 100 i 300 obiektów. Dla 300 obiektów liczba wywołań rysowania spadła z 9960 do 607, a trójkątów z 191176 do 3816. Płynność zależy od sprzętu, rozdzielczości i wyposażenia; szczegóły oraz warunki pomiaru zawiera `WERYFIKACJA_WYDAJNOSCI_I_OKIEN_6_7.md`. Wyniki testu headless nie gwarantują liczby klatek na monitorze.
+  - W większej hali użyj **Wybierz wyposażenie z listy**, następnie **Zbliż na wybrany obiekt**. **Dopasuj halę 3D** (`F`) przywraca kadr całej hali. Dopasowanie pomija niewidoczną płaszczyznę manipulatora. W LOD widoczna jest bryła zastępcza, więc szczegóły wyposażenia sprawdzaj po wyłączeniu tego trybu.
 
 - **Otwieranie widoków w osobnym oknie monitora (Popout Window)**:
   - Przycisk **`⧉ Otwórz ... w osobnym oknie`** pozwala przenieść kluczowe moduły do osobnego, niezależnego okna przeglądarki na drugi lub trzeci monitor:
@@ -458,4 +459,6 @@ Dla projektów o dużej skali oraz konfiguracji wielomonitorowych wdrożono dedy
 ![Tryb uproszczony 3D — lekki render brył zastępczych LOD](../outputs/qa/verify_6_7_simplified_lod_mode_active.png)
 
 ![Przycisk otwarcia rzutu CAD w osobnym oknie](../outputs/qa/verify_6_7_popout_cad_btn.png)
+
+![Scena 300 obiektów — wybrany obiekt po zbliżeniu w trybie uproszczonym](../outputs/qa/benchmark_6_7/300_focused_lod.png)
 

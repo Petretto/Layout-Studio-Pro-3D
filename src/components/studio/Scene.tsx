@@ -1,4 +1,5 @@
 import {EquipmentAppearanceEditor} from './EquipmentAppearanceEditor';
+import {sceneContentBounds} from '../../core/equipment/sceneFraming';
 import {applyEquipmentAppearance} from '../../core/equipment/equipmentAppearance';
 import React,{useEffect,useRef,useState} from 'react';
 import * as THREE from 'three';
@@ -326,7 +327,7 @@ export function Scene({
       }
     }
 
-    fit.current=()=>{const bounds=new THREE.Box3().setFromObject(scene),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());const r=Math.max(size.x,size.z)*1.25/Math.min(1,camera.aspect);camera.position.set(center.x+r*.65,center.y+r,center.z+r*.7);controls.target.copy(center);controls.update();};
+    fit.current=()=>{const bounds=sceneContentBounds(scene,[transform]),size=bounds.getSize(new THREE.Vector3()),center=bounds.getCenter(new THREE.Vector3());const r=Math.max(size.x,size.z,1)*1.25/Math.min(1,camera.aspect);camera.position.set(center.x+r*.65,center.y+r,center.z+r*.7);controls.target.copy(center);controls.update();};
     topView.current=()=>{controls.target.set(width/2,0,length/2);camera.position.set(width/2,Math.max(width,length)*1.4,length/2+.001);controls.update();};
     focusObject.current=(id:string)=>{const group=groups.find(g=>g.userData.id===id);if(!group)return;const size=new THREE.Box3().setFromObject(group).getSize(new THREE.Vector3()),r=Math.max(size.x,size.z,size.y,1)*4;controls.target.copy(group.position);camera.position.copy(group.position).add(new THREE.Vector3(r*.6,r,r*.8));controls.update();};
 
