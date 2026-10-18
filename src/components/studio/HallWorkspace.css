@@ -23,3 +23,8 @@
   .hall-panel-controls button { flex: 1 1 120px; }
   .hall-drawer { width: min(380px, 94%); }
 }
+.bhp-disclaimer { margin: 8px 0; padding: 8px 12px; background: #1e293b; border-left: 4px solid #38bdf8; border-radius: 6px; color: #e2e8f0; font-size: 13px; }
+.geo-warning-list { margin: 8px 0 0; padding-left: 18px; }
+.geo-warning-list li { margin-bottom: 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.geo-badge { display: inline-block; padding: 2px 7px; border-radius: 4px; background: #334155; border: 1px solid #f59e0b; color: #fde047; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+

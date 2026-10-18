@@ -1,9 +1,16 @@
-import type {FacilityUnderlay,LayoutObject,Obstacle} from '../models/types';
+import type {FacilityConfig,FacilityUnderlay,LayoutObject,Obstacle} from '../models/types';
 import {corners} from './layoutEngine';
 
 export type Alignment = 'left'|'right'|'top'|'bottom';
 export type SnapSource = 'none'|'grid'|'edge'|'connection';
-export type LayoutLayerId = 'underlay'|'stations'|'buffers'|'operators'|'routes'|'obstacles'|'dimensions';
+export type LayoutLayerId = 'underlay'|'functionalZones'|'stations'|'buffers'|'operators'|'routes'|'obstacles'|'dimensions';
+export type FunctionalZoneKind = 'service'|'staging'|'communication';
+export interface FunctionalZone{id:string;kind:FunctionalZoneKind;label:string;xMm:number;yMm:number;widthMm:number;lengthMm:number;sourceObjectId?:string;workstationId?:string;}
+export type GeometricWarningKind = 'hall-boundary'|'obstacle-collision'|'object-collision'|'zone-obstruction'|'narrow-aisle';
+export interface GeometricLayoutWarning{id:string;kind:GeometricWarningKind;scopeLabel:'Geometria rzutu (nie BHP)';message:string;objectIds:string[];obstacleIds?:string[];measuredMm?:number;thresholdMm?:number;}
+export interface GeometricWarningReport{disclaimer:string;safeStateNote:string;zones:FunctionalZone[];warnings:GeometricLayoutWarning[];affectedObjectIds:string[];}
+export const BHP_GEOMETRY_DISCLAIMER = 'Kontrola ma wyłącznie charakter geometryczny (obrysy 2D, granice hali, kolizje prostokątów i zadane prześwity modelowe w mm) i NIE stanowi oceny zgodności z przepisami BHP, ergonomii, ochrony przeciwpożarowej ani dopuszczenia stanowisk do eksploatacji.';
+export const BHP_SAFE_STATE_NOTE = 'Brak ostrzeżeń geometrycznych oznacza wyłącznie brak nakładania się prostokątnych obrysów 2D i zachowanie zadanych prześwitów modelowych — nie potwierdza spełnienia wymogów BHP ani dopuszczenia stanowisk do eksploatacji.';
 export interface SnapOptions{grid?:boolean;edges?:boolean;connections?:boolean;gridSizeMm?:number;thresholdMm?:number;}
 export interface ConnectionPoint{objectId:string;kind:'center'|'left'|'right'|'top'|'bottom';x:number;y:number;}
 export interface SnapGuide{kind:'edge'|'connection';axis:'x'|'y'|'point';x1:number;y1:number;x2:number;y2:number;targetId:string;}
@@ -237,4 +244,196 @@ export function calibrateUnderlayScale(u:FacilityUnderlay,p1Mm:{x:number;y:numbe
   if(nextMmPerPixel<0.01||nextMmPerPixel>10000)throw new Error('Skala podkładu poza zakresem 0,01–10000 mm/px');
   return {...u,mmPerPixel:nextMmPerPixel,calibratedDistanceMm:Math.round(actualDistanceMm),calibratedSpanPx:Number(spanPx.toFixed(2))};
 }
+function objectBoundingBox(o:{xMm:number;yMm:number;widthMm:number;lengthMm:number;rotationDeg?:number}){
+  const pts=corners(o);
+  const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);
+  const minX=Math.round(Math.min(...xs)),maxX=Math.round(Math.max(...xs));
+  const minY=Math.round(Math.min(...ys)),maxY=Math.round(Math.max(...ys));
+  return {xMm:minX,yMm:minY,widthMm:Math.max(1,maxX-minX),lengthMm:Math.max(1,maxY-minY)};
+}
+export function computeFunctionalZones(objects:LayoutObject[],facility:FacilityConfig,aisleMm=2000):FunctionalZone[]{
+  const zones:FunctionalZone[]=[];
+  const hallW=Math.max(1000,facility.widthMm||10000),hallL=Math.max(1000,facility.lengthMm||10000);
+  const stationsWithMat=new Set<string>();
+  for(const o of objects){
+    if(o.type==='OperatorErgoMat'){
+      const box=objectBoundingBox(o);
+      const pad=150;
+      const xMm=Math.max(0,box.xMm-pad),yMm=Math.max(0,box.yMm-pad);
+      const widthMm=Math.min(hallW-xMm,box.widthMm+2*pad),lengthMm=Math.min(hallL-yMm,box.lengthMm+2*pad);
+      const suffix=copySuffix(o.id);
+      if(o.workstationId)stationsWithMat.add(`${o.workstationId}${suffix}`);
+      zones.push({
+        id:`ZONE-SRV-${o.id}`,
+        kind:'service',
+        label:`Strefa obsługi (${o.workstationId??o.name})`,
+        xMm,yMm,widthMm,lengthMm,
+        sourceObjectId:o.id,
+        workstationId:o.workstationId,
+      });
+    } else if(classifyLayoutObjectLayer(o)==='buffers'){
+      const box=objectBoundingBox(o);
+      const pad=140;
+      const xMm=Math.max(0,box.xMm-pad),yMm=Math.max(0,box.yMm-pad);
+      const widthMm=Math.min(hallW-xMm,box.widthMm+2*pad),lengthMm=Math.min(hallL-yMm,box.lengthMm+2*pad);
+      zones.push({
+        id:`ZONE-STG-${o.id}`,
+        kind:'staging',
+        label:`Strefa odkładania (${o.workstationId?`FIFO ${o.workstationId}`:o.name})`,
+        xMm,yMm,widthMm,lengthMm,
+        sourceObjectId:o.id,
+        workstationId:o.workstationId,
+      });
+    }
+  }
+  for(const o of objects){
+    if(classifyLayoutObjectLayer(o)==='stations'){
+      const suffix=copySuffix(o.id);
+      if(o.workstationId&&stationsWithMat.has(`${o.workstationId}${suffix}`))continue;
+      const box=objectBoundingBox(o);
+      const depth=800;
+      const xMm=box.xMm,yMm=Math.min(hallL-depth,box.yMm+box.lengthMm+80);
+      zones.push({
+        id:`ZONE-SRV-${o.id}`,
+        kind:'service',
+        label:`Strefa obsługi (${o.workstationId??o.name})`,
+        xMm,yMm,widthMm:box.widthMm,lengthMm:depth,
+        sourceObjectId:o.id,
+        workstationId:o.workstationId,
+      });
+    }
+  }
+  if(objects.length>0){
+    const boxes=objects.map(objectBoundingBox);
+    const minX=Math.max(0,Math.min(...boxes.map(b=>b.xMm))-300);
+    const maxX=Math.min(hallW,Math.max(...boxes.map(b=>b.xMm+b.widthMm))+300);
+    const corridorWidth=Math.max(800,Math.min(3600,Math.round(aisleMm||2000)));
+    const tables=objects.filter(o=>classifyLayoutObjectLayer(o)==='stations').map(objectBoundingBox).sort((a,b)=>a.yMm-b.yMm);
+    let addedInterRow=false;
+    for(let i=0;i+1<tables.length;i++){
+      const gapStart=tables[i].yMm+tables[i].lengthMm+950;
+      const gapEnd=tables[i+1].yMm-1450;
+      if(gapEnd-gapStart>=700){
+        zones.push({
+          id:`ZONE-COM-ROW-${i+1}`,
+          kind:'communication',
+          label:`Strefa komunikacji międzyrzędowej (${gapEnd-gapStart} mm)`,
+          xMm:minX,
+          yMm:gapStart,
+          widthMm:Math.max(1000,maxX-minX),
+          lengthMm:gapEnd-gapStart,
+        });
+        addedInterRow=true;
+        break;
+      }
+    }
+    if(!addedInterRow){
+      const maxY=Math.max(...boxes.map(b=>b.yMm+b.lengthMm));
+      const minY=Math.min(...boxes.map(b=>b.yMm));
+      const frontY=maxY+250+corridorWidth<=hallL?maxY+250:Math.max(0,minY-corridorWidth-250);
+      zones.push({
+        id:'ZONE-COM-MAIN',
+        kind:'communication',
+        label:`Strefa komunikacji wzdłuż linii (${corridorWidth} mm)`,
+        xMm:minX,
+        yMm:Math.max(0,Math.min(hallL-corridorWidth,frontY)),
+        widthMm:Math.max(1000,maxX-minX),
+        lengthMm:Math.min(corridorWidth,hallL),
+      });
+    }
+  }
+  return zones;
+}
+export function analyzeGeometricLayoutWarnings(
+  objects:LayoutObject[],
+  obstacles:Obstacle[],
+  facility:FacilityConfig,
+  settings:{spacingMm?:number;aisleMm?:number}={spacingMm:700,aisleMm:2000}
+):GeometricWarningReport{
+  const zones=computeFunctionalZones(objects,facility,settings.aisleMm??2000);
+  const warnings:GeometricLayoutWarning[]=[];
+  const affected=new Set<string>();
+  const minClearanceMm=Math.max(200,Math.min(600,Math.round(settings.spacingMm??700)));
+
+  objects.forEach((o,i)=>{
+    const c=corners(o);
+    if(c.some(v=>v.x<0||v.y<0||v.x>facility.widthMm||v.y>facility.lengthMm)||o.zMm<0||o.zMm+o.heightMm>facility.heightMm){
+      affected.add(o.id);
+      warnings.push({
+        id:`WARN-BND-${o.id}`,
+        kind:'hall-boundary',
+        scopeLabel:'Geometria rzutu (nie BHP)',
+        message:`[Geometria rzutu — nie BHP] ${o.name}: obrys wykracza poza granice modelu hali (${facility.widthMm} × ${facility.lengthMm} × ${facility.heightMm} mm).`,
+        objectIds:[o.id],
+      });
+    }
+    obstacles.forEach(b=>{
+      if(polygonsOverlap(c,corners(b))){
+        affected.add(o.id);
+        warnings.push({
+          id:`WARN-OBS-${o.id}-${b.id}`,
+          kind:'obstacle-collision',
+          scopeLabel:'Geometria rzutu (nie BHP)',
+          message:`[Geometria rzutu — nie BHP] ${o.name}: nakładanie obrysu 2D z przeszkodą „${b.name}”.`,
+          objectIds:[o.id],
+          obstacleIds:[b.id],
+          measuredMm:0,
+        });
+      }
+    });
+    objects.slice(i+1).forEach(b=>{
+      if(polygonsOverlap(c,corners(b))){
+        affected.add(o.id);affected.add(b.id);
+        warnings.push({
+          id:`WARN-OBJ-${o.id}-${b.id}`,
+          kind:'object-collision',
+          scopeLabel:'Geometria rzutu (nie BHP)',
+          message:`[Geometria rzutu — nie BHP] ${o.name} ↔ ${b.name}: wzajemne nakładanie obrysów 2D (prześwit 0 mm).`,
+          objectIds:[o.id,b.id],
+          measuredMm:0,
+        });
+      } else if(classifyLayoutObjectLayer(o)==='stations'&&classifyLayoutObjectLayer(b)==='stations'){
+        const dist=measureObjectsDistance(o,b);
+        if(dist.edgeGapMm>0&&dist.edgeGapMm<minClearanceMm){
+          affected.add(o.id);affected.add(b.id);
+          warnings.push({
+            id:`WARN-GAP-${o.id}-${b.id}`,
+            kind:'narrow-aisle',
+            scopeLabel:'Geometria rzutu (nie BHP)',
+            message:`[Geometria rzutu — nie BHP] ${o.name} ↔ ${b.name}: prześwit geometryczny między stołami wynosi ${dist.edgeGapMm} mm (poniżej progu kontrolnego ${minClearanceMm} mm).`,
+            objectIds:[o.id,b.id],
+            measuredMm:dist.edgeGapMm,
+            thresholdMm:minClearanceMm,
+          });
+        }
+      }
+    });
+  });
+
+  for(const z of zones){
+    const zPoly=corners(z);
+    for(const b of obstacles){
+      if(polygonsOverlap(zPoly,corners(b))){
+        if(z.sourceObjectId)affected.add(z.sourceObjectId);
+        warnings.push({
+          id:`WARN-ZONE-${z.id}-${b.id}`,
+          kind:'zone-obstruction',
+          scopeLabel:'Geometria rzutu (nie BHP)',
+          message:`[Geometria rzutu — nie BHP] ${z.label}: w obrysie strefy znajduje się przeszkoda „${b.name}”.`,
+          objectIds:z.sourceObjectId?[z.sourceObjectId]:[],
+          obstacleIds:[b.id],
+        });
+      }
+    }
+  }
+
+  return {
+    disclaimer:BHP_GEOMETRY_DISCLAIMER,
+    safeStateNote:BHP_SAFE_STATE_NOTE,
+    zones,
+    warnings,
+    affectedObjectIds:[...affected],
+  };
+}
+
 

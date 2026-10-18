@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import { calculateTaktTime } from '../src/core/algorithms/taktCalculator';
 import { runLineBalancing } from '../src/core/algorithms/lineBalancingEngine';
 import { generate3DLayout,layoutWarnings,corners } from '../src/core/algorithms/layoutEngine';
-import {alignLayoutObjects,calibrateUnderlayScale,classifyLayoutObjectLayer,expandMoveSelection,expandVisualSelection,groupLayoutObjects,copyLayoutObjects,lockLayoutObjects,measureObjectsDistance,measurePointsDistance,moveLayoutObjects,objectConnectionPoints,snapLayoutTranslation,underlayDimensionsMm,workstationAssemblyIds} from '../src/core/algorithms/layoutSelection';
+import {alignLayoutObjects,analyzeGeometricLayoutWarnings,BHP_GEOMETRY_DISCLAIMER,BHP_SAFE_STATE_NOTE,calibrateUnderlayScale,classifyLayoutObjectLayer,computeFunctionalZones,expandMoveSelection,expandVisualSelection,groupLayoutObjects,copyLayoutObjects,lockLayoutObjects,measureObjectsDistance,measurePointsDistance,moveLayoutObjects,objectConnectionPoints,snapLayoutTranslation,underlayDimensionsMm,workstationAssemblyIds} from '../src/core/algorithms/layoutSelection';
 import {layoutRoutes} from '../src/core/algorithms/routing';
 import { simulate,simulationAt,SIMULATION_SPEEDS,stepSimulationTime } from '../src/core/algorithms/simulation';
 import { importProcess,importBOM,processRows,bomRows,templateWorkbookBytes,TEMPLATE_PROCESS_STEPS,TEMPLATE_BOM_COMPONENTS,PROCESS_COLUMN_DOCS,BOM_COLUMN_DOCS } from '../src/core/export/excelImporter';
@@ -714,5 +714,98 @@ test('5.8: import DXF — wymóg potwierdzenia jednostek przy braku $INSUNITS or
   assert.ok(confirmedM.skippedEntities.some(s => s.type === 'LWPOLYLINE' && s.reason.includes('mniej niż 3 wierzchołki')));
   assert.ok(DXF_UNITS.length >= 5);
 });
+
+test('5.9: generowanie czytelnych stref obsługi, odkładania i komunikacji (computeFunctionalZones)', () => {
+  const derived = derive(motor);
+  const objects = derived.project.layoutObjects ?? [];
+  const zones = computeFunctionalZones(objects, derived.project.facility, derived.project.layoutSettings?.aisleMm ?? 2400);
+
+  const serviceZones = zones.filter(z => z.kind === 'service');
+  const stagingZones = zones.filter(z => z.kind === 'staging');
+  const commZones = zones.filter(z => z.kind === 'communication');
+
+  assert.equal(serviceZones.length, 2); // WS-1 i WS-2 (maty operatora + otoczka)
+  assert.equal(stagingZones.length, 4); // 2 regały FIFO + Strefa Wejścia + Strefa Wyjścia
+  assert.equal(commZones.length, 1); // pas komunikacji międzyrzędowej U-Shape
+
+  assert.ok(serviceZones.every(z => z.label.startsWith('Strefa obsługi (')));
+  assert.ok(stagingZones.every(z => z.label.startsWith('Strefa odkładania (')));
+  assert.ok(commZones.every(z => z.label.startsWith('Strefa komunikacji')));
+
+  // Układ liniowy (battery) generuje pas komunikacji wzdłuż linii
+  const derivedBattery = derive(battery);
+  const batteryZones = computeFunctionalZones(derivedBattery.project.layoutObjects ?? [], derivedBattery.project.facility, 2000);
+  assert.ok(batteryZones.some(z => z.kind === 'communication' && z.label.startsWith('Strefa komunikacji wzdłuż linii')));
+
+  // Stanowisko bez maty operatora otrzymuje domyślną przednią strefę obsługi (800 mm głębokości)
+  const withoutMats = objects.filter(o => o.type !== 'OperatorErgoMat');
+  const zonesWithoutMats = computeFunctionalZones(withoutMats, derived.project.facility, 2400);
+  const fallbackService = zonesWithoutMats.filter(z => z.kind === 'service');
+  assert.equal(fallbackService.length, 2);
+  assert.ok(fallbackService.every(z => z.lengthMm === 800 && z.widthMm >= 1600));
+});
+
+test('5.9: kontrola geometryczna rzutu odróżnia ostrzeżenia geometryczne 2D od oceny zgodności BHP', () => {
+  const derived = derive(motor);
+  const objects = derived.project.layoutObjects ?? [];
+  const cleanCheck = analyzeGeometricLayoutWarnings(
+    objects,
+    derived.project.obstacles,
+    derived.project.facility,
+    derived.project.layoutSettings
+  );
+
+  assert.equal(cleanCheck.disclaimer, BHP_GEOMETRY_DISCLAIMER);
+  assert.equal(cleanCheck.safeStateNote, BHP_SAFE_STATE_NOTE);
+  assert.ok(cleanCheck.disclaimer.includes('NIE stanowi oceny zgodności z przepisami BHP'));
+  assert.ok(cleanCheck.safeStateNote.includes('nie potwierdza spełnienia wymogów BHP'));
+  assert.equal(cleanCheck.warnings.length, 0);
+  assert.equal(cleanCheck.affectedObjectIds.length, 0);
+
+  // Wymuszenie ostrzeżeń geometrycznych: wyjście poza obrys hali, kolizja ze słupem, kolizja 2 obiektów, wąskie przejście i przeszkoda w strefie komunikacji
+  const table1 = objects.find(o => o.id === 'TBL-WS-1')!;
+  const table2 = objects.find(o => o.id === 'TBL-WS-2')!;
+
+  const modifiedObjects = objects.map(o => {
+    if (o.id === table1.id) {
+      return { ...o, xMm: -500, yMm: -200 }; // poza obrysem hali (prawa krawędź = 1300)
+    }
+    if (o.id === table2.id) {
+      return { ...o, xMm: 1500, yMm: -200 }; // prześwit 200 mm od TBL-WS-1 (poniżej progu 600 mm)
+    }
+    if (o.id === 'FIFO-WS-1') {
+      return { ...o, xMm: -400, yMm: -100 }; // nakłada się z TBL-WS-1
+    }
+    return o;
+  });
+
+  const modifiedZones = computeFunctionalZones(modifiedObjects, derived.project.facility, 2000);
+  const commZone = modifiedZones.find(z => z.kind === 'communication')!;
+
+  const obstaclesWithIntrusion = [
+    ...derived.project.obstacles,
+    { id: 'OBS-IN-COMM', name: 'Słup w przejściu', xMm: commZone.xMm + 100, yMm: commZone.yMm + 100, zMm: 0, widthMm: 600, lengthMm: 600, heightMm: 3000, rotationDeg: 0 },
+    { id: 'OBS-ON-TBL', name: 'Słup na stole', xMm: -200, yMm: -100, zMm: 0, widthMm: 500, lengthMm: 500, heightMm: 3000, rotationDeg: 0 }
+  ];
+
+  const warningCheck = analyzeGeometricLayoutWarnings(
+    modifiedObjects,
+    obstaclesWithIntrusion,
+    derived.project.facility,
+    { ...derived.project.layoutSettings, spacingMm: 600, aisleMm: 2000 }
+  );
+
+  assert.ok(warningCheck.warnings.length >= 5);
+  assert.ok(warningCheck.warnings.every(w => w.scopeLabel === 'Geometria rzutu (nie BHP)'));
+  assert.ok(warningCheck.warnings.every(w => w.message.includes('[Geometria rzutu — nie BHP]')));
+  assert.ok(warningCheck.warnings.some(w => w.kind === 'hall-boundary'));
+  assert.ok(warningCheck.warnings.some(w => w.kind === 'object-collision'));
+  assert.ok(warningCheck.warnings.some(w => w.kind === 'obstacle-collision'));
+  assert.ok(warningCheck.warnings.some(w => w.kind === 'narrow-aisle'));
+  assert.ok(warningCheck.warnings.some(w => w.kind === 'zone-obstruction'));
+  assert.ok(warningCheck.affectedObjectIds.includes('TBL-WS-1'));
+  assert.ok(warningCheck.affectedObjectIds.includes('TBL-WS-2'));
+});
+
 
 
