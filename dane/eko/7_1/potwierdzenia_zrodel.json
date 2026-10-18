@@ -1,0 +1,40 @@
+{
+  "kind": "eko-evidence-register-not-an-application-project",
+  "version": 1,
+  "confirmations": [
+    {
+      "id": "EKO-U1",
+      "recordedOn": "2026-10-18",
+      "authority": "użytkownik projektu — odpowiedź w tej rozmowie",
+      "statement": "dane są rzeczywiste. pomiary czasu były wykonane w lipcu tego roku. wariant ramy 1.4",
+      "sourcePaths": ["tests/Test Eko.xlsx", "tests/Test Eko BOM.xlsx"],
+      "measurementPeriod": "2026-07",
+      "measurementPeriodPrecision": "month",
+      "frameVariant": "1.4",
+      "sourceIsRealProductionData": true,
+      "measurementMethod": null,
+      "sampleCount": null,
+      "detailedMeasurementDates": null,
+      "notes": "Potwierdzenie pochodzenia danych przez użytkownika. Zakres OP22–OP25 doprecyzowano w EKO-U2. Nie potwierdza założeń hali, popytu ani obsady scenariuszy testowych."
+    },
+    {
+      "id": "EKO-U2",
+      "recordedOn": "2026-10-18",
+      "authority": "użytkownik projektu — odpowiedź w tej rozmowie",
+      "statement": "te są przykładowe, ale prawdopodobne",
+      "operationIds": ["OP22", "OP23", "OP24", "OP25"],
+      "timeEvidence": "synthetic-test",
+      "notes": "Wartości 600, 600, 480 i 480 s pozostają przykładami. Prawdopodobieństwo nie jest potwierdzeniem pomiaru."
+    }
+  ],
+  "clarifications": [
+    {
+      "id": "EKO-C1",
+      "operationIds": ["OP22", "OP23", "OP24", "OP25"],
+      "status": "resolved",
+      "question": "Czy potwierdzenie lipcowych pomiarów ramy 1.4 obejmuje również 600, 600, 480 i 480 s oznaczone w arkuszu jako syntetyczne?",
+      "resolution": "remain-synthetic",
+      "confirmationId": "EKO-U2"
+    }
+  ]
+}
