@@ -3,7 +3,7 @@ import { TimeUnit } from '../../core/models/types';
 import { fromSeconds, toSeconds, formatTimeValue, formatTimeWithUnit, TIME_UNITS } from '../../core/time';
 export { formatTimeValue, formatTimeWithUnit, fromSeconds, toSeconds, TIME_UNITS };
 
-export function NumberField({label,value,onChange,min=0,max,step='any'}:{label:string;value:number;onChange:(v:number)=>void;min?:number;max?:number;step?:string}){return <label className="field">{label}<input type="number" required min={min} max={max} step={step} value={Number.isFinite(value)?value:''} onChange={e=>onChange(e.target.value===''?NaN:Number(e.target.value))}/></label>;}
+export function NumberField({label,value,onChange,min=0,max,step='any',disabled}:{label:string;value:number;onChange:(v:number)=>void;min?:number;max?:number;step?:string;disabled?:boolean}){return <label className="field">{label}<input type="number" required disabled={disabled} min={min} max={max} step={step} value={Number.isFinite(value)?value:''} onChange={e=>onChange(e.target.value===''?NaN:Number(e.target.value))}/></label>;}
 
 export function TimeField({label,seconds,unit='s',onChange,min=0,max}:{label:string;seconds:number;unit?:TimeUnit;onChange:(seconds:number)=>void;min?:number;max?:number}){
   const displayVal = Number(fromSeconds(seconds, unit).toFixed(6));
@@ -15,7 +15,7 @@ export function TimeField({label,seconds,unit='s',onChange,min=0,max}:{label:str
   }}/></label>;
 }
 
-export function TextField({label,value,onChange}:{label:string;value:string;onChange:(v:string)=>void}){return <label className="field">{label}<input required value={value} onChange={e=>onChange(e.target.value)}/></label>;}
+export function TextField({label,value,onChange,disabled}:{label:string;value:string;onChange:(v:string)=>void;disabled?:boolean}){return <label className="field">{label}<input required disabled={disabled} value={value} onChange={e=>onChange(e.target.value)}/></label>;}
 export function Metric({label,value,hint}:{label:string;value:string;hint?:string}){return <div className="metric"><span>{label}</span><strong>{value}</strong>{hint&&<small>{hint}</small>}</div>;}
 export const fmt=(n:number|undefined,d=2)=>Number.isFinite(n)?n!.toLocaleString('pl-PL',{maximumFractionDigits:d}):'—';
 export function Alert({children}:{children:React.ReactNode}){return <div className="notice" role="status">{children}</div>;}

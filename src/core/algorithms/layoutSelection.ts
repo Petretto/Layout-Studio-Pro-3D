@@ -3,11 +3,23 @@ import {corners} from './layoutEngine';
 
 export type Alignment = 'left'|'right'|'top'|'bottom';
 export type SnapSource = 'none'|'grid'|'edge'|'connection';
+export type LayoutLayerId = 'stations'|'buffers'|'operators'|'routes'|'obstacles'|'dimensions';
 export interface SnapOptions{grid?:boolean;edges?:boolean;connections?:boolean;gridSizeMm?:number;thresholdMm?:number;}
 export interface ConnectionPoint{objectId:string;kind:'center'|'left'|'right'|'top'|'bottom';x:number;y:number;}
 export interface SnapGuide{kind:'edge'|'connection';axis:'x'|'y'|'point';x1:number;y1:number;x2:number;y2:number;targetId:string;}
 export interface SnapResult{xMm:number;yMm:number;dx:number;dy:number;snappedX:SnapSource;snappedY:SnapSource;guides:SnapGuide[];}
+export interface DistanceMeasurement{fromId:string;toId:string;centerDistanceMm:number;dxCenterMm:number;dyCenterMm:number;edgeGapMm:number;gapXMm:number;gapYMm:number;c1:{x:number;y:number};c2:{x:number;y:number};p1:{x:number;y:number};p2:{x:number;y:number};}
+export interface PointDistanceMeasurement{x1:number;y1:number;x2:number;y2:number;dxMm:number;dyMm:number;distanceMm:number;}
 const copySuffix=(id:string)=>id.match(/-COPY-\d+$/)?.[0]??'';
+export function classifyLayoutObjectLayer(o:Pick<LayoutObject,'type'>):'stations'|'buffers'|'operators'{
+  if(o.type==='OperatorErgoMat')return 'operators';
+  if(o.type==='Table'||o.type==='TableESD'||o.type==='TableToolRail'||o.type==='QualityGate'||o.type==='ReworkStation')return 'stations';
+  return 'buffers';
+}
+export function lockLayoutObjects(objects:LayoutObject[],ids:string[],locked:boolean):LayoutObject[]{
+  const chosen=new Set(ids);
+  return objects.map(o=>{if(!chosen.has(o.id))return o;const {locked:_,...rest}=o;return locked?{...rest,locked:true}:rest;});
+}
 export function expandVisualSelection(objects:LayoutObject[],id:string):string[]{
   const object=objects.find(o=>o.id===id);
   return object?.visualGroupId?objects.filter(o=>o.visualGroupId===object.visualGroupId).map(o=>o.id):object?[id]:[];
@@ -33,23 +45,23 @@ export function expandMoveSelection(objects:LayoutObject[],ids:string[],includeS
 export function moveLayoutObjects(objects:LayoutObject[],ids:string[],dx:number,dy:number,includeStationAssembly=true):LayoutObject[]{
   if(!Number.isFinite(dx)||!Number.isFinite(dy))throw new Error('Nieprawidłowe przesunięcie obiektów w mm');
   const moved=new Set(expandMoveSelection(objects,ids,includeStationAssembly));
-  return objects.map(o=>moved.has(o.id)?{...o,xMm:o.xMm+dx,yMm:o.yMm+dy}:o);
+  return objects.map(o=>moved.has(o.id)&&!o.locked?{...o,xMm:o.xMm+dx,yMm:o.yMm+dy}:o);
 }
 export function groupLayoutObjects(objects:LayoutObject[],ids:string[],groupId:string|null):LayoutObject[]{
   const chosen=new Set(ids);
   return objects.map(o=>{if(!chosen.has(o.id))return o;const {visualGroupId:_,...rest}=o;return groupId?{...rest,visualGroupId:groupId}:rest;});
 }
-/** Copies are visual geometry, deliberately detached from production station bindings. */
+/** Copies are visual geometry, deliberately detached from production station bindings and unlocked by default. */
 export function copyLayoutObjects(objects:LayoutObject[],ids:string[],dx:number,dy:number,newId:()=>string):{objects:LayoutObject[];ids:string[]}{
   if(!Number.isFinite(dx)||!Number.isFinite(dy))throw new Error('Podaj jawne przesunięcie kopii w mm');
   const selected=[...new Set(ids)].map(id=>objects.find(o=>o.id===id)).filter((o):o is LayoutObject=>!!o);
   if(objects.length+selected.length>5000)throw new Error('Limit 5000 obiektów layoutu');
   const used=new Set(objects.flatMap(o=>o.visualGroupId?[o.id,o.visualGroupId]:[o.id])),groups=new Map<string,string>();
   const fresh=()=>{const id=newId();if(!id||used.has(id))throw new Error('Powtórzone ID kopii');used.add(id);return id;};
-  const copies=selected.map(o=>{const {workstationId:_,visualGroupId:group,...geometry}=o;const copy={...geometry,id:fresh(),name:`${o.name} — kopia`,xMm:o.xMm+dx,yMm:o.yMm+dy};if(group){if(!groups.has(group))groups.set(group,fresh());return {...copy,visualGroupId:groups.get(group)!};}return copy;});
+  const copies=selected.map(o=>{const {workstationId:_,visualGroupId:group,locked:_locked,...geometry}=o;const copy={...geometry,id:fresh(),name:`${o.name} — kopia`,xMm:o.xMm+dx,yMm:o.yMm+dy};if(group){if(!groups.has(group))groups.set(group,fresh());return {...copy,visualGroupId:groups.get(group)!};}return copy;});
   return {objects:[...objects,...copies],ids:copies.map(o=>o.id)};
 }
-/** Align rotated visual outlines to the first selected object; retain all IDs, station assemblies and bindings. */
+/** Align rotated visual outlines to the first selected object; retain all IDs, station assemblies and bindings. Locked units do not move. */
 export function alignLayoutObjects(objects:LayoutObject[],ids:string[],alignment:Alignment,includeStationAssembly=true):LayoutObject[]{
   const selected=ids.map(id=>objects.find(o=>o.id===id)).filter((o):o is LayoutObject=>!!o);
   if(selected.length<2)return objects;
@@ -71,10 +83,11 @@ export function alignLayoutObjects(objects:LayoutObject[],ids:string[],alignment
     const offset=target-edge(unit);
     if(!Number.isFinite(offset))throw new Error('Nieprawidłowa geometria zaznaczenia');
     const unitIds=useAssemblyUnits?expandMoveSelection(objects,unit.map(o=>o.id),true):unit.map(o=>o.id);
+    if(unitIds.some(id=>objects.find(o=>o.id===id)?.locked))continue;
     for(const id of unitIds)objectOffsets.set(id,offset);
   }
   if(!Number.isFinite(target))throw new Error('Nieprawidłowa geometria zaznaczenia');
-  return objects.map(o=>objectOffsets.has(o.id)?{...o,[horizontal?'xMm':'yMm']:(horizontal?o.xMm:o.yMm)+objectOffsets.get(o.id)!}:o);
+  return objects.map(o=>objectOffsets.has(o.id)&&!o.locked?{...o,[horizontal?'xMm':'yMm']:(horizontal?o.xMm:o.yMm)+objectOffsets.get(o.id)!}:o);
 }
 export function objectConnectionPoints(o:Pick<LayoutObject,'id'|'xMm'|'yMm'|'widthMm'|'lengthMm'|'rotationDeg'>):ConnectionPoint[]{
   const c=corners(o),mid=(a:{x:number;y:number},b:{x:number;y:number})=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
@@ -159,5 +172,55 @@ export function snapLayoutTranslation(objects:LayoutObject[],obstacles:Obstacle[
     else dy=Math.round(rawDy);
   }
   return {xMm:anchor.xMm+dx,yMm:anchor.yMm+dy,dx,dy,snappedX,snappedY,guides};
+}
+function closestPointOnSegment(p:{x:number;y:number},a:{x:number;y:number},b:{x:number;y:number}):{x:number;y:number}{
+  const vx=b.x-a.x,vy=b.y-a.y,lenSq=vx*vx+vy*vy;
+  if(lenSq<=1e-9)return a;
+  const t=Math.max(0,Math.min(1,((p.x-a.x)*vx+(p.y-a.y)*vy)/lenSq));
+  return {x:a.x+t*vx,y:a.y+t*vy};
+}
+function polygonsOverlap(a:ReturnType<typeof corners>,b:ReturnType<typeof corners>):boolean{
+  for(const poly of [a,b])for(let i=0;i<4;i++){
+    const p=poly[i],q=poly[(i+1)%4],axis={x:-(q.y-p.y),y:q.x-p.x};
+    const pa=a.map(v=>v.x*axis.x+v.y*axis.y),pb=b.map(v=>v.x*axis.x+v.y*axis.y);
+    if(Math.max(...pa)<=Math.min(...pb)+0.01||Math.max(...pb)<=Math.min(...pa)+0.01)return false;
+  }
+  return true;
+}
+export function measureObjectsDistance(a:LayoutObject,b:LayoutObject):DistanceMeasurement{
+  const c1={x:Math.round(a.xMm+a.widthMm/2),y:Math.round(a.yMm+a.lengthMm/2)};
+  const c2={x:Math.round(b.xMm+b.widthMm/2),y:Math.round(b.yMm+b.lengthMm/2)};
+  const dxCenterMm=Math.round((b.xMm+b.widthMm/2)-(a.xMm+a.widthMm/2));
+  const dyCenterMm=Math.round((b.yMm+b.lengthMm/2)-(a.yMm+a.lengthMm/2));
+  const centerDistanceMm=Math.round(Math.hypot(dxCenterMm,dyCenterMm));
+  const polyA=corners(a),polyB=corners(b);
+  const xsA=polyA.map(v=>v.x),ysA=polyA.map(v=>v.y),xsB=polyB.map(v=>v.x),ysB=polyB.map(v=>v.y);
+  const gapXMm=Math.round(Math.max(0,Math.max(Math.min(...xsA)-Math.max(...xsB),Math.min(...xsB)-Math.max(...xsA))));
+  const gapYMm=Math.round(Math.max(0,Math.max(Math.min(...ysA)-Math.max(...ysB),Math.min(...ysB)-Math.max(...ysA))));
+  if(polygonsOverlap(polyA,polyB)){
+    return {fromId:a.id,toId:b.id,centerDistanceMm,dxCenterMm,dyCenterMm,edgeGapMm:0,gapXMm,gapYMm,c1,c2,p1:c1,p2:c2};
+  }
+  let bestDist=Infinity,bestP1=c1,bestP2=c2;
+  for(const va of polyA)for(let i=0;i<4;i++){
+    const qb=closestPointOnSegment(va,polyB[i],polyB[(i+1)%4]);
+    const d=Math.hypot(qb.x-va.x,qb.y-va.y);
+    if(d<bestDist){bestDist=d;bestP1=va;bestP2=qb;}
+  }
+  for(const vb of polyB)for(let i=0;i<4;i++){
+    const qa=closestPointOnSegment(vb,polyA[i],polyA[(i+1)%4]);
+    const d=Math.hypot(vb.x-qa.x,vb.y-qa.y);
+    if(d<bestDist){bestDist=d;bestP1=qa;bestP2=vb;}
+  }
+  return {
+    fromId:a.id,toId:b.id,centerDistanceMm,dxCenterMm,dyCenterMm,
+    edgeGapMm:Math.round(bestDist),gapXMm,gapYMm,c1,c2,
+    p1:{x:Math.round(bestP1.x),y:Math.round(bestP1.y)},
+    p2:{x:Math.round(bestP2.x),y:Math.round(bestP2.y)},
+  };
+}
+export function measurePointsDistance(a:{x:number;y:number},b:{x:number;y:number}):PointDistanceMeasurement{
+  const x1=Math.round(a.x),y1=Math.round(a.y),x2=Math.round(b.x),y2=Math.round(b.y);
+  const dxMm=x2-x1,dyMm=y2-y1,distanceMm=Math.round(Math.hypot(dxMm,dyMm));
+  return {x1,y1,x2,y2,dxMm,dyMm,distanceMm};
 }
 

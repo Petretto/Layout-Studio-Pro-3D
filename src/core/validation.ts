@@ -70,6 +70,7 @@ export function validateProject(p:ProjectData):Issue[]{
   for(const o of p.layoutObjects){
     if(!o.id||objectIds.has(o.id))error('layout',`Powtórzone lub puste ID obiektu ${o.id}.`);objectIds.add(o.id);
     if(![o.xMm,o.yMm,o.zMm,o.rotationDeg].every(Number.isFinite)||![o.widthMm,o.lengthMm,o.heightMm].every(v=>finite(v,1)))error('layout',`${o.name}: niepoprawna geometria.`);
+    if(o.locked!==undefined&&typeof o.locked!=='boolean')error('layout',`${o.name}: niepoprawny stan blokady obiektu.`);
   }
   return issues;
 }
@@ -87,6 +88,6 @@ export function parseProject(text:string):ProjectData{
   if(p.timeUnit!==undefined&&!['s','min','h'].includes(p.timeUnit))throw new Error('Nieznana jednostka czasu.');
   p.id=typeof p.id==='string'?p.id:crypto.randomUUID();p.timeUnit=p.timeUnit??'s';p.algorithm=['RPW','LCR','Manual'].includes(p.algorithm)?p.algorithm:'RPW';p.currency=['PLN','EUR','USD'].includes(p.currency)?p.currency:'USD';p.layoutMode=p.layoutMode==='manual'?'manual':'auto';p.schemaVersion=4;
   const errors=validateProject(p);if(errors.length)throw new Error(errors.map(i=>i.message).join('\n'));
-  for(const o of p.layoutObjects){if(typeof o.id!=='string'||typeof o.type!=='string'||typeof o.name!=='string'||![o.xMm,o.yMm,o.zMm,o.rotationDeg].every(Number.isFinite)||![o.widthMm,o.lengthMm,o.heightMm].every(v=>finite(v,1)))throw new Error('Niepoprawne współrzędne layoutu.');if(o.visualGroupId!==undefined&&(typeof o.visualGroupId!=='string'||!o.visualGroupId.trim()||o.visualGroupId.length>100))throw new Error('Niepoprawne ID grupy wizualnej.');}
+  for(const o of p.layoutObjects){if(typeof o.id!=='string'||typeof o.type!=='string'||typeof o.name!=='string'||![o.xMm,o.yMm,o.zMm,o.rotationDeg].every(Number.isFinite)||![o.widthMm,o.lengthMm,o.heightMm].every(v=>finite(v,1)))throw new Error('Niepoprawne współrzędne layoutu.');if(o.visualGroupId!==undefined&&(typeof o.visualGroupId!=='string'||!o.visualGroupId.trim()||o.visualGroupId.length>100))throw new Error('Niepoprawne ID grupy wizualnej.');if(o.locked!==undefined&&typeof o.locked!=='boolean')throw new Error('Niepoprawny stan blokady obiektu.');}
   return p as ProjectData;
 }

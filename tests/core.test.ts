@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import { calculateTaktTime } from '../src/core/algorithms/taktCalculator';
 import { runLineBalancing } from '../src/core/algorithms/lineBalancingEngine';
 import { generate3DLayout,layoutWarnings,corners } from '../src/core/algorithms/layoutEngine';
-import {alignLayoutObjects,expandMoveSelection,expandVisualSelection,groupLayoutObjects,copyLayoutObjects,moveLayoutObjects,objectConnectionPoints,snapLayoutTranslation,workstationAssemblyIds} from '../src/core/algorithms/layoutSelection';
+import {alignLayoutObjects,classifyLayoutObjectLayer,expandMoveSelection,expandVisualSelection,groupLayoutObjects,copyLayoutObjects,lockLayoutObjects,measureObjectsDistance,measurePointsDistance,moveLayoutObjects,objectConnectionPoints,snapLayoutTranslation,workstationAssemblyIds} from '../src/core/algorithms/layoutSelection';
 import {layoutRoutes} from '../src/core/algorithms/routing';
 import { simulate,simulationAt,SIMULATION_SPEEDS,stepSimulationTime } from '../src/core/algorithms/simulation';
 import { importProcess,importBOM,processRows,bomRows,templateWorkbookBytes,TEMPLATE_PROCESS_STEPS,TEMPLATE_BOM_COMPONENTS,PROCESS_COLUMN_DOCS,BOM_COLUMN_DOCS } from '../src/core/export/excelImporter';
@@ -271,6 +271,59 @@ test('5.5: przyciąganie do punktów połączeń (portów bocznych i osi technol
   const axialSnap=snapLayoutTranslation(objs,[],ws1Ids,'TBL-WS-1',42,-900,{grid:true,edges:false,connections:true,gridSizeMm:200,thresholdMm:120});
   assert.equal(axialSnap.snappedX,'connection');assert.equal(axialSnap.dx,0);
   assert.ok(axialSnap.guides.some(g=>g.kind==='connection'&&g.axis==='x'));
+});
+test('5.6: blokowanie obiektów chroni przed przesunięciem i wyrównaniem, kopie są odblokowane, a walidacja sprawdza pole locked',()=>{
+  const base=derive(structuredClone(motor)).project;
+  const objs=base.layoutObjects;
+  const locked=lockLayoutObjects(objs,['TBL-WS-1'],true);
+  assert.equal(locked.find(o=>o.id==='TBL-WS-1')!.locked,true);
+  assert.equal(locked.find(o=>o.id==='TBL-WS-2')!.locked,undefined);
+  // Próba przesunięcia zablokowanego stołu nie zmienia jego pozycji
+  const moved=moveLayoutObjects(locked,['TBL-WS-1'],1200,-600,false);
+  assert.deepEqual(moved.find(o=>o.id==='TBL-WS-1'),locked.find(o=>o.id==='TBL-WS-1'));
+  // Wyrównanie: zablokowany obiekt jako drugi nie przesuwa się, a jako pierwszy może służyć za bazę odniesienia
+  const shifted=moveLayoutObjects(locked,['TBL-WS-2'],900,0,true);
+  const alignLockedTarget=alignLayoutObjects(shifted,['TBL-WS-2','TBL-WS-1'],'left',true);
+  assert.deepEqual(alignLockedTarget.find(o=>o.id==='TBL-WS-1'),shifted.find(o=>o.id==='TBL-WS-1'));
+  const alignToLockedRef=alignLayoutObjects(shifted,['TBL-WS-1','TBL-WS-2'],'left',true);
+  assert.equal(alignToLockedRef.find(o=>o.id==='TBL-WS-2')!.xMm,shifted.find(o=>o.id==='TBL-WS-1')!.xMm);
+  // Kopia zablokowanego obiektu jest domyślnie odblokowana
+  let seq=0;
+  const copied=copyLayoutObjects(locked,['TBL-WS-1'],500,500,()=>`COPY-LOCK-${++seq}`);
+  const copyObj=copied.objects.find(o=>o.id==='COPY-LOCK-1')!;
+  assert.equal(copyObj.locked,undefined);
+  // Odblokowanie usuwa flagę locked
+  const unlocked=lockLayoutObjects(locked,['TBL-WS-1'],false);
+  assert.equal(unlocked.find(o=>o.id==='TBL-WS-1')!.locked,undefined);
+  // Roundtrip JSON i walidacja niepoprawnego typu locked
+  const roundtrip=parseProject(JSON.stringify({...base,layoutMode:'manual',layoutObjects:locked}));
+  assert.equal(roundtrip.layoutObjects.find(o=>o.id==='TBL-WS-1')!.locked,true);
+  assert.throws(()=>parseProject(JSON.stringify({...base,layoutMode:'manual',layoutObjects:[{...objs[0],locked:'tak'}]})),/stan blokady obiektu/);
+});
+test('5.6: klasyfikacja warstw oraz dokładny pomiar odległości między obiektami i punktami na rzucie',()=>{
+  const base=derive(structuredClone(motor)).project;
+  const objs=base.layoutObjects;
+  const tbl1=objs.find(o=>o.id==='TBL-WS-1')!,tbl2=objs.find(o=>o.id==='TBL-WS-2')!;
+  const fifo1=objs.find(o=>o.id==='FIFO-WS-1')!,mat1=objs.find(o=>o.id==='MAT-WS-1')!,matIn=objs.find(o=>o.id==='MAT-IN')!;
+  assert.equal(classifyLayoutObjectLayer(tbl1),'stations');
+  assert.equal(classifyLayoutObjectLayer(fifo1),'buffers');
+  assert.equal(classifyLayoutObjectLayer(matIn),'buffers');
+  assert.equal(classifyLayoutObjectLayer(mat1),'operators');
+  const dist=measureObjectsDistance(tbl1,tbl2);
+  const expectedGapX=Math.max(0,Math.max(tbl1.xMm-(tbl2.xMm+tbl2.widthMm),tbl2.xMm-(tbl1.xMm+tbl1.widthMm)));
+  const expectedGapY=Math.max(0,Math.max(tbl1.yMm-(tbl2.yMm+tbl2.lengthMm),tbl2.yMm-(tbl1.yMm+tbl1.lengthMm)));
+  assert.equal(dist.fromId,'TBL-WS-1');assert.equal(dist.toId,'TBL-WS-2');
+  assert.equal(dist.gapXMm,expectedGapX);assert.equal(dist.gapYMm,expectedGapY);
+  assert.equal(dist.edgeGapMm,Math.round(Math.hypot(expectedGapX,expectedGapY)));
+  assert.equal(dist.dxCenterMm,Math.round((tbl2.xMm+tbl2.widthMm/2)-(tbl1.xMm+tbl1.widthMm/2)));
+  assert.equal(dist.dyCenterMm,Math.round((tbl2.yMm+tbl2.lengthMm/2)-(tbl1.yMm+tbl1.lengthMm/2)));
+  assert.equal(dist.centerDistanceMm,Math.round(Math.hypot(dist.dxCenterMm,dist.dyCenterMm)));
+  // Nakładające się obiekty mają prześwit 0 mm
+  const overlapping=measureObjectsDistance(tbl1,{...tbl2,xMm:tbl1.xMm+200,yMm:tbl1.yMm+100});
+  assert.equal(overlapping.edgeGapMm,0);
+  // Pomiar punkt-punkt (np. przekątna 3000 x 4000 = 5000 mm)
+  const ptDist=measurePointsDistance({x:1000,y:1500},{x:4000,y:5500});
+  assert.deepEqual(ptDist,{x1:1000,y1:1500,x2:4000,y2:5500,dxMm:3000,dyMm:4000,distanceMm:5000});
 });
 test('JSON starych projektów migruje, zły schemat odrzucany',()=>{for(const p of [motor,battery]){const parsed=parseProject(JSON.stringify(p));assert.equal(parsed.schemaVersion,4);assert.ok(derive(parsed).project.balancing);}assert.throws(()=>parseProject('{}'));assert.throws(()=>parseProject(JSON.stringify({...motor,schemaVersion:999})));assert.throws(()=>parseProject(JSON.stringify({...motor,demand:{...motor.demand,plannedBreaksMinutesPerShift:600}})));});
 test('archiwum importu zachowuje bajty starszego JSON także z BOM i poza granicą bloku',async()=>{

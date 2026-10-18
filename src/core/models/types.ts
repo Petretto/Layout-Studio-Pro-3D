@@ -72,6 +72,8 @@ export interface LayoutObject {
   workstationId?: string;
   /** Visual editor group only; never a station/resource assignment. */
   visualGroupId?: string;
+  /** Prevents moving, aligning, resizing, rotating or deleting this layout object in the CAD editor. */
+  locked?: boolean;
 }
 
 export interface FacilityConfig {
