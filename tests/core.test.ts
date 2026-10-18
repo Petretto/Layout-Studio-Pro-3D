@@ -10,6 +10,7 @@ import {layoutRoutes} from '../src/core/algorithms/routing';
 import { simulate,simulationAt,SIMULATION_SPEEDS,stepSimulationTime } from '../src/core/algorithms/simulation';
 import { importProcess,importBOM,processRows,bomRows,templateWorkbookBytes,TEMPLATE_PROCESS_STEPS,TEMPLATE_BOM_COMPONENTS,PROCESS_COLUMN_DOCS,BOM_COLUMN_DOCS } from '../src/core/export/excelImporter';
 import { exportToDxf } from '../src/core/export/dxfExporter';
+import { parseDxfImport, applyDxfImportToProject, DXF_UNITS } from '../src/core/export/dxfImporter';
 import { parseProject,processErrors,topologicalSort,validateProject } from '../src/core/validation';
 import { derive } from '../src/core/project';
 import {archivedImportBlob, encodeImport} from '../src/core/importArchive';
@@ -596,4 +597,122 @@ test('5.11: walidacja projektu zachowuje jednostkę czasu i wewnętrzne sekundy'
   // Nieznana jednostka rzuca błąd walidacji
   assert.throws(() => parseProject(JSON.stringify({...motor, timeUnit: 'days'})), /Nieznana jednostka czasu/);
 });
+
+test('5.8: import DXF — roundtrip eksportu DXF, weryfikacja jednostek ($INSUNITS) oraz zakresy aktualizacji projektu', () => {
+  const derived = derive(motor);
+  const objects = derived.layout?.objects ?? [];
+  const exported = exportToDxf(motor.facility, objects, motor.name, motor.obstacles);
+  const report = parseDxfImport(exported, { unitSelection: 'auto' });
+  assert.equal(report.detectedInsunitsCode, 4);
+  assert.equal(report.detectedUnit, 'mm');
+  assert.equal(report.effectiveUnit, 'mm');
+  assert.equal(report.mmPerUnit, 1);
+  assert.equal(report.requiresUnitConfirmation, false);
+  assert.equal(report.totalSkippedCount, 0);
+  assert.ok(report.importedFacility);
+  assert.equal(report.importedFacility.widthMm, motor.facility.widthMm);
+  assert.equal(report.importedFacility.lengthMm, motor.facility.lengthMm);
+  assert.equal(report.importedObstacles.length, motor.obstacles.length);
+  assert.equal(report.importedVisualObjects.length, objects.length);
+
+  // Sprawdzenie skalowania jednostek ($INSUNITS = 6 -> metry ×1000 mm)
+  const dxfMeters = [
+    '0', 'SECTION', '2', 'HEADER', '9', '$INSUNITS', '70', '6', '0', 'ENDSEC',
+    '0', 'SECTION', '2', 'ENTITIES',
+    '0', 'LWPOLYLINE', '8', 'FACILITY', '70', '1',
+    '10', '0', '20', '0',
+    '10', '32', '20', '0',
+    '10', '32', '20', '-40',
+    '10', '0', '20', '-40',
+    '0', 'CIRCLE', '8', 'OBSTACLES', '10', '5', '20', '-8', '40', '0.6',
+    '0', 'TEXT', '8', 'OBSTACLES', '10', '5', '20', '-8', '1', 'Słup nośny S-1',
+    '0', 'ENDSEC', '0', 'EOF'
+  ].join('\n');
+
+  const meterReport = parseDxfImport(dxfMeters, { unitSelection: 'auto' });
+  assert.equal(meterReport.detectedUnit, 'm');
+  assert.equal(meterReport.mmPerUnit, 1000);
+  assert.equal(meterReport.requiresUnitConfirmation, false);
+  assert.deepEqual(meterReport.importedFacility, { widthMm: 32000, lengthMm: 40000, layer: 'FACILITY', label: undefined });
+  assert.equal(meterReport.importedObstacles.length, 1);
+  assert.equal(meterReport.importedObstacles[0].name, 'Słup nośny S-1');
+  assert.equal(meterReport.importedObstacles[0].xMm, 4400);
+  assert.equal(meterReport.importedObstacles[0].yMm, 7400);
+  assert.equal(meterReport.importedObstacles[0].widthMm, 1200);
+  assert.equal(meterReport.importedObstacles[0].lengthMm, 1200);
+
+  // Zastosowanie importu w 3 zakresach
+  const appliedHall = applyDxfImportToProject(motor.facility, motor.obstacles, objects, meterReport, 'facility-and-obstacles', true);
+  assert.equal(appliedHall.facility.widthMm, 32000);
+  assert.equal(appliedHall.facility.lengthMm, 40000);
+  assert.equal(appliedHall.obstacles.length, 1);
+  assert.equal(appliedHall.layoutObjects.length, objects.length);
+
+  const appliedObsOnly = applyDxfImportToProject(motor.facility, motor.obstacles, objects, meterReport, 'obstacles-only', false);
+  assert.equal(appliedObsOnly.facility.widthMm, motor.facility.widthMm);
+  assert.equal(appliedObsOnly.obstacles.length, motor.obstacles.length + 1);
+});
+
+test('5.8: import DXF — wymóg potwierdzenia jednostek przy braku $INSUNITS oraz raport pominiętej geometrii CAD', () => {
+  const dxfMixed = [
+    '0', 'SECTION', '2', 'HEADER', '9', '$INSUNITS', '70', '0', '0', 'ENDSEC',
+    '0', 'SECTION', '2', 'BLOCKS',
+    '0', 'BLOCK', '2', 'INTERNAL_BLK',
+    '0', 'LWPOLYLINE', '8', 'OBSTACLES', '70', '1', '10', '0', '20', '0', '10', '10', '20', '0', '10', '10', '20', '10',
+    '0', 'ENDBLK',
+    '0', 'ENDSEC',
+    '0', 'SECTION', '2', 'ENTITIES',
+    // Obsługiwana geometria hali z odcinków LINE na warstwie BOUNDARY
+    '0', 'LINE', '8', 'BOUNDARY', '10', '0', '20', '0', '11', '25', '21', '0',
+    '0', 'LINE', '8', 'BOUNDARY', '10', '25', '20', '0', '11', '25', '21', '30',
+    '0', 'LINE', '8', 'BOUNDARY', '10', '25', '20', '30', '11', '0', '21', '30',
+    '0', 'LINE', '8', 'BOUNDARY', '10', '0', '20', '30', '11', '0', '21', '0',
+    // Obsługiwana przeszkoda POLYLINE + VERTEX + SEQEND
+    '0', 'POLYLINE', '8', 'COLUMNS',
+    '0', 'VERTEX', '8', 'COLUMNS', '10', '4', '20', '6',
+    '0', 'VERTEX', '8', 'COLUMNS', '10', '5', '20', '6',
+    '0', 'VERTEX', '8', 'COLUMNS', '10', '5', '20', '7',
+    '0', 'VERTEX', '8', 'COLUMNS', '10', '4', '20', '7',
+    '0', 'SEQEND',
+    // Nieobsługiwane encje CAD (raportowane w skippedEntities)
+    '0', 'INSERT', '8', 'EQUIPMENT', '2', 'ROBOT_CELL',
+    '0', 'INSERT', '8', 'EQUIPMENT', '2', 'CONVEYOR_BLK',
+    '0', 'SPLINE', '8', 'PATHS',
+    '0', 'HATCH', '8', 'ZONES',
+    '0', 'DIMENSION', '8', 'DIMS',
+    '0', '3DFACE', '8', 'MESH_3D',
+    // LWPOLYLINE z łukiem bulge (kod 42)
+    '0', 'LWPOLYLINE', '8', 'OBSTACLES', '10', '1', '20', '1', '42', '0.5', '10', '2', '20', '1', '10', '2', '20', '2',
+    // LWPOLYLINE z tylko 2 wierzchołkami
+    '0', 'LWPOLYLINE', '8', 'EQUIPMENT', '10', '1', '20', '1', '10', '3', '20', '1',
+    '0', 'ENDSEC', '0', 'EOF'
+  ].join('\n');
+
+  const unconfirmed = parseDxfImport(dxfMixed, { unitSelection: 'auto' });
+  assert.equal(unconfirmed.detectedInsunitsCode, 0);
+  assert.equal(unconfirmed.detectedUnit, null);
+  assert.equal(unconfirmed.requiresUnitConfirmation, true);
+  assert.ok(unconfirmed.unitWarning?.includes('jawnie wybierz jednostkę'));
+
+  // Po jawnym wyborze metrów (m) blokada jednostek znika, a wymiary są przeliczone ×1000 mm
+  const confirmedM = parseDxfImport(dxfMixed, { unitSelection: 'm' });
+  assert.equal(confirmedM.requiresUnitConfirmation, false);
+  assert.equal(confirmedM.mmPerUnit, 1000);
+  assert.deepEqual(confirmedM.importedFacility, { widthMm: 25000, lengthMm: 30000, layer: 'BOUNDARY', label: undefined });
+  assert.equal(confirmedM.importedObstacles.length, 2); // POLYLINE na COLUMNS + LWPOLYLINE z cięciwą na OBSTACLES
+  assert.equal(confirmedM.importedObstacles[0].widthMm, 1000);
+  assert.equal(confirmedM.importedObstacles[0].lengthMm, 1000);
+
+  // Raport pominiętej geometrii zawiera wszystkie nieobsługiwane encje z ENTITIES (i ignoruje definicję BLOCKS)
+  assert.equal(confirmedM.totalSkippedCount, 8);
+  assert.ok(confirmedM.skippedEntities.some(s => s.type === 'INSERT' && s.layer === 'EQUIPMENT' && s.count === 2));
+  assert.ok(confirmedM.skippedEntities.some(s => s.type === 'SPLINE' && s.layer === 'PATHS' && s.count === 1));
+  assert.ok(confirmedM.skippedEntities.some(s => s.type === 'HATCH' && s.layer === 'ZONES' && s.count === 1));
+  assert.ok(confirmedM.skippedEntities.some(s => s.type === 'DIMENSION' && s.layer === 'DIMS' && s.count === 1));
+  assert.ok(confirmedM.skippedEntities.some(s => s.type === '3DFACE' && s.layer === 'MESH_3D' && s.count === 1));
+  assert.ok(confirmedM.skippedEntities.some(s => s.type.includes('bulge')));
+  assert.ok(confirmedM.skippedEntities.some(s => s.type === 'LWPOLYLINE' && s.reason.includes('mniej niż 3 wierzchołki')));
+  assert.ok(DXF_UNITS.length >= 5);
+});
+
 
