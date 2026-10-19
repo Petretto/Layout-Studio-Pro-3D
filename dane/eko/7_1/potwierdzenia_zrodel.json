@@ -69,6 +69,16 @@
         "workerIds": null
       },
       "notes": "Uzupełnia EKO-U4: obie osoby obecne przez całe pakowanie. Brak maszyn jest potwierdzonym brakiem, nie brakującą informacją. Nie potwierdza surowych prób, szczegółowych faz ręcznych/oczekiwania, tożsamości osób, obsady OP22–OP25 ani pomiarowego pochodzenia ich czasów. Czas OP21 pozostaje 1320 s dla zespołu, bez dzielenia przez dwa."
+    },
+    {
+      "id": "EKO-U6",
+      "recordedOn": "2026-10-19",
+      "authority": "użytkownik projektu — odpowiedź w tej rozmowie na pytanie o OP10–OP21",
+      "statement": "Średnia z kilku pomiarów",
+      "operationIds": ["OP10", "OP11", "OP12", "OP13", "OP14", "OP15", "OP16", "OP17", "OP18", "OP19", "OP20", "OP21"],
+      "timeAggregation": "mean-of-multiple-measurements",
+      "sampleCount": null,
+      "notes": "Potwierdza sposób agregacji 12 czasów, bez liczby prób, wartości surowych, rozrzutu lub szczegółowej metody pomiaru. Nie rozszerzać na przykładowe OP22–OP25. Nie rekonstruować prób ani parametrów rozkładu ze średniej."
     }
   ],
   "clarifications": [

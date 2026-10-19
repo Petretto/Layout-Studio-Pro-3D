@@ -20,6 +20,9 @@ ok(staffingConfirmation?.personCountScope==='whole-process'&&staffingConfirmatio
 const manualConfirmation=evidence.confirmations.find(c=>c.id==='EKO-U5');
 ok(manualConfirmation?.scope==='whole-process'&&manualConfirmation.workMode==='manual-only'&&manualConfirmation.hasMachinesOrAutomation===false,'Recheck explicit manual-only process confirmation');
 ok(manualConfirmation.packaging?.operationId==='OP21'&&manualConfirmation.packaging.workerCount===2&&manualConfirmation.packaging.presenceCoverage==='entire-operation','Recheck continuous two-person packaging');
+const aggregationConfirmation=evidence.confirmations.find(c=>c.id==='EKO-U6');
+ok(aggregationConfirmation?.timeAggregation==='mean-of-multiple-measurements'&&aggregationConfirmation.sampleCount===null,'Recheck mean-time confirmation; sample count remains unknown');
+deepStrictEqual([...aggregationConfirmation.operationIds].sort(),Object.keys(staffingConfirmation.operationWorkerCounts).sort(),'Mean-time confirmation must cover OP10–OP21 only');
 const sourcePaths=[processPath,bomPath,'src/core/models/ekoProject.ts','tests/qa/Eko_D5_actual_export_v5.json','tests/fixtures/ekoDomainScenarios.ts','WERYFIKACJA_EKO_2_9.md',confirmationPath];
 const sources=sourcePaths.map((path,index)=>{
   const bytes=readFileSync(resolve(root,path));
@@ -46,6 +49,9 @@ const operations=processRows.slice(1).flatMap((r,index)=>!r[idCol]?[]:[{
   workMode:'manual-only',workModeConfirmation:manualConfirmation.id,
   crewPresenceRequirement:String(r[idCol])==='OP21'?{workerCount:2,coverage:'entire-operation',workerIds:null,confirmation:manualConfirmation.id}:null,
   crewIds:null,measurementPeriod:testIds.has(String(r[idCol]))?null:confirmation.measurementPeriod,method:null,
+  timeAggregation:testIds.has(String(r[idCol]))?null:aggregationConfirmation.timeAggregation,
+  aggregationConfirmation:testIds.has(String(r[idCol]))?null:aggregationConfirmation.id,
+  sampleCount:null,
   measuredCrewWorkerCount:staffingConfirmation.operationWorkerCounts[String(r[idCol])]??null,
   crewCountConfirmation:staffingConfirmation.operationWorkerCounts[String(r[idCol])]===undefined?null:staffingConfirmation.id,
   confirmation:testIds.has(String(r[idCol]))?syntheticConfirmation.id:confirmation.id,
@@ -75,6 +81,6 @@ const report={kind:'eko-source-audit-not-an-application-project',auditVersion:2,
   testFixture:{sourceId:'EKO-S5',workersAndRoles:'test-assumptions',bodyInitiallyPresent:'test-assumption'},
   remainingEvidence:['measurement-method-and-sample-detail','manual-phase-and-other-operator-presence-profiles','actual-crews-and-competencies','concurrency-approval','station-copies-and-equipment','measured-geometry-and-directed-routes','buffer-capacity-and-operator-blocking','calendar-and-initial-state','explicit-material-consumption-and-deliveries','observed-production-events-and-losses','comparison-conditions-and-tolerances-for-7.2','measured-replacements-for-OP22-OP25'],
 };
-// Keep the historical audit and any local changes to it intact.
-const output=resolve(root,'outputs/data_audit/eko_7_1c.json');mkdirSync(dirname(output),{recursive:true});writeFileSync(output,JSON.stringify(report,null,2)+'\n');
+// Keep historical audits and any local changes to them intact.
+const output=resolve(root,'outputs/data_audit/eko_7_1d.json');mkdirSync(dirname(output),{recursive:true});writeFileSync(output,JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify({output,operations:operations.length,userConfirmed:report.process.userConfirmedSourceValues,synthetic:4,frameVariant:confirmation.frameVariant,measurementPeriod:confirmation.measurementPeriod,bomItems:bomItems.length,sourceHashes:sources.length,workbookVsExample:'PASS',productionDataAccepted:false}));

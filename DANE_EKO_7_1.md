@@ -9,6 +9,7 @@ Aktualizacja: 2026-10-19. Zakres: **rama 1.4, pomiary z lipca 2026**, zgodnie z 
 - **EKO-U3:** użytkownik podał „Pomiar dla 13 osób”. Historyczny wpis zachowano; zakres rozstrzygnięto w EKO-U4.
 - **EKO-U4:** 13 osób łącznie w procesie. Tylko pakowanie OP21 wykonywały 2 osoby, pozostałe mierzone OP10–OP20 po jednej. Czas OP21 **1320 s (22 min)** pozostaje czasem dla dwóch osób; nie zastosowano skalowania. EKO-C2 zamknięte. Tożsamości, współdzielenie, kalendarze i profile obecności pozostają nieokreślone; deklaracji nie rozszerzono na testowe OP22–OP25.
 - **EKO-U5 (zapis 7.1c):** cały proces jest manualny, bez maszyn i automatyzacji. Obie osoby wykonujące OP21 są obecne przez całe pakowanie. Brak pracy maszynowej jest teraz potwierdzony, nie oznacza braku informacji. Czas OP21 pozostaje 1320 s dla zespołu; nie dzielimy go przez dwa ani nie zastępujemy roboczosekundami.
+- **EKO-U6 (7.1d):** czasy OP10–OP21 są średnimi z kilku pomiarów. Liczba prób, wyniki surowe, rozrzut i szczegółowa metoda pomiaru pozostają nieznane. OP22–OP25 nadal przykładowe.
 - Całkowicie manualny charakter procesu nie wyznacza szczegółowych odcinków pracy, oczekiwania i blokad ani tożsamości osób. Pełna obecność zespołu OP21 jest potwierdzona; profili pozostałych operacji nie uzupełniono automatycznie. Podział VA/NVA nie zastępuje profili. Nie nadano automatycznie statusu pomiaru każdej kolumnie arkusza.
 - Potwierdzenie plików procesu i BOM nie obejmuje demonstracyjnego popytu, wymiarów hali, OEE, obsady, grup równoległości ani początkowej ramy z fixture 2.9. Dane testowych scenariuszy pozostają testowe.
 
@@ -16,7 +17,7 @@ Treść odpowiedzi, ich zakres i rozstrzygnięcie EKO-C1 zapisano w [rejestrze p
 
 ## Źródła
 
-Pełne SHA-256 i rozmiary źródeł są w [aktualnym raporcie maszynowym 7.1c](outputs/data_audit/eko_7_1c.json). Skrót identyfikuje zawartość pliku w dniu audytu; nie dowodzi jakości pomiaru.
+Pełne SHA-256 i rozmiary źródeł są w [aktualnym raporcie maszynowym 7.1d](outputs/data_audit/eko_7_1d.json). Skrót identyfikuje zawartość pliku w dniu audytu; nie dowodzi jakości pomiaru.
 
 | ID | Lokalizacja | Zakres i kwalifikacja |
 | --- | --- | --- |
@@ -34,7 +35,7 @@ Materiałów Jabama i konceptów Blender 6.3b nie uznano za geometrię Eko. Nie 
 
 | Operacje | Liczba | Kwalifikacja |
 | --- | ---: | --- |
-| OP10–OP21 | 12 | Rzeczywiste dane według EKO-U1, lipiec 2026, rama 1.4. Dane surowych prób i szczegóły metody do uzupełnienia. |
+| OP10–OP21 | 12 | Rzeczywiste dane według EKO-U1, lipiec 2026, rama 1.4. Średnie z kilku pomiarów (EKO-U6); liczba prób, dane surowe i szczegóły metody do uzupełnienia. |
 | OP22, OP23 | 2 | Po 600 s, przykład według arkusza i EKO-U2. |
 | OP24, OP25 | 2 | Po 480 s, przykład według arkusza i EKO-U2. |
 
@@ -45,7 +46,7 @@ Raport JSON zachowuje wartości z arkusza jako `declaredStandardTimeSeconds`. Po
 | ID | Obszar | Dostępne / brakujące dane | Warunek zamknięcia |
 | --- | --- | --- | --- |
 | EKO-B01 | Wariant i okres | Rama 1.4 i miesiąc 2026-07 potwierdzone. Brak szczegółowej rewizji dokumentacji i warunków prób. | Powiązać wariant i rewizję z każdym źródłem, określić warunki próby. |
-| EKO-B02 | Metoda i próby czasu | Standardy 12 operacji z potwierdzonych danych; brak surowych prób, metody agregacji i liczby obserwacji. | Uzupełnić metrykę pomiaru i dostępne obserwacje; wskazać, czy wartość jest pojedynczą próbą, średnią czy normą po obróbce pomiarów. |
+| EKO-B02 | Metoda i próby czasu | Częściowo wyjaśnione: 12 czasów OP10–OP21 to średnie z kilku pomiarów (EKO-U6). Brak liczby prób, wartości surowych, rozrzutu i szczegółowej metody pomiaru. | Uzupełnić dostępne metryki i obserwacje; nie rekonstruować liczby prób ani zmienności ze średniej. |
 | EKO-B03 | OP22–OP25 | Czasy przykładowe, wyjaśnienie zamknięte; pomiarów brak. | Dostarczyć pomiary dla ramy 1.4 i wskazanej obsady albo wyłączyć je z uzgodnionego zakresu odbioru 7.2. |
 | EKO-B04 | Praca ręczna i obecność | Częściowo zamknięte przez EKO-U5: cały proces manualny, brak maszyn/automatyzacji; OP21 stale 2 osoby. Brak szczegółowych faz i obecności przy pozostałych operacjach. | Uzupełnić potrzebne odcinki pracy ręcznej, oczekiwania i obecności; nie wymagać pomiarów nieistniejącej pracy maszyny. Dla OP21 zachować pełną obecność dwóch osób. |
 | EKO-B05 | Obsada i kompetencje | Potwierdzono 13 osób w procesie: OP10–OP20 po 1, OP21 pakowanie 2. EKO-C2 zamknięte. Osoby z fixture nadal są założone; brak rzeczywistych tożsamości, współdzielenia i kompetencji. | Powiązać rzeczywiste ID osób, ich kompetencje, wymagania operacji i kalendarze z potwierdzoną obsadą. Kompetencje całej obsady mogą się uzupełniać; liczebność zespołu nie ustala pełnego profilu obecności pozostałych operacji; pełna obecność OP21 jest potwierdzona w EKO-U5. |
@@ -95,3 +96,9 @@ Nowy wynik `outputs/data_audit/eko_7_1c.json` ma wersję audytu 2 i pozostaje do
 Weryfikacja: audyt PASS (16 operacji, 12 potwierdzonych źródłowo czasów, 4 testowe, 60 BOM, 7 SHA-256). Kontrola raportu PASS: brak odcinków maszyn, OP21 2 osoby przez całość/1320 s, pozostałe mierzone operacje po 1 osobie, 4 testowe bez przypisanej obsady, brak zmyślonych prób/ID, zgodne sumy źródeł, `productionDataAccepted: false`. Bez zmian działania aplikacji: nie uruchamiano regresji, builda, UI ani regeneracji podręcznika PDF. Zaktualizowano instrukcję zbierania danych.
 
 **7.1 pozostaje w trakcie.** Najbliższy brak do wyjaśnienia: znaczenie wartości czasu w arkuszu (pojedynczy pomiar, średnia z prób czy norma). Dalej: identyfikatory i współdzielenie osób, kalendarze, stanowiska/geometria/transport/bufory, rzeczywiste wyniki oraz uzgodnione warunki i tolerancje 7.2. Nie zastępujemy tych braków wartościami domyślnymi.
+
+## Odbiór pakietu 7.1d — 2026-10-19
+
+EKO-U6 rozstrzyga wcześniejsze pytanie o znaczenie czasów: 12 wartości OP10–OP21 to średnie z kilku pomiarów. Nie zmieniono liczb ani nie utworzono sztucznych obserwacji. `timeAggregation` wskazuje średnią, `sampleCount` i szczegółowa metoda pozostają `null`. Cztery operacje OP22–OP25 nie otrzymują potwierdzenia średniej lub liczby prób. Sama średnia nie wyznacza parametrów do Monte Carlo.
+
+Aktualny audyt: `outputs/data_audit/eko_7_1d.json`; wyniki 7.1 i 7.1c zachowano. Audyt i kontrola metadanych/SHA-256 PASS: 12 średnich, 4 przykładowe czasy bez agregacji, wszystkie wartości zgodne z wcześniejszym audytem, 60 BOM, 7 źródeł. Nadal potwierdzony brak maszyn i 2 osoby przez całe pakowanie przy niezmienionych 1320 s. Bez zmian aplikacji, schematów projektów lub kart surowych pomiarów; bez regresji/builda/UI i nowego PDF. 7.1 pozostaje w trakcie; następne braki obejmują liczby prób (o ile dostępne), przypisania i współdzielenie osób, kalendarze oraz dane przestrzenne i wyniki rzeczywistej produkcji.

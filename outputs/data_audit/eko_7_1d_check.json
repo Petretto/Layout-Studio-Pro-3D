@@ -1,0 +1,11 @@
+{
+  "package": "7.1d",
+  "result": "PASS",
+  "confirmedMeans": 12,
+  "syntheticWithoutAggregation": 4,
+  "unknownSampleCountsAndRawObservationsRemainNull": true,
+  "timesStaffingAndManualModeUnchanged": true,
+  "bomItems": 60,
+  "sourceHashesVerified": 7,
+  "productionDataAccepted": false
+}

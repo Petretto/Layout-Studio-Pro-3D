@@ -4,9 +4,9 @@ Pakiet pomocniczy 7.1. Pliki służą do zebrania i udokumentowania danych przed
 
 ## Co już potwierdzono
 
-Użytkownik potwierdził rzeczywiste pochodzenie `tests/Test Eko.xlsx` i `tests/Test Eko BOM.xlsx`, pomiary z **lipca 2026** oraz wariant ramy **1.4**. Następnie potwierdził, że **OP22–OP25 nadal mają czasy przykładowe, choć prawdopodobne**. Pozostałe 12 czasów pochodzi z rzeczywistych danych według tego potwierdzenia. Szczegółowej metody, liczby prób i dziennych dat pomiarów jeszcze nie podano.
+Użytkownik potwierdził rzeczywiste pochodzenie `tests/Test Eko.xlsx` i `tests/Test Eko BOM.xlsx`, pomiary z **lipca 2026** oraz wariant ramy **1.4**. Następnie potwierdził, że **OP22–OP25 nadal mają czasy przykładowe, choć prawdopodobne**. Pozostałe 12 czasów pochodzi z rzeczywistych danych według tego potwierdzenia. EKO-U6 potwierdza, że te 12 czasów to średnie z kilku pomiarów. Szczegółowej metody, liczby prób, wartości surowych, rozrzutu i dziennych dat jeszcze nie podano.
 
-Dowody odpowiedzi są zapisane w `potwierdzenia_zrodel.json`; pełny audyt i identyfikatory źródeł zawiera `../../../outputs/data_audit/eko_7_1c.json`. Rejestr braków: `../../../DANE_EKO_7_1.md`.
+Dowody odpowiedzi są zapisane w `potwierdzenia_zrodel.json`; pełny audyt i identyfikatory źródeł zawiera `../../../outputs/data_audit/eko_7_1d.json`. Rejestr braków: `../../../DANE_EKO_7_1.md`.
 
 Użytkownik doprecyzował obsadę (EKO-U4): **13 osób łącznie w procesie**, po **1 osobie dla mierzonych OP10–OP20** oraz **2 osoby przy pakowaniu OP21**. Zmierzony czas pakowania **1320 s = 22 min** dotyczy tej dwuosobowej obsady; nie dzielimy go przez dwa. EKO-U5 doprecyzowuje: cały proces jest manualny, bez maszyn i automatyzacji; obie osoby są obecne przez całe pakowanie. Nie określono tożsamości osób, współdzielenia ani przedziałów obecności przy pozostałych operacjach. Karty są nadal pustymi wzorcami; liczebności obsady i pomiarowego pochodzenia czasów nie rozszerzamy na testowe OP22–OP25.
 
@@ -46,10 +46,10 @@ Z katalogu głównego repozytorium uruchom:
 node scripts/audit_eko_data_7_1.mjs
 ```
 
-Skrypt czyta źródła i rejestr potwierdzeń, porównuje ID/czasy z wbudowanym przykładem, liczy pozycje BOM, sprawdza jego odwołania i zapisuje SHA-256 w `outputs/data_audit/eko_7_1c.json`. Brak maszyn zapisuje jako potwierdzoną pustą listę odcinków, a pełną obecność 2 osób OP21 jako wymaganie bez wymyślonych ID osób. Zapisuje wynik do `outputs/data_audit/eko_7_1c.json`, pozostawiając historyczny `eko_7_1.json` i jego lokalne zmiany. Nie edytuje arkuszy, kart CSV ani aplikacji. Zgodność plików nie oznacza kompletności lub odbioru modelu produkcyjnego.
+Skrypt czyta źródła i rejestr potwierdzeń, porównuje ID/czasy z wbudowanym przykładem, liczy pozycje BOM, sprawdza jego odwołania i zapisuje SHA-256 w `outputs/data_audit/eko_7_1d.json`. Brak maszyn zapisuje jako potwierdzoną pustą listę odcinków, a pełną obecność 2 osób OP21 jako wymaganie bez wymyślonych ID osób. Zapisuje wynik do `outputs/data_audit/eko_7_1d.json`, pozostawiając historyczne `eko_7_1.json` i `eko_7_1c.json` oraz zastane lokalne zmiany. Nie edytuje arkuszy, kart CSV ani aplikacji. Zgodność plików nie oznacza kompletności lub odbioru modelu produkcyjnego.
 
 Tolerancje i okres porównania wyników należy uzgodnić przed odbiorem 7.2; ten pakiet nie nadaje im wartości domyślnych.
 
 ## Najbliższe uzupełnienie
 
-Podaj, czy wartości OP10–OP21 w arkuszu są pojedynczymi pomiarami, średnimi z kilku prób (jeśli tak, z ilu), czy przyjętymi normami. Nie zmieniaj liczb tylko po to, aby uzupełnić ich metrykę. Następnie można przypisać lokalne ID 13 osób i określić, czy przechodzą między operacjami; sama suma 13 nie potwierdza jednoczesnej dostępności wszystkich zespołów.
+Potwierdzono już średnie z kilku pomiarów OP10–OP21. Jeśli znasz liczbę prób lub masz wyniki surowe, dopisz je jako odrębne informacje; nie odtwarzaj ich ze średniej i nie wpisuj średniej jako pojedynczej próby. Nie zmieniaj liczb tylko po to, aby uzupełnić ich metrykę. Następnie można przypisać lokalne ID 13 osób i określić, czy przechodzą między operacjami; sama suma 13 nie potwierdza jednoczesnej dostępności wszystkich zespołów.
