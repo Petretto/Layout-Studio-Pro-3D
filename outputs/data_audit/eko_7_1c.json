@@ -1,0 +1,654 @@
+{
+  "kind": "eko-source-audit-not-an-application-project",
+  "auditVersion": 2,
+  "auditedAt": "2026-10-19T20:59:28.820Z",
+  "productionDataAccepted": false,
+  "notice": "User confirms real source, July 2026, frame variant 1.4. Four synthetic times remain examples per explicit clarification. Complete production model not accepted.",
+  "sources": [
+    {
+      "id": "EKO-S1",
+      "path": "tests/Test Eko.xlsx",
+      "bytes": 5142,
+      "sha256": "5af417beeb0e75e478aec716fb1bf57cb15af235ab15f8e513bbeecc61947923",
+      "measurementPeriod": "2026-07",
+      "productionConfirmation": "EKO-U1"
+    },
+    {
+      "id": "EKO-S2",
+      "path": "tests/Test Eko BOM.xlsx",
+      "bytes": 7674,
+      "sha256": "03976ee02e8c81529839993901d83856c682f45d9eec97755c99681449de7bf5",
+      "measurementPeriod": null,
+      "productionConfirmation": "EKO-U1"
+    },
+    {
+      "id": "EKO-S3",
+      "path": "src/core/models/ekoProject.ts",
+      "bytes": 19225,
+      "sha256": "2feaf86561bc43612d6bca4c5793890ff209662c9e59c2ba1aca51967fd6f092",
+      "measurementPeriod": null,
+      "productionConfirmation": null
+    },
+    {
+      "id": "EKO-S4",
+      "path": "tests/qa/Eko_D5_actual_export_v5.json",
+      "bytes": 44879,
+      "sha256": "ce745ff727030553d5ce3999518b47b3760907ff4641419be725be15cdba979f",
+      "measurementPeriod": null,
+      "productionConfirmation": null
+    },
+    {
+      "id": "EKO-S5",
+      "path": "tests/fixtures/ekoDomainScenarios.ts",
+      "bytes": 3482,
+      "sha256": "f80f2592930490f63e8461eb57bc24f206c183bf173be3a0c990a07d746e5fc5",
+      "measurementPeriod": null,
+      "productionConfirmation": null
+    },
+    {
+      "id": "EKO-S6",
+      "path": "WERYFIKACJA_EKO_2_9.md",
+      "bytes": 4345,
+      "sha256": "6d8186e8d1d505f56860a6a044d29824b0f2b06c46efc4dbd7096d3e201c19c6",
+      "measurementPeriod": null,
+      "productionConfirmation": null
+    },
+    {
+      "id": "EKO-S7",
+      "path": "dane/eko/7_1/potwierdzenia_zrodel.json",
+      "bytes": 4371,
+      "sha256": "2ebcb8de7f8154afeb2d029fcddba49148bffa19429425aa757a6eb34ae29a8d",
+      "measurementPeriod": null,
+      "productionConfirmation": null
+    }
+  ],
+  "userConfirmations": [
+    {
+      "id": "EKO-U1",
+      "recordedOn": "2026-10-18",
+      "authority": "użytkownik projektu — odpowiedź w tej rozmowie",
+      "statement": "dane są rzeczywiste. pomiary czasu były wykonane w lipcu tego roku. wariant ramy 1.4",
+      "sourcePaths": [
+        "tests/Test Eko.xlsx",
+        "tests/Test Eko BOM.xlsx"
+      ],
+      "measurementPeriod": "2026-07",
+      "measurementPeriodPrecision": "month",
+      "frameVariant": "1.4",
+      "sourceIsRealProductionData": true,
+      "measurementMethod": null,
+      "sampleCount": null,
+      "detailedMeasurementDates": null,
+      "notes": "Potwierdzenie pochodzenia danych przez użytkownika. Zakres OP22–OP25 doprecyzowano w EKO-U2. Nie potwierdza założeń hali, popytu ani obsady scenariuszy testowych."
+    },
+    {
+      "id": "EKO-U2",
+      "recordedOn": "2026-10-18",
+      "authority": "użytkownik projektu — odpowiedź w tej rozmowie",
+      "statement": "te są przykładowe, ale prawdopodobne",
+      "operationIds": [
+        "OP22",
+        "OP23",
+        "OP24",
+        "OP25"
+      ],
+      "timeEvidence": "synthetic-test",
+      "notes": "Wartości 600, 600, 480 i 480 s pozostają przykładami. Prawdopodobieństwo nie jest potwierdzeniem pomiaru."
+    },
+    {
+      "id": "EKO-U3",
+      "recordedOn": "2026-10-18",
+      "authority": "użytkownik projektu — odpowiedź w tej rozmowie",
+      "statement": "Pomiar dla 13 osób",
+      "reportedPersonCount": 13,
+      "personCountScope": null,
+      "operationCrewAssignments": null,
+      "notes": "Pierwotna odpowiedź bez określenia zakresu. Doprecyzowanie zapisano w EKO-U4; historyczny wpis zachowano."
+    },
+    {
+      "id": "EKO-U4",
+      "recordedOn": "2026-10-18",
+      "authority": "użytkownik projektu — odpowiedź w tej rozmowie",
+      "statement": "Łącznie w procesie. tylko pakowanie było wykonywane przez 2 osoby",
+      "totalProcessPersonCount": 13,
+      "personCountScope": "whole-process",
+      "frameVariant": "1.4",
+      "measurementPeriod": "2026-07",
+      "operationWorkerCounts": {
+        "OP10": 1,
+        "OP11": 1,
+        "OP12": 1,
+        "OP13": 1,
+        "OP14": 1,
+        "OP15": 1,
+        "OP16": 1,
+        "OP17": 1,
+        "OP18": 1,
+        "OP19": 1,
+        "OP20": 1,
+        "OP21": 2
+      },
+      "workerIdentitiesAndSharing": null,
+      "notes": "Tylko pakowanie OP21 wykonywały 2 osoby, pozostałe mierzone operacje OP10–OP20 po jednej. 1320 s OP21 jest czasem dla tej obsady; nie dzielić przez 2. Nie określono tożsamości osób, współdzielenia między operacjami, przedziałów obecności ani jednoczesności. Nie rozszerzać tej deklaracji na testowe OP22–OP25."
+    },
+    {
+      "id": "EKO-U5",
+      "recordedOn": "2026-10-19",
+      "authority": "użytkownik projektu — wcześniejsza odpowiedź w tej rozmowie, zapisana w pakiecie 7.1c",
+      "statement": "cała praca jest manualna, nie ma w tym procesie żadnych maszyn i automatyzacji. pakowanie cały czas 2 osoby",
+      "frameVariant": "1.4",
+      "scope": "whole-process",
+      "workMode": "manual-only",
+      "hasMachinesOrAutomation": false,
+      "packaging": {
+        "operationId": "OP21",
+        "workerCount": 2,
+        "presenceCoverage": "entire-operation",
+        "workerIds": null
+      },
+      "notes": "Uzupełnia EKO-U4: obie osoby obecne przez całe pakowanie. Brak maszyn jest potwierdzonym brakiem, nie brakującą informacją. Nie potwierdza surowych prób, szczegółowych faz ręcznych/oczekiwania, tożsamości osób, obsady OP22–OP25 ani pomiarowego pochodzenia ich czasów. Czas OP21 pozostaje 1320 s dla zespołu, bez dzielenia przez dwa."
+    }
+  ],
+  "clarifications": [
+    {
+      "id": "EKO-C1",
+      "operationIds": [
+        "OP22",
+        "OP23",
+        "OP24",
+        "OP25"
+      ],
+      "status": "resolved",
+      "question": "Czy potwierdzenie lipcowych pomiarów ramy 1.4 obejmuje również 600, 600, 480 i 480 s oznaczone w arkuszu jako syntetyczne?",
+      "resolution": "remain-synthetic",
+      "confirmationId": "EKO-U2"
+    },
+    {
+      "id": "EKO-C2",
+      "status": "resolved",
+      "question": "Czy 13 osób to łączna obsada procesu Eko, czy wszystkie 13 osób wspólnie wykonywało każdą mierzoną operację?",
+      "resolution": "13-total-process-OP21-two-other-measured-operations-one",
+      "sourceConfirmationId": "EKO-U3",
+      "confirmationId": "EKO-U4"
+    }
+  ],
+  "staffing": {
+    "confirmationId": "EKO-U4",
+    "totalProcessPersonCount": 13,
+    "operationWorkerCounts": {
+      "OP10": 1,
+      "OP11": 1,
+      "OP12": 1,
+      "OP13": 1,
+      "OP14": 1,
+      "OP15": 1,
+      "OP16": 1,
+      "OP17": 1,
+      "OP18": 1,
+      "OP19": 1,
+      "OP20": 1,
+      "OP21": 2
+    },
+    "workerIdentitiesAndSharing": null,
+    "simultaneousAvailabilityInferred": false,
+    "timeScalingApplied": false
+  },
+  "workMode": {
+    "confirmationId": "EKO-U5",
+    "mode": "manual-only",
+    "hasMachinesOrAutomation": false,
+    "packagingPresence": {
+      "operationId": "OP21",
+      "workerCount": 2,
+      "presenceCoverage": "entire-operation",
+      "workerIds": null
+    },
+    "manualPhaseIntervalsKnown": false
+  },
+  "process": {
+    "sourceId": "EKO-S1",
+    "sheet": "Dane",
+    "operations": 16,
+    "userConfirmedSourceValues": 12,
+    "syntheticTestValues": 4,
+    "items": [
+      {
+        "operationId": "OP10",
+        "name": "Podmontaż stelaża",
+        "declaredStandardTimeSeconds": 3480,
+        "evidenceClass": "user-confirmed-real-source",
+        "source": {
+          "id": "EKO-S1",
+          "sheet": "Dane",
+          "row": 2,
+          "cell": "C2"
+        },
+        "rawObservedDurationSeconds": null,
+        "manualIntervalsSeconds": null,
+        "machineIntervalsSeconds": [],
+        "operatorPresenceIntervalsSeconds": null,
+        "workMode": "manual-only",
+        "workModeConfirmation": "EKO-U5",
+        "crewPresenceRequirement": null,
+        "crewIds": null,
+        "measurementPeriod": "2026-07",
+        "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
+        "confirmation": "EKO-U1"
+      },
+      {
+        "operationId": "OP11",
+        "name": "Montaż stelaża w ramie",
+        "declaredStandardTimeSeconds": 600,
+        "evidenceClass": "user-confirmed-real-source",
+        "source": {
+          "id": "EKO-S1",
+          "sheet": "Dane",
+          "row": 3,
+          "cell": "C3"
+        },
+        "rawObservedDurationSeconds": null,
+        "manualIntervalsSeconds": null,
+        "machineIntervalsSeconds": [],
+        "operatorPresenceIntervalsSeconds": null,
+        "workMode": "manual-only",
+        "workModeConfirmation": "EKO-U5",
+        "crewPresenceRequirement": null,
+        "crewIds": null,
+        "measurementPeriod": "2026-07",
+        "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
+        "confirmation": "EKO-U1"
+      },
+      {
+        "operationId": "OP12",
+        "name": "Etap I",
+        "declaredStandardTimeSeconds": 3590,
+        "evidenceClass": "user-confirmed-real-source",
+        "source": {
+          "id": "EKO-S1",
+          "sheet": "Dane",
+          "row": 4,
+          "cell": "C4"
+        },
+        "rawObservedDurationSeconds": null,
+        "manualIntervalsSeconds": null,
+        "machineIntervalsSeconds": [],
+        "operatorPresenceIntervalsSeconds": null,
+        "workMode": "manual-only",
+        "workModeConfirmation": "EKO-U5",
+        "crewPresenceRequirement": null,
+        "crewIds": null,
+        "measurementPeriod": "2026-07",
+        "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
+        "confirmation": "EKO-U1"
+      },
+      {
+        "operationId": "OP13",
+        "name": "Podmontaż drzwi lewych",
+        "declaredStandardTimeSeconds": 2640,
+        "evidenceClass": "user-confirmed-real-source",
+        "source": {
+          "id": "EKO-S1",
+          "sheet": "Dane",
+          "row": 5,
+          "cell": "C5"
+        },
+        "rawObservedDurationSeconds": null,
+        "manualIntervalsSeconds": null,
+        "machineIntervalsSeconds": [],
+        "operatorPresenceIntervalsSeconds": null,
+        "workMode": "manual-only",
+        "workModeConfirmation": "EKO-U5",
+        "crewPresenceRequirement": null,
+        "crewIds": null,
+        "measurementPeriod": "2026-07",
+        "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
+        "confirmation": "EKO-U1"
+      },
+      {
+        "operationId": "OP14",
+        "name": "Podmontaż front panel",
+        "declaredStandardTimeSeconds": 1320,
+        "evidenceClass": "user-confirmed-real-source",
+        "source": {
+          "id": "EKO-S1",
+          "sheet": "Dane",
+          "row": 6,
+          "cell": "C6"
+        },
+        "rawObservedDurationSeconds": null,
+        "manualIntervalsSeconds": null,
+        "machineIntervalsSeconds": [],
+        "operatorPresenceIntervalsSeconds": null,
+        "workMode": "manual-only",
+        "workModeConfirmation": "EKO-U5",
+        "crewPresenceRequirement": null,
+        "crewIds": null,
+        "measurementPeriod": "2026-07",
+        "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
+        "confirmation": "EKO-U1"
+      },
+      {
+        "operationId": "OP15",
+        "name": "Podmonta drzwi prawych",
+        "declaredStandardTimeSeconds": 2640,
+        "evidenceClass": "user-confirmed-real-source",
+        "source": {
+          "id": "EKO-S1",
+          "sheet": "Dane",
+          "row": 7,
+          "cell": "C7"
+        },
+        "rawObservedDurationSeconds": null,
+        "manualIntervalsSeconds": null,
+        "machineIntervalsSeconds": [],
+        "operatorPresenceIntervalsSeconds": null,
+        "workMode": "manual-only",
+        "workModeConfirmation": "EKO-U5",
+        "crewPresenceRequirement": null,
+        "crewIds": null,
+        "measurementPeriod": "2026-07",
+        "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
+        "confirmation": "EKO-U1"
+      },
+      {
+        "operationId": "OP16",
+        "name": "Podmontaż tylnego panela",
+        "declaredStandardTimeSeconds": 1920,
+        "evidenceClass": "user-confirmed-real-source",
+        "source": {
+          "id": "EKO-S1",
+          "sheet": "Dane",
+          "row": 8,
+          "cell": "C8"
+        },
+        "rawObservedDurationSeconds": null,
+        "manualIntervalsSeconds": null,
+        "machineIntervalsSeconds": [],
+        "operatorPresenceIntervalsSeconds": null,
+        "workMode": "manual-only",
+        "workModeConfirmation": "EKO-U5",
+        "crewPresenceRequirement": null,
+        "crewIds": null,
+        "measurementPeriod": "2026-07",
+        "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
+        "confirmation": "EKO-U1"
+      },
+      {
+        "operationId": "OP17",
+        "name": "Podmontaż dachu",
+        "declaredStandardTimeSeconds": 1680,
+        "evidenceClass": "user-confirmed-real-source",
+        "source": {
+          "id": "EKO-S1",
+          "sheet": "Dane",
+          "row": 9,
+          "cell": "C9"
+        },
+        "rawObservedDurationSeconds": null,
+        "manualIntervalsSeconds": null,
+        "machineIntervalsSeconds": [],
+        "operatorPresenceIntervalsSeconds": null,
+        "workMode": "manual-only",
+        "workModeConfirmation": "EKO-U5",
+        "crewPresenceRequirement": null,
+        "crewIds": null,
+        "measurementPeriod": "2026-07",
+        "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
+        "confirmation": "EKO-U1"
+      },
+      {
+        "operationId": "OP18",
+        "name": "Podmontaż „trumny”",
+        "declaredStandardTimeSeconds": 1200,
+        "evidenceClass": "user-confirmed-real-source",
+        "source": {
+          "id": "EKO-S1",
+          "sheet": "Dane",
+          "row": 10,
+          "cell": "C10"
+        },
+        "rawObservedDurationSeconds": null,
+        "manualIntervalsSeconds": null,
+        "machineIntervalsSeconds": [],
+        "operatorPresenceIntervalsSeconds": null,
+        "workMode": "manual-only",
+        "workModeConfirmation": "EKO-U5",
+        "crewPresenceRequirement": null,
+        "crewIds": null,
+        "measurementPeriod": "2026-07",
+        "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
+        "confirmation": "EKO-U1"
+      },
+      {
+        "operationId": "OP19",
+        "name": "Test",
+        "declaredStandardTimeSeconds": 1800,
+        "evidenceClass": "user-confirmed-real-source",
+        "source": {
+          "id": "EKO-S1",
+          "sheet": "Dane",
+          "row": 11,
+          "cell": "C11"
+        },
+        "rawObservedDurationSeconds": null,
+        "manualIntervalsSeconds": null,
+        "machineIntervalsSeconds": [],
+        "operatorPresenceIntervalsSeconds": null,
+        "workMode": "manual-only",
+        "workModeConfirmation": "EKO-U5",
+        "crewPresenceRequirement": null,
+        "crewIds": null,
+        "measurementPeriod": "2026-07",
+        "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
+        "confirmation": "EKO-U1"
+      },
+      {
+        "operationId": "OP20",
+        "name": "Montaż „trumny” na ramie",
+        "declaredStandardTimeSeconds": 1200,
+        "evidenceClass": "user-confirmed-real-source",
+        "source": {
+          "id": "EKO-S1",
+          "sheet": "Dane",
+          "row": 12,
+          "cell": "C12"
+        },
+        "rawObservedDurationSeconds": null,
+        "manualIntervalsSeconds": null,
+        "machineIntervalsSeconds": [],
+        "operatorPresenceIntervalsSeconds": null,
+        "workMode": "manual-only",
+        "workModeConfirmation": "EKO-U5",
+        "crewPresenceRequirement": null,
+        "crewIds": null,
+        "measurementPeriod": "2026-07",
+        "method": null,
+        "measuredCrewWorkerCount": 1,
+        "crewCountConfirmation": "EKO-U4",
+        "confirmation": "EKO-U1"
+      },
+      {
+        "operationId": "OP21",
+        "name": "Pakowanie",
+        "declaredStandardTimeSeconds": 1320,
+        "evidenceClass": "user-confirmed-real-source",
+        "source": {
+          "id": "EKO-S1",
+          "sheet": "Dane",
+          "row": 13,
+          "cell": "C13"
+        },
+        "rawObservedDurationSeconds": null,
+        "manualIntervalsSeconds": null,
+        "machineIntervalsSeconds": [],
+        "operatorPresenceIntervalsSeconds": null,
+        "workMode": "manual-only",
+        "workModeConfirmation": "EKO-U5",
+        "crewPresenceRequirement": {
+          "workerCount": 2,
+          "coverage": "entire-operation",
+          "workerIds": null,
+          "confirmation": "EKO-U5"
+        },
+        "crewIds": null,
+        "measurementPeriod": "2026-07",
+        "method": null,
+        "measuredCrewWorkerCount": 2,
+        "crewCountConfirmation": "EKO-U4",
+        "confirmation": "EKO-U1"
+      },
+      {
+        "operationId": "OP22",
+        "name": "Montaż drzwi lewych na ramie [CZAS TESTOWY]",
+        "declaredStandardTimeSeconds": 600,
+        "evidenceClass": "synthetic-test",
+        "source": {
+          "id": "EKO-S1",
+          "sheet": "Dane",
+          "row": 14,
+          "cell": "C14"
+        },
+        "rawObservedDurationSeconds": null,
+        "manualIntervalsSeconds": null,
+        "machineIntervalsSeconds": [],
+        "operatorPresenceIntervalsSeconds": null,
+        "workMode": "manual-only",
+        "workModeConfirmation": "EKO-U5",
+        "crewPresenceRequirement": null,
+        "crewIds": null,
+        "measurementPeriod": null,
+        "method": null,
+        "measuredCrewWorkerCount": null,
+        "crewCountConfirmation": null,
+        "confirmation": "EKO-U2"
+      },
+      {
+        "operationId": "OP23",
+        "name": "Montaż drzwi prawych na ramie [CZAS TESTOWY]",
+        "declaredStandardTimeSeconds": 600,
+        "evidenceClass": "synthetic-test",
+        "source": {
+          "id": "EKO-S1",
+          "sheet": "Dane",
+          "row": 15,
+          "cell": "C15"
+        },
+        "rawObservedDurationSeconds": null,
+        "manualIntervalsSeconds": null,
+        "machineIntervalsSeconds": [],
+        "operatorPresenceIntervalsSeconds": null,
+        "workMode": "manual-only",
+        "workModeConfirmation": "EKO-U5",
+        "crewPresenceRequirement": null,
+        "crewIds": null,
+        "measurementPeriod": null,
+        "method": null,
+        "measuredCrewWorkerCount": null,
+        "crewCountConfirmation": null,
+        "confirmation": "EKO-U2"
+      },
+      {
+        "operationId": "OP24",
+        "name": "Montaż panelu przedniego na ramie [CZAS TESTOWY]",
+        "declaredStandardTimeSeconds": 480,
+        "evidenceClass": "synthetic-test",
+        "source": {
+          "id": "EKO-S1",
+          "sheet": "Dane",
+          "row": 16,
+          "cell": "C16"
+        },
+        "rawObservedDurationSeconds": null,
+        "manualIntervalsSeconds": null,
+        "machineIntervalsSeconds": [],
+        "operatorPresenceIntervalsSeconds": null,
+        "workMode": "manual-only",
+        "workModeConfirmation": "EKO-U5",
+        "crewPresenceRequirement": null,
+        "crewIds": null,
+        "measurementPeriod": null,
+        "method": null,
+        "measuredCrewWorkerCount": null,
+        "crewCountConfirmation": null,
+        "confirmation": "EKO-U2"
+      },
+      {
+        "operationId": "OP25",
+        "name": "Montaż panelu tylnego na ramie [CZAS TESTOWY]",
+        "declaredStandardTimeSeconds": 480,
+        "evidenceClass": "synthetic-test",
+        "source": {
+          "id": "EKO-S1",
+          "sheet": "Dane",
+          "row": 17,
+          "cell": "C17"
+        },
+        "rawObservedDurationSeconds": null,
+        "manualIntervalsSeconds": null,
+        "machineIntervalsSeconds": [],
+        "operatorPresenceIntervalsSeconds": null,
+        "workMode": "manual-only",
+        "workModeConfirmation": "EKO-U5",
+        "crewPresenceRequirement": null,
+        "crewIds": null,
+        "measurementPeriod": null,
+        "method": null,
+        "measuredCrewWorkerCount": null,
+        "crewCountConfirmation": null,
+        "confirmation": "EKO-U2"
+      }
+    ]
+  },
+  "bom": {
+    "sourceId": "EKO-S2",
+    "sheet": "BOM",
+    "items": 60,
+    "productionConfirmation": "EKO-U1",
+    "stockOrConsumptionInferred": false
+  },
+  "builtInExample": {
+    "sourceId": "EKO-S3",
+    "sameOperationIdsAndDeclaredTimes": true,
+    "sameBomCount": true,
+    "facilityAndDemand": "demonstration-assumptions"
+  },
+  "testFixture": {
+    "sourceId": "EKO-S5",
+    "workersAndRoles": "test-assumptions",
+    "bodyInitiallyPresent": "test-assumption"
+  },
+  "remainingEvidence": [
+    "measurement-method-and-sample-detail",
+    "manual-phase-and-other-operator-presence-profiles",
+    "actual-crews-and-competencies",
+    "concurrency-approval",
+    "station-copies-and-equipment",
+    "measured-geometry-and-directed-routes",
+    "buffer-capacity-and-operator-blocking",
+    "calendar-and-initial-state",
+    "explicit-material-consumption-and-deliveries",
+    "observed-production-events-and-losses",
+    "comparison-conditions-and-tolerances-for-7.2",
+    "measured-replacements-for-OP22-OP25"
+  ]
+}

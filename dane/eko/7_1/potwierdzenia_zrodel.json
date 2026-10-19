@@ -52,6 +52,23 @@
       },
       "workerIdentitiesAndSharing": null,
       "notes": "Tylko pakowanie OP21 wykonywały 2 osoby, pozostałe mierzone operacje OP10–OP20 po jednej. 1320 s OP21 jest czasem dla tej obsady; nie dzielić przez 2. Nie określono tożsamości osób, współdzielenia między operacjami, przedziałów obecności ani jednoczesności. Nie rozszerzać tej deklaracji na testowe OP22–OP25."
+    },
+    {
+      "id": "EKO-U5",
+      "recordedOn": "2026-10-19",
+      "authority": "użytkownik projektu — wcześniejsza odpowiedź w tej rozmowie, zapisana w pakiecie 7.1c",
+      "statement": "cała praca jest manualna, nie ma w tym procesie żadnych maszyn i automatyzacji. pakowanie cały czas 2 osoby",
+      "frameVariant": "1.4",
+      "scope": "whole-process",
+      "workMode": "manual-only",
+      "hasMachinesOrAutomation": false,
+      "packaging": {
+        "operationId": "OP21",
+        "workerCount": 2,
+        "presenceCoverage": "entire-operation",
+        "workerIds": null
+      },
+      "notes": "Uzupełnia EKO-U4: obie osoby obecne przez całe pakowanie. Brak maszyn jest potwierdzonym brakiem, nie brakującą informacją. Nie potwierdza surowych prób, szczegółowych faz ręcznych/oczekiwania, tożsamości osób, obsady OP22–OP25 ani pomiarowego pochodzenia ich czasów. Czas OP21 pozostaje 1320 s dla zespołu, bez dzielenia przez dwa."
     }
   ],
   "clarifications": [

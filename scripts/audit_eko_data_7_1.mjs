@@ -17,6 +17,9 @@ const syntheticConfirmation=evidence.confirmations.find(c=>c.id==='EKO-U2');
 ok(syntheticConfirmation?.timeEvidence==='synthetic-test'&&evidence.clarifications.find(c=>c.id==='EKO-C1')?.resolution==='remain-synthetic','Recheck synthetic operation confirmation');
 const staffingConfirmation=evidence.confirmations.find(c=>c.id==='EKO-U4');
 ok(staffingConfirmation?.personCountScope==='whole-process'&&staffingConfirmation.totalProcessPersonCount===13,'Recheck process staffing confirmation');
+const manualConfirmation=evidence.confirmations.find(c=>c.id==='EKO-U5');
+ok(manualConfirmation?.scope==='whole-process'&&manualConfirmation.workMode==='manual-only'&&manualConfirmation.hasMachinesOrAutomation===false,'Recheck explicit manual-only process confirmation');
+ok(manualConfirmation.packaging?.operationId==='OP21'&&manualConfirmation.packaging.workerCount===2&&manualConfirmation.packaging.presenceCoverage==='entire-operation','Recheck continuous two-person packaging');
 const sourcePaths=[processPath,bomPath,'src/core/models/ekoProject.ts','tests/qa/Eko_D5_actual_export_v5.json','tests/fixtures/ekoDomainScenarios.ts','WERYFIKACJA_EKO_2_9.md',confirmationPath];
 const sources=sourcePaths.map((path,index)=>{
   const bytes=readFileSync(resolve(root,path));
@@ -39,7 +42,9 @@ const operations=processRows.slice(1).flatMap((r,index)=>!r[idCol]?[]:[{
   operationId:String(r[idCol]),name:r[nameCol],declaredStandardTimeSeconds:r[timeCol],
   evidenceClass:testIds.has(String(r[idCol]))?'synthetic-test':'user-confirmed-real-source',
   source:{id:'EKO-S1',sheet:'Dane',row:index+2,cell:XLSX.utils.encode_cell({r:index+1,c:timeCol})},
-  rawObservedDurationSeconds:null,manualIntervalsSeconds:null,machineIntervalsSeconds:null,operatorPresenceIntervalsSeconds:null,
+  rawObservedDurationSeconds:null,manualIntervalsSeconds:null,machineIntervalsSeconds:[],operatorPresenceIntervalsSeconds:null,
+  workMode:'manual-only',workModeConfirmation:manualConfirmation.id,
+  crewPresenceRequirement:String(r[idCol])==='OP21'?{workerCount:2,coverage:'entire-operation',workerIds:null,confirmation:manualConfirmation.id}:null,
   crewIds:null,measurementPeriod:testIds.has(String(r[idCol]))?null:confirmation.measurementPeriod,method:null,
   measuredCrewWorkerCount:staffingConfirmation.operationWorkerCounts[String(r[idCol])]??null,
   crewCountConfirmation:staffingConfirmation.operationWorkerCounts[String(r[idCol])]===undefined?null:staffingConfirmation.id,
@@ -59,15 +64,17 @@ deepStrictEqual(workbookTimes,appTimes,'Workbook vs built-in example time mismat
 const bomItems=bomRows.slice(1).filter(r=>r[col(bh,'Nr Części (Part No)')]);
 ok(bomItems.every(r=>operations.some(o=>o.operationId===r[col(bh,'Przypisany Krok')])),'BOM references an unknown operation');
 ok(bomItems.length===example.bom.length,'Workbook vs built-in BOM count mismatch');
-const report={kind:'eko-source-audit-not-an-application-project',auditVersion:1,auditedAt:new Date().toISOString(),
+const report={kind:'eko-source-audit-not-an-application-project',auditVersion:2,auditedAt:new Date().toISOString(),
   productionDataAccepted:false,notice:'User confirms real source, July 2026, frame variant 1.4. Four synthetic times remain examples per explicit clarification. Complete production model not accepted.',sources,
   userConfirmations:evidence.confirmations,clarifications:evidence.clarifications,
   staffing:{confirmationId:staffingConfirmation.id,totalProcessPersonCount:13,operationWorkerCounts:staffingConfirmation.operationWorkerCounts,workerIdentitiesAndSharing:null,simultaneousAvailabilityInferred:false,timeScalingApplied:false},
+  workMode:{confirmationId:manualConfirmation.id,mode:'manual-only',hasMachinesOrAutomation:false,packagingPresence:manualConfirmation.packaging,manualPhaseIntervalsKnown:false},
   process:{sourceId:'EKO-S1',sheet:'Dane',operations:operations.length,userConfirmedSourceValues:operations.filter(o=>o.evidenceClass==='user-confirmed-real-source').length,syntheticTestValues:4,items:operations},
   bom:{sourceId:'EKO-S2',sheet:'BOM',items:bomItems.length,productionConfirmation:confirmation.id,stockOrConsumptionInferred:false},
   builtInExample:{sourceId:'EKO-S3',sameOperationIdsAndDeclaredTimes:true,sameBomCount:true,facilityAndDemand:'demonstration-assumptions'},
   testFixture:{sourceId:'EKO-S5',workersAndRoles:'test-assumptions',bodyInitiallyPresent:'test-assumption'},
-  remainingEvidence:['measurement-method-and-sample-detail','manual-machine-presence-profiles','actual-crews-and-competencies','concurrency-approval','station-copies-and-equipment','measured-geometry-and-directed-routes','buffer-capacity-and-operator-blocking','calendar-and-initial-state','explicit-material-consumption-and-deliveries','observed-production-events-and-losses','comparison-conditions-and-tolerances-for-7.2','measured-replacements-for-OP22-OP25'],
+  remainingEvidence:['measurement-method-and-sample-detail','manual-phase-and-other-operator-presence-profiles','actual-crews-and-competencies','concurrency-approval','station-copies-and-equipment','measured-geometry-and-directed-routes','buffer-capacity-and-operator-blocking','calendar-and-initial-state','explicit-material-consumption-and-deliveries','observed-production-events-and-losses','comparison-conditions-and-tolerances-for-7.2','measured-replacements-for-OP22-OP25'],
 };
-const output=resolve(root,'outputs/data_audit/eko_7_1.json');mkdirSync(dirname(output),{recursive:true});writeFileSync(output,JSON.stringify(report,null,2)+'\n');
+// Keep the historical audit and any local changes to it intact.
+const output=resolve(root,'outputs/data_audit/eko_7_1c.json');mkdirSync(dirname(output),{recursive:true});writeFileSync(output,JSON.stringify(report,null,2)+'\n');
 console.log(JSON.stringify({output,operations:operations.length,userConfirmed:report.process.userConfirmedSourceValues,synthetic:4,frameVariant:confirmation.frameVariant,measurementPeriod:confirmation.measurementPeriod,bomItems:bomItems.length,sourceHashes:sources.length,workbookVsExample:'PASS',productionDataAccepted:false}));

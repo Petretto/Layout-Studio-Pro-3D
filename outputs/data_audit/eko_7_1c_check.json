@@ -1,0 +1,18 @@
+{
+  "package": "7.1c",
+  "result": "PASS",
+  "operations": 16,
+  "realSourceTimes": 12,
+  "syntheticTimes": 4,
+  "bomItems": 60,
+  "sourceHashesVerified": 7,
+  "manualOnly": true,
+  "packaging": {
+    "workers": 2,
+    "coverage": "entire-operation",
+    "teamTimeSeconds": 1320
+  },
+  "originalAuditPreserved": true,
+  "unknownProfilesAndIdsRemainNull": true,
+  "productionDataAccepted": false
+}

@@ -1,6 +1,6 @@
 # Eko — rejestr danych, źródeł i braków (7.1)
 
-Data: 2026-10-18. Zakres: **rama 1.4, pomiary z lipca 2026**, zgodnie z potwierdzeniem użytkownika. **7.1 w trakcie**; ukończony pakiet 7.1a obejmuje audyt źródeł i przygotowanie zbierania dalszych danych. Nie jest to jeszcze odbiór całego modelu produkcyjnego ani porównanie z produkcją z 7.2.
+Aktualizacja: 2026-10-19. Zakres: **rama 1.4, pomiary z lipca 2026**, zgodnie z potwierdzeniem użytkownika. **7.1 w trakcie**; ukończony pakiet 7.1a obejmuje audyt źródeł i przygotowanie zbierania dalszych danych. Nie jest to jeszcze odbiór całego modelu produkcyjnego ani porównanie z produkcją z 7.2.
 
 ## Potwierdzenia i granice ich zakresu
 
@@ -8,14 +8,15 @@ Data: 2026-10-18. Zakres: **rama 1.4, pomiary z lipca 2026**, zgodnie z potwierd
 - **EKO-U2:** OP22–OP25 mają czasy „przykładowe, ale prawdopodobne”. Wartości **600, 600, 480 i 480 s pozostają założeniami**, zgodnie z adnotacjami arkusza. Wyjaśnienie zamyka sprzeczność z ogólnym potwierdzeniem rzeczywistego pochodzenia danych; nie podnosi tych czterech wartości do rangi pomiaru.
 - **EKO-U3:** użytkownik podał „Pomiar dla 13 osób”. Historyczny wpis zachowano; zakres rozstrzygnięto w EKO-U4.
 - **EKO-U4:** 13 osób łącznie w procesie. Tylko pakowanie OP21 wykonywały 2 osoby, pozostałe mierzone OP10–OP20 po jednej. Czas OP21 **1320 s (22 min)** pozostaje czasem dla dwóch osób; nie zastosowano skalowania. EKO-C2 zamknięte. Tożsamości, współdzielenie, kalendarze i profile obecności pozostają nieokreślone; deklaracji nie rozszerzono na testowe OP22–OP25.
-- Potwierdzenie czasu całej operacji nie potwierdza oddzielnie profilu pracy ręcznej, automatu lub obecności operatora. Podział VA/NVA nie zastępuje tych profili. Nie nadano automatycznie statusu pomiaru każdej kolumnie arkusza.
+- **EKO-U5 (zapis 7.1c):** cały proces jest manualny, bez maszyn i automatyzacji. Obie osoby wykonujące OP21 są obecne przez całe pakowanie. Brak pracy maszynowej jest teraz potwierdzony, nie oznacza braku informacji. Czas OP21 pozostaje 1320 s dla zespołu; nie dzielimy go przez dwa ani nie zastępujemy roboczosekundami.
+- Całkowicie manualny charakter procesu nie wyznacza szczegółowych odcinków pracy, oczekiwania i blokad ani tożsamości osób. Pełna obecność zespołu OP21 jest potwierdzona; profili pozostałych operacji nie uzupełniono automatycznie. Podział VA/NVA nie zastępuje profili. Nie nadano automatycznie statusu pomiaru każdej kolumnie arkusza.
 - Potwierdzenie plików procesu i BOM nie obejmuje demonstracyjnego popytu, wymiarów hali, OEE, obsady, grup równoległości ani początkowej ramy z fixture 2.9. Dane testowych scenariuszy pozostają testowe.
 
 Treść odpowiedzi, ich zakres i rozstrzygnięcie EKO-C1 zapisano w [rejestrze potwierdzeń](dane/eko/7_1/potwierdzenia_zrodel.json). Lipiec oznacza dokładność do miesiąca; nie dopisano fikcyjnej daty dziennej. BOM nie otrzymał daty pomiaru czasu.
 
 ## Źródła
 
-Pełne SHA-256 i rozmiary źródeł są w [raporcie maszynowym](outputs/data_audit/eko_7_1.json). Skrót identyfikuje zawartość pliku w dniu audytu; nie dowodzi jakości pomiaru.
+Pełne SHA-256 i rozmiary źródeł są w [aktualnym raporcie maszynowym 7.1c](outputs/data_audit/eko_7_1c.json). Skrót identyfikuje zawartość pliku w dniu audytu; nie dowodzi jakości pomiaru.
 
 | ID | Lokalizacja | Zakres i kwalifikacja |
 | --- | --- | --- |
@@ -25,7 +26,7 @@ Pełne SHA-256 i rozmiary źródeł są w [raporcie maszynowym](outputs/data_aud
 | EKO-S4 | `tests/qa/Eko_D5_actual_export_v5.json` | Historyczny eksport służący testom/migracji. Nazwa pliku nie oznacza odbioru produkcyjnego ani nowszego pomiaru. |
 | EKO-S5 | `tests/fixtures/ekoDomainScenarios.ts` | Wyłącznie test: obsada, role, grupy, wspólna kopia, rama obecna na wejściu. Nie wykorzystano ich jako danych zakładu. |
 | EKO-S6 | `WERYFIKACJA_EKO_2_9.md` | Historyczny raport testów algorytmu. Opisane końce partii nie są obserwowanymi wynikami produkcji. |
-| EKO-S7 | `dane/eko/7_1/potwierdzenia_zrodel.json` | Rejestr wypowiedzi użytkownika z 2026-10-18; źródło potwierdzenia okresu, wariantu i rozdzielenia czasów rzeczywistych/testowych. |
+| EKO-S7 | `dane/eko/7_1/potwierdzenia_zrodel.json` | Rejestr wypowiedzi użytkownika zapisanych 2026-10-18 i 2026-10-19; źródło potwierdzenia okresu, wariantu, obsady, manualnego charakteru procesu i rozdzielenia czasów rzeczywistych/testowych. |
 
 Materiałów Jabama i konceptów Blender 6.3b nie uznano za geometrię Eko. Nie używano plików lokalnych użytkownika `tools/equipment-editor/wyposazenie_karta.json` ani arkuszy/symulacji o niepotwierdzonym pochodzeniu jako zastępstwa pomiarów. Oryginalne źródła pozostały bez zmian.
 
@@ -37,7 +38,7 @@ Materiałów Jabama i konceptów Blender 6.3b nie uznano za geometrię Eko. Nie 
 | OP22, OP23 | 2 | Po 600 s, przykład według arkusza i EKO-U2. |
 | OP24, OP25 | 2 | Po 480 s, przykład według arkusza i EKO-U2. |
 
-Raport JSON zachowuje wartości z arkusza jako `declaredStandardTimeSeconds`. Pola surowej obserwacji, profili i obsady pozostają `null`; nie przepisano do nich standardu jako nowego pomiaru. Wbudowanego przykładu, testów ani zapisanych projektów nie zmieniano. Przyszła aktualizacja modelu wymaga jawnego mapowania właściwego wariantu obsady i metody, z zachowaniem źródła/historycznych przykładów.
+Raport JSON zachowuje wartości z arkusza jako `declaredStandardTimeSeconds`. Pola surowej obserwacji, szczegółowych faz ręcznych, przedziałów obecności i ID osób pozostają `null`; nie przepisano do nich standardu jako nowego pomiaru. Liczebności OP10–OP21 są potwierdzone. W 7.1c `machineIntervalsSeconds: []` oznacza potwierdzony brak pracy maszynowej, a `crewPresenceRequirement` OP21 zawiera wymóg dwóch osób przez całą operację, bez wymyślonych ID osób lub dat rozpoczęcia. Wbudowanego przykładu, testów ani zapisanych projektów nie zmieniano. Przyszła aktualizacja modelu wymaga jawnego mapowania właściwego wariantu obsady i metody, z zachowaniem źródła/historycznych przykładów.
 
 ## Rejestr braków do dalszego zbierania
 
@@ -46,8 +47,8 @@ Raport JSON zachowuje wartości z arkusza jako `declaredStandardTimeSeconds`. Po
 | EKO-B01 | Wariant i okres | Rama 1.4 i miesiąc 2026-07 potwierdzone. Brak szczegółowej rewizji dokumentacji i warunków prób. | Powiązać wariant i rewizję z każdym źródłem, określić warunki próby. |
 | EKO-B02 | Metoda i próby czasu | Standardy 12 operacji z potwierdzonych danych; brak surowych prób, metody agregacji i liczby obserwacji. | Uzupełnić metrykę pomiaru i dostępne obserwacje; wskazać, czy wartość jest pojedynczą próbą, średnią czy normą po obróbce pomiarów. |
 | EKO-B03 | OP22–OP25 | Czasy przykładowe, wyjaśnienie zamknięte; pomiarów brak. | Dostarczyć pomiary dla ramy 1.4 i wskazanej obsady albo wyłączyć je z uzgodnionego zakresu odbioru 7.2. |
-| EKO-B04 | Praca ręczna/automat/obecność | Podział VA/NVA nie określa wymaganych przedziałów. | Jawne odcinki pracy ręcznej, pracy maszyny i obecności każdej osoby dla właściwej obsady. |
-| EKO-B05 | Obsada i kompetencje | Potwierdzono 13 osób w procesie: OP10–OP20 po 1, OP21 pakowanie 2. EKO-C2 zamknięte. Osoby z fixture nadal są założone; brak rzeczywistych tożsamości, współdzielenia i kompetencji. | Powiązać rzeczywiste ID osób, ich kompetencje, wymagania operacji i kalendarze z potwierdzoną obsadą. Kompetencje całej obsady mogą się uzupełniać; liczebność zespołu nie ustala pełnego profilu obecności. |
+| EKO-B04 | Praca ręczna i obecność | Częściowo zamknięte przez EKO-U5: cały proces manualny, brak maszyn/automatyzacji; OP21 stale 2 osoby. Brak szczegółowych faz i obecności przy pozostałych operacjach. | Uzupełnić potrzebne odcinki pracy ręcznej, oczekiwania i obecności; nie wymagać pomiarów nieistniejącej pracy maszyny. Dla OP21 zachować pełną obecność dwóch osób. |
+| EKO-B05 | Obsada i kompetencje | Potwierdzono 13 osób w procesie: OP10–OP20 po 1, OP21 pakowanie 2. EKO-C2 zamknięte. Osoby z fixture nadal są założone; brak rzeczywistych tożsamości, współdzielenia i kompetencji. | Powiązać rzeczywiste ID osób, ich kompetencje, wymagania operacji i kalendarze z potwierdzoną obsadą. Kompetencje całej obsady mogą się uzupełniać; liczebność zespołu nie ustala pełnego profilu obecności pozostałych operacji; pełna obecność OP21 jest potwierdzona w EKO-U5. |
 | EKO-B06 | Równoległość i rama | Graf i testy nie potwierdzają fizycznego dostępu. | Potwierdzić dopuszczone grupy, wykluczenia i warunki pracy na wspólnej ramie. |
 | EKO-B07 | Kopie i wyposażenie | Przykładowy layout nie potwierdza rzeczywistych zasobów. | ID rzeczywistych kopii, wyposażenie i dopuszczenia operacji; nie tworzyć zdolności przez kopię geometrii. |
 | EKO-B08 | Geometria | Hala 40000×40000×6000 mm i generowane stoły są demonstracyjne. | Pomierzone gabaryty, pozycje, jednostki i źródło CAD/pomiaru. |
@@ -84,3 +85,13 @@ Status: **7.1a odebrane, główne 7.1 w trakcie**. Potwierdzone źródła nie wy
 Uzupełnienie 7.1b: zapisano EKO-U3 (13 osób) i pytanie EKO-C2 o zakres liczby. Ponowiony audyt źródeł PASS; kontrola JSON potwierdziła 13 oraz puste przypisania osób do operacji. Zmiana dotyczy wyłącznie rejestru danych; bez regresji/builda/UI. Postęp nadal 53/69 = 76,8% i 53/65 = 81,5% pierwszego wydania.
 
 Doprecyzowanie 7.1b: EKO-U4 zamyka EKO-C2. Audyt zawiera teraz liczby osób dla 12 mierzonych operacji (11×1 + 1×2), łącznie 13; identyfikatory osób pozostają puste, obsada czterech testowych operacji nie jest wyprowadzana. Ponowiony audyt i kontrola liczebności, zachowania 1320 s OP21 oraz SHA-256 źródeł PASS. Bez zmian aplikacji, czasów lub przydziałów istniejących projektów; bez builda/regresji/UI.
+
+## Odbiór pakietu 7.1c — 2026-10-19
+
+Zapisano wcześniej przekazane EKO-U5. Audyt oznacza wszystkie 16 operacji jako manualne bez maszyn; kwalifikacja 12 czasów rzeczywistych / 4 przykładowych pozostaje bez zmian. OP21 ma wymóg 2 osób przez całą operację; 1320 s pozostaje niezmienione. Nie nadano tożsamości osób, jednoczesności między operacjami ani brakujących kalendarzy. Obsada OP22–OP25 nadal nieznana.
+
+Nowy wynik `outputs/data_audit/eko_7_1c.json` ma wersję audytu 2 i pozostaje dokumentem pochodzenia, nie formatem projektu aplikacji. Historyczny `eko_7_1.json`, w tym jego zastana lokalna zmiana, został zachowany. Skrypt `node scripts/audit_eko_data_7_1.mjs` zapisuje teraz nowy wynik. Oryginalne XLSX, wbudowany przykład i puste karty zbierania danych są niezmienione.
+
+Weryfikacja: audyt PASS (16 operacji, 12 potwierdzonych źródłowo czasów, 4 testowe, 60 BOM, 7 SHA-256). Kontrola raportu PASS: brak odcinków maszyn, OP21 2 osoby przez całość/1320 s, pozostałe mierzone operacje po 1 osobie, 4 testowe bez przypisanej obsady, brak zmyślonych prób/ID, zgodne sumy źródeł, `productionDataAccepted: false`. Bez zmian działania aplikacji: nie uruchamiano regresji, builda, UI ani regeneracji podręcznika PDF. Zaktualizowano instrukcję zbierania danych.
+
+**7.1 pozostaje w trakcie.** Najbliższy brak do wyjaśnienia: znaczenie wartości czasu w arkuszu (pojedynczy pomiar, średnia z prób czy norma). Dalej: identyfikatory i współdzielenie osób, kalendarze, stanowiska/geometria/transport/bufory, rzeczywiste wyniki oraz uzgodnione warunki i tolerancje 7.2. Nie zastępujemy tych braków wartościami domyślnymi.
