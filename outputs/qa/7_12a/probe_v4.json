@@ -1,0 +1,160 @@
+{
+  "id": "AUDIT-7-12A",
+  "name": "AUDYT 7.12.A — syntetyczna próba przenośności",
+  "createdAt": "2026-10-19T00:00:00.000Z",
+  "updatedAt": "2026-10-19T00:00:00.000Z",
+  "targetLayoutType": "UShape",
+  "facility": {
+    "widthMm": 10000,
+    "lengthMm": 10000,
+    "heightMm": 3000,
+    "gridSizeMm": 1000,
+    "isConfirmed": false
+  },
+  "obstacles": [],
+  "demand": {
+    "yearlyDemand": 25000,
+    "workingDaysPerYear": 250,
+    "shiftsPerDay": 1,
+    "hoursPerShift": 8,
+    "plannedBreaksMinutesPerShift": 0,
+    "oeePercent": 100
+  },
+  "processSteps": [
+    {
+      "id": "A-OP1",
+      "name": "Syntetyczna operacja audytowa",
+      "standardTimeSeconds": 60,
+      "vaTimeSeconds": 50,
+      "nvaTimeSeconds": 10,
+      "sequenceNumber": 1,
+      "predecessorIds": []
+    }
+  ],
+  "bom": [
+    {
+      "id": "BOM-1",
+      "partNumber": "AUDIT-P1",
+      "name": "Syntetyczny komponent",
+      "quantityPerUnit": 1,
+      "container": "BoxKLT",
+      "packageQuantity": 10,
+      "associatedProcessStepId": "A-OP1",
+      "unitCost": 0
+    }
+  ],
+  "layoutObjects": [
+    {
+      "id": "TBL-WS-1",
+      "name": "Stanowisko 1",
+      "type": "TableESD",
+      "xMm": 4100,
+      "yMm": 4750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "WS-1",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "FIFO-WS-1",
+      "name": "FIFO WS-1 · AUDIT-P1",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 4100,
+      "yMm": 3350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "WS-1",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "MAT-WS-1",
+      "name": "Obsada 1 · WS-1",
+      "type": "OperatorErgoMat",
+      "xMm": 4100,
+      "yMm": 5850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "WS-1",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "MAT-IN",
+      "name": "Wejście materiału",
+      "type": "MaterialIn",
+      "xMm": 1000,
+      "yMm": 4750,
+      "zMm": 0,
+      "widthMm": 2400,
+      "lengthMm": 1600,
+      "heightMm": 100,
+      "rotationDeg": 0,
+      "colorHex": "#7c3aed",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "FINISHED-GOODS",
+      "name": "Wyroby gotowe",
+      "type": "FinishedGoods",
+      "xMm": 6600,
+      "yMm": 4750,
+      "zMm": 0,
+      "widthMm": 2400,
+      "lengthMm": 1600,
+      "heightMm": 100,
+      "rotationDeg": 0,
+      "colorHex": "#10b981",
+      "isVisualAssumption": true
+    }
+  ],
+  "schemaVersion": 4,
+  "algorithm": "RPW",
+  "currency": "PLN",
+  "layoutMode": "auto",
+  "layoutSettings": {
+    "tableWidthMm": 1800,
+    "tableLengthMm": 900,
+    "spacingMm": 700,
+    "aisleMm": 2000
+  },
+  "timeUnit": "s",
+  "balancing": {
+    "taktTimeSeconds": 288,
+    "totalWorkContentSeconds": 60,
+    "theoreticalMinWorkstations": 1,
+    "actualWorkstationsCount": 1,
+    "lineEfficiencyPercent": 20.833333333333336,
+    "balanceDelayPercent": 79.16666666666666,
+    "bottleneckStationName": "Stanowisko 1",
+    "bottleneckCycleTimeSeconds": 60,
+    "workstations": [
+      {
+        "id": "WS-1",
+        "name": "Stanowisko 1",
+        "sequenceIndex": 1,
+        "assignedStepIds": [
+          "A-OP1"
+        ],
+        "cycleTimeSeconds": 60,
+        "isBottleneck": false,
+        "xMm": 0,
+        "yMm": 0,
+        "operators": 1,
+        "parallelStations": 1,
+        "baseCycleSeconds": 60,
+        "effectiveCycleSeconds": 60
+      }
+    ]
+  }
+}

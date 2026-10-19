@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-19T21:27:21.623Z",
+  "scope": "capability audit only, no physical simulation acceptance",
+  "ui": {
+    "v4Import": true,
+    "v5Import": true,
+    "draftCreatedAndDownloaded": true,
+    "noDraftFileImportControl": true,
+    "downloadedDraftRejectedByMainImportWithoutMutation": true,
+    "workspaceRestoresDraftAndLibraryAfterReload": true,
+    "checksumMismatchRestoreButtonEnabled": true
+  },
+  "runtimeErrors": []
+}

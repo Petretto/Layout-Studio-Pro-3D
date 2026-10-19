@@ -77,3 +77,10 @@ Dla komercyjnego wdrożenia Layout Studio Pro 3D w środowiskach inżynierskich 
 1. **Autonomia (Offline-First)**: Aplikacja spełnia rygorystyczne wymagania bezpieczeństwa sieci zakładowych — zero połączeń z zewnętrznymi CDN, pełne osadzenie zasobów w dystrybucji lokalnej.
 2. **Kryptograficzna integralność**: Suma kontrolna FIPS 180-4 SHA-256 uniemożliwia wgranie uszkodzonych lub niezgodnych plików konfiguracyjnych.
 3. **Bezpieczeństwo danych (Disaster Recovery)**: Automatyczny Rollback Snapshot zabezpiecza inżyniera przed przypadkowym zniszczeniem bieżącej sesji projektowej.
+
+
+## Ponowne otwarcie 7.6 — audyt 7.12.A, 2026-10-19
+
+7.6 przywrócono do **w trakcie**. Wcześniejszy odbiór i testy nie obejmowały odtworzonych obecnie luk: suma SHA-256 nie blokuje przywrócenia, walidacja pomija pełną otoczkę szkicu i biblioteki, null pozostawia stare obce dane, a awaria kolejnego zapisu pozostawia częściowo zmienione środowisko. Snapshot jest pobierany przez modal dopiero po powodzeniu, nie gwarantuje ratunku przy wyjątku funkcji restore. Ponadto licznik wariantów 6 pokazuje 0 dla biblioteki zawierającej 1 wariant.
+
+Dowody: `node scripts/audit_demo_portability_7_12a.mjs`, `node tests/qa/verify_7_12a.mjs`, pliki `outputs/qa/7_12a/capabilities.json` oraz `outputs/qa/7_12a_ui/report.json` i zrzut modala. Poprawna kopia ze szkicem i biblioteką daje odczyt po reloadzie w osobnym profilu Edge, lecz nie oznacza to spełnienia kryteriów bezpiecznego odzyskiwania. Istniejące testy celowane 7/7 PASS nie obejmowały tych luk. Nie zmieniono danych użytkownika ani kodu aplikacji. Naprawa i nowe negatywne testy są zaplanowane jako 7.6a; szczegóły w `WERYFIKACJA_PAKIETOW_POKAZOWYCH_7_12_A.md`.
