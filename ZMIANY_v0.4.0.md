@@ -1,5 +1,13 @@
 # Zmiany v0.4.0 — 29.09.2026
 
+## Korekty odbioru 19.10.2026 — 7.10a / 7.11a / 7.8.2a
+
+- Naprawiono kartę zdolności produkcyjnej raportu PDF: nominalna zdolność z efektywnego odstępu stanowiska, osobno wymagane tempo popytu. Brak podwójnego OEE; jawne odróżnienie od wyniku symulacji.
+- Rozszerzono odbiór dwóch procesów o import rzeczywistych plików XLSX przez UI, warianty przy niezmiennym popycie, porównanie, pobranie CSV/JSON, ponowny import i odświeżenie. Potwierdzono zachowanie migawek i odrzucenie obcego BOM. Dane syntetyczne, aktywny schemat 4.
+- Przywrócono rozdział LOD/Popout. Instrukcja MD/HTML/PDF: 51 stron, 42 obrazy, poprawione nazwy przycisków i zakres weryfikacji. Nowa kontrola wykrywa brak sekcji i nieaktualny HTML.
+- Celowane testy 3/3, pełna okresowa regresja 371/371, build, Edge UI i kontrola PDF PASS. Bez zmiany schematów i reguł symulacji. Wdrożenia Vercel nie zweryfikowano.
+
+
 ## Aktualizacja dokumentacji 18.10.2026 — 7.8.2 (Finalny odbiór Etapów 5–7)
 
 Podręcznik użytkownika Markdown/HTML/PDF został całościowo zaktualizowany po zakończeniu Etapów 5–7 (nowy edytor hali CAD 2D/3D, automatyczna propozycja layoutu 5.13, manipulatory 3D przesuwania i obrotu 6.5, deterministyczna animacja 3D z kartą inspekcji 6.6, tryb uproszczony LOD i Popout Windows 6.7, symulacja stochastyczna Monte Carlo 7.4, dekompozycja strat OEE 7.5, dystrybucja offline-first z backupem SHA-256 7.6, audyt licencji i bezpieczeństwa 7.7, profesjonalny raport inżynierski PDF z wykresem Yamazumi 7.10 oraz uniwersalność procesowa na bateriach i silnikach EV 7.11).

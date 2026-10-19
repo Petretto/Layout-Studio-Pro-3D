@@ -85,3 +85,17 @@ Raport inżynierski PDF spełnia wszystkie wymagania Planu 7.10:
 - Generuje czytelny, dynamiczny wykres Yamazumi.
 - Zapewnia nienaganny podział stron na formacie A4 bez ucinania wierszy.
 - Wykazuje 100% zgodności liczb i wskaźników z modelem obliczeniowym aplikacji.
+
+## Korekta odbioru 7.10a — 2026-10-19
+
+Ten wpis zastępuje wcześniejsze wnioski o zgodności wszystkich liczb. Przegląd wykazał, że karta zdolności pokazywała wymagane tempo popytu. Poprawiono ją na nominalną zdolność 3600 / największy efektywny odstęp niepustego stanowiska, z uwzględnieniem skonfigurowanych kopii i jawnego czasu zespołu. Nie jest to dynamiczna przepustowość ani wynik z dodatkowym OEE. Dla braku poprawnego odstępu widoczna jest kreska. Wymagane tempo ma osobną kartę.
+
+Wykonane sprawdzenia:
+
+- `node scripts/test.mjs --suite=core --test-name-pattern=7\.10`: 2/2 PASS; następnie wspólne celowane 7.10/7.11: 3/3 PASS. Test obejmuje kopie, jawny czas zespołu, brak automatycznego skracania przez liczbę osób, brak danych i niepoprawne czasy.
+- `npm.cmd run build`: PASS, 1970 modułów; pozostaje ostrzeżenie o paczkach większych niż 500 kB.
+- `node tests/qa/verify_7_10.mjs`: Edge UI/PDF PASS, 0 wyjątków JS. Krótki projekt: 127 s, zdolność 28,3 szt./h, wymagane tempo 22,2 szt./h; 6 operacji i 5 BOM. Długi syntetyczny Eko: 16 operacji i 60 BOM. Dotychczasowe wartości 60/86 s w historycznym opisie nie opisują obecnych wydruków.
+- PDF krótki: 3 strony, 238400 bajtów; długi: 6 stron, 560734 bajtów. Ekstrakcja tekstu potwierdziła oba KPI i wartości krótkiego projektu, brak słów poza stroną w obu dokumentach. Wizualnie sprawdzono pierwsze strony obu PDF; nowe karty są czytelne. Dowód: `outputs/qa/report_7_10a_pdf_check.json`, rendery `report_7_10_*_page1.png` oraz oba PDF.
+- Końcowa pełna regresja po integracji trzech pakietów: `npm.cmd run test -- --run`, 371/371 PASS, 0 pominiętych. Używany jest runner Node test, nie Vitest.
+
+Instrukcja 5.11 zaktualizowana w MD/HTML/PDF. Nie zmieniono schematu projektu, danych produkcyjnych ani reguł symulacji. Vercel nie zweryfikowano. 7.10 ponownie odebrane w tym zakresie.

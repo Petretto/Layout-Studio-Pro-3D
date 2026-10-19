@@ -4,6 +4,8 @@ Run with the bundled Python (pypdf, pdfplumber, pypdfium2 and Pillow).
 import json
 import re
 import sys
+import html
+import subprocess
 from pathlib import Path
 import pdfplumber
 import pypdfium2 as pdfium
@@ -23,10 +25,16 @@ with pdfplumber.open(pdf_path) as document:
         for word in page.extract_words():
             if word['x0'] < 0 or word['x1'] > page.width + 1 or word['top'] < 0 or word['bottom'] > page.height + 1:
                 bounds.append({'page': number, 'text': word['text']})
-    required = ['3.1.', '3.2.', '3.3.', '3.4.', '3.5.', '3.6.', '3.7.', '3.8.', '3.9.', '4. Ważne zasady']
+    required = ['3.1.', '3.2.', '3.3.', '3.4.', '3.5.', '3.6.', '3.7.', '3.8.', '3.9.', '4. Ważne zasady'] + [f'5.{n}.' for n in range(1, 13)]
     joined = '\n'.join(texts)
     absent = [item for item in required if item not in joined]
     blank = [i + 1 for i, text in enumerate(texts) if not text.strip()]
+terms = ['Tryb uproszczony', 'Popout', 'osobnym oknie', 'Zdolność Produkcyjna', 'Wymagane tempo', 'Zapisz wariant', 'Eksport JSON']
+formats = {'md': manual.read_text(encoding='utf-8'),
+           'html': html.unescape(re.sub(r'<[^>]+>', ' ', manual.with_suffix('.html').read_text(encoding='utf-8'))),
+           'pdf': joined}
+missing_terms = {name: [term for term in terms if ' '.join(term.split()).casefold() not in ' '.join(value.split()).casefold()] for name, value in formats.items()}
+html_check = subprocess.run(['node', str(root / 'scripts/generate_pdf_html.mjs'), '--check'], cwd=root, capture_output=True, text=True, encoding='utf-8', errors='replace')
 renderer = pdfium.PdfDocument(str(pdf_path))
 for start in range(0, len(renderer), 16):
     sheet = Image.new('RGB', (1240, 1840), '#dbe1e8')
@@ -46,10 +54,11 @@ for number in [1, len(renderer)]:
     page.render(scale=1.3).to_pil().save(out / f'page_{number}.png')
     page.close()
 report = {'pages': len(renderer), 'imageReferences': len(references), 'missingImages': missing,
+          'htmlMatchesMarkdown': html_check.returncode == 0, 'missingFormatTerms': missing_terms,
           'absentSections': absent, 'blankPages': blank, 'wordsOutsidePage': bounds,
           'pagesBySection': {item: [i + 1 for i, text in enumerate(texts) if item in text] for item in required}}
 renderer.close()
 (out / 'report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
 print(json.dumps(report, ensure_ascii=False))
-if missing or absent or blank or bounds:
+if missing or absent or blank or bounds or any(missing_terms.values()) or html_check.returncode:
     raise SystemExit('Manual verification failed; inspect generated pages.')

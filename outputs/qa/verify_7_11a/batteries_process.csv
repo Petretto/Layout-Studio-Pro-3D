@@ -1,0 +1,7 @@
+﻿ID Kroku,Nazwa Operacji,Czas Standardowy [s],Wartość Dodana VA [s],Strata NVA [s],Poprzednicy,Następnicy
+OP-BAT-10,Sortowanie i układanie ogniw 21700 w koszach,45,40,5,,OP-BAT-20
+OP-BAT-20,Aplikacja pasty termoprzewodzącej TIM,30,25,5,OP-BAT-10,OP-BAT-30
+OP-BAT-30,Laserowe zgrzewanie szyn miedzianych (busbars),55,50,5,OP-BAT-20,OP-BAT-40
+OP-BAT-40,Montaż wiązki pomiarowej i modułu BMS,40,34,6,OP-BAT-30,OP-BAT-50
+OP-BAT-50,Montaż i skręcanie pokrywy kompozytowej,35,30,5,OP-BAT-40,OP-BAT-60
+OP-BAT-60,Test wysokonapięciowy HV i szczelności,50,45,5,OP-BAT-50,

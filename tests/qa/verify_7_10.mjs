@@ -115,6 +115,8 @@ try {
     console.log(`     * ${k.label}: ${k.value}`);
   }
   ok(kpis.length >= 6, 'Powinno być co najmniej 6 kafelków KPI');
+  ok(kpis.find(k=>k.label==='Zdolność Produkcyjna')?.value.trim()==='28.3 szt./h','Nominal capacity must be 3600/127, not demand');
+  ok(kpis.find(k=>k.label==='Wymagane tempo')?.value.trim()==='22.2 szt./h','Demand target must remain separate');
 
   const shortStepsCount = await evaluate(`document.querySelectorAll('.report-section:nth-of-type(4) tbody tr').length`);
   const shortBomCount = await evaluate(`document.querySelectorAll('.report-section:nth-of-type(5) tbody tr').length - 1`); // bez wiersza podsumowania

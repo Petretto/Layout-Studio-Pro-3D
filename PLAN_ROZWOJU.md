@@ -1,7 +1,7 @@
 # Plan rozwoju i rejestr postępu aplikacji
 
 Data utworzenia: 2026-09-29  
-Ostatnia aktualizacja: 2026-10-18
+Ostatnia aktualizacja: 2026-10-19
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
 Przykładowy przypadek testowy: niepełny proces Eko; odbiór uniwersalności wymaga także niezależnych procesów.
 
@@ -126,6 +126,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+7.10a / 7.11a / 7.8.2a (2026-10-19): wdrożone — po przeglądzie ponownie odebrano trzy punkty. Poprawiono KPI nominalnej zdolności (3600 / efektywny odstęp) i wydzielono wymagane tempo; testy liczb, kopii, czasu zespołu i braku danych. Edge 7.10: krótki PDF 3 strony/238400 B, długi 6 stron/560734 B, oba KPI i granice tekstu poprawne. Nowy `tests/qa/verify_7_11a.mjs`: rzeczywisty import XLSX procesu/BOM, baza Manual i reorganizacja RPW przy stałym popycie, zapis/porównanie migawek, pobranie i import CSV/JSON, odświeżenie, zachowanie danych dwóch projektów oraz odrzucenie obcego BOM — PASS, 0 wyjątków JS. Baterie 6 → 1 stanowisko przy 303,75 s; silniki 6 → 2 przy 151,875 s. Zakres aktywnego schematu 4 i danych syntetycznych; bez odbioru pełnej fizycznej symulacji szkicu 6. Biblioteka wariantów wspólna w przeglądarce, migawki zachowują dane projektów. Przywrócono LOD/Popout w instrukcji, poprawiono opisy KPI i ścieżki użytkownika. MD/HTML/PDF zgodne: 51 stron, 42 obrazy, brak brakujących sekcji/terminów, pustych stron i tekstu poza stroną; wizualny odbiór renderów PASS. Wynik 51 stron zastępuje wcześniejszą deklarację 45 (przed naprawą faktycznie 48). Celowane testy 7.10/7.11: 3/3 PASS; okresowa pełna regresja po integracji trzech pakietów: 371/371 PASS (Node test), build PASS z dotychczasowym ostrzeżeniem rozmiaru paczek. Raporty: `WERYFIKACJA_RAPORTU_PDF_7_10.md`, `WERYFIKACJA_UNIWERSALNOSCI_7_11.md`, `WERYFIKACJA_AKTUALIZACJI_DOKUMENTACJI_7_8_2.md`. Bez zmian schematu lub reguł symulacji. Lokalne pliki użytkownika zachowane, Vercel nie zweryfikowano. Postęp: cały plan 61/69 = 88,4%, pierwsze wydanie 61/65 = 93,8%. Dalej pozostają 6.3, 7.1, 7.2 i 7.9; ten pakiet ich nie odbiera.
 
 7.8.2 (2026-10-18): wdrożone — finalna aktualizacja instrukcji użytkownika, pełnego opisu funkcji (`FUNKCJE_PROGRAMU.md`), rejestru zmian (`ZMIANY_v0.4.0.md`) i jawnych ograniczeń po zakończeniu Etapów 5–7 (nowy edytor hali CAD 2D/3D, automatyczna propozycja layoutu 5.13, manipulatory 3D 6.5, animacja 3D z inspekcją 6.6, tryb uproszczony LOD i Popout Windows 6.7, przezbrojenia 7.3, symulacja stochastyczna Monte Carlo 7.4, dekompozycja strat OEE 7.5, dystrybucja offline-first i backup SHA-256 7.6, audyt licencji i bezpieczeństwa 7.7, profesjonalny raport inżynierski PDF z wykresem Yamazumi 7.10 oraz uniwersalność na bateriach i silnikach EV 7.11). Podręcznik użytkownika `Instrukcja/Podrecznik_Uzytkownika.md` (zregenerowane pliki HTML i 45-stronicowy PDF, 5,56 MB, 39 zweryfikowanych ilustracji) stanowi pełną, kompletną dokumentację aplikacji. Kopia zapasowa: `backup/v0.4.0_przed_7_8_2_20261018` (440 plików z SHA256). Pełny zestaw testów 370/370 PASS, build PASS. Raport `WERYFIKACJA_AKTUALIZACJI_DOKUMENTACJI_7_8_2.md`. Postęp: cały plan 61/69 = 88,4%, pierwsze wydanie 61/65 = 93,8%, Etap 7: 8/11 = 72,7%.
 

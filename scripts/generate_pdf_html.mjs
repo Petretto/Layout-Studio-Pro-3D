@@ -7,7 +7,7 @@ const ROOT = resolve(__dirname, '..');
 const mdPath = resolve(ROOT, 'Instrukcja', 'Podrecznik_Uzytkownika.md');
 const htmlPath = resolve(ROOT, 'Instrukcja', 'Podrecznik_Uzytkownika.html');
 
-const md = readFileSync(mdPath, 'utf8');
+const md = readFileSync(mdPath, 'utf8').replace(/\r\n/g, '\n');
 
 // Parse markdown to clean HTML
 function mdToHtml(markdown) {
@@ -201,10 +201,17 @@ const fullHtml = `<!DOCTYPE html>
 </style>
 </head>
 <body>
-  <div class="header-badge">Podręcznik v0.4.0 — aktualizacja funkcji Etapów 1–4</div>
+  <div class="header-badge">Podręcznik v0.4.0 — funkcje Etapów 1–7, zakres i ograniczenia opisane w treści</div>
   ${bodyHtml}
 </body>
 </html>`;
 
-writeFileSync(htmlPath, fullHtml, 'utf8');
-console.log('HTML written to', htmlPath);
+if (process.argv.includes('--check')) {
+  if (readFileSync(htmlPath, 'utf8').replace(/\r\n/g, '\n') !== fullHtml) {
+    console.error('Manual HTML is stale; run node scripts/generate_pdf_html.mjs');
+    process.exitCode = 1;
+  } else console.log('Manual HTML matches Markdown');
+} else {
+  writeFileSync(htmlPath, fullHtml, 'utf8');
+  console.log('HTML written to', htmlPath);
+}

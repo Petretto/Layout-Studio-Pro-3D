@@ -1,0 +1,16 @@
+[
+  {
+    "file": "report_7_10_short.pdf",
+    "pages": 3,
+    "bytes": 238400,
+    "wordsOutsidePage": [],
+    "capacityAndDemandPresent": true
+  },
+  {
+    "file": "report_7_10_long.pdf",
+    "pages": 6,
+    "bytes": 560734,
+    "wordsOutsidePage": [],
+    "capacityAndDemandPresent": true
+  }
+]

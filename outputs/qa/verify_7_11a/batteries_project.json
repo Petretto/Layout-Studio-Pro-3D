@@ -1,0 +1,269 @@
+{
+  "id": "2e432bef-fe86-4193-961c-d673bbc453e3",
+  "name": "QA_7_11_batteries",
+  "createdAt": "2026-10-19T20:43:27.204Z",
+  "updatedAt": "2026-10-19T20:43:32.119Z",
+  "targetLayoutType": "Linear",
+  "facility": {
+    "widthMm": 24000,
+    "lengthMm": 32000,
+    "heightMm": 6000,
+    "gridSizeMm": 1000
+  },
+  "obstacles": [],
+  "demand": {
+    "yearlyDemand": 40000,
+    "workingDaysPerYear": 250,
+    "shiftsPerDay": 2,
+    "hoursPerShift": 8,
+    "plannedBreaksMinutesPerShift": 30,
+    "oeePercent": 90
+  },
+  "processSteps": [
+    {
+      "id": "OP-BAT-10",
+      "name": "Sortowanie i układanie ogniw 21700 w koszach",
+      "standardTimeSeconds": 45,
+      "vaTimeSeconds": 40,
+      "nvaTimeSeconds": 5,
+      "sequenceNumber": 1,
+      "predecessorIds": []
+    },
+    {
+      "id": "OP-BAT-20",
+      "name": "Aplikacja pasty termoprzewodzącej TIM",
+      "standardTimeSeconds": 30,
+      "vaTimeSeconds": 25,
+      "nvaTimeSeconds": 5,
+      "sequenceNumber": 2,
+      "predecessorIds": [
+        "OP-BAT-10"
+      ]
+    },
+    {
+      "id": "OP-BAT-30",
+      "name": "Laserowe zgrzewanie szyn miedzianych (busbars)",
+      "standardTimeSeconds": 55,
+      "vaTimeSeconds": 50,
+      "nvaTimeSeconds": 5,
+      "sequenceNumber": 3,
+      "predecessorIds": [
+        "OP-BAT-20"
+      ]
+    },
+    {
+      "id": "OP-BAT-40",
+      "name": "Montaż wiązki pomiarowej i modułu BMS",
+      "standardTimeSeconds": 40,
+      "vaTimeSeconds": 34,
+      "nvaTimeSeconds": 6,
+      "sequenceNumber": 4,
+      "predecessorIds": [
+        "OP-BAT-30"
+      ]
+    },
+    {
+      "id": "OP-BAT-50",
+      "name": "Montaż i skręcanie pokrywy kompozytowej",
+      "standardTimeSeconds": 35,
+      "vaTimeSeconds": 30,
+      "nvaTimeSeconds": 5,
+      "sequenceNumber": 5,
+      "predecessorIds": [
+        "OP-BAT-40"
+      ]
+    },
+    {
+      "id": "OP-BAT-60",
+      "name": "Test wysokonapięciowy HV i szczelności",
+      "standardTimeSeconds": 50,
+      "vaTimeSeconds": 45,
+      "nvaTimeSeconds": 5,
+      "sequenceNumber": 6,
+      "predecessorIds": [
+        "OP-BAT-50"
+      ]
+    }
+  ],
+  "bom": [
+    {
+      "id": "BOM-1",
+      "partNumber": "CELL-21700-HP",
+      "name": "Ogniwo litowo-jonowe 21700 5000mAh",
+      "quantityPerUnit": 96,
+      "container": "Pallet",
+      "packageQuantity": 480,
+      "associatedProcessStepId": "OP-BAT-10",
+      "unitCost": 15.5
+    },
+    {
+      "id": "BOM-2",
+      "partNumber": "TIM-PASTE-01",
+      "name": "Karton pasty termoprzewodzącej 5W/mK",
+      "quantityPerUnit": 1,
+      "container": "Carton",
+      "packageQuantity": 10,
+      "associatedProcessStepId": "OP-BAT-20",
+      "unitCost": 45
+    },
+    {
+      "id": "BOM-3",
+      "partNumber": "BUSBAR-CU-96",
+      "name": "Zestaw szyn miedzianych niklowanych",
+      "quantityPerUnit": 12,
+      "container": "BoxKLT",
+      "packageQuantity": 60,
+      "associatedProcessStepId": "OP-BAT-30",
+      "unitCost": 8.5
+    },
+    {
+      "id": "BOM-4",
+      "partNumber": "BMS-PCBA-V2",
+      "name": "Sterownik BMS z wiązką sensorów",
+      "quantityPerUnit": 1,
+      "container": "BoxKLT",
+      "packageQuantity": 20,
+      "associatedProcessStepId": "OP-BAT-40",
+      "unitCost": 210
+    },
+    {
+      "id": "BOM-5",
+      "partNumber": "ENCL-TOP-C01",
+      "name": "Pokrywa górna kompozytowa IP68",
+      "quantityPerUnit": 1,
+      "container": "Pallet",
+      "packageQuantity": 25,
+      "associatedProcessStepId": "OP-BAT-50",
+      "unitCost": 95
+    },
+    {
+      "id": "BOM-6",
+      "partNumber": "SEAL-EPDM-01",
+      "name": "Uszczelka profilowa EPDM",
+      "quantityPerUnit": 1,
+      "container": "BoxKLT",
+      "packageQuantity": 50,
+      "associatedProcessStepId": "OP-BAT-50",
+      "unitCost": 12
+    }
+  ],
+  "layoutObjects": [
+    {
+      "id": "TBL-WS-1",
+      "name": "Stanowisko 1",
+      "type": "TableESD",
+      "xMm": 11100,
+      "yMm": 15750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "WS-1",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "FIFO-WS-1",
+      "name": "FIFO WS-1 · CELL-21700-HP, TIM-PASTE-01, BUSBAR-CU-96...",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 11100,
+      "yMm": 14350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "WS-1",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "MAT-WS-1",
+      "name": "Obsada 1 · WS-1",
+      "type": "OperatorErgoMat",
+      "xMm": 11100,
+      "yMm": 16850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "WS-1",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "MAT-IN",
+      "name": "Wejście materiału",
+      "type": "MaterialIn",
+      "xMm": 8000,
+      "yMm": 15750,
+      "zMm": 0,
+      "widthMm": 2400,
+      "lengthMm": 1600,
+      "heightMm": 100,
+      "rotationDeg": 0,
+      "colorHex": "#7c3aed",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "FINISHED-GOODS",
+      "name": "Wyroby gotowe",
+      "type": "FinishedGoods",
+      "xMm": 13600,
+      "yMm": 15750,
+      "zMm": 0,
+      "widthMm": 2400,
+      "lengthMm": 1600,
+      "heightMm": 100,
+      "rotationDeg": 0,
+      "colorHex": "#10b981",
+      "isVisualAssumption": true
+    }
+  ],
+  "schemaVersion": 4,
+  "algorithm": "RPW",
+  "currency": "EUR",
+  "layoutMode": "auto",
+  "layoutSettings": {
+    "tableWidthMm": 1800,
+    "tableLengthMm": 900,
+    "spacingMm": 700,
+    "aisleMm": 2000
+  },
+  "balancing": {
+    "taktTimeSeconds": 303.75,
+    "totalWorkContentSeconds": 255,
+    "theoreticalMinWorkstations": 1,
+    "actualWorkstationsCount": 1,
+    "lineEfficiencyPercent": 83.9506172839506,
+    "balanceDelayPercent": 16.049382716049394,
+    "bottleneckStationName": "Stanowisko 1",
+    "bottleneckCycleTimeSeconds": 255,
+    "workstations": [
+      {
+        "id": "WS-1",
+        "name": "Stanowisko 1",
+        "sequenceIndex": 1,
+        "assignedStepIds": [
+          "OP-BAT-10",
+          "OP-BAT-20",
+          "OP-BAT-30",
+          "OP-BAT-40",
+          "OP-BAT-50",
+          "OP-BAT-60"
+        ],
+        "cycleTimeSeconds": 255,
+        "isBottleneck": false,
+        "xMm": 0,
+        "yMm": 0,
+        "operators": 1,
+        "parallelStations": 1,
+        "baseCycleSeconds": 255,
+        "effectiveCycleSeconds": 255
+      }
+    ]
+  },
+  "workstationSettings": {}
+}

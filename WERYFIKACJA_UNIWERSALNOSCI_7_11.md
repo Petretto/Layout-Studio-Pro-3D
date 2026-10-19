@@ -73,3 +73,20 @@ Aplikacja Layout Studio Pro 3D w pełni pomyślnie przeszła odbiór uniwersalno
 - Silnik nie posiada żadnych ukrytych założeń zakodowanych pod specyfikę procesu Eko.
 - Użytkownik i konsultant Lean mogą swobodnie importować procesy z XLSX, budować i porównywać warianty bazowe i usprawnione, bilansować linię, generować layouty oraz eksportować i odzyskiwać projekty.
 - Wymogi punktu 7.11 zostały w całości zrealizowane.
+
+## Uzupełniony odbiór 7.11a — 2026-10-19
+
+Poprzedni test przeglądarkowy był testem wczytania gotowych przykładów i nie dowodził pełnej ścieżki użytkownika. Poniższy odbiór zastępuje wcześniejsze szersze deklaracje. Zakres: aktywny schemat 4, dwa syntetyczne procesy; bez odbioru pełnej fizycznej symulacji szkicu 6 lub dowolnej sieci procesu.
+
+Nowy `tests/qa/verify_7_11a.mjs` w Edge uruchamia dla każdego procesu:
+
+1. Nowy pusty projekt, własną nazwę, walutę i popyt, rzeczywisty import plików XLSX procesu i BOM przez pola plikowe UI.
+2. Wygenerowany layout i widoczne ostrzeżenie niepotwierdzonych wymiarów hali.
+3. Bazę Manual po jednej operacji na stanowisko i reorganizację RPW przy identycznych czasach, BOM i popycie; zapis obu migawek oraz odczyt tabeli porównania. Oba wiersze muszą mieścić się w widocznym obszarze zrzutu.
+4. Rzeczywiste pobranie CSV i ponowny import; pobranie JSON, wyczyszczenie projektu, import pobranego JSON i odświeżenie strony. Sprawdza ID, proces, BOM, popyt, walutę, algorytm, typ układu i konfigurację stanowisk.
+5. Zachowanie migawek pierwszego projektu podczas pracy z drugim; wspólna biblioteka przeglądarki zachowuje dane projektów, nie jest osobną biblioteką dla każdego projektu.
+6. Odrzucenie obcego BOM o nieznanych ID operacji bez częściowego nadpisania projektu.
+
+Wynik końcowy: PASS dla obu procesów i odrzucenia BOM, 0 wyjątków JS. Baterie: 6 operacji/6 BOM, EUR, Linear, 6 → 1 stanowisko przy takcie 303,75 s. Silniki: 6 operacji/5 BOM, USD, UShape, 6 → 2 stanowiska przy takcie 151,875 s. Reorganizacje bez przeciążenia; to porównanie statycznej organizacji, nie dowód zwiększonej przepustowości dynamicznej. Dowody: `outputs/qa/verify_7_11a/report.json`, zrzuty, pobrane CSV i JSON z tego katalogu.
+
+Test core 7.11 poprawiono na porównanie przy niezmiennym popycie. Celowane 7.10/7.11: 3/3 PASS. Pełna regresja integracyjna: 371/371 PASS (runner Node test); build PASS. Niepowodzenia podczas rozbudowy skryptu dotyczyły ścieżki testowej (zakładka wariantów, odczyt wyliczonego bilansu, oczekiwanie na przeładowanie i render zrzutu); końcowy przebieg PASS. Instrukcja 5.12 opisuje tę samą ścieżkę i ograniczenia. 7.11 odebrane w powyższym zakresie; nie oznacza odbioru rzeczywistego procesu Eko. Vercel nie zweryfikowano.

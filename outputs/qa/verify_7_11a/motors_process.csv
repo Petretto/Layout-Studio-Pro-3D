@@ -1,0 +1,7 @@
+﻿ID Kroku,Nazwa Operacji,Czas Standardowy [s],Wartość Dodana VA [s],Strata NVA [s],Poprzednicy,Następnicy
+OP-MOT-10,Tłoczenie pakietu blach stojana i izolacja,38,32,6,,"OP-MOT-20, OP-MOT-30"
+OP-MOT-20,Nawijanie i zgrzewanie uzwojeń miedzianych,52,45,7,OP-MOT-10,OP-MOT-40
+OP-MOT-30,Wyważanie dynamiczne wirnika i magnesy,35,30,5,OP-MOT-10,OP-MOT-40
+OP-MOT-40,Zespolenie wirnika ze stojanem i łożyska,48,42,6,"OP-MOT-20, OP-MOT-30",OP-MOT-50
+OP-MOT-50,Montaż obudowy i dokręcanie śrub sterowane momentem,32,28,4,OP-MOT-40,OP-MOT-60
+OP-MOT-60,"Test parametrów EOL (moment, wibracje, AOI)",45,40,5,OP-MOT-50,

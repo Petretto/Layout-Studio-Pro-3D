@@ -1,0 +1,320 @@
+{
+  "id": "360a5553-ca64-47b3-ac7c-87ed7c0c62d7",
+  "name": "QA_7_11_motors",
+  "createdAt": "2026-10-19T20:43:34.783Z",
+  "updatedAt": "2026-10-19T20:43:39.489Z",
+  "targetLayoutType": "UShape",
+  "facility": {
+    "widthMm": 24000,
+    "lengthMm": 32000,
+    "heightMm": 6000,
+    "gridSizeMm": 1000
+  },
+  "obstacles": [],
+  "demand": {
+    "yearlyDemand": 80000,
+    "workingDaysPerYear": 250,
+    "shiftsPerDay": 2,
+    "hoursPerShift": 8,
+    "plannedBreaksMinutesPerShift": 30,
+    "oeePercent": 90
+  },
+  "processSteps": [
+    {
+      "id": "OP-MOT-10",
+      "name": "Tłoczenie pakietu blach stojana i izolacja",
+      "standardTimeSeconds": 38,
+      "vaTimeSeconds": 32,
+      "nvaTimeSeconds": 6,
+      "sequenceNumber": 1,
+      "predecessorIds": []
+    },
+    {
+      "id": "OP-MOT-20",
+      "name": "Nawijanie i zgrzewanie uzwojeń miedzianych",
+      "standardTimeSeconds": 52,
+      "vaTimeSeconds": 45,
+      "nvaTimeSeconds": 7,
+      "sequenceNumber": 2,
+      "predecessorIds": [
+        "OP-MOT-10"
+      ]
+    },
+    {
+      "id": "OP-MOT-30",
+      "name": "Wyważanie dynamiczne wirnika i magnesy",
+      "standardTimeSeconds": 35,
+      "vaTimeSeconds": 30,
+      "nvaTimeSeconds": 5,
+      "sequenceNumber": 3,
+      "predecessorIds": [
+        "OP-MOT-10"
+      ]
+    },
+    {
+      "id": "OP-MOT-40",
+      "name": "Zespolenie wirnika ze stojanem i łożyska",
+      "standardTimeSeconds": 48,
+      "vaTimeSeconds": 42,
+      "nvaTimeSeconds": 6,
+      "sequenceNumber": 4,
+      "predecessorIds": [
+        "OP-MOT-20",
+        "OP-MOT-30"
+      ]
+    },
+    {
+      "id": "OP-MOT-50",
+      "name": "Montaż obudowy i dokręcanie śrub sterowane momentem",
+      "standardTimeSeconds": 32,
+      "vaTimeSeconds": 28,
+      "nvaTimeSeconds": 4,
+      "sequenceNumber": 5,
+      "predecessorIds": [
+        "OP-MOT-40"
+      ]
+    },
+    {
+      "id": "OP-MOT-60",
+      "name": "Test parametrów EOL (moment, wibracje, AOI)",
+      "standardTimeSeconds": 45,
+      "vaTimeSeconds": 40,
+      "nvaTimeSeconds": 5,
+      "sequenceNumber": 6,
+      "predecessorIds": [
+        "OP-MOT-50"
+      ]
+    }
+  ],
+  "bom": [
+    {
+      "id": "BOM-1",
+      "partNumber": "MOT-STAT-01",
+      "name": "Pakiet blach stojana ze stali krzemowej",
+      "quantityPerUnit": 1,
+      "container": "BoxKLT",
+      "packageQuantity": 30,
+      "associatedProcessStepId": "OP-MOT-10",
+      "unitCost": 80
+    },
+    {
+      "id": "BOM-2",
+      "partNumber": "CU-WIRE-GRADEH",
+      "name": "Drut miedziany emaliowany kl. H [kg]",
+      "quantityPerUnit": 2.4,
+      "container": "Carton",
+      "packageQuantity": 24,
+      "associatedProcessStepId": "OP-MOT-20",
+      "unitCost": 38
+    },
+    {
+      "id": "BOM-3",
+      "partNumber": "ROTOR-SHAFT-01",
+      "name": "Wał wirnika z magnesami neodymowymi NdFeB",
+      "quantityPerUnit": 1,
+      "container": "Tray",
+      "packageQuantity": 15,
+      "associatedProcessStepId": "OP-MOT-30",
+      "unitCost": 165
+    },
+    {
+      "id": "BOM-4",
+      "partNumber": "BEARING-6205",
+      "name": "Łożysko toczne wysokoobrotowe 6205-2RS",
+      "quantityPerUnit": 2,
+      "container": "BoxKLT",
+      "packageQuantity": 50,
+      "associatedProcessStepId": "OP-MOT-40",
+      "unitCost": 14
+    },
+    {
+      "id": "BOM-5",
+      "partNumber": "HOUSING-ALU-01",
+      "name": "Korpus aluminiowy odlewany ciśnieniowo",
+      "quantityPerUnit": 1,
+      "container": "Pallet",
+      "packageQuantity": 20,
+      "associatedProcessStepId": "OP-MOT-50",
+      "unitCost": 110
+    }
+  ],
+  "layoutObjects": [
+    {
+      "id": "TBL-WS-1",
+      "name": "Stanowisko 1",
+      "type": "TableESD",
+      "xMm": 12650,
+      "yMm": 12750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "WS-1",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "FIFO-WS-1",
+      "name": "FIFO WS-1 · MOT-STAT-01, CU-WIRE-GRADEH, ROTOR-SHAFT-01",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 12650,
+      "yMm": 11350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "WS-1",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "MAT-WS-1",
+      "name": "Obsada 1 · WS-1",
+      "type": "OperatorErgoMat",
+      "xMm": 12650,
+      "yMm": 13850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "WS-1",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "TBL-WS-2",
+      "name": "Stanowisko 2",
+      "type": "TableESD",
+      "xMm": 12650,
+      "yMm": 18750,
+      "zMm": 0,
+      "widthMm": 1800,
+      "lengthMm": 900,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2563eb",
+      "workstationId": "WS-2",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "FIFO-WS-2",
+      "name": "FIFO WS-2 · BEARING-6205, HOUSING-ALU-01",
+      "type": "FlowRackFIFO3Tier",
+      "xMm": 12650,
+      "yMm": 17350,
+      "zMm": 0,
+      "widthMm": 1400,
+      "lengthMm": 1200,
+      "heightMm": 1600,
+      "rotationDeg": 0,
+      "colorHex": "#d97706",
+      "workstationId": "WS-2",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "MAT-WS-2",
+      "name": "Obsada 1 · WS-2",
+      "type": "OperatorErgoMat",
+      "xMm": 12650,
+      "yMm": 19850,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 25,
+      "rotationDeg": 0,
+      "colorHex": "#059669",
+      "workstationId": "WS-2",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "MAT-IN",
+      "name": "Wejście materiału",
+      "type": "MaterialIn",
+      "xMm": 9550,
+      "yMm": 12750,
+      "zMm": 0,
+      "widthMm": 2400,
+      "lengthMm": 1600,
+      "heightMm": 100,
+      "rotationDeg": 0,
+      "colorHex": "#7c3aed",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "FINISHED-GOODS",
+      "name": "Wyroby gotowe",
+      "type": "FinishedGoods",
+      "xMm": 9550,
+      "yMm": 18750,
+      "zMm": 0,
+      "widthMm": 2400,
+      "lengthMm": 1600,
+      "heightMm": 100,
+      "rotationDeg": 0,
+      "colorHex": "#10b981",
+      "isVisualAssumption": true
+    }
+  ],
+  "schemaVersion": 4,
+  "algorithm": "RPW",
+  "currency": "USD",
+  "layoutMode": "auto",
+  "layoutSettings": {
+    "tableWidthMm": 1800,
+    "tableLengthMm": 900,
+    "spacingMm": 700,
+    "aisleMm": 2000
+  },
+  "balancing": {
+    "taktTimeSeconds": 151.875,
+    "totalWorkContentSeconds": 250,
+    "theoreticalMinWorkstations": 2,
+    "actualWorkstationsCount": 2,
+    "lineEfficiencyPercent": 82.3045267489712,
+    "balanceDelayPercent": 17.6954732510288,
+    "bottleneckStationName": "Stanowisko 1",
+    "bottleneckCycleTimeSeconds": 125,
+    "workstations": [
+      {
+        "id": "WS-1",
+        "name": "Stanowisko 1",
+        "sequenceIndex": 1,
+        "assignedStepIds": [
+          "OP-MOT-10",
+          "OP-MOT-20",
+          "OP-MOT-30"
+        ],
+        "cycleTimeSeconds": 125,
+        "isBottleneck": false,
+        "xMm": 0,
+        "yMm": 0,
+        "operators": 1,
+        "parallelStations": 1,
+        "baseCycleSeconds": 125,
+        "effectiveCycleSeconds": 125
+      },
+      {
+        "id": "WS-2",
+        "name": "Stanowisko 2",
+        "sequenceIndex": 2,
+        "assignedStepIds": [
+          "OP-MOT-40",
+          "OP-MOT-50",
+          "OP-MOT-60"
+        ],
+        "cycleTimeSeconds": 125,
+        "isBottleneck": false,
+        "xMm": 0,
+        "yMm": 0,
+        "operators": 1,
+        "parallelStations": 1,
+        "baseCycleSeconds": 125,
+        "effectiveCycleSeconds": 125
+      }
+    ]
+  },
+  "workstationSettings": {}
+}

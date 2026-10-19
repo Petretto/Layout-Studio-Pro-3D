@@ -1,4 +1,5 @@
 import { strict as assert } from 'node:assert';
+import {nominalReportCapacity} from '../src/core/reportCapacity';
 import {Box3,Group,Mesh,BoxGeometry,PlaneGeometry,MeshBasicMaterial,Vector3} from 'three';
 import {sceneContentBounds} from '../src/core/equipment/sceneFraming';
 import { test } from 'node:test';
@@ -2574,6 +2575,24 @@ test('7.7: weryfikacja licencji zależności produkcyjnych, modeli 3D i niezmien
   }
 });
 
+test('7.10a: zdolność nominalna wynika z cyklu, uwzględnia kopie i jawny czas zespołu, nie popyt ani ponowne OEE',()=>{
+  const {project}=derive({...structuredClone(motor),algorithm:'RPW'});
+  const b=project.balancing!;
+  assert.equal(nominalReportCapacity(b),3600/127);
+  assert.notEqual(nominalReportCapacity(b),calculateTaktTime(project.demand).requiredPartsPerHour);
+  const changedDemand=calculateTaktTime({...project.demand,yearlyDemand:project.demand.yearlyDemand*2,oeePercent:50});
+  assert.notEqual(changedDemand.requiredPartsPerHour,calculateTaktTime(project.demand).requiredPartsPerHour);
+  assert.equal(nominalReportCapacity(b),3600/127);
+  const station={...b.workstations[0],cycleTimeSeconds:120,parallelStations:2,effectiveCycleSeconds:60};
+  assert.equal(nominalReportCapacity({...b,workstations:[station]}),60);
+  assert.equal(nominalReportCapacity({...b,workstations:[{...station,operators:3}]}),60,'worker count alone must not shorten time');
+  assert.equal(nominalReportCapacity({...b,workstations:[{...station,cycleTimeSeconds:90,effectiveCycleSeconds:45}]}),80);
+  assert.equal(nominalReportCapacity(undefined),null);
+  assert.equal(nominalReportCapacity({...b,workstations:[]}),null);
+  for(const value of [0,-1,NaN,Infinity])assert.equal(nominalReportCapacity({...b,workstations:[{...station,effectiveCycleSeconds:value}]}),null);
+  assert.equal(nominalReportCapacity({...b,workstations:[station,{...station,assignedStepIds:[],effectiveCycleSeconds:0}]}),60);
+});
+
 test('7.10: weryfikacja spójności danych raportu inżynierskiego PDF dla krótkiego i długiego projektu', () => {
   // 1. Krótki projekt: Motor EV
   const { project: motorProj, issues: motorIssues } = derive(motor);
@@ -2638,8 +2657,9 @@ test('7.11: odbiór uniwersalności na dwóch odmiennych procesach niezależnych
   batteryProject.processSteps = batProcRes.items;
   batteryProject.bom = batBOMRes.items;
 
-  // Wariant bazowy baterii (RPW)
-  batteryProject.algorithm = 'RPW';
+  // Baseline: one operation per station. Same demand and times for the reorganized variant.
+  batteryProject.algorithm = 'Manual';
+  batteryProject.processSteps=batteryProject.processSteps.map((s,i)=>({...s,assignedWorkstationId:`WS-${i+1}`}));
   const { project: batBaseDerived, issues: batBaseIssues } = derive(batteryProject);
   assert.ok(batBaseDerived.balancing, 'Baterie baza: bilansowanie wyliczone');
   assert.ok(batBaseDerived.layoutObjects.length > 0, 'Baterie baza: layout wygenerowany automatycznie');
@@ -2647,15 +2667,17 @@ test('7.11: odbiór uniwersalności na dwóch odmiennych procesach niezależnych
   const batTakt = calculateTaktTime(batBaseDerived.demand).taktTimeSeconds;
   assert.ok(batTakt > 0, 'Baterie: takt poprawny');
 
-  // Wariant usprawniony baterii (LCR ze zwiększonym popytem)
+  // Reorganized variant: fewer stations at the unchanged cycle target, not a throughput claim.
   const batteryImproved = structuredClone(batteryProject);
   batteryImproved.id = 'PROJ-BATTERY-711-IMP';
-  batteryImproved.name = 'Usprawniona Linia Baterii EV (Wariant B - Wyższa przepustowość)';
-  batteryImproved.algorithm = 'LCR';
-  batteryImproved.demand.yearlyDemand = 60000;
+  batteryImproved.name = 'Przeorganizowana Linia Baterii EV (ten sam popyt)';
+  batteryImproved.algorithm = 'RPW';
   const { project: batImpDerived, issues: batImpIssues } = derive(batteryImproved);
   assert.ok(batImpDerived.balancing, 'Baterie usprawnione: bilansowanie wyliczone');
-  assert.ok(batImpDerived.balancing.workstations.length >= batBaseDerived.balancing.workstations.length, 'Baterie: wariant o wyższym popycie wymaga co najmniej tylu samo stanowisk');
+  assert.deepEqual(batteryImproved.demand,batteryProject.demand);
+  assert.equal(batImpDerived.balancing.taktTimeSeconds,batBaseDerived.balancing!.taktTimeSeconds);
+  assert.ok(batImpDerived.balancing.workstations.length < batBaseDerived.balancing!.workstations.length);
+  assert.ok(batImpDerived.balancing.workstations.every(s=>!s.isBottleneck));
 
   // Eksport i re-import projektu baterii w formacie JSON
   const batJson = JSON.stringify(batBaseDerived);

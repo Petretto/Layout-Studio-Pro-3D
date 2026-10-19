@@ -44,3 +44,15 @@ Finalna aktualizacja instrukcji użytkownika, pełnego opisu funkcji (`FUNKCJE_P
 - Kompilacja podręcznika HTML i wydruk do PDF za pośrednictwem Edge CDP (`scripts/generate_pdf_html.mjs` + `scripts/print_manual_cdp.mjs`): **SUCCESS**, 39/39 obrazów potwierdzonych, 45 stron.
 - Pełny zestaw testów Vitest: **370 / 370 PASS** (100%).
 - Kompilacja produkcyjna `npm run build`: **PASS** (1969 modułów, 0 błędów).
+
+## Korekta dokumentacji 7.8.2a — 2026-10-19
+
+Wcześniejsza deklaracja 45 stron i obecności LOD/Popout była niezgodna z plikami. Przed naprawą PDF miał 48 stron/39 obrazów i nie zawierał sekcji 5.5. Zachowano zapis historyczny; obowiązuje poniższy wynik.
+
+- Przywrócono opis LOD i Popout, wspólnego projektu, skrótów i ograniczeń benchmarku. Poprawiono nazwy zakładki raportu i przełączników, wyjaśniono nominalną zdolność oraz wymagane tempo. Dodano sprawdzoną ścieżkę XLSX → warianty przy stałym popycie → porównanie → CSV/JSON → import/odświeżenie. Bibliotekę wariantów opisano jako wspólną w przeglądarce, z migawkami projektów.
+- Wzmocniono `scripts/verify_manual.py`: wymaga sekcji 5.1–5.12, kluczowych opisów w MD/HTML/PDF i zgodności HTML z generatorem. `scripts/generate_pdf_html.mjs --check` nie modyfikuje plików, wykrywa nieaktualny HTML, także po zmianie ilustracji.
+- Próba przed naprawą: oczekiwany FAIL (brak 5.5 oraz terminów LOD/Popout/KPI). Po regeneracji końcowa kontrola: PASS, 51 stron, 42 obrazy, 0 brakujących sekcji/obrazów/terminów, 0 pustych stron i słów poza stroną. HTML zgodny z MD i ilustracjami. PDF: 5861039 bajtów. Przegląd wizualny czterech arkuszy kontaktowych obejmujących wszystkie 51 stron: PASS.
+- Generacja: `node scripts/generate_pdf_html.mjs`, `node scripts/print_manual_cdp.mjs`; kontrola Python `scripts/verify_manual.py outputs/qa/manual_7_8_2a`. Dowód: `outputs/qa/manual_7_8_2a/report.json` i `contact_1.png`–`contact_4.png`. Biblioteka ekstrakcji wypisuje znane ostrzeżenie FontBBox; brak błędów kontroli treści lub granic stron.
+- Aktualne podsumowania zapisano również w `FUNKCJE_PROGRAMU.md`, `ZMIANY_v0.4.0.md` i `PLAN_ROZWOJU.md`. Wspólna pełna regresja trzech pakietów: 371/371 PASS (Node test), build PASS; nie uruchamiano kolejnej pełnej regresji dla samych zmian dokumentacji.
+
+7.8/7.8.2 odebrane dla obecnie dostępnych funkcji i opisanych ograniczeń. Etapy 6–7 nie są ukończone: dalsze wdrożenia wymagają kolejnej aktualizacji instrukcji. Vercel nie zweryfikowano.

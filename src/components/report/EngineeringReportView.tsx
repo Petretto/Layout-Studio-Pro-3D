@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ProjectData, Workstation, BOMComponent, ProcessStep } from '../../core/models/types';
 import { Issue } from '../../core/validation';
 import { calculateTaktTime } from '../../core/algorithms/taktCalculator';
+import {nominalReportCapacity} from '../../core/reportCapacity';
 import './EngineeringReportView.css';
 
 interface EngineeringReportViewProps {
@@ -20,6 +21,7 @@ export const EngineeringReportView: React.FC<EngineeringReportViewProps> = ({
   const demand = project.demand;
   const takt = calculateTaktTime(demand);
   const balancing = project.balancing;
+  const capacity = nominalReportCapacity(balancing);
   const currency = project.currency ?? 'PLN';
 
   // Obliczenia podsumowujące
@@ -132,11 +134,16 @@ export const EngineeringReportView: React.FC<EngineeringReportViewProps> = ({
               <div className="report-kpi-card">
                 <span className="report-kpi-label">Zdolność Produkcyjna</span>
                 <span className="report-kpi-value">
-                  {takt.requiredPartsPerHour > 0 ? Math.round(takt.requiredPartsPerHour) : 0} szt./h
+                  {capacity===null?'—':`${capacity.toFixed(1)} szt./h`}
                 </span>
                 <span className="report-kpi-sub">
-                  {Math.round(takt.dailyDemand / demand.shiftsPerDay)} szt. na zmianę
+                  Nominalnie: 3600 / odstęp wąskiego gardła. Szacunek statyczny, bez dodatkowego OEE; nie wynik symulacji.
                 </span>
+              </div>
+              <div className="report-kpi-card">
+                <span className="report-kpi-label">Wymagane tempo</span>
+                <span className="report-kpi-value">{takt.requiredPartsPerHour.toFixed(1)} szt./h</span>
+                <span className="report-kpi-sub">Cel po rezerwie OEE; popyt {Math.round(takt.dailyDemand / demand.shiftsPerDay)} szt. na zmianę</span>
               </div>
             </div>
           </section>

@@ -1,0 +1,58 @@
+{
+  "at": "2026-10-19T20:43:42.503Z",
+  "scope": "active schema 4; synthetic fixtures; not physical schema 6 acceptance",
+  "results": [
+    {
+      "case": "batteries",
+      "baseStations": 6,
+      "reorganizedStations": 1,
+      "takt": 303.75,
+      "currency": "EUR",
+      "steps": 6,
+      "bom": 6,
+      "comparison": [
+        [
+          "batteries_baseline19.10.2026, 22:43:29",
+          "303,75",
+          "6",
+          "13,99%"
+        ],
+        [
+          "batteries_reorganized19.10.2026, 22:43:30",
+          "303,75",
+          "1",
+          "83,95%"
+        ]
+      ],
+      "actualCsvAndJsonDownloads": true,
+      "reimportAndReload": true
+    },
+    {
+      "case": "motors",
+      "baseStations": 6,
+      "reorganizedStations": 2,
+      "takt": 151.875,
+      "currency": "USD",
+      "steps": 6,
+      "bom": 5,
+      "comparison": [
+        [
+          "motors_baseline19.10.2026, 22:43:37",
+          "151,88",
+          "6",
+          "27,43%"
+        ],
+        [
+          "motors_reorganized19.10.2026, 22:43:38",
+          "151,88",
+          "2",
+          "82,3%"
+        ]
+      ],
+      "actualCsvAndJsonDownloads": true,
+      "reimportAndReload": true
+    }
+  ],
+  "foreignBomRejected": true,
+  "runtimeErrors": []
+}

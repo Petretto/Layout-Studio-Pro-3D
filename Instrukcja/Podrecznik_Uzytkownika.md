@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**  
-Aktualizacja podręcznika: **18.10.2026 — odbiór funkcji Etapów 1–4 (7.8.1), edytora hali B (5.2) oraz narzędzi zaznaczenia, grup, zespołów stanowisk i przyciągania (5.3–5.5)**.
+Aktualizacja podręcznika: **19.10.2026 — korekta KPI raportu (7.10a), odbiór importu i wariantów dwóch procesów (7.11a), przywrócenie opisu LOD/Popout i kontrola zgodności MD/HTML/PDF (7.8.2a)**.
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -437,6 +437,16 @@ W widoku 3D (`6 Widok 3D i symulacja`) wprowadzono pełną synchronizację przes
 
 ![Karta inspekcji stanu detalu z postępem i wykazem BOM](../outputs/qa/verify_6_6_inspection_card_3d.png)
 
+### 5.5. Tryb uproszczony 3D i osobne okna — Popout (6.7)
+
+W widoku 3D przycisk **Tryb uproszczony (LOD)** przełącza szczegółowe modele na prostsze bryły. Stan aktywny jest oznaczony jako **Tryb uproszczony: WŁ**. Użyj go przy dużej liczbie obiektów lub na słabszym komputerze. Zmienia wyłącznie reprezentację wizualną: czasy, zasoby i wyniki symulacji pozostają takie same. Nadal można wybrać obiekt z listy i skierować na niego kamerę; klawisz **F** dopasowuje widok.
+
+![Aktywny uproszczony widok 3D — syntetyczny projekt testowy](../outputs/qa/verify_6_7_simplified_lod_mode_active.png)
+
+Widoki 3D, CAD i przepływu można otworzyć w **osobnym oknie** przyciskiem odłączenia widoku (Popout). Pozwala to przenieść widok na drugi monitor. Okna korzystają ze wspólnego projektu; zamknięcie okna przywraca widok w aplikacji. Jeśli okno się nie otwiera, zezwól przeglądarce na wyskakujące okna dla aplikacji. Skróty lokalne działają w oknie, które ma fokus; Ctrl+S oraz Ctrl+Z/Ctrl+Y służą do zapisu i cofania/ponawiania.
+
+Odbiór 6.7 obejmował sceny 100 i 300 obiektów. Dla 300 obiektów LOD zmniejszył liczbę wywołań renderowania z 9960 do 607, a trójkątów ze 191176 do 3816. To pomiar złożoności sceny w teście, a nie gwarancja FPS na komputerze użytkownika. Nie zmierzono zimnego startu ani animacji w tym benchmarku.
+
 ### 5.6. Warianty wyrobów, macierz przezbrojeń i zlecenia partii produkcyjnych (Plan 7.3)
 
 W zaawansowanym modelu procesu (szkic 6) wprowadzono pełne wsparcie dla produkcji wielowariantowej (`ProductVariant`), macierzy czasów przezbrojeń (`ChangeoverMatrix`), sekwencjonowania zleceń partii produkcyjnych (`ProductionOrderBatch`) oraz ich integracji z symulacją i wykresem Gantta:
@@ -567,7 +577,7 @@ Przed komercyjnym wdrożeniem i instalacją na komputerach zakładowych przeprow
 
 ### 5.11. Profesjonalny raport inżynierski PDF i wykres Yamazumi (Plan 7.10)
 
-W zakładce `4 Raport inżynierski` udostępniono zaawansowany generator dokumentacji technicznej, zoptymalizowany pod kątem formalnej akceptacji wdrożeń przemysłowych, audytów Lean Management oraz wydruku i eksportu do wielostronicowego formatu **PDF / A4 portrait**:
+W zakładce `7 Raport` dostępny jest dokument inżynierski przeznaczony do przeglądu i wydruku w formacie **PDF / A4 portrait**. Dokument nie zastępuje walidacji procesu ani odbioru przemysłowego:
 
 - **Hierarchia dokumentu i układ sekcji**:
   - **Nagłówek formalny**: nazwa i kod projektu, autor, data sporządzenia, wersja silnika aplikacji oraz wskaźnik statusu walidacji (`Zgodny`, `Ostrzeżenia`, `Błędy krytyczne`).
@@ -576,7 +586,8 @@ W zakładce `4 Raport inżynierski` udostępniono zaawansowany generator dokumen
     - Wąskie gardło ($CT_{max}$),
     - Liczba stanowisk roboczych i operatorów,
     - Efektywność zbalansowania linii ($Line\ Efficiency\ [\%]$),
-    - Projektowa przepustowość linii ($[szt./h]$).
+    - **Zdolność Produkcyjna**: nominalny szacunek statyczny, 3600 podzielone przez największy efektywny odstęp stanowiska z przypisanymi operacjami. Uwzględnia jawny czas zespołu i kopie stanowiska; sama liczba osób nie skraca czasu. Bez poprawnego dodatniego odstępu widoczna jest kreska. Nie stosuje się ponownie OEE i nie jest to wynik symulacji partii.
+    - **Wymagane tempo**: cel wynikający z popytu i rezerwy OEE, odrębny od zdolności. Przykład testowy: cykl 127 s daje 28,3 szt./h zdolności, podczas gdy wymagane tempo wynosi 22,2 szt./h.
   - **2. Założenia produkcyjne i popytowe**: tabela parametrów wejściowych (czas pracy, wielkość zmiany, liczba dni roboczych, popyt w okresie, bufor bezpieczeństwa).
   - **3. Bilansowanie linii i Wykres Yamazumi**:
     - **Wektorowy wykres słupkowy Yamazumi (SVG/CSS)**: prezentuje czasy cyklu poszczególnych stanowisk roboczych z wyróżnieniem operacji dodających wartość (VA) i niedodających wartości (NVA).
@@ -596,38 +607,27 @@ W zakładce `4 Raport inżynierski` udostępniono zaawansowany generator dokumen
   - Powtarzanie nagłówków tabel na kolejnych stronach wydruku (`thead { display: table-header-group; }`).
   - Automatyczne ukrywanie elementów interfejsu studia, paska akcji raportu oraz nawigacji podczas drukowania i eksportu do PDF.
 
-- **Przełącznik trybu widoku (`Widok dokumentu A4` / `Surowy Markdown`)**:
+- **Przełącznik trybu widoku (`Profesjonalny Raport A4` / `Źródło Markdown`)**:
   - Domyślny widok A4 prezentuje sformatowany dokument inżynierski.
   - Tryb surowego tekstu Markdown umożliwia szybkie skopiowanie raportu do systemów ERP/MES lub edytorów zewnętrznych.
 
+![Raport A4 z rozdzieleniem nominalnej zdolności i wymaganego tempa — dane syntetyczne](../outputs/qa/report_7_10_short.png)
+
 ### 5.12. Uniwersalność procesowa: baterie EV i silniki elektryczne (Plan 7.11)
 
-Aplikacja Layout Studio Pro 3D została zaprojektowana jako uniwersalne narzędzie dla Inżynierów Procesu oraz Konsultantów Lean Management, pracujących z wieloma różnorodnymi klientami i procesami przemysłowymi:
+Odbiór 7.11a sprawdza dwa niezależne, syntetyczne procesy w aktywnym schemacie 4: baterie EV (6 operacji, 6 pozycji BOM, EUR, układ liniowy) i silniki EV (6 operacji, 5 pozycji BOM, USD, układ U). Są to przykłady do nauki i testów, bez potwierdzonych pomiarów produkcji. Odbiór nie obejmuje pełnej fizycznej konfiguracji i symulacji szkicu 6 ani dowolnej sieci procesu.
 
-- **Brak założeń zakodowanych pod strukturę Eko**:
-  - Silniki obliczeniowe (balansowanie RPW/LCR, wyznaczanie taktu, generowanie propozycji layoutu, harmonogramowanie sieciowe i symulacja partii) nie polegają na stałych, nazwach czy hierarchii przykładu Eko.
-  - Dowolny proces o strukturze liniowej, zbieżnej, rozbieżnej lub gniazdowej może zostać wprowadzony ręcznie bądź zaimportowany ze standardowych arkuszy kalkulacyjnych Excel (`.xlsx`) lub plików `.csv`.
+Aby przeprowadzić porównanie na własnych danych:
 
-- **Procesy wzorcowe niezależne od Eko**:
-  - **Montaż modułów baterii EV (Linear Continuous Flow)**:
-    - Przepływ liniowy ciągły: 6 operacji technologicznych (sortowanie ogniw 21700, aplikacja pasty TIM, laserowe zgrzewanie busbarów, montaż BMS, skręcanie pokrywy kompozytowej, test HV i próba helowa).
-    - 6 pozycji w zestawieniu materiałowym BOM (ogniwa, pasta termoprzewodząca, szyny Cu, PCBA sterownika, obudowa IP68, uszczelka).
-    - Dedykowany pulpit startowy umożliwia natychmiastowe załadowanie wariantu bateryjnego (`Przykład — baterie EV`).
-  - **Montaż silników trakcyjnych EV (U-Shape Assembly)**:
-    - Układ gniazdowy U-kształtny: 6 operacji montażowych (pakiety blach stojana, nawijanie miedzi, wyważanie wirnika, montaż łożysk i wirnika w korpusie, dokręcanie śrub z kontrolą momentu, test EOL).
-    - Zestawienie materiałowe oparte na drutach emaliowanych, magnesach NdFeB i korpusach odlewanych ciśnieniowo.
-    - Szybki dostęp z pulpitu (`Przykład — silniki EV`).
+1. Na pulpicie wybierz **Rozpocznij od zera**, wpisz nazwę projektu, walutę i popyt. W zakładkach procesu i BOM zaimportuj własne arkusze XLSX; identyfikatory operacji w BOM muszą odpowiadać procesowi.
+2. W bilansowaniu utwórz wariant bazowy, np. **Każda operacja osobno — zachowaj gałęzie**. Na pulpicie wpisz **Nazwa wariantu** i kliknij **Zapisz wariant**.
+3. Zmień przydział operacji, np. wybierz RPW, zachowując te same czasy, BOM i popyt. Zapisz drugi wariant. Tabela na pulpicie pozwala porównać liczbę stanowisk, takt i efektywność. Mniejsza liczba stanowisk w tym porównaniu nie dowodzi zwiększenia dynamicznej przepustowości.
+4. W procesie pobierz **Eksport CSV**. Możesz ponownie wczytać pobrany plik. **Eksport JSON** zapisuje projekt; ponowny import JSON i odświeżenie aplikacji pozwalają sprawdzić odtworzenie danych i konfiguracji.
 
-- **Zadania Inżyniera Procesu i Konsultanta Lean**:
-  - **Budowa wariantu bazowego**: import danych klienta, analiza wąskich gardeł, identyfikacja stacji przeciążonych ($CT > TT$), automatyczne wygenerowanie wstępnego rozmieszczenia stanowisk.
-  - **Budowa wariantu usprawnionego**: modyfikacja wielkości partii lub popytu, dodanie równoległych stanowisk lub dodatkowego operatora, porównanie wskaźników Line Efficiency i Makespanu.
-  - **Pełna izolacja danych**: projekty posiadają unikalne identyfikatory UUID, odrębne waluty (PLN / EUR / USD), niezależne biblioteki wariantów oraz niekolidujące przestrzenie geometryczne layoutu.
-  - **Jawne braki danych**: w przypadku braku potwierdzonych pomiarów hali aplikacja jawnie oznacza wymiary jako niepotwierdzone (`isConfirmed: false`), a wygenerowane stanowiska oznacza etykietą założenia wizualnego (`isVisualAssumption: true`), chroniąc przed fałszowaniem danych inżynierskich (Zasada 5).
+W teście dla baterii zmiana przydziału zmniejszyła liczbę stanowisk z 6 do 1 przy takcie 303,75 s; dla silników z 6 do 2 przy takcie 151,875 s. Popyt i dane wejściowe były niezmienne w każdej parze. Nie stwierdzono przeciążenia stanowisk względem taktu.
 
+![Porównanie zapisanych wariantów baterii przy stałym popycie — dane syntetyczne](../outputs/qa/verify_7_11a/batteries_comparison.png)
 
+Biblioteka wariantów jest wspólna w danej przeglądarce. Migawki zachowują dane własnego projektu; stosuj nazwy zawierające nazwę projektu i wariantu. Test dwóch projektów potwierdził zachowanie pierwszych migawek podczas pracy nad drugim projektem oraz brak zmieszania procesu, BOM, waluty i układu przy eksporcie, imporcie i odświeżeniu. Obcy BOM z nieznanymi identyfikatorami operacji jest odrzucany bez częściowego nadpisania projektu.
 
-
-
-
-
-
+Niepotwierdzone wymiary hali i wygenerowany układ są oznaczane jako założenia. Wczytanie przykładu lub wygenerowanie rozmieszczenia nie zastępuje pomiarów hali, potwierdzenia wyposażenia i odbioru technologicznego.
