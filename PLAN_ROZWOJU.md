@@ -3,13 +3,13 @@
 Data utworzenia: 2026-09-29  
 Ostatnia aktualizacja: 2026-10-19
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
-Przykładowy przypadek testowy: niepełny proces Eko; odbiór uniwersalności wymaga także niezależnych procesów.
+Dane testowe: Eko jest historycznym przypadkiem regresyjnym; docelowe przykłady to trzy zewnętrzne, kompletne pakiety demonstracyjne (7.12).
 
 ## Cel i zakres
 
 Dopracować obecną aplikację React/TypeScript/Three.js do projektowania, balansowania i porównywania wariantów linii produkcyjnych. Najpierw zapewnić poprawność modelu, bezpieczeństwo danych i wygodę pracy, następnie rozbudować symulację, CAD i 3D oraz przygotować wydanie komercyjne o jasno określonym zakresie.
 
-Produkt jest przeznaczony dla inżynierów projektujących procesy oraz konsultantów Lean analizujących i usprawniających procesy różnych klientów. Użytkownik ma móc wprowadzić własne dane procesu i BOM, zbudować wariant bazowy i warianty usprawnień oraz porównać wyniki. Reguły aplikacji nie mogą zależeć od struktury przykładu Eko. Eko służy do rozwoju i regresji; jego dane są niepełne i nie stanowią wzorca rzeczywistego procesu produkcyjnego.
+Produkt jest przeznaczony dla inżynierów projektujących procesy oraz konsultantów Lean analizujących i usprawniających procesy różnych klientów. Użytkownik ma móc wprowadzić własne dane procesu i BOM, zbudować wariant bazowy i warianty usprawnień oraz porównać wyniki. Reguły aplikacji nie mogą zależeć od struktury przykładu Eko. Eko służy do rozwoju i regresji; jego dane są niepełne i nie stanowią wzorca rzeczywistego procesu produkcyjnego. Decyzja użytkownika 2026-10-19: kompletowanie rzeczywistego procesu Eko nie jest warunkiem dalszego rozwoju ani wydania. Aplikacja końcowa startuje bez wbudowanego projektu; przykłady są ładowane z zewnętrznych plików (7.12–7.14).
 
 Pierwsze użyteczne wydanie ma zapewnić samodzielny przepływ od danych klienta do wstępnego layoutu, jego korekty, symulacji, porównania wariantów i raportu. Konsultant korzysta z aplikacji razem z klientem przy analizie jego danych; wspólne logowanie i jednoczesna edycja online nie należą do tego wydania. VSM zaplanować na kolejną wersję (np. 1.5 lub 2.0), po odbiorze pierwszego wydania.
 
@@ -44,7 +44,9 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po odbiorze 7.8.2: cały plan 61/69 = **88,4%**; pierwsze wydanie 61/65 = **93,8%**; Etap 7: 8/11 = **72,7%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po rozszerzeniu zakresu 2026-10-19 o 7.12–7.14: cały plan 61/72 = **84,7%**; pierwsze wydanie 61/68 = **89,7%**; Etap 7: 8/14 = **57,1%**. Spadek procentu wynika z dodania trzech zadań, nie cofnięcia odebranych funkcji. Weryfikacja: `node scripts/plan_progress.mjs`.
+
+Stan historyczny po odbiorze 7.8.2: cały plan 61/69 = **88,4%**; pierwsze wydanie 61/65 = **93,8%**; Etap 7: 8/11 = **72,7%**.
 
 Stan historyczny po 7.11: cały plan 60/69 = **87,0%**; pierwsze wydanie 60/65 = **92,3%**; Etap 7: 7/11 = **63,6%**.
 
@@ -126,6 +128,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+Decyzja planistyczna 2026-10-19 — Eko pozostaje materiałem testowym, nie projektem zaszytym w produkcie. Zaktualizowano zakres 7.1/7.2 i 6.3 oraz dodano 7.12 (trzy kompletne pakiety pokazowe), 7.13 (pusty start i ładowanie z plików), 7.14 (interaktywny tutorial). Wszystkie nowe punkty są nierozpoczęte; aktualizacja planu nie stanowi ich wdrożenia. Dawne potwierdzenia, audyty i odbiory zachowane. Najpierw 7.12.A: sprawdzić rzeczywiste możliwości zapisu/importu i uzgodnić kontrakt kompletnego pakietu, następnie 7.12.B: przygotować i odebrać najprostszy przykład. Nie kontynuować zbierania danych Eko jako domyślnej ścieżki krytycznej. Zmiana wyłącznie planistyczna; bez zmian aplikacji, testów regresji, builda lub PDF. Postęp po dodaniu zakresu: 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%.
 
 7.1d (2026-10-19): odebrany pakiet metadanych, główne 7.1 w trakcie — EKO-U6 potwierdza czasy OP10–OP21 jako średnie z kilku pomiarów. Liczba prób, dane surowe, rozrzut i szczegółowa metoda pozostają nieznane. Bez zmiany wartości, bez rozszerzania potwierdzenia na przykładowe OP22–OP25 i bez wymyślania zmienności Monte Carlo. Nowy audyt `outputs/data_audit/eko_7_1d.json`; wcześniejsze wyniki zachowane. Audyt i kontrola agregacji, niezmienności czasów, obsady i SHA-256 PASS (16 operacji, 12 średnich, 4 testowe, 60 BOM, 7 źródeł). Zaktualizowano rejestr danych i instrukcję zbierania; bez zmian aplikacji, regresji/builda/UI lub PDF. Nadal potrzebne m.in. przypisania osób, kalendarze, dane przestrzenne i wyniki produkcji. Postęp bez zmiany: 61/69 = 88,4%, pierwsze wydanie 61/65 = 93,8%.
 
@@ -608,7 +612,7 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 | --- | --- | --- |
 | 6.1 | Ustalić standard wyposażenia: skala, jednostki, punkt ustawienia, obrys kolizji, strefa obsługi, punkty transportu i metadane źródła/licencji. | wdrożone |
 | 6.2 | Przygotować parametryczne stoły, regały, palety, pojemniki, wózki i przenośniki. | wdrożone |
-| 6.3 | Przygotować charakterystyczne modele Eko/maszyn w Blenderze tam, gdzie prosta geometria nie wystarcza; sprawdzić skalę i budżet złożoności. | w trakcie |
+| 6.3 | Przygotować charakterystyczne modele wyposażenia i wyrobów dla wspieranych zastosowań oraz pakietów pokazowych 7.12 tam, gdzie prosta geometria nie wystarcza; sprawdzić skalę, pochodzenie/licencję i budżet złożoności. Modelowanie Eko nie jest wymagane; jawnie syntetyczne modele demonstracyjne nie są pomiarami urządzeń klienta. Zachować dotychczasowe rezultaty 6.3a/b. | w trakcie |
 | 6.4 | Oddzielić model wizualny od parametrów technologicznych, aby wymiana wyglądu nie zmieniała zdolności produkcyjnej. | wdrożone |
 | 6.5 | Dodać wygodne manipulatory przesuwania i obrotu oraz ukrywanie warstw i obiektów. | wdrożone |
 | 6.6 | Animować produkty, podzespoły i transport zgodnie z harmonogramem symulacji; umożliwić pauzę i inspekcję stanu. | wdrożone |
@@ -620,8 +624,8 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 
 | ID | Krok / oczekiwany rezultat | Status |
 | --- | --- | --- |
-| 7.1 | Zebrać rzeczywiste dane Eko: obsada, czasy ręczne/maszynowe, równoległość, wymiary, trasy, bufory, kalendarz i wyniki produkcji; oznaczyć braki oraz źródła. | w trakcie |
-| 7.2 | Zastąpić przykładowe czasy pomiarami i porównać model z produkcją; przed odbiorem uzgodnić tolerancje i warunki porównania. | nierozpoczęte |
+| 7.1 | Uporządkować pochodzenie i kwalifikację danych walidacyjnych: oddzielić rzeczywiste pomiary, dane syntetyczne i historyczne fixture. Zachować rejestr Eko i jego braki jako materiał testowy, bez wymagania ich pełnego uzupełnienia przed wydaniem. Ustalić zasady pochodzenia i kompletności dla trzech pakietów 7.12. Odebrać nowy zakres osobno; istniejące 7.1a–d pozostają dowodami historycznymi. | w trakcie |
+| 7.2 | Odebrać poprawność obliczeń na jawnych scenariuszach: ustalić oczekiwane wyniki analityczne lub niezależne obliczenia referencyjne oraz tolerancje przed testem, sprawdzić bilans i harmonogram dla przypadków 7.12. Wyniki silnika nie mogą być jedynym źródłem wzorca. Porównanie z rzeczywistą produkcją jest odrębnym odbiorem na uzgodnionych danych klienta; brak kompletnych danych Eko nie blokuje tego zakresu pierwszego wydania. Testy syntetyczne nie potwierdzają zgodności z produkcją. | nierozpoczęte |
 | 7.3 | Dodać przezbrojenia i warianty produktów, z regułami kolejności oraz czasami przejść. | wdrożone |
 | 7.4 | Dodać zmienność czasów i awarie oraz powtarzalne serie eksperymentów z ziarnem losowym i zakresem niepewności wyników. | wdrożone |
 | 7.5 | Rozdzielić szczegółowo modelowane straty od rezerwy OEE, aby nie naliczać tych samych strat dwukrotnie. | wdrożone |
@@ -634,9 +638,48 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 | 7.10 | Dopracować wygląd generowanego raportu PDF: czytelną hierarchię, typografię, tabele i wykresy, podziały stron oraz wersję do druku. Sprawdzić na krótkim i długim projekcie, także pod kątem obciętego tekstu i zgodności liczb z wynikami aplikacji. | wdrożone |
 | 7.11 | Odebrać uniwersalność na co najmniej dwóch odmiennych procesach niezależnych od Eko, w zadaniach inżyniera procesu i konsultanta Lean: wprowadzenie lub import własnych danych procesu i BOM, wariant bazowy i usprawniony, porównanie, eksport oraz ponowny odczyt projektu. Sprawdzić brak założeń zakodowanych pod Eko, rozdzielenie danych projektów i jawne wskazanie brakujących danych. | wdrożone |
 
-**Odbiór etapu:** wyniki mieszczą się w wcześniej uzgodnionych tolerancjach dla zweryfikowanych przypadków, a scenariusze 7.11 potwierdzają pracę na różnych procesach i danych klientów. Aplikację można zainstalować, zaktualizować i odzyskać dane na docelowym komputerze. Dostępne są instrukcja, rejestr zmian, jawne ograniczenia i raport odbioru. Testy nie zastępują oceny technologicznej, ergonomicznej ani certyfikacji przemysłowej.
+| 7.12 | Przygotować trzy zewnętrzne, kompletne projekty pokazowe o rosnącej złożoności, każdy w osobnym podkatalogu z projektem, operacjami/czasami, BOM, zasobami, warunkami bilansowania i symulacji, wariantami oraz instrukcją i szablonami. Jeden projekt zawiera główną nitkę i co najmniej dwie gałęzie podmontaży łączące się z nią. Dane jawnie syntetyczne; odbiór importu, symulacji, porównania i odtworzenia przez UI. | nierozpoczęte |
+| 7.13 | Usunąć projekty wbudowane na sztywno z produkcyjnego startu i interfejsu; zapewnić pusty projekt, otwarcie własnego pliku oraz pobranie i jawne wczytanie zewnętrznych pakietów 7.12. Zachować zapisane projekty użytkownika i potrzebne fixture testowe. Brak automatycznego ładowania danych demonstracyjnych lub przywracania Eko jako fallback. | nierozpoczęte |
+| 7.14 | Wdrożyć interaktywny tutorial na zewnętrznym projekcie podstawowym 7.12: import, kontrola danych, bilans, layout, symulacja, zapis wariantu, porównanie i raport. Obsłużyć pomijanie, powrót, wznowienie i zakończenie bez utraty własnej pracy użytkownika; wskazać ograniczenia przykładów. | nierozpoczęte |
+
+**Odbiór etapu:** wyniki mieszczą się w wcześniej uzgodnionych tolerancjach dla zweryfikowanych przypadków 7.2, a scenariusze 7.11 oraz trzy zewnętrzne pakiety 7.12 potwierdzają obsługę różnych procesów. Aplikacja uruchamia się bez zaszytego projektu i umożliwia wczytanie plików oraz przejście tutorialu 7.14. Odbiór funkcjonalny na danych syntetycznych jest oddzielony od porównania z rzeczywistą produkcją; kompletność Eko nie jest bramką wydania. Aplikację można zainstalować, zaktualizować i odzyskać dane na docelowym komputerze. Dostępne są instrukcja, rejestr zmian, jawne ograniczenia i raport odbioru. Testy nie zastępują oceny technologicznej, ergonomicznej ani certyfikacji przemysłowej.
 
 Po ustabilizowaniu pakietu D punkty 3.10, 5.11 i 5.12 można wykonać jako małe, niezależne pakiety wcześniej niż resztę ich etapów, jeżeli nie zmienią modelu czasu ani kontraktu importu. Na wniosek użytkownika (2026-10-16) punkt 7.8.1 (przygotowanie i aktualizacja instrukcji / podręcznika użytkownika ze screenshotami po wdrożeniu Etapów 1–4) może zostać zrealizowany jako odrębny, wcześniejszy pakiet dokumentacyjny przed lub równolegle z Etapem 5. Punkt 7.10 jest zaplanowany później, po ustaleniu docelowej zawartości raportu.
+
+### Pakiety pokazowe, start i tutorial — decyzja 2026-10-19
+
+**Rola danych.** Eko oraz dotychczasowe baterie/silniki mogą pozostać w fixture i historycznych raportach, jeżeli są potrzebne regresji. Nie są obowiązkowymi danymi produktu i nie wolno opierać reguł aplikacji na ich nazwach lub ID. Nie usuwać oryginałów, testów ani zapisów użytkownika tylko w celu usunięcia przycisków przykładowych projektów. Syntetyczne czasy, geometria, koszty i reguły nowych przykładów mają być jawnie zaprojektowane do demonstracji; nie przedstawiać ich jako pomiarów lub danych katalogowych. Rejestr 7.1 obejmuje te kwalifikacje. Pełną walidację rzeczywistego zakładu prowadzić osobno z jego właścicielem, na uzgodnionych danych i tolerancjach.
+
+**7.12 — zawartość trzech projektów:**
+
+| Podkatalog docelowy | Projekt i poziom | Zakres demonstracji |
+| --- | --- | --- |
+| `przyklady/01_zestaw_montazowy/` | Montaż zestawu montażowego — podstawowy | Krótki liniowy proces manualny, jawna obsada, BOM, popyt/kalendarz, takt, balans, prosty layout i deterministyczna symulacja. Najpierw pełna poprawna ścieżka, potem lokalna zmiana i porównanie wariantu. |
+| `przyklady/02_wozek_warsztatowy/` | Montaż wózka warsztatowego — średni | Kompetencje zespołów, warianty obsady i ich czasy, istniejące dopuszczone kopie stanowisk, transport montażowy, bufory, zużycie/dostawy materiałów i porównanie reorganizacji przy stałych warunkach. |
+| `przyklady/03_modul_urzadzenia/` | Montaż modułu urządzenia — zaawansowany | Główna nitka i co najmniej dwie równoległe gałęzie przygotowania podzespołów; jawne partie/ilości/jednostki oraz przypisania producent–odbiorca, punkty złączenia, współdzielone zasoby, bufory, transport i dostawy. Sprawdzić gotowość wszystkich wymaganych podzespołów przed startem montażu odbiorczego, atomowe zużycie partii i brak podwójnej rezerwacji osób/zasobów. |
+
+Każdy katalog zawiera jeden spójny, wersjonowany zestaw: kompletny projekt i jego warianty w rzeczywiście obsługiwanym formacie; pliki procesu i BOM co najmniej XLSX zgodne z importerami; wszystkie wymagane konfiguracje zasobów, obsady/kompetencji, czasów zespołów, kopii, kalendarzy, zależności, ram/wyrobów, podzespołów, materiałów, transportu, buforów i stanu początkowego; layout/geometrię i wymagane assety lub przenośne referencje; opis wariantu bazowego i reorganizacji; `README.md`, słownik pól/jednostek i manifest wersji/pochodzenia/plików. Dane opcjonalne, np. koszty lub Monte Carlo, włączać wyłącznie z jawnym kompletem parametrów i założeń.
+
+Nie obiecywać osobnego importu dowolnego CSV zasobów. Dane bez odrębnego importera zawrzeć w przenośnym projekcie; dodatkowe tabele są dokumentacją. README ma jednoznacznie wskazywać, co importować, w jakiej kolejności i co zawiera kompletna paczka. Wszystkie przykłady i szablony muszą odpowiadać aktualnej wersji programu, bez ręcznej edycji kodu, localStorage lub ukrytego przygotowania projektu przez dewelopera.
+
+**Pakiety 7.12 (4):**
+
+1. **A — Kontrakt i wykonalność.** Sprawdzić ścieżki zapisu, eksportu i importu wszystkich wymaganych danych, w szczególności pełnego modelu zasobów/szkicu 6. Sporządzić macierz „dane → plik → importer → zachowanie po ponownym otwarciu”, format manifestu, zasady pochodzenia oraz niezależne oczekiwane wyniki. Jawnie wskazać luki. Niezbędne poprawki ładowania wykonywać w osobnym, ograniczonym pakiecie z backupem i migracją, jeśli dotkną zapisu; nie zastępować ich ręcznym przygotowaniem stanu przeglądarki.
+2. **B — Projekt podstawowy.** Przygotować pierwszy katalog i wszystkie potrzebne pliki. Zweryfikować kompletność, ID/odwołania, takt, bilans i mały ręcznie sprawdzalny harmonogram. Przejść przez UI od pustego projektu do symulacji, wariantów i raportu; zapisać, wyeksportować, zaimportować i ponownie otworzyć. Nie używać wyników silnika jako jedynego wzorca poprawności.
+3. **C — Projekty średni i zaawansowany.** Zbudować pozostałe katalogi na odebranym kontrakcie. Sprawdzić kompetencje i dostępność zasobów, fizyczny transport i bufory, jawne zużycie materiałów oraz gałęzie podmontaży i ich łączenie. Konfiguracja ma pozwalać na równoległość wynikającą z jawnych zasobów i reguł; sam rysunek rozgałęzień nie wystarcza. Nie używać JIT jako ukrytego obejścia braków transportu/materiałów.
+4. **D — Odbiór i szablony.** W czystym profilu przeglądarki wykonać pełną ścieżkę wszystkich trzech pakietów, porównać bazę i reorganizację przy tym samym popycie/kalendarzu/warunkach, pobrać pliki, ponownie je wczytać i odświeżyć. Sprawdzić brak mieszania danych projektów i brak zależności od Eko. Udokumentować błędy importu, oczekiwane wyniki i ograniczenia; udostępnić wersjonowane paczki i zaktualizować instrukcję.
+
+**7.13 — start bez projektów wbudowanych (2 pakiety):**
+
+1. Oddzielić dane testowe od kodu produkcyjnego i usunąć przyciski oraz inicjalizację gotowych projektów Eko/baterii/silników. Na nowym profilu startować pusto; na istniejącym bezpiecznie odczytywać zapis użytkownika. Akcje „Nowy projekt”, „Otwórz projekt”, „Pobierz przykłady” i „Rozpocznij tutorial” nie mogą niejawnie zastępować aktywnej pracy. Przed zastąpieniem zapewnić możliwość zapisu/eksportu i jawne potwierdzenie. Przykłady są plikami, nie stałymi obiektami zaszytymi w bundle; tutorial korzysta z tego samego ładowania. Obsłużyć brak/uszkodzenie pliku i dostęp offline zgodnie z zadeklarowaną dystrybucją.
+2. Odebrać czysty start, przywrócenie istniejącego projektu, import starszych zapisów, anulowanie/błąd bez utraty danych oraz pobranie i wczytanie każdego pakietu. Fixture regresyjne i historyczne projekty zachować poza produkcyjnym interfejsem. Zaktualizować instrukcję, ekran startowy i testy zależne od dawnych przycisków; wyniki wcześniejszego 7.11 pozostają historyczne, nowy odbiór używa zewnętrznych plików.
+
+**7.14 — interaktywny tutorial (2 pakiety):**
+
+1. Przygotować scenariusz dla początkującego na projekcie podstawowym: wybór/wczytanie plików → kontrola danych → takt i bilans → layout → symulacja → zapis wariantu → porównanie → raport i zapis projektu. Każdy krok ma krótki cel, wskazanie rzeczywistej kontrolki i warunek ukończenia wynikający z działania użytkownika. Korzystać ze wspólnych funkcji aplikacji i plików 7.12, bez drugiego silnika obliczeń lub ukrytego automatycznego wykonywania zadania. Wyjaśniać pojęcia i założenia przy ich pierwszym użyciu.
+2. Wdrożyć pomijanie, powrót, wznowienie i reset postępu; bezpieczne wejście/wyjście z ochroną projektu użytkownika, obsługę klawiatury, mniejszych ekranów i brakującej kontrolki. Zapisać wersję tutorialu/paczki i rozpoznać niezgodność po aktualizacji. Odebrać pełne przejście z nowym użytkownikiem w 7.9 oraz przerwanie/wznowienie i zmianę projektu bez utraty danych. Przygotować instrukcję tekstową jako alternatywę.
+
+**Kolejność:** 7.1 (zasady źródeł i kwalifikacji) + 7.12.A → 7.12.B → 7.12.C → wspólny odbiór 7.12.D i 7.2 → 7.13 → 7.14 → ponowna aktualizacja dokumentacji 7.8 → pilotaż 7.9. Modele 6.3 przygotowywać według potrzeb przykładów, bez oczekiwania na geometrię Eko. Istniejący odbiór 7.11 nie zamyka nowych 7.12–7.14. Szczegółowe wybory domenowe lub konieczne zmiany schematu nadal wymagają osobnego rozstrzygnięcia zgodnie z zasadami planu.
 
 ## Etap 8 — Po pierwszym wydaniu
 
@@ -725,6 +768,7 @@ Każdy kolejny wpis powinien wskazywać konkretne ID. Nie usuwać historii przy 
 
 | Data | ID | Zmiana statusu | Rezultat / dowód / uwagi |
 | --- | --- | --- | --- |
+| 2026-10-19 | 6.3, 7.1, 7.2, 7.12–7.14 | zmiana zakresu; nowe punkty nierozpoczęte | Decyzja użytkownika: Eko wyłącznie do testów/regresji, kompletność jego danych nie blokuje wydania. Dodano trzy zewnętrzne pakiety pokazowe (w tym gałęzie podmontaży), start bez projektów zaszytych w aplikacji oraz interaktywny tutorial. Zachowano dawne odbiory i źródła. Zmieniono plan, bez implementacji lub nowych testów aplikacji. Postęp 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%. |
 | 2026-10-18 | 7.7 | nierozpoczęte → wdrożone | Przegląd zależności, licencji kodu i modeli oraz bezpieczeństwa komercyjnego (`scripts/audit_licenses_and_security.mjs`, `package.json`, `tests/core.test.ts`): audyt licencji 95 pakietów (100% permisywnych MIT/Apache-2.0/ISC w runtime, 0 GPL/AGPL), eliminacja luki DoS w `source-map-js` do poziomu 0 podatności w `npm audit`, weryfikacja praw do modeli wyposażenia 3D i konceptów, automatyczny raport `outputs/security_audit/audit_7_7.json`, aktualizacja instrukcji (sekcja 5.10, HTML i PDF). Backup `backup/v0.4.0_przed_7_7_20261018` (428 plików SHA256). Testy 368/368 PASS, build PASS. Raport: `WERYFIKACJA_LICENCJI_I_BEZPIECZENSTWA_7_7.md`. Postęp: cały plan 58/69 = 84,1%, pierwsze wydanie 58/65 = 89,2%, Etap 7: 5/11 = 45,5%. |
 | 2026-10-18 | 7.6 | w trakcie → wdrożone | Dystrybucja 100% offline-first, uruchamianie i Disaster Recovery środowiska (`src/core/workspaceBackup.ts`, `src/components/studio/WorkspaceBackupModal.tsx`, `Uruchom_Layout_Studio.bat`): algorytm sumy kontrolnej FIPS 180-4 SHA-256 w czystym TS, eksport i walidacja całości środowiska (`.lsbackup.json`), bezpieczne przywracanie z automatycznym Rollback Snapshotem, weryfikacja czystego komputera bez CDN (`scripts/verify_clean_install.mjs`), test Edge CDP z zrzutem ekranu (`tests/qa/verify_7_6.mjs`), aktualizacja instrukcji obsługi (sekcja 5.9, HTML i PDF). Backup `backup/v0.4.0_przed_7_6_20261018` (422 pliki SHA256). Testy 367/367 PASS, build PASS. Raport: `WERYFIKACJA_DYSTRYBUCJI_I_ODZYSKIWANIA_7_6.md`. Postęp: cały plan 57/69 = 82,6%, pierwsze wydanie 57/65 = 87,7%, Etap 7: 4/11 = 36,4%. |
 | 2026-10-18 | 7.5 | w trakcie → wdrożone | Rozdzielenie szczegółowo modelowanych strat od rezerwy OEE i ochrona przed podwójnym naliczaniem (`src/core/oeeLossDecomposition.ts`, `src/components/demand/DemandWizardView.tsx`): analityczna dekompozycja strat jawnych (dostępności z awarii i przerw, wydajności z transportu i buforów, jakości), kalkulacja rezydualnego OEE, wykrywanie ryzyka dublowania strat (brak / umiarkowane / wysokie), skorygowany takt time, rekomendacje Lean i przycisk adaptacji OEE. Backup `backup/v0.4.0_przed_7_5_20261018` (420 plików SHA256). Testy 366/366 PASS (w tym test dekompozycji w `tests/core.test.ts`), build `tsc && vite build` PASS, instrukcja MD/HTML/PDF zaktualizowana (sekcja 5.8). Raport: `WERYFIKACJA_DEKOMPOZYCJI_OEE_7_5.md`. Postęp: cały plan 56/69 = 81,2%, pierwsze wydanie 56/65 = 86,2%, Etap 7: 3/11 = 27,3%. |
