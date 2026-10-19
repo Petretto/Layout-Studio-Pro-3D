@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-19T21:52:14.071Z",
+  "result": "PASS",
+  "scope": "isolated Edge; synthetic inputs; quota and persistent write faults deliberately injected",
+  "checks": {
+    "checksumBlocked": true,
+    "backgroundInertAndShortcutsBlocked": true,
+    "copyAndAcknowledgementRequired": true,
+    "downloadedRescueMatchesPreviousSlots": true,
+    "quotaRollbackExact": true,
+    "rollbackFailureLocksEditing": true,
+    "recoveryFromRescue": true,
+    "validRestoreAndReload": true,
+    "nullDeletesOldV5": true,
+    "domainAndLibraryPreserved": true,
+    "variantCountOne": true,
+    "closingRestoresAccessAndCtrlS": true
+  },
+  "runtimeErrors": []
+}

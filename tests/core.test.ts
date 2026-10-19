@@ -2462,7 +2462,7 @@ test('7.6: tworzenie, walidacja integralności SHA-256 i odzyskiwanie pełnej ko
       }
     }),
     [STORAGE_KEYS.v4Scenarios]: JSON.stringify([
-      { id: 'SC-1', name: 'Wariant 1', at: '2026-10-18T10:00:00.000Z', project: { id: 'PRJ-V4', name: 'Linia Testowa V4', schemaVersion: 4 } }
+      { id: 'SC-1', name: 'Wariant 1', at: '2026-10-18T10:00:00.000Z', project: {...structuredClone(motor),schemaVersion:4} }
     ])
   };
 
@@ -2502,6 +2502,7 @@ test('7.6: tworzenie, walidacja integralności SHA-256 i odzyskiwanie pełnej ko
   // 7. Walidacja kopii z uszkodzonym projektem
   const brokenProjectBackup = JSON.parse(backupJson);
   brokenProjectBackup.storage.v4ProjectRaw = JSON.stringify({ project: { id: 'BAD', schemaVersion: 999 } });
+  brokenProjectBackup.checksumSha256 = sha256Hex(JSON.stringify(brokenProjectBackup.storage));
   const brokenResult = validateWorkspaceBackup(JSON.stringify(brokenProjectBackup));
   assert.equal(brokenResult.valid, false, 'brokenResult.valid should be false');
   assert.ok(brokenResult.error?.includes('Uszkodzony projekt v4'), 'brokenResult.error should mention uszkodzony projekt');
@@ -2513,6 +2514,7 @@ test('7.6: tworzenie, walidacja integralności SHA-256 i odzyskiwanie pełnej ko
   const targetPort = {
     getItem: (key: string) => targetMemory[key] ?? null,
     setItem: (key: string, value: string) => { targetMemory[key] = value; },
+    removeItem: (key: string) => { delete targetMemory[key]; },
   };
 
   const restoreResult = restoreWorkspaceBackup(targetPort, valResult.payload!);
@@ -2746,3 +2748,99 @@ test('7.11: odbiór uniwersalności na dwóch odmiennych procesach niezależnych
 
 
 
+
+
+function workspaceRestoreFixture() {
+  const api = require('../src/core/workspaceBackup');
+  const domain = require('../src/core/domainDraftStorage');
+  const variants = require('../src/core/domainVariantComparison');
+  const at = '2026-10-19T00:00:00.000Z';
+  const source = JSON.stringify({...structuredClone(motor),schemaVersion:4});
+  const v5 = prepareStationMigration(previewStationMigration(source));
+  const prepared = prepareDomainMigration(previewDomainMigrationFromV4(source));
+  const values: Record<string,string> = {};
+  const port = {getItem:(key:string)=>values[key]??null,setItem:(key:string,value:string)=>{values[key]=value;},removeItem:(key:string)=>{delete values[key];}};
+  port.setItem(api.STORAGE_KEYS.v4Project,JSON.stringify({project:JSON.parse(source),at,importSourceBase64:''}));
+  port.setItem(api.STORAGE_KEYS.v4Scenarios,JSON.stringify([{id:'SC-1',name:'Baza',at,project:JSON.parse(source)}]));
+  port.setItem(api.STORAGE_KEYS.v5Stations,JSON.stringify({project:v5.project,originalJson:source,importSourceBase64:'',at}));
+  domain.saveDomainDraft(port,prepared,null,at);
+  variants.saveDomainVariant(port,{id:'VAR-1',name:'Baza 6',category:'baseline',project:prepared.project,originalJson:source,at},null);
+  const backup = api.createWorkspaceBackup(port,'0.4.0',at);
+  return {api,values,port,backup,at,source};
+}
+
+test('7.6a: walidacja wszystkich slotów, sumy, otoczek i bibliotek; podsumowanie pochodzi z danych',()=>{
+  const {api,backup}=workspaceRestoreFixture();
+  const original=JSON.stringify(backup),valid=api.validateWorkspaceBackup(original);
+  assert.equal(valid.valid,true,valid.error);assert.equal(valid.validatedProjectsCount,3);
+  assert.equal(valid.payload.summary.variantsV6Count,1);assert.equal(valid.payload.summary.scenariosV4Count,1);
+  for(const key of Object.keys(backup.storage)){
+    for(const value of [42,{},[],undefined,'','not-json']){
+      const bad=structuredClone(backup);bad.storage[key]=value;bad.checksumSha256=api.sha256Hex(JSON.stringify(bad.storage));
+      assert.equal(api.validateWorkspaceBackup(JSON.stringify(bad)).valid,false,`${key}: ${JSON.stringify(value)}`);
+    }
+  }
+  const checksum=structuredClone(backup);checksum.checksumSha256='0'.repeat(64);
+  assert.equal(api.validateWorkspaceBackup(JSON.stringify(checksum)).valid,false);
+  const draftEnvelope=structuredClone(backup);draftEnvelope.storage.v6DomainDraftRaw=JSON.stringify(JSON.parse(backup.storage.v6DomainDraftRaw).project);
+  draftEnvelope.checksumSha256=api.sha256Hex(JSON.stringify(draftEnvelope.storage));assert.equal(api.validateWorkspaceBackup(JSON.stringify(draftEnvelope)).valid,false);
+  const variants=structuredClone(backup),library=JSON.parse(variants.storage.v6VariantsRaw);
+  library.variants[0].sourceSchemaVersion=5;variants.storage.v6VariantsRaw=JSON.stringify(library);variants.checksumSha256=api.sha256Hex(JSON.stringify(variants.storage));
+  assert.equal(api.validateWorkspaceBackup(JSON.stringify(variants)).valid,false);
+  const duplicate=structuredClone(backup),list=JSON.parse(duplicate.storage.v4ScenariosRaw);list.push(list[0]);duplicate.storage.v4ScenariosRaw=JSON.stringify(list);duplicate.checksumSha256=api.sha256Hex(JSON.stringify(duplicate.storage));assert.equal(api.validateWorkspaceBackup(JSON.stringify(duplicate)).valid,false);
+  const forged=structuredClone(backup);forged.summary={variantsV6Count:999};assert.equal(api.validateWorkspaceBackup(JSON.stringify(forged)).payload.summary.variantsV6Count,1);
+  const future=structuredClone(backup);future.formatVersion=2;assert.equal(api.validateWorkspaceBackup(JSON.stringify(future)).valid,false);
+  assert.equal(JSON.stringify(backup),original,'validation must not normalize or mutate source bytes');
+});
+
+test('7.6a: poprawne stare kopie v1 i niezależne źródła obszarów pozostają obsługiwane',()=>{
+  const {api,backup,port}=workspaceRestoreFixture();
+  const other={...structuredClone(motor),schemaVersion:4,id:'OTHER',name:'Inny aktywny projekt'};
+  port.setItem(api.STORAGE_KEYS.v4Project,JSON.stringify({project:other}));
+  const independent=api.createWorkspaceBackup(port);assert.equal(api.validateWorkspaceBackup(JSON.stringify(independent)).valid,true);
+  const minimal=structuredClone(backup);minimal.storage.v5StationsRaw=JSON.stringify({project:JSON.parse(minimal.storage.v5StationsRaw).project});minimal.checksumSha256=api.sha256Hex(JSON.stringify(minimal.storage));
+  assert.equal(api.validateWorkspaceBackup(JSON.stringify(minimal)).valid,true,'compatible old v5 envelope without optional metadata');
+  const legacy=structuredClone(backup),draft=JSON.parse(legacy.storage.v6DomainDraftRaw);draft.version=99;legacy.storage.v6DomainDraftRaw=JSON.stringify(draft);legacy.checksumSha256=api.sha256Hex(JSON.stringify(legacy.storage));assert.equal(api.validateWorkspaceBackup(JSON.stringify(legacy)).valid,false);
+});
+
+test('7.6a: pełne odtworzenie usuwa null, zachowuje obce klucze, ponownie waliduje i chroni przed nieaktualną kopią ratunkową',()=>{
+  const {api,backup,port,values}=workspaceRestoreFixture();
+  const before=api.createWorkspaceBackup(port);values['unrelated']='keep';
+  const empty=api.createWorkspaceBackup({getItem:()=>null});
+  let snapshot='';api.restoreWorkspaceBackup(port,empty,{expectedCurrentSnapshot:JSON.stringify(before),beforeWrite:(raw:string)=>{snapshot=raw;assert.ok(values[api.STORAGE_KEYS.v4Project]);}});
+  assert.deepEqual(values,{unrelated:'keep'});assert.deepEqual(JSON.parse(snapshot).storage,before.storage);
+  api.restoreWorkspaceBackup(port,backup);assert.equal(api.validateWorkspaceBackup(JSON.stringify(api.createWorkspaceBackup(port))).valid,true);
+  const previous=JSON.stringify(values),invalid=structuredClone(backup);invalid.checksumSha256='bad';
+  assert.throws(()=>api.restoreWorkspaceBackup(port,invalid),/SHA-256/);assert.equal(JSON.stringify(values),previous);
+  assert.throws(()=>api.restoreWorkspaceBackup(port,backup,{expectedCurrentSnapshot:JSON.stringify({...JSON.parse(snapshot),storage:{...JSON.parse(snapshot).storage,v4ProjectRaw:'changed'}})}),/zmienił się/);assert.equal(JSON.stringify(values),previous);
+  let writes=0;assert.throws(()=>api.restoreWorkspaceBackup({...port,setItem:()=>{writes++;}},empty,{beforeWrite:()=>{throw new Error('copy not available');}}),/copy not available/);assert.equal(writes,0);assert.equal(JSON.stringify(values),previous);
+});
+
+test('7.6a: błąd każdego zapisu i usunięcia wycofuje dokładny poprzedni stan, także po częściowej mutacji',()=>{
+  const {api,backup}=workspaceRestoreFixture();
+  for(const mode of ['set','remove'])for(const failingKey of Object.values(api.STORAGE_KEYS) as string[])for(const mutateFirst of [false,true]){
+    const old:Record<string,string>={unrelated:'keep'};
+    if(mode==='remove')for(const key of Object.values(api.STORAGE_KEYS) as string[])old[key]='previous raw '+key;
+    const values={...old};let failed=false;
+    const port={getItem:(key:string)=>values[key]??null,setItem:(key:string,value:string)=>{
+      if(mode==='set'&&key===failingKey&&!failed){failed=true;if(mutateFirst)values[key]=value;throw new Error('quota');}values[key]=value;
+    },removeItem:(key:string)=>{
+      if(mode==='remove'&&key===failingKey&&!failed){failed=true;if(mutateFirst)delete values[key];throw new Error('remove unavailable');}delete values[key];
+    }};
+    const payload=mode==='set'?backup:api.createWorkspaceBackup({getItem:()=>null});
+    assert.throws(()=>api.restoreWorkspaceBackup(port,payload),(error:any)=>{
+      assert.ok(error instanceof api.WorkspaceRestoreError);assert.deepEqual(error.rollbackErrors,[]);assert.ok(error.rollbackSnapshot);return true;
+    });assert.deepEqual(values,old,`${mode} ${failingKey} mutate=${mutateFirst}`);
+  }
+});
+
+test('7.6a: awaria wycofania jest jawna i nadal udostępnia kopię ratunkową',()=>{
+  const {api,backup}=workspaceRestoreFixture(),key=api.STORAGE_KEYS.v4Project;
+  const values:Record<string,string>={[key]:'previous raw'};let calls=0;
+  const port={getItem:(name:string)=>values[name]??null,removeItem:(name:string)=>{delete values[name];},setItem:(name:string,value:string)=>{
+    if(name===key){if(++calls===1)values[name]=value;throw new Error('persistent failure');}values[name]=value;
+  }};
+  assert.throws(()=>api.restoreWorkspaceBackup(port,backup),(error:any)=>{
+    assert.ok(error instanceof api.WorkspaceRestoreError);assert.ok(error.rollbackErrors.length>0);assert.equal(JSON.parse(error.rollbackSnapshot).storage.v4ProjectRaw,'previous raw');assert.match(error.message,/nie jest potwierdzone/);return true;
+  });
+});

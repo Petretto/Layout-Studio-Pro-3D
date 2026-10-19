@@ -1,6 +1,7 @@
 import { parseProject } from './validation';
 import { parseStationProjectV5 } from './stationProject';
-import { parseDomainProjectV6 } from './domainProject';
+import {readDomainDraft} from './domainDraftStorage';
+import {parseDomainVariantLibrary} from './domainVariantComparison';
 
 export const WORKSPACE_BACKUP_FORMAT = 'layout-studio-workspace-backup';
 export const WORKSPACE_BACKUP_VERSION = 1;
@@ -45,7 +46,7 @@ export interface WorkspaceBackupPayload {
 export interface StoragePort {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
-  removeItem?(key: string): void;
+  removeItem(key: string): void;
 }
 
 /**
@@ -171,7 +172,7 @@ export function sha256Hex(ascii: string): string {
 /**
  * Summarizes the contents found in storage.
  */
-export function inspectWorkspaceStorage(storage: StoragePort): WorkspaceBackupSummary {
+export function inspectWorkspaceStorage(storage: Pick<StoragePort, 'getItem'>): WorkspaceBackupSummary {
   const v4Raw = storage.getItem(STORAGE_KEYS.v4Project);
   const v4ScenariosRaw = storage.getItem(STORAGE_KEYS.v4Scenarios);
   const v5Raw = storage.getItem(STORAGE_KEYS.v5Stations);
@@ -225,8 +226,7 @@ export function inspectWorkspaceStorage(storage: StoragePort): WorkspaceBackupSu
 
   if (v6VariantsRaw) {
     try {
-      const parsed = JSON.parse(v6VariantsRaw);
-      if (Array.isArray(parsed)) variantsV6Count = parsed.length;
+      variantsV6Count = parseDomainVariantLibrary(v6VariantsRaw).variants.length;
     } catch {
       variantsV6Count = 0;
     }
@@ -256,7 +256,7 @@ export function inspectWorkspaceStorage(storage: StoragePort): WorkspaceBackupSu
  * Creates a complete Workspace Backup payload from current storage.
  */
 export function createWorkspaceBackup(
-  storage: StoragePort,
+  storage: Pick<StoragePort, 'getItem'>,
   appVersion = APP_VERSION,
   createdAt = new Date().toISOString()
 ): WorkspaceBackupPayload {
@@ -296,150 +296,108 @@ export interface BackupValidationResult {
 /**
  * Validates a workspace backup JSON string before attempting any restore.
  */
+const SLOT_MAP = {
+  v4ProjectRaw: STORAGE_KEYS.v4Project,
+  v4ScenariosRaw: STORAGE_KEYS.v4Scenarios,
+  v5StationsRaw: STORAGE_KEYS.v5Stations,
+  v6DomainDraftRaw: STORAGE_KEYS.v6DomainDraft,
+  v6VariantsRaw: STORAGE_KEYS.v6Variants,
+} as const;
+type Slot = keyof typeof SLOT_MAP;
+const slotNames = Object.keys(SLOT_MAP) as Slot[];
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  !!value && typeof value === 'object' && !Array.isArray(value);
+function requireRecord(value: unknown, label: string): Record<string, unknown> {
+  if (!isRecord(value)) throw new Error(`${label}: wymagana otoczka zapisu.`);
+  return value;
+}
+function checkDate(value: unknown, label: string, required = false) {
+  if (value === undefined && !required) return;
+  if (typeof value !== 'string' || !Number.isFinite(Date.parse(value))) throw new Error(`${label}: niepoprawna data.`);
+}
+function checkImportSource(value: unknown) {
+  if (value === undefined || value === '') return;
+  if (typeof value !== 'string') throw new Error('Niepoprawna kopia pierwotnego importu.');
+  const binary = atob(value);
+  if (btoa(binary) !== value) throw new Error('Niepoprawne kodowanie pierwotnego importu.');
+  parseProject(new TextDecoder('utf-8', {fatal: true}).decode(Uint8Array.from(binary, c => c.charCodeAt(0))));
+}
+
 export function validateWorkspaceBackup(rawJson: string): BackupValidationResult {
-  let parsed: unknown;
+  let checksumMatches = false, validatedProjectsCount = 0;
   try {
-    parsed = JSON.parse(rawJson);
-  } catch (e) {
-    return {
-      valid: false,
-      error: `Niepoprawny format JSON pliku kopii: ${(e as Error).message}`,
-      checksumMatches: false,
-      validatedProjectsCount: 0,
-    };
-  }
-
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-    return {
-      valid: false,
-      error: 'Plik kopii nie zawiera poprawnego obiektu JSON.',
-      checksumMatches: false,
-      validatedProjectsCount: 0,
-    };
-  }
-
-  const data = parsed as Record<string, unknown>;
-
-  if (data.format !== WORKSPACE_BACKUP_FORMAT) {
-    return {
-      valid: false,
-      error: `Nieznany format kopii: "${String(data.format)}". Oczekiwano "${WORKSPACE_BACKUP_FORMAT}".`,
-      checksumMatches: false,
-      validatedProjectsCount: 0,
-    };
-  }
-
-  if (data.formatVersion !== WORKSPACE_BACKUP_VERSION) {
-    return {
-      valid: false,
-      error: `Nieobsługiwana wersja formatu kopii: ${String(data.formatVersion)}. Oczekiwano ${WORKSPACE_BACKUP_VERSION}.`,
-      checksumMatches: false,
-      validatedProjectsCount: 0,
-    };
-  }
-
-  if (!data.storage || typeof data.storage !== 'object') {
-    return {
-      valid: false,
-      error: 'Brak struktury storage w pliku kopii zapasowej.',
-      checksumMatches: false,
-      validatedProjectsCount: 0,
-    };
-  }
-
-  const storage = data.storage as Record<string, unknown>;
-
-  // Checksum verification
-  const canonicalString = JSON.stringify({
-    v4ProjectRaw: storage.v4ProjectRaw ?? null,
-    v4ScenariosRaw: storage.v4ScenariosRaw ?? null,
-    v5StationsRaw: storage.v5StationsRaw ?? null,
-    v6DomainDraftRaw: storage.v6DomainDraftRaw ?? null,
-    v6VariantsRaw: storage.v6VariantsRaw ?? null,
-  });
-  const expectedChecksum = sha256Hex(canonicalString);
-  const checksumMatches = data.checksumSha256 === expectedChecksum;
-
-  // Validate internal projects
-  let validatedProjects = 0;
-
-  if (typeof storage.v4ProjectRaw === 'string' && storage.v4ProjectRaw.trim()) {
-    try {
-      const v4Parsed = JSON.parse(storage.v4ProjectRaw);
-      const project = v4Parsed?.project ?? v4Parsed;
-      parseProject(JSON.stringify(project));
-      validatedProjects++;
-    } catch (e) {
-      return {
-        valid: false,
-        error: `Uszkodzony projekt v4 w kopii: ${(e as Error).message}`,
-        checksumMatches,
-        validatedProjectsCount: validatedProjects,
-      };
+    const data = requireRecord(JSON.parse(rawJson), 'Plik kopii');
+    if (data.format !== WORKSPACE_BACKUP_FORMAT || data.formatVersion !== WORKSPACE_BACKUP_VERSION) {
+      throw new Error('Nieznany format lub nieobsługiwana wersja kopii.');
     }
-  }
-
-  if (typeof storage.v5StationsRaw === 'string' && storage.v5StationsRaw.trim()) {
-    try {
-      const v5Parsed = JSON.parse(storage.v5StationsRaw);
-      const project = v5Parsed?.project ?? v5Parsed;
-      parseStationProjectV5(JSON.stringify(project));
-      validatedProjects++;
-    } catch (e) {
-      return {
-        valid: false,
-        error: `Uszkodzony projekt stanowisk v5 w kopii: ${(e as Error).message}`,
-        checksumMatches,
-        validatedProjectsCount: validatedProjects,
-      };
+    if (typeof data.appVersion !== 'string' || !data.appVersion.trim()) throw new Error('Brak wersji aplikacji w kopii.');
+    checkDate(data.createdAt, 'Data kopii', true);
+    const rawStorage = requireRecord(data.storage, 'Dane kopii');
+    if (Object.keys(rawStorage).some(key => !slotNames.includes(key as Slot))) throw new Error('Nieznany obszar danych kopii.');
+    const storage = {} as WorkspaceBackupPayload['storage'];
+    for (const name of slotNames) {
+      const value = rawStorage[name];
+      if (value !== null && typeof value !== 'string') throw new Error(`${name}: wymagany tekst albo null.`);
+      storage[name] = value;
     }
+    checksumMatches = typeof data.checksumSha256 === 'string' && data.checksumSha256 === sha256Hex(JSON.stringify(storage));
+    if (!checksumMatches) throw new Error('Suma kontrolna SHA-256 jest niezgodna. Nie przywrócono danych.');
+    const validateSlot = (name: Slot, label: string, validate: (value: string) => void) => {
+      const value = storage[name];
+      if (value === null) return;
+      try { validate(value); }
+      catch (error) { throw new Error(`${label}: ${(error as Error).message}`); }
+    };
+    validateSlot('v4ProjectRaw', 'Uszkodzony projekt v4 w kopii', value => {
+      const saved = requireRecord(JSON.parse(value), 'Projekt v4');
+      parseProject(JSON.stringify(saved.project));
+      checkDate(saved.at, 'Zapis v4');
+      checkImportSource(saved.importSourceBase64);
+      validatedProjectsCount++;
+    });
+    validateSlot('v4ScenariosRaw', 'Uszkodzona biblioteka wariantów v4', value => {
+      const list: unknown = JSON.parse(value);
+      if (!Array.isArray(list) || list.length > 20) throw new Error('Wymagana lista do 20 wariantów.');
+      const ids = new Set<string>();
+      for (const entry of list) {
+        const variant = requireRecord(entry, 'Wariant v4');
+        if (typeof variant.id !== 'string' || !variant.id.trim() || ids.has(variant.id) ||
+            typeof variant.name !== 'string' || !variant.name.trim()) throw new Error('Puste lub powtórzone ID/nazwa wariantu.');
+        ids.add(variant.id);
+        checkDate(variant.at, 'Wariant v4', true);
+        parseProject(JSON.stringify(variant.project));
+      }
+    });
+    validateSlot('v5StationsRaw', 'Uszkodzony projekt stanowisk v5 w kopii', value => {
+      const saved = requireRecord(JSON.parse(value), 'Warsztat v5');
+      parseStationProjectV5(JSON.stringify(saved.project));
+      checkDate(saved.at, 'Zapis v5');
+      if (saved.originalJson !== undefined && saved.originalJson !== '') {
+        if (typeof saved.originalJson !== 'string') throw new Error('Niepoprawna migawka źródła v4.');
+        parseProject(saved.originalJson);
+      }
+      checkImportSource(saved.importSourceBase64);
+      validatedProjectsCount++;
+    });
+    validateSlot('v6DomainDraftRaw', 'Uszkodzony szkic domeny v6 w kopii', value => {
+      const result = readDomainDraft({getItem: () => value});
+      if (result.status !== 'valid') throw new Error(result.status === 'corrupt' || result.status === 'unavailable' ? result.error : 'Brak szkicu.');
+      validatedProjectsCount++;
+    });
+    validateSlot('v6VariantsRaw', 'Uszkodzona biblioteka wariantów v6', value => {
+      const library = parseDomainVariantLibrary(value);
+      if (library.variants.some(variant => variant.originalJson !== library.variants[0].originalJson)) {
+        throw new Error('Biblioteka zawiera warianty różnych źródeł.');
+      }
+    });
+    // Slots are independent workspace documents; do not require v4/v5/draft to share a source.
+    const summary = inspectWorkspaceStorage({getItem: key => storage[slotNames.find(name => SLOT_MAP[name] === key)!] ?? null});
+    const payload: WorkspaceBackupPayload = {format: WORKSPACE_BACKUP_FORMAT, formatVersion: WORKSPACE_BACKUP_VERSION,
+      appVersion: data.appVersion, createdAt: data.createdAt as string, checksumSha256: data.checksumSha256 as string, summary, storage};
+    return {valid: true, payload, checksumMatches, validatedProjectsCount};
+  } catch (error) {
+    return {valid: false, error: (error as Error).message, checksumMatches, validatedProjectsCount};
   }
-
-  if (typeof storage.v6DomainDraftRaw === 'string' && storage.v6DomainDraftRaw.trim()) {
-    try {
-      const v6Parsed = JSON.parse(storage.v6DomainDraftRaw);
-      const project = v6Parsed?.project ?? v6Parsed;
-      parseDomainProjectV6(JSON.stringify(project));
-      validatedProjects++;
-    } catch (e) {
-      return {
-        valid: false,
-        error: `Uszkodzony szkic domeny v6 w kopii: ${(e as Error).message}`,
-        checksumMatches,
-        validatedProjectsCount: validatedProjects,
-      };
-    }
-  }
-
-  const payload: WorkspaceBackupPayload = {
-    format: WORKSPACE_BACKUP_FORMAT,
-    formatVersion: WORKSPACE_BACKUP_VERSION,
-    appVersion: String(data.appVersion ?? APP_VERSION),
-    createdAt: String(data.createdAt ?? new Date().toISOString()),
-    checksumSha256: String(data.checksumSha256 ?? expectedChecksum),
-    summary: (data.summary as WorkspaceBackupSummary) ?? {
-      hasActiveProjectV4: Boolean(storage.v4ProjectRaw),
-      hasStationsProjectV5: Boolean(storage.v5StationsRaw),
-      hasDomainDraftV6: Boolean(storage.v6DomainDraftRaw),
-      scenariosV4Count: 0,
-      variantsV6Count: 0,
-      totalStorageBytes: 0,
-    },
-    storage: {
-      v4ProjectRaw: (storage.v4ProjectRaw as string) ?? null,
-      v4ScenariosRaw: (storage.v4ScenariosRaw as string) ?? null,
-      v5StationsRaw: (storage.v5StationsRaw as string) ?? null,
-      v6DomainDraftRaw: (storage.v6DomainDraftRaw as string) ?? null,
-      v6VariantsRaw: (storage.v6VariantsRaw as string) ?? null,
-    },
-  };
-
-  return {
-    valid: true,
-    payload,
-    checksumMatches,
-    validatedProjectsCount: validatedProjects,
-  };
 }
 
 export interface RestoreResult {
@@ -447,50 +405,50 @@ export interface RestoreResult {
   restoredKeys: string[];
   rollbackSnapshot: string;
 }
+export class WorkspaceRestoreError extends Error {
+  constructor(message: string, public readonly rollbackSnapshot: string, public readonly rollbackErrors: string[]) {
+    super(message); this.name = 'WorkspaceRestoreError';
+  }
+}
 
-/**
- * Restores workspace backup to target storage.
- * Automatically takes a rollback snapshot of existing storage first!
- */
+/** Full restore, not merge. Null removes a slot. Every caller is revalidated before writes. */
 export function restoreWorkspaceBackup(
   storage: StoragePort,
-  payload: WorkspaceBackupPayload
+  payload: WorkspaceBackupPayload,
+  options: {expectedCurrentSnapshot?: string; beforeWrite?: (snapshot: string) => void} = {},
 ): RestoreResult {
-  // 1. Take safety snapshot of current state before touching anything
-  const currentBackup = createWorkspaceBackup(storage, APP_VERSION);
-  const rollbackSnapshot = JSON.stringify(currentBackup, null, 2);
-
-  const restoredKeys: string[] = [];
-
-  // 2. Safely apply restored storage slots
-  if (payload.storage.v4ProjectRaw !== null) {
-    storage.setItem(STORAGE_KEYS.v4Project, payload.storage.v4ProjectRaw);
-    restoredKeys.push(STORAGE_KEYS.v4Project);
+  const checked = validateWorkspaceBackup(JSON.stringify(payload));
+  if (!checked.valid || !checked.payload) throw new Error(checked.error ?? 'Niepoprawna kopia.');
+  const current = createWorkspaceBackup(storage, APP_VERSION);
+  const rollbackSnapshot = JSON.stringify(current, null, 2);
+  if (options.expectedCurrentSnapshot !== undefined) {
+    const expected: unknown = JSON.parse(options.expectedCurrentSnapshot);
+    if (!isRecord(expected) || JSON.stringify(expected.storage) !== JSON.stringify(current.storage)) {
+      throw new Error('Stan przeglądarki zmienił się od pobrania kopii ratunkowej. Pobierz ją ponownie.');
+    }
   }
-
-  if (payload.storage.v4ScenariosRaw !== null) {
-    storage.setItem(STORAGE_KEYS.v4Scenarios, payload.storage.v4ScenariosRaw);
-    restoredKeys.push(STORAGE_KEYS.v4Scenarios);
+  const changed = slotNames.filter(name => current.storage[name] !== checked.payload!.storage[name]);
+  if (changed.length && typeof storage.removeItem !== 'function') throw new Error('Pamięć nie obsługuje usuwania ani pełnego wycofania zapisów.');
+  const attempted: Slot[] = [];
+  const put = (name: Slot, value: string | null) => value === null ? storage.removeItem(SLOT_MAP[name]) : storage.setItem(SLOT_MAP[name], value);
+  try {
+    options.beforeWrite?.(rollbackSnapshot);
+    for (const name of changed) {
+      attempted.push(name);
+      put(name, checked.payload.storage[name]);
+      if (storage.getItem(SLOT_MAP[name]) !== checked.payload.storage[name]) throw new Error(`Nie potwierdzono zapisu ${name}.`);
+    }
+    return {success: true, restoredKeys: changed.map(name => SLOT_MAP[name]), rollbackSnapshot};
+  } catch (error) {
+    const rollbackErrors: string[] = [];
+    for (const name of attempted.reverse()) {
+      try { put(name, current.storage[name]); }
+      catch (failure) { rollbackErrors.push(`${SLOT_MAP[name]}: ${(failure as Error).message}`); }
+    }
+    for (const name of slotNames) {
+      try { if (storage.getItem(SLOT_MAP[name]) !== current.storage[name]) rollbackErrors.push(`${SLOT_MAP[name]}: stan nie został odtworzony.`); }
+      catch (failure) { rollbackErrors.push(`${SLOT_MAP[name]}: ${(failure as Error).message}`); }
+    }
+    throw new WorkspaceRestoreError(`Nie przywrócono kopii: ${(error as Error).message}. ${rollbackErrors.length ? 'Wycofanie nie jest potwierdzone. Zachowaj kopię ratunkową; nie kontynuuj edycji.' : 'Poprzedni stan został zachowany lub odtworzony.'}`, rollbackSnapshot, rollbackErrors);
   }
-
-  if (payload.storage.v5StationsRaw !== null) {
-    storage.setItem(STORAGE_KEYS.v5Stations, payload.storage.v5StationsRaw);
-    restoredKeys.push(STORAGE_KEYS.v5Stations);
-  }
-
-  if (payload.storage.v6DomainDraftRaw !== null) {
-    storage.setItem(STORAGE_KEYS.v6DomainDraft, payload.storage.v6DomainDraftRaw);
-    restoredKeys.push(STORAGE_KEYS.v6DomainDraft);
-  }
-
-  if (payload.storage.v6VariantsRaw !== null) {
-    storage.setItem(STORAGE_KEYS.v6Variants, payload.storage.v6VariantsRaw);
-    restoredKeys.push(STORAGE_KEYS.v6Variants);
-  }
-
-  return {
-    success: true,
-    restoredKeys,
-    rollbackSnapshot,
-  };
 }

@@ -1,5 +1,13 @@
 # Zmiany v0.4.0 — 29.09.2026
 
+## Naprawa odzyskiwania 19.10.2026 — 7.6a
+
+- Kopie środowiska v1: pełna walidacja pięciu obszarów i sumy, poprawny licznik wariantów; API odrzuca niepoprawną kopię przed zapisem.
+- Pełne odtworzenie usuwa stary obszar dla null. Kopia ratunkowa powstaje przed zmianami; zapis jest sprawdzany, błędy uruchamiają wycofanie, a jego trwała awaria jest jawna i blokuje edycję.
+- UI wymaga pobrania kopii ratunkowej i potwierdzenia zakresu; autozapis i skróty w tle są wstrzymane. Poprawne starsze kopie pozostają obsługiwane, bez migracji schematów.
+- Testy celowane 9/9, pełna regresja integracyjna 376/376, build i Edge UI PASS. Instrukcja MD/HTML/PDF: 52 strony, 43 obrazy. 7.6 ponownie odebrane; następne A1 — importer pojedynczego pakietu. Vercel nie zweryfikowano.
+
+
 ## Korekty odbioru 19.10.2026 — 7.10a / 7.11a / 7.8.2a
 
 - Naprawiono kartę zdolności produkcyjnej raportu PDF: nominalna zdolność z efektywnego odstępu stanowiska, osobno wymagane tempo popytu. Brak podwójnego OEE; jawne odróżnienie od wyniku symulacji.

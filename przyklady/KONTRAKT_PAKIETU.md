@@ -52,6 +52,6 @@ Dokładne liczby i tolerancje powstają przy projektowaniu scenariusza przed uru
 
 ## Bramka przed generowaniem i odbiorem
 
-Najpierw 7.6a (ochrona odzyskiwania) oraz 7.12.A1 (sprawdzony import/export pojedynczego pakietu 4/5/6 i wariantów). Przed odbiorem fizycznych przykładów sprawdzić także A2: zgodność wybranego modelu z widocznym bilansem, layoutem, animacją i raportem; nie podawać wyników aktywnego 4 jako wyników szkicu 6. Jeśli integracja nie istnieje, opisać i wdrożyć potrzebną część osobno, bez fałszywego odbioru 7.12.C/D.
+Ochronę odzyskiwania 7.6a odebrano po audycie (raport 7.6). Następnie 7.12.A1 (sprawdzony import/export pojedynczego pakietu 4/5/6 i wariantów). Przed odbiorem fizycznych przykładów sprawdzić także A2: zgodność wybranego modelu z widocznym bilansem, layoutem, animacją i raportem; nie podawać wyników aktywnego 4 jako wyników szkicu 6. Jeśli integracja nie istnieje, opisać i wdrożyć potrzebną część osobno, bez fałszywego odbioru 7.12.C/D.
 
 Akceptacja plików: zgodność wersji/manifestu/SHA i limitów, unikalne ID i kompletne referencje, jawne pochodzenie i konfiguracje, brak zewnętrznych zależności, zgodność arkuszy z projektem. Akceptacja UI: czysty profil → plik → podgląd/akceptacja → symulacja → porównanie → raport → pobranie → ponowny import → odświeżenie. Sprawdzić też anulowanie, obce/uszkodzone źródło, konflikt istniejącego szkicu/biblioteki i błąd zapisu bez utraty stanu. Odbiór 7.12.D jest osobny od audytu wykonalności A.

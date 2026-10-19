@@ -1,0 +1,85 @@
+{
+  "at": "2026-10-19T21:52:04.076Z",
+  "scope": "7.6a recovery regression of 7.12.A probes",
+  "positive": {
+    "xlsxProcessAndBom": true,
+    "jsonV4AndV5Archives": true,
+    "domainDraftLocalRoundTrip": true,
+    "domainVariantLocalRoundTrip": true,
+    "workspaceFreshMemoryRoundTrip": true
+  },
+  "gaps": {
+    "mainImportRejectsV6": true,
+    "checksumMismatchStillValid": false,
+    "backupAcceptsInvalidDraftEnvelopeAndVariantLibrary": false,
+    "nullSlotsDoNotClearPreviousData": false,
+    "writeFailureCanLeavePartialRestore": false,
+    "v6VariantSummaryZeroForOneSavedVariant": false
+  },
+  "sources": [
+    {
+      "path": "src/core/project.ts",
+      "sha256": "00483498e6914691c01e89c3bfaba8e2fc37c059589674c32ba5a728c78fed98"
+    },
+    {
+      "path": "src/core/validation.ts",
+      "sha256": "b5adb7b0fdf1773abbc5170b5054ff210bbd5c3c90a26ee97afa8ef9cff021cb"
+    },
+    {
+      "path": "src/core/stationMigration.ts",
+      "sha256": "0d7333e4de71e445de6d8c5eae63b96486de5ce1251e2c364f267e41d3565f88"
+    },
+    {
+      "path": "src/core/stationProject.ts",
+      "sha256": "415f63d5464e402f3c8a6716f13f2d4e2dabc42c446d74b2a0d72b8401242b6e"
+    },
+    {
+      "path": "src/core/domainProject.ts",
+      "sha256": "a1504507b4aca9c3dcb97232b7341af9c171913d6592e9560fbc0ed33bc50816"
+    },
+    {
+      "path": "src/core/domainMigrationPreview.ts",
+      "sha256": "a9d4860a8af596d6e8144d2c8800784accef1959f0738f33330a488fb0dc9803"
+    },
+    {
+      "path": "src/core/domainDraftStorage.ts",
+      "sha256": "ebe02bf9152ee7fa28e927c6317d7cbd6c9fa2de7480871de410c93bc56e2ca5"
+    },
+    {
+      "path": "src/core/domainVariantComparison.ts",
+      "sha256": "0b7940546cc1087afa76e01c42b2b3ec9eee53e6d1d35a563eafc325af67cee9"
+    },
+    {
+      "path": "src/core/portableArchive.ts",
+      "sha256": "8a03843fa37187fd86679bcc99f737f1e4c95048a8df9c579cc37518de4dd804"
+    },
+    {
+      "path": "src/core/workspaceBackup.ts",
+      "sha256": "f62895d26299a42af651e13658bbf81e93ba0a793be62a543767c7a05aa1992a"
+    },
+    {
+      "path": "src/core/export/excelImporter.ts",
+      "sha256": "26b47b38ee26fa40606c4a5206e8e33e7b4b3d106a3f83a1f17229b187407bdb"
+    },
+    {
+      "path": "src/App.tsx",
+      "sha256": "2450ef4d4fa723a4784eda59b126d58d662ac44cf232156f5a1123650e11b911"
+    },
+    {
+      "path": "src/components/studio/StationWorkspace.tsx",
+      "sha256": "9bd9678123a25c87e1e3183b98ba01debfc16923b1fd6bb0c98cc78b792d3430"
+    },
+    {
+      "path": "src/components/studio/DomainDraftPanel.tsx",
+      "sha256": "9ea6b2ce7552102c7945ee47f31c5d9e6ff98ed94f9c830c4c4a299a07730816"
+    },
+    {
+      "path": "src/components/studio/DomainVariantComparisonPanel.tsx",
+      "sha256": "9df3dfe58cc2d9e4a4e35f2ef1718cc727464ec0f3b295a6480e0236945d3e2a"
+    },
+    {
+      "path": "src/components/studio/WorkspaceBackupModal.tsx",
+      "sha256": "cc971a6128986ed59cbec8de9d5a642d3e6ef3749ec9ebeb946eb6e43b2943e3"
+    }
+  ]
+}

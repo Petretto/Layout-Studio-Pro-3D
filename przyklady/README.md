@@ -10,4 +10,4 @@ Docelowe katalogi:
 
 W każdym znajdą się kompletne pliki, instrukcja i jawne założenia syntetyczne. Szczegółowe nazwy plików, wymagania i warunki odbioru określa [KONTRAKT_PAKIETU.md](KONTRAKT_PAKIETU.md). Macierz obecnych możliwości i luk: [WERYFIKACJA_PAKIETOW_POKAZOWYCH_7_12_A.md](../WERYFIKACJA_PAKIETOW_POKAZOWYCH_7_12_A.md).
 
-Zewnętrzne pakiety będą ładowane przez interfejs aplikacji. Nie należy wklejać ich do localStorage. Pełna kopia środowiska `.lsbackup.json` nie jest docelowym formatem pojedynczego przykładu: obejmuje kilka obszarów danych, a audyt wykazał luki wymagające osobnego odbioru 7.6a.
+Zewnętrzne pakiety będą ładowane przez interfejs aplikacji. Nie należy wklejać ich do localStorage. Pełna kopia środowiska `.lsbackup.json` nie jest docelowym formatem pojedynczego przykładu: obejmuje kilka obszarów danych, a wykryte w audycie luki odzyskiwania naprawiono w 7.6a. Nadal wymagany jest osobny importer pojedynczego pakietu 7.12.A1.

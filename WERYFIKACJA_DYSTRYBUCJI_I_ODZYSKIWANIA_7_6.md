@@ -84,3 +84,40 @@ Dla komercyjnego wdrożenia Layout Studio Pro 3D w środowiskach inżynierskich 
 7.6 przywrócono do **w trakcie**. Wcześniejszy odbiór i testy nie obejmowały odtworzonych obecnie luk: suma SHA-256 nie blokuje przywrócenia, walidacja pomija pełną otoczkę szkicu i biblioteki, null pozostawia stare obce dane, a awaria kolejnego zapisu pozostawia częściowo zmienione środowisko. Snapshot jest pobierany przez modal dopiero po powodzeniu, nie gwarantuje ratunku przy wyjątku funkcji restore. Ponadto licznik wariantów 6 pokazuje 0 dla biblioteki zawierającej 1 wariant.
 
 Dowody: `node scripts/audit_demo_portability_7_12a.mjs`, `node tests/qa/verify_7_12a.mjs`, pliki `outputs/qa/7_12a/capabilities.json` oraz `outputs/qa/7_12a_ui/report.json` i zrzut modala. Poprawna kopia ze szkicem i biblioteką daje odczyt po reloadzie w osobnym profilu Edge, lecz nie oznacza to spełnienia kryteriów bezpiecznego odzyskiwania. Istniejące testy celowane 7/7 PASS nie obejmowały tych luk. Nie zmieniono danych użytkownika ani kodu aplikacji. Naprawa i nowe negatywne testy są zaplanowane jako 7.6a; szczegóły w `WERYFIKACJA_PAKIETOW_POKAZOWYCH_7_12_A.md`.
+
+
+## Odbiór naprawy 7.6a — 2026-10-19
+
+**7.6a odebrane, główne 7.6 ponownie wdrożone.** Ten wpis zastępuje stan ponownego otwarcia powyżej. Luki L2–L6 z audytu 7.12.A zostały naprawione; brak importera pojedynczego pakietu 6 (A1) i zgodności całej ścieżki widoków 6 (A2) pozostają osobnymi zadaniami.
+
+### Zmiana i kompatybilność
+
+- Backup przed przebudową: `backup/v0.4.0_przed_7_6a_20261019`, 448 plików; sumy skopiowanych plików sprawdzone SHA-256, PASS.
+- Zachowano format `.lsbackup.json` v1, klucze i schematy projektów 4/5/6, bez migracji. Walidacja wymaga pięciu pól storage z tekstem lub null, prawidłowego nagłówka, zgodnej sumy i poprawnych danych każdego obszaru. Odtwarzanie API ponownie waliduje przekazany payload, nie ufa wcześniejszemu stanowi UI.
+- Szkic jest sprawdzany istniejącym czytnikiem pełnej otoczki `DomainDraftSave`, a biblioteka 6 swoim parserem; sprawdzane są także warianty 4, źródła, wersje i referencje. Poprawne starsze kopie v1 pozostają obsługiwane, w tym plik z audytu przed naprawą. Niepoprawne kopie wcześniej przepuszczane nie są automatycznie normalizowane lub zastępowane.
+- Sloty środowiska są niezależne: aktywny 4, warsztat 5 i szkic 6 mogą mieć różne źródła. Wymaganie spójnego źródła dotyczy wnętrza biblioteki 6, nie przymusowego połączenia wszystkich dokumentów. Bajty zapisów i oryginałów są zachowane.
+- Podsumowanie obliczane jest z zawartości zamiast nagłówka pliku; 1 wariant 6 jest pokazany jako 1.
+- Pełne odtworzenie zastępuje pięć znanych slotów; null usuwa poprzednią zawartość, a obce klucze nie są zmieniane. Funkcja wymaga możliwości usuwania i weryfikuje zapis. Przy błędzie wycofuje również próbę, która mogła częściowo zmienić dane, oraz sprawdza stan po wycofaniu.
+- Błąd `WorkspaceRestoreError` udostępnia dokładny snapshot sprzed próby i błędy rollbacku. Kopia istnieje przed pierwszą mutacją; nie znika, gdy restore rzuci wyjątek. Trwała awaria localStorage może uniemożliwić wycofanie — nie deklarujemy pełnej transakcyjności.
+
+### Interfejs
+
+Przed odtworzeniem użytkownik pobiera kopię ratunkową, sprawdza plik i potwierdza zastąpienie pięciu obszarów. Zmiana pamięci od pobrania kopii blokuje zapis i wymaga świeżej kopii. Błędna suma/struktura nie udostępniają akcji przywrócenia. Wybór nowego pliku zeruje poprzednią walidację i potwierdzenie; spóźniony odczyt poprzedniego pliku jest ignorowany.
+
+Przy otwieraniu okna aplikacja próbuje zapisać aktywny projekt. Autozapis oraz skróty zapisu/cofania są wstrzymane, a tło nieaktywne. Przy niezachowanych zmianach trzeba najpierw je zapisać lub wyeksportować aktualny JSON. Po powodzeniu przeładowanie jest natychmiastowe, bez okna czasowego dla starego autozapisu. Po awarii wycofania UI blokuje zamknięcie i edycję, udostępnia stan sprzed błędu oraz pozwala odzyskać poprawną kopię.
+
+### Wykonana weryfikacja
+
+1. Testy celowane core `7\.6`: **6/6 PASS** (stary test i 5 nowych). Obejmują typy i brakujące pola wszystkich slotów, SHA, otoczki/wersje, biblioteki, niezmienność źródła, niezależne dokumenty, zgodność starszego zapisu, przeliczenie podsumowania, null, obce klucze, powtórną walidację API, nieaktualną kopię ratunkową, przerwanie przed mutacją oraz trwałą awarię rollbacku. Pętla błędów: **20 kombinacji** — każdy z 5 zapisów/usunięć przed i po częściowej mutacji.
+2. Rozszerzony celowany zakres zapisu szkicu i biblioteki (`7\.6|2\.1d:|4\.5:.*(zapis|ochron)`): **9/9 PASS**.
+3. `node scripts/audit_demo_portability_7_12a.mjs --recovery-fixed`: **PASS**, poprawne formaty/odczyty oraz historyczna kopia v1. Reprodukcje odzyskiwania z A mają teraz flagi luk false. Wynik i sumy źródeł: `outputs/qa/7_6a/capabilities.json`. Tryb bez flagi zachowuje historyczne oczekiwania audytu A; nie jest odbiorem naprawy.
+4. `npm.cmd run build`: **PASS**, 1970 modułów. Pozostało dotychczasowe ostrzeżenie paczek >500 kB; główny chunk 890,30 kB / gzip 254,00 kB.
+5. `node tests/qa/verify_7_6a.mjs`: **PASS w osobnym profilu Edge**, 0 wyjątków runtime. Rzeczywisty wybór pliku i pobranie kopii ratunkowej, zgodność jej zawartości z poprzednimi pięcioma slotami, blokada błędnego SHA, obowiązkowa kopia/potwierdzenie, blokada Ctrl+S w tle. Celowo wstrzyknięto błąd quota oraz trwały błąd zapisu: odtworzenie poprzedniego stanu, blokada edycji po błędzie rollbacku, odzyskanie z faktycznie pobranego pliku, poprawny restore/reload, usunięcie starego v5 przy null, identyczny szkic i biblioteka 6, licznik 1. Po zamknięciu normalnego okna dostęp i Ctrl+S działają ponownie. Raport i zrzuty: `outputs/qa/7_6a_ui`. Pierwsza próba skryptu trafiła w przejściowy plik `.crdownload`; poprawiono oczekiwanie testu na zakończenie pobrania. Końcowy przebieg PASS.
+6. Ze względu na zmianę mechanizmu wszystkich slotów i integrację z autozapisem wykonano **jedną pełną regresję integracyjną** `npm.cmd run test -- --run`: **376/376 PASS**, 0 pominiętych. Nie powtarzano pełnej regresji po samych zmianach testowego skryptu i dokumentacji.
+7. Instrukcja 5.9 poprawiona bez fikcyjnego klucza rollback i nieistniejącego przycisku cofania odzyskania. MD → HTML → Edge PDF PASS. `verify_manual.py outputs/qa/manual_7_6a`: **52 strony, 43 obrazy, 6034779 bajtów PDF**, zgodność HTML z MD/ilustracjami, brak brakujących sekcji/obrazów/terminów, pustych stron i słów poza stroną. Wizualnie sprawdzono zmieniony obszar i dalsze strony na arkuszach 3/4 (33–52), PASS. Znane ostrzeżenie ekstraktora FontBBox nie powoduje błędu kontroli. Źródło i pochodne instrukcji zaktualizowane.
+
+### Granice odbioru
+
+Nie zmieniono reguł symulacji, danych Eko lub modeli produkcyjnych. Nie wdrożono importera pojedynczego projektu 6 ani trzech projektów pokazowych. Pełna kopia środowiska nadal nie zastępuje A1. Usunięcie null jest sprawdzone dla całego storage w testach API oraz dla warsztatu v5 po przeładowaniu w UI; po usunięciu aktywnego 4 start aplikacji nadal podlega dotychczasowej inicjalizacji (wbudowane przykłady usuwa 7.13). Sesyjne ustawienia paneli i historia cofania nie są częścią kopii. Snapshot uszkodzonego stanu zachowuje surowe dane do naprawy, nie gwarantuje poprawnego importu bez ich naprawienia. Nie gwarantujemy odporności na trwałą awarię pamięci lub równoczesne niezależne zapisy innych okien w każdej chwili operacji.
+
+Dane użytkownika i zastana lokalna zmiana `outputs/data_audit/eko_7_1.json` zachowane. Vercel nie zweryfikowano. Następny pakiet: **7.12.A1 — import/eksport pojedynczego kompletnego pakietu**. Postęp po ponownym odbiorze 7.6: cały plan 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%.

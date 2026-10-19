@@ -5,6 +5,7 @@ import {
   restoreWorkspaceBackup,
   inspectWorkspaceStorage,
   APP_VERSION,
+  WorkspaceRestoreError,
   type WorkspaceBackupPayload,
   type WorkspaceBackupSummary,
   type BackupValidationResult,
@@ -27,12 +28,14 @@ interface WorkspaceBackupModalProps {
   isOpen: boolean;
   onClose: () => void;
   onRestored: () => void;
+  unsavedChanges?: boolean;
 }
 
 export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
   isOpen,
   onClose,
   onRestored,
+  unsavedChanges = false,
 }) => {
   const [summary, setSummary] = useState<WorkspaceBackupSummary | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -40,6 +43,12 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
   const [restoreInProgress, setRestoreInProgress] = useState(false);
   const [restoreMessage, setRestoreMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const readId = useRef(0);
+  const [rollbackSnapshot, setRollbackSnapshot] = useState<string | null>(null);
+  const [confirmedBackup, setConfirmedBackup] = useState(false);
+  const [recoverySnapshot, setRecoverySnapshot] = useState<string | null>(null);
+  const [unrecovered, setUnrecovered] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   // Refresh summary upon opening
   useEffect(() => {
@@ -48,7 +57,13 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
       setSelectedFile(null);
       setValidationResult(null);
       setRestoreMessage(null);
+      setRollbackSnapshot(null); setConfirmedBackup(false); setRecoverySnapshot(null);
+      setRestoreInProgress(false);
+      setUnrecovered(false);
+      modalRef.current?.focus();
     }
+    readId.current++;
+    return () => { readId.current++; };
   }, [isOpen]);
 
   const refreshSummary = () => {
@@ -86,59 +101,52 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    const requestId = ++readId.current;
+    setValidationResult(null); setConfirmedBackup(false); setRollbackSnapshot(null);
+    setSelectedFile(file ?? null); setRestoreMessage(null);
+    e.target.value = '';
     if (!file) return;
-    setSelectedFile(file);
-    setRestoreMessage(null);
-
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = event => {
+      if (requestId !== readId.current) return;
       const content = event.target?.result;
-      if (typeof content === 'string') {
-        const val = validateWorkspaceBackup(content);
-        setValidationResult(val);
-      }
+      if (typeof content === 'string') setValidationResult(validateWorkspaceBackup(content));
     };
     reader.onerror = () => {
-      setValidationResult({
-        valid: false,
-        error: 'Nie można odczytać pliku.',
-        checksumMatches: false,
-        validatedProjectsCount: 0,
-      });
+      if (requestId !== readId.current) return;
+      setValidationResult({valid: false, error: 'Nie można odczytać pliku.', checksumMatches: false, validatedProjectsCount: 0});
     };
     reader.readAsText(file);
   };
 
-  const handleRestore = () => {
-    if (!validationResult?.valid || !validationResult.payload) return;
+  const downloadRollback = () => {
+    try {
+      const snapshot = JSON.stringify(createWorkspaceBackup(window.localStorage, APP_VERSION), null, 2);
+      download(snapshot, `Rollback_Przed_Odzyskaniem_${Date.now()}.lsbackup.json`, 'application/json');
+      setRollbackSnapshot(snapshot); setConfirmedBackup(false);
+      setRestoreMessage({text: 'Przekazano kopię ratunkową do pobrania. Sprawdź zapisany plik przed potwierdzeniem.', type: 'success'});
+    } catch (error) {
+      setRollbackSnapshot(null); setConfirmedBackup(false);
+      setRestoreMessage({text: `Nie przygotowano kopii ratunkowej: ${(error as Error).message}`, type: 'error'});
+    }
+  };
 
+  const handleRestore = () => {
+    if (!validationResult?.valid || !validationResult.checksumMatches || !validationResult.payload ||
+        !rollbackSnapshot || !confirmedBackup || unsavedChanges || restoreInProgress) return;
     setRestoreInProgress(true);
     try {
-      // 1. Restore with automatic safety rollback snapshot creation
-      const res = restoreWorkspaceBackup(window.localStorage, validationResult.payload);
-
-      // 2. Download rollback snapshot automatically so the user never loses previous state
-      const now = new Date();
-      const pad = (n: number) => String(n).padStart(2, '0');
-      const stamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
-      const rollbackFilename = `Rollback_Przed_Odzyskaniem_${stamp}.lsbackup.json`;
-      download(res.rollbackSnapshot, rollbackFilename, 'application/json');
-
-      setRestoreMessage({
-        text: `Pomyślnie przywrócono stan środowiska (${res.restoredKeys.length} obszarów danych). Pobrano automatyczną kopię ratunkową (${rollbackFilename}). Aplikacja zostanie przeładowana za 3 sekundy...`,
-        type: 'success',
-      });
-
-      setTimeout(() => {
-        onRestored();
-        window.location.reload();
-      }, 2500);
-    } catch (e) {
-      setRestoreMessage({
-        text: `Błąd podczas przywracania kopii: ${(e as Error).message}`,
-        type: 'error',
-      });
-      setRestoreInProgress(false);
+      const res = restoreWorkspaceBackup(window.localStorage, validationResult.payload, {expectedCurrentSnapshot: rollbackSnapshot});
+      setRestoreMessage({text: `Przywrócono stan środowiska (${res.restoredKeys.length} zmienionych obszarów). Przeładowywanie aplikacji...`, type: 'success'});
+      onRestored();
+      window.location.reload();
+    } catch (error) {
+      if (error instanceof WorkspaceRestoreError) {
+        setRecoverySnapshot(error.rollbackSnapshot);
+        if (error.rollbackErrors.length) setUnrecovered(true);
+      }
+      setRestoreMessage({text: (error as Error).message, type: 'error'});
+      setRestoreInProgress(false); setConfirmedBackup(false); setRollbackSnapshot(null);
     }
   };
 
@@ -149,7 +157,7 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
       window.location.protocol === 'file:');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
+    <div ref={modalRef} role="dialog" aria-modal="true" aria-label="Kopie i odzyskiwanie środowiska" tabIndex={-1} className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden my-8 text-slate-100 flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-800/40">
@@ -167,6 +175,7 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
             </div>
           </div>
           <button
+            disabled={restoreInProgress || unrecovered}
             onClick={onClose}
             aria-label="Zamknij okno kopii i odzyskiwania"
             className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
@@ -177,6 +186,10 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
 
         {/* Content Body */}
         <div className="p-6 space-y-6 overflow-y-auto flex-1 text-sm">
+          <p className="text-xs text-amber-300">Pełne przywrócenie zastępuje pięć obszarów: projekt 4, warianty 4, warsztat 5, szkic 6 i warianty 6. Brak obszaru (null) w kopii usuwa poprzednie dane tego obszaru. Pozostałe klucze przeglądarki nie są zmieniane.</p>
+          {unsavedChanges && <p role="alert" className="text-amber-300">Masz niezapisane zmiany. Zamknij okno i zachowaj je przez zapis lub eksport JSON przed przywróceniem. Kopia środowiska obejmuje zapisane dane przeglądarki.</p>}
+          {recoverySnapshot && <button onClick={() => download(recoverySnapshot, 'Ratunkowy_stan_przed_bledem.lsbackup.json', 'application/json')}>Pobierz stan sprzed błędu</button>}
+          {unrecovered && <p role="alert" className="text-red-300">Wycofanie nie zostało potwierdzone. Edycja pozostaje zablokowana. Zachowaj stan sprzed błędu i przywróć sprawdzoną kopię przed powrotem do pracy.</p>}
           {/* Notifications */}
           {restoreMessage && (
             <div
@@ -258,8 +271,8 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
             </div>
 
             <p className="text-xs text-slate-400 leading-relaxed">
-              Wybierz plik kopii zapasowej (<code>.lsbackup.json</code>). Przed nadpisaniem aplikacji
-              system automatycznie utworzy i pobierze migawkę ratunkową (Rollback Snapshot).
+              Wybierz plik kopii zapasowej (<code>.lsbackup.json</code>). Przed nadpisaniem pobierz kopię
+              ratunkową obecnego stanu i potwierdź zapisanie pliku. Przy błędzie aplikacja spróbuje wycofać zmiany.
             </p>
 
             <div className="flex items-center space-x-3">
@@ -330,10 +343,16 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
                       </div>
                     </div>
 
+                    <div className="pt-2 space-y-2">
+                      <button disabled={restoreInProgress} onClick={downloadRollback}>Pobierz kopię ratunkową przed przywróceniem</button>
+                      <label className="flex items-center gap-2"><input type="checkbox" disabled={!rollbackSnapshot || restoreInProgress}
+                        checked={confirmedBackup} onChange={event => setConfirmedBackup(event.target.checked)} />
+                        Potwierdzam zapisanie kopii ratunkowej i zastąpienie pięciu obszarów danych.</label>
+                    </div>
                     <div className="pt-2 flex justify-end">
                       <button
                         type="button"
-                        disabled={restoreInProgress}
+                        disabled={restoreInProgress || !rollbackSnapshot || !confirmedBackup || unsavedChanges}
                         onClick={handleRestore}
                         className="px-4 py-2 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white text-xs font-semibold rounded-xl shadow transition flex items-center space-x-1.5"
                       >
@@ -389,6 +408,7 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
         <div className="px-6 py-3 border-t border-slate-800 bg-slate-800/30 flex justify-end">
           <button
             type="button"
+            disabled={restoreInProgress || unrecovered}
             onClick={onClose}
             className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-xl transition"
           >

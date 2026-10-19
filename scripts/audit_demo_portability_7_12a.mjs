@@ -13,7 +13,8 @@ const exports={project:['newProject','derive'],validation:['parseProject'],stati
 const contents=Object.entries(exports).map(([file,names])=>`export {${names.join(',')}} from './src/core/${file}';`).join('\n')+`\nexport {processRows,bomRows,importProcess,importBOM} from './src/core/export/excelImporter';`;
 const result=await build({stdin:{contents,resolveDir:process.cwd()},bundle:true,platform:'node',format:'esm',write:false});
 const api=await import('data:text/javascript;base64,'+Buffer.from(result.outputFiles[0].text).toString('base64'));
-const out=resolve('outputs/qa/7_12a');mkdirSync(out,{recursive:true});
+const fixed=process.argv.includes('--recovery-fixed');
+const out=resolve(fixed?'outputs/qa/7_6a':'outputs/qa/7_12a');mkdirSync(out,{recursive:true});
 const at='2026-10-19T00:00:00.000Z',memory=()=>{
   const values={};return {values,getItem:key=>values[key]??null,setItem:(key,value)=>{values[key]=value;},removeItem:key=>{delete values[key];}};
 };
@@ -41,17 +42,18 @@ assert.throws(()=>api.parseProject(raw));
 assert.throws(()=>api.readPortableArchive(JSON.stringify({format:'layout-studio-portable-archive',formatVersion:1,schemaVersion:6,project:prepared.project}),4));
 draft.setItem(api.STORAGE_KEYS.v4Project,JSON.stringify({project:v4,at,importSourceBase64:''}));
 const backup=api.createWorkspaceBackup(draft,'0.4.0',at),valid=api.validateWorkspaceBackup(JSON.stringify(backup));assert.equal(valid.valid,true);assert.equal(valid.checksumMatches,true);
-assert.equal(backup.summary.variantsV6Count,0);assert.equal(api.readDomainVariants(draft).saved.variants.length,1);
+if(fixed){const historical=api.validateWorkspaceBackup(readFileSync('outputs/qa/7_12a/probe_workspace.lsbackup.json','utf8'));assert.equal(historical.valid,true);assert.equal(historical.payload.summary.variantsV6Count,1);}
+assert.equal(backup.summary.variantsV6Count,fixed?1:0);assert.equal(api.readDomainVariants(draft).saved.variants.length,1);
 const fresh=memory();api.restoreWorkspaceBackup(fresh,valid.payload);assert.equal(api.readDomainDraft(fresh).status,'valid');assert.equal(api.readDomainVariants(fresh).status,'valid');assert.deepEqual(fresh.values,draft.values);
 // Capture actual limitations. PASS below means these observations are reproducible, not accepted behavior.
-const checksum=structuredClone(backup);checksum.checksumSha256='0'.repeat(64);const checksumResult=api.validateWorkspaceBackup(JSON.stringify(checksum));assert.equal(checksumResult.valid,true);assert.equal(checksumResult.checksumMatches,false);
+const checksum=structuredClone(backup);checksum.checksumSha256='0'.repeat(64);const checksumResult=api.validateWorkspaceBackup(JSON.stringify(checksum));assert.equal(checksumResult.valid,!fixed);assert.equal(checksumResult.checksumMatches,false);
 const dirty=memory();dirty.setItem(api.STORAGE_KEYS.v6DomainDraft,JSON.stringify(prepared.project));dirty.setItem(api.STORAGE_KEYS.v6Variants,'not-json');
-const malformedBackup=api.createWorkspaceBackup(dirty,'0.4.0',at);assert.equal(api.validateWorkspaceBackup(JSON.stringify(malformedBackup)).valid,true);
-const brokenRestore=memory();api.restoreWorkspaceBackup(brokenRestore,malformedBackup);assert.equal(api.readDomainDraft(brokenRestore).status,'corrupt');assert.equal(api.readDomainVariants(brokenRestore).status,'corrupt');
-const target=memory();target.setItem(api.STORAGE_KEYS.v5Stations,'previous unrelated slot');api.restoreWorkspaceBackup(target,backup);assert.equal(target.getItem(api.STORAGE_KEYS.v5Stations),'previous unrelated slot');
+const malformedBackup=api.createWorkspaceBackup(dirty,'0.4.0',at);assert.equal(api.validateWorkspaceBackup(JSON.stringify(malformedBackup)).valid,!fixed);
+const brokenRestore=memory();if(fixed){assert.throws(()=>api.restoreWorkspaceBackup(brokenRestore,malformedBackup));assert.deepEqual(brokenRestore.values,{});}else{api.restoreWorkspaceBackup(brokenRestore,malformedBackup);assert.equal(api.readDomainDraft(brokenRestore).status,'corrupt');assert.equal(api.readDomainVariants(brokenRestore).status,'corrupt');}
+const target=memory();target.setItem(api.STORAGE_KEYS.v5Stations,'previous unrelated slot');api.restoreWorkspaceBackup(target,backup);assert.equal(target.getItem(api.STORAGE_KEYS.v5Stations),fixed?null:'previous unrelated slot');
 const partial=memory();partial.setItem(api.STORAGE_KEYS.v4Project,'old');partial.setItem(api.STORAGE_KEYS.v6DomainDraft,'old draft');
 assert.throws(()=>api.restoreWorkspaceBackup({...partial,setItem:(key,value)=>{if(key===api.STORAGE_KEYS.v6DomainDraft)throw new Error('simulated quota');partial.setItem(key,value);}},backup),/simulated quota/);
-assert.notEqual(partial.getItem(api.STORAGE_KEYS.v4Project),'old');assert.equal(partial.getItem(api.STORAGE_KEYS.v6DomainDraft),'old draft');
+if(fixed)assert.equal(partial.getItem(api.STORAGE_KEYS.v4Project),'old');else assert.notEqual(partial.getItem(api.STORAGE_KEYS.v4Project),'old');assert.equal(partial.getItem(api.STORAGE_KEYS.v6DomainDraft),'old draft');
 writeFileSync(resolve(out,'probe_v4.json'),JSON.stringify(v4,null,2));writeFileSync(resolve(out,'probe_v5.json'),JSON.stringify(v5,null,2));writeFileSync(resolve(out,'probe_v6_save.json'),raw);writeFileSync(resolve(out,'probe_workspace.lsbackup.json'),JSON.stringify(backup,null,2));
-const report={at:new Date().toISOString(),scope:'7.12.A capability audit, no application changes, probe is not a demonstration package',positive:{xlsxProcessAndBom:true,jsonV4AndV5Archives:true,domainDraftLocalRoundTrip:true,domainVariantLocalRoundTrip:true,workspaceFreshMemoryRoundTrip:true},gaps:{mainImportRejectsV6:true,checksumMismatchStillValid:true,backupAcceptsInvalidDraftEnvelopeAndVariantLibrary:true,nullSlotsDoNotClearPreviousData:true,writeFailureCanLeavePartialRestore:true,v6VariantSummaryZeroForOneSavedVariant:true},sources:paths.map(path=>({path,sha256:createHash('sha256').update(readFileSync(path)).digest('hex')}))};
+const report={at:new Date().toISOString(),scope:fixed?'7.6a recovery regression of 7.12.A probes':'7.12.A historical capability audit; use --recovery-fixed after 7.6a',positive:{xlsxProcessAndBom:true,jsonV4AndV5Archives:true,domainDraftLocalRoundTrip:true,domainVariantLocalRoundTrip:true,workspaceFreshMemoryRoundTrip:true},gaps:{mainImportRejectsV6:true,checksumMismatchStillValid:!fixed,backupAcceptsInvalidDraftEnvelopeAndVariantLibrary:!fixed,nullSlotsDoNotClearPreviousData:!fixed,writeFailureCanLeavePartialRestore:!fixed,v6VariantSummaryZeroForOneSavedVariant:!fixed},sources:paths.map(path=>({path,sha256:createHash('sha256').update(readFileSync(path)).digest('hex')}))};
 writeFileSync(resolve(out,'capabilities.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify({audit:'PASS',positive:report.positive,gaps:report.gaps}));

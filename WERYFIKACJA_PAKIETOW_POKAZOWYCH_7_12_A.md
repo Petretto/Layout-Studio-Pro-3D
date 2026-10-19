@@ -2,6 +2,8 @@
 
 Data: 2026-10-19. **Audyt i kontrakt odebrane; 7.12 pozostaje w trakcie.** Nie utworzono trzech projektów, nie wdrożono nowego importera i nie zmieniono schematów/zapisu aplikacji. Poniższe luki są odtworzonymi ograniczeniami, nie pozytywnym odbiorem ich zachowania. Rejestr Eko i zastane lokalne pliki pozostały bez zmian.
 
+Aktualizacja po naprawie **7.6a (2026-10-19)**: historyczne luki L2–L6 opisane poniżej zostały naprawione i ponownie odebrane. Bieżąca regresja próby: `node scripts/audit_demo_portability_7_12a.mjs --recovery-fixed`, wynik w `outputs/qa/7_6a/capabilities.json`; UI: `tests/qa/verify_7_6a.mjs`. Dalszy wymagany krok to A1; L1 i L7 nadal otwarte. Poniższy zapis zachowuje wynik pierwotnego audytu, nie opisuje stanu naprawionego odzyskiwania.
+
 ## Wynik
 
 Obecne XLSX procesu/BOM oraz JSON/archiwa 4 i 5 nadają się do części danych wejściowych. Cały model zasobów, fizycznych podmontaży, transportu i buforów znajduje się w szkicu 6, który ma eksport i lokalny odczyt, ale **nie ma odrębnego importera pliku w UI**. Biblioteka wariantów 6 również nie ma importera pliku. Wczytanie aktywnego projektu 4 nie wczytuje szkicu ani biblioteki 6.

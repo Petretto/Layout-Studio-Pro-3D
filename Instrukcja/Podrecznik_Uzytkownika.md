@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**  
-Aktualizacja podręcznika: **19.10.2026 — korekta KPI raportu (7.10a), odbiór importu i wariantów dwóch procesów (7.11a), przywrócenie opisu LOD/Popout i kontrola zgodności MD/HTML/PDF (7.8.2a)**.
+Aktualizacja podręcznika: **19.10.2026 — bezpieczne odzyskiwanie kopii (7.6a), korekta KPI raportu (7.10a), odbiór importu i wariantów dwóch procesów (7.11a), przywrócenie opisu LOD/Popout i kontrola zgodności MD/HTML/PDF (7.8.2a)**.
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -547,14 +547,21 @@ Wersja produkcyjna Layout Studio Pro 3D została zoptymalizowana pod kątem peł
   - Na komputerach z systemem Windows aplikację uruchamia się dwuklikiem w plik `Uruchom_Layout_Studio.bat`.
   - Skrypt automatycznie weryfikuje obecność skompilowanego pakietu `dist/` (w razie potrzeby buduje go automatycznie), uruchamia lokalny, bezpieczny serwer HTTP na porcie `4173` i otwiera domyślną przeglądarkę internetową pod adresem `http://127.0.0.1:4173`.
 
-- **Kompleksowa kopia środowiska i Disaster Recovery (`.lsbackup.json`)**:
-  - Dostęp do panelu kopii zapasowych uzyskuje się z poziomu paska narzędziowego (przycisk `Kopie i odzyskiwanie`) lub pulpitu startowego (karta `Kopia i odzyskiwanie (.lsbackup)`).
-  - **Pobieranie pełnej kopii zapasowej (`Pobierz kopię środowiska (.lsbackup.json)`)**:
-    - Eksportuje całe środowisko pracy do jednego, spójnego pliku JSON: aktywny projekt (Schema 4), biblioteki stanowisk i wyposażenia v5, szkice procesu v6, zdefiniowane warianty produkcyjne oraz konfiguracje scenariuszy symulacji.
-    - Każda kopia posiada nagłówek metadanych (wersja aplikacji, data utworzenia) oraz kryptograficzną sumę kontrolną **SHA-256 (FIPS 180-4)** obliczaną deterministycznie z czystego payloadu.
-  - **Integralność i bezpieczne przywracanie awaryjne (Disaster Recovery)**:
-    - Przy próbie wgrania pliku `.lsbackup.json` silnik weryfikuje poprawność strukturalną, zgodność schematów oraz zgodność sumy SHA-256 (wykrywając jakiekolwiek uszkodzenia lub modyfikacje pliku).
-    - **Automatyczny Rollback Snapshot**: Przed nadpisaniem pamięci lokalnej przeglądarki system automatycznie tworzy i zapisuje migawkę awaryjną aktualnego stanu (`layout_studio_rollback_snapshot`). W przypadku jakichkolwiek problemów użytkownik może natychmiast cofnąć przywrócenie jednym kliknięciem (`Przywróć stan sprzed ostatniego odzyskania`).
+- **Kopia środowiska (`.lsbackup.json`)** obejmuje pięć zapisanych obszarów: aktywny projekt 4, bibliotekę wariantów 4, warsztat stanowisk 5, szkic procesu 6 i bibliotekę wariantów 6. Nie obejmuje całej historii Cofnij/Ponów ani wszystkich ustawień paneli przechowywanych tylko w sesji. To kopia środowiska, nie importer pojedynczego przykładu.
+- Otwórz **Kopie i odzyskiwanie** i wybierz **Pobierz Pełną Kopię (.lsbackup.json)**, aby zachować zapisane dane. Sprawdź plik w folderze pobierania. SHA-256 sprawdza integralność zawartości, nie potwierdza jakości danych produkcyjnych ani autorstwa pliku.
+
+**Przywracanie:**
+
+1. Zachowaj bieżącą pracę. Przy otwieraniu okna aplikacja próbuje zapisać aktywny projekt. Jeśli zapis się nie powiedzie, zamknij okno i pobierz aktualny **Eksport JSON** przed przywracaniem. Autozapis i skróty zapisu/cofania są wstrzymane podczas pracy w oknie odzyskiwania.
+2. Wybierz plik `.lsbackup.json`. Niezgodna suma SHA-256, nieobsługiwana wersja lub uszkodzona zawartość blokują przywrócenie. Sprawdzane są projekty, otoczka szkicu, biblioteki, ich źródła i odwołania. Podsumowanie jest wyliczane z danych, w tym rzeczywista liczba wariantów 6.
+3. Pamiętaj: to **pełne zastąpienie pięciu obszarów**. `null` w kopii usuwa poprzedni zapis tego obszaru; nie oznacza zachowania poprzedniego projektu. Inne klucze przeglądarki pozostają nietknięte. Niezależne dokumenty 4/5/6 mogą mieć różne źródła, ale każda biblioteka 6 musi zachowywać spójne własne źródło.
+4. Kliknij **Pobierz kopię ratunkową przed przywróceniem**. Sprawdź, czy plik został zapisany, i zaznacz **Potwierdzam zapisanie kopii ratunkowej i zastąpienie pięciu obszarów danych**. Samo kliknięcie pobierania nie potwierdza, że przeglądarka zapisała plik.
+5. Kliknij **Przywróć stan z kopii i zrestartuj**. Jeśli stan pamięci zmienił się po przygotowaniu kopii ratunkowej, aplikacja nie nadpisze go — pobierz świeżą kopię i potwierdź ponownie. Po powodzeniu aplikacja od razu się przeładowuje.
+6. Przy błędzie zapisu aplikacja próbuje odtworzyć dokładny poprzedni stan i sprawdza wynik. Dostępny jest **Pobierz stan sprzed błędu**. Jeśli wycofanie nie jest potwierdzone, dalsza edycja i zamknięcie okna są zablokowane; zachowaj plik i przywróć poprawną kopię przed powrotem do pracy. Trwała awaria pamięci może uniemożliwić także wycofanie — nie ma gwarancji transakcji obejmującej wszystkie klucze przeglądarki.
+
+Kopia ratunkowa zachowuje również surowe uszkodzone zapisy, jeżeli takie były przed odzyskiwaniem. Jest wtedy materiałem do naprawy, a nie plikiem gwarantującym poprawne wczytanie. Nie ma osobnego przycisku cofającego całe odzyskiwanie jednym kliknięciem; poprawną kopię ratunkową wczytuje się tą samą ścieżką.
+
+![Przywracanie wymaga pobrania kopii ratunkowej i potwierdzenia — dane syntetyczne](../outputs/qa/7_6a_ui/copy_and_confirmation_required.png)
 
 ### 5.10. Zgodność licencyjna, prawa do modeli 3D i bezpieczeństwo (Plan 7.7)
 
