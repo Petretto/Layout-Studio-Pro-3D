@@ -1,7 +1,7 @@
 # Plan rozwoju i rejestr postępu aplikacji
 
 Data utworzenia: 2026-09-29  
-Ostatnia aktualizacja: 2026-10-19
+Ostatnia aktualizacja: 2026-10-21
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
 Dane testowe: Eko jest historycznym przypadkiem regresyjnym; docelowe przykłady to trzy zewnętrzne, kompletne pakiety demonstracyjne (7.12).
 
@@ -44,7 +44,7 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po odbiorze naprawy 7.6a (2026-10-19): cały plan 61/72 = **84,7%**; pierwsze wydanie 61/68 = **89,7%**; Etap 7: 8/14 = **57,1%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po odbiorze podpakietu 7.12.A1 (2026-10-21; główne 7.12 nadal w trakcie): cały plan 61/72 = **84,7%**; pierwsze wydanie 61/68 = **89,7%**; Etap 7: 8/14 = **57,1%**. Weryfikacja: `node scripts/plan_progress.mjs`.
 
 Stan historyczny po audycie A i ponownym otwarciu 7.6: 60/72 = 83,3%, pierwsze wydanie 60/68 = 88,2%, Etap 7: 7/14 = 50,0%.
 
@@ -132,6 +132,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+7.12.A1 (odbiór 2026-10-21, start 2026-10-19): wdrożone — pojedynczy pakiet rodziny projektu (źródło 4, opcjonalne źródło 5, dokładny szkic 6 i warianty tego samego źródła). Przycisk Pakiet projektu, walidacja wersji/źródeł/ID/SHA/limitu, podgląd, kopia ratunkowa i potwierdzenie, ochrona przed nieaktualnym snapshotem i wycofanie po awarii. Biblioteka scenariuszy 4 zachowana; brakujące 5/warianty 6 usuwają stary zapis. Brak oryginału 4 dla źródła 5 wymaga jawnego pliku. Backup `backup/v0.4.0_przed_7_12a1_20261019`: 449 plików, SHA-256 PASS. Schematy bez migracji. Celowane 12/12, pełna integracyjna 382/382, próby API obu źródeł, build i Edge UI (czysty profil, import/reload/eksport, anulowanie, quota/rollback/odzyskanie) PASS. Instrukcja MD/HTML/PDF: 53 strony/44 obrazy. Raport `WERYFIKACJA_PAKIETU_PROJEKTU_7_12_A1.md`. Główne 7.12 w trakcie, następny 7.12.B; A2 pozostaje przed odbiorem fizycznych przykładów. Postęp bez zmiany: 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%. Wdrożenia Vercel nie zweryfikowano.
 
 7.6a (2026-10-19): wdrożone — naprawiono luki L2–L6 audytu 7.12.A. Walidacja wszystkich pięciu obszarów, źródeł i bibliotek oraz blokada SHA przed zapisem także w API; poprawny licznik wariantów. Pełne odtworzenie: null usuwa stary slot, inne klucze zachowane, źródła niezależnych dokumentów bez przymusowego łączenia. Snapshot przed mutacją, kontrola jego aktualności, wycofanie i weryfikacja po błędach; trwała awaria rollbacku jawna z dostępem do kopii. UI wymaga pobrania kopii ratunkowej i potwierdzenia, wstrzymuje autozapis/skróty i blokuje edycję po niepotwierdzonym wycofaniu. Format kopii v1/schematy bez migracji, poprawna historyczna kopia zgodna. Backup `backup/v0.4.0_przed_7_6a_20261019`: 448 plików, SHA-256 PASS. Testy celowane 9/9, audyt `--recovery-fixed`, świeży build i Edge UI z wstrzykniętymi awariami PASS. Pełna regresja integracyjna 376/376 PASS. Instrukcja MD/HTML/PDF: 52 strony/43 obrazy, kontrola treści i granic PASS; przegląd zmienionych renderów PASS. Raport `WERYFIKACJA_DYSTRYBUCJI_I_ODZYSKIWANIA_7_6.md`. Główne 7.6 ponownie wdrożone; A1 i A2 nadal otwarte. Bez zmian symulacji/danych Eko. Lokalne pliki użytkownika zachowane, Vercel nie zweryfikowano. Postęp: 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%. Następny pakiet 7.12.A1.
 
@@ -690,7 +692,7 @@ Nie obiecywać osobnego importu dowolnego CSV zasobów. Dane bez odrębnego impo
 **Uzupełnienie po audycie A — 2026-10-19:**
 
 - **7.6a — naprawa odzyskiwania, wdrożone (2026-10-19).** Przed zapisami sprawdzać sumę i wszystkie otoczki/biblioteki, pokazywać właściwe liczniki i zakres zastąpienia, ustalić semantykę null, zapewnić kopię ratunkową przed mutacją i wycofanie po błędach. Testy uszkodzeń, obcych źródeł, każdego slotu oraz quota/rollback; backup przed zmianą mechanizmu zapisu. Odbiór 7.6a: 376/376, build, UI i instrukcja PASS; 7.6 ponownie wdrożone. Szczegóły w raporcie 7.6.
-- **7.12.A1 — import/eksport pojedynczego pakietu, nierozpoczęte.** Na podstawie kontraktu A dostarczyć podgląd i jawne wczytanie źródła 4/5, pełnego szkicu 6 i wariantów zgodnego źródła, bez traktowania kopii środowiska jako importera projektu. Sprawdzić odtworzenie w UI i anulowanie/błąd bez utraty dotychczasowej pracy. To osobny pakiet implementacyjny z backupem i kompatybilnością, nie rezultat już wdrożony w A.
+- **7.12.A1 — import/eksport pojedynczego pakietu, wdrożone (2026-10-21).** Na podstawie kontraktu A dostarczyć podgląd i jawne wczytanie źródła 4/5, pełnego szkicu 6 i wariantów zgodnego źródła, bez traktowania kopii środowiska jako importera projektu. Sprawdzić odtworzenie w UI i anulowanie/błąd bez utraty dotychczasowej pracy. Odbiór A1: 12/12 celowanych, pełna integracyjna 382/382, build, próby API, Edge oraz instrukcja 53 strony/44 obrazy PASS; backup 449 plików SHA-256. Raport `WERYFIKACJA_PAKIETU_PROJEKTU_7_12_A1.md`. Ustawienia sesji wymagają jawnego ustawienia, A2 i pełne przykłady nie są częścią odbioru A1.
 - **7.12.A2 — zgodność widoków i wyników, nierozpoczęte.** Przed odbiorem fizycznych przykładów ustalić i zweryfikować, że widoczny bilans/layout/animacja/raport dotyczą właściwego modelu. Aktywny 4, warsztat 5 i szkic 6 obecnie mają odrębne ścieżki; sam import szkicu nie oznacza jego integracji z głównym raportem A4 i animacją. Niezbędne poprawki rozbić na ograniczone pakiety, nie pozorować jednego spójnego widoku wyników.
 
 **Kolejność:** 7.1 (zasady źródeł i kwalifikacji) + 7.12.A (audyt odebrany) → 7.6a → 7.12.A1 → 7.12.B → 7.12.A2 → 7.12.C → wspólny odbiór 7.12.D i 7.2 → 7.13 → 7.14 → ponowna aktualizacja dokumentacji 7.8 → pilotaż 7.9. Modele 6.3 przygotowywać według potrzeb przykładów, bez oczekiwania na geometrię Eko. Istniejący odbiór 7.11 nie zamyka nowych 7.12–7.14. Szczegółowe wybory domenowe lub konieczne zmiany schematu nadal wymagają osobnego rozstrzygnięcia zgodnie z zasadami planu.
@@ -782,6 +784,7 @@ Każdy kolejny wpis powinien wskazywać konkretne ID. Nie usuwać historii przy 
 
 | Data | ID | Zmiana statusu | Rezultat / dowód / uwagi |
 | --- | --- | --- | --- |
+| 2026-10-21 | 7.12.A1 | w trakcie → wdrożone; główne 7.12 nadal w trakcie | Pakiet rodziny 4/5/6 i zgodnych wariantów, SHA/podgląd, kopia ratunkowa, sprawdzane wycofanie i ochrona UI; scenariusze 4 zachowane. Backup 449 SHA-256, celowane 12/12, pełna integracyjna 382/382, API obu źródeł, build i Edge PASS. Instrukcja MD/HTML/PDF 53 strony/44 obrazy; raport `WERYFIKACJA_PAKIETU_PROJEKTU_7_12_A1.md`. Bez migracji. Następny B, A2 przed fizycznymi przykładami. Postęp 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%. |
 | 2026-10-19 | 7.6a / 7.6 | w trakcie → wdrożone | Walidacja pięciu slotów/SHA/otoczek/bibliotek, pełne zastąpienie z null, kopia ratunkowa przed mutacją i sprawdzany rollback. Ochrona UI/autozapisu, jawna awaria wycofania. Backup 448 plików SHA-256 PASS, testy celowane 9/9, pełna regresja integracyjna 376/376, build i Edge UI PASS, instrukcja 52 strony/43 obrazy. Raport 7.6; bez migracji. Postęp 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%. |
 | 2026-10-19 | 7.12.A, 7.6 | audyt A odebrany; 7.12 w trakcie; 7.6 wdrożone → w trakcie | Kontrakt i macierz przenośności 4/5/6, 7/7 testów celowanych, build i Edge UI PASS. Odtworzone luki odzyskiwania i brak importu szkicu/biblioteki 6; raport `WERYFIKACJA_PAKIETOW_POKAZOWYCH_7_12_A.md`. Zaplanowano 7.6a, A1 i A2 przed dalszym odbiorem. Bez zmiany kodu aplikacji lub schematów. Postęp 60/72 = 83,3%, pierwsze wydanie 60/68 = 88,2%. |
 | 2026-10-19 | 6.3, 7.1, 7.2, 7.12–7.14 | zmiana zakresu; nowe punkty nierozpoczęte | Decyzja użytkownika: Eko wyłącznie do testów/regresji, kompletność jego danych nie blokuje wydania. Dodano trzy zewnętrzne pakiety pokazowe (w tym gałęzie podmontaży), start bez projektów zaszytych w aplikacji oraz interaktywny tutorial. Zachowano dawne odbiory i źródła. Zmieniono plan, bez implementacji lub nowych testów aplikacji. Postęp 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%. |

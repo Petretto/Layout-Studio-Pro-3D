@@ -1,0 +1,27 @@
+{
+  "at": "2026-10-19T22:01:47.185Z",
+  "result": "PASS",
+  "scope": "synthetic capability probes, not demo datasets",
+  "source4": {
+    "id": "AUDIT-7-12A",
+    "name": "AUDYT 7.12.A — syntetyczna próba przenośności",
+    "sourceSchemaVersion": 4,
+    "operations": 1,
+    "stations": 1,
+    "workers": 0,
+    "variants": 1,
+    "dataOrigin": "synthetic"
+  },
+  "source5": {
+    "id": "AUDIT-7-12A",
+    "name": "AUDYT 7.12.A — syntetyczna próba przenośności",
+    "sourceSchemaVersion": 5,
+    "operations": 1,
+    "stations": 1,
+    "workers": 0,
+    "variants": 1,
+    "dataOrigin": "synthetic"
+  },
+  "exactFamilyRoundTrip": true,
+  "preservedIndependentLibrary": true
+}

@@ -2769,6 +2769,86 @@ function workspaceRestoreFixture() {
   return {api,values,port,backup,at,source};
 }
 
+test('7.12.A1: pakiet źródła 4 zachowuje dokładny szkic, warianty i oryginał, niezależnie od aktywnego 4',()=>{
+  const {api,port,values,source}=workspaceRestoreFixture(),pkgApi=require('../src/core/projectPackage');
+  values[api.STORAGE_KEYS.v4Project]=JSON.stringify({project:{...JSON.parse(source),id:'OTHER'}});
+  const pkg=pkgApi.makeProjectPackage(port,{dataOrigin:'synthetic'});
+  assert.equal(pkg.data.source4Json,source);assert.equal(pkg.data.source5Json,null);
+  assert.equal(pkg.data.draftRaw,values[api.STORAGE_KEYS.v6DomainDraft]);assert.equal(pkg.data.variantsRaw,values[api.STORAGE_KEYS.v6Variants]);
+  assert.equal(pkgApi.describeProjectPackage(pkg).variants,1);
+  assert.equal(pkgApi.describeProjectPackage(pkg).dataOrigin,'synthetic');
+  assert.deepEqual(pkgApi.parseProjectPackage(JSON.stringify(pkg)),pkg);
+});
+
+test('7.12.A1: import zastępuje tylko rodzinę projektu, usuwa brakujące 5/6, zachowuje obce i nawet uszkodzone scenariusze 4',()=>{
+  const {api,port,values}=workspaceRestoreFixture(),pkgApi=require('../src/core/projectPackage');
+  const pkg=pkgApi.makeProjectPackage(port);pkg.data.variantsRaw=null;pkg.checksumSha256=api.sha256Hex(JSON.stringify(pkg.data));
+  values[api.STORAGE_KEYS.v4Scenarios]='foreign-corrupt-library';values.unrelated='keep';
+  const snapshot=JSON.stringify(api.createWorkspaceBackup(port));
+  pkgApi.importProjectPackage(port,pkg,snapshot);
+  assert.equal(values[api.STORAGE_KEYS.v4Scenarios],'foreign-corrupt-library');assert.equal(values.unrelated,'keep');
+  assert.equal(port.getItem(api.STORAGE_KEYS.v5Stations),null);assert.equal(port.getItem(api.STORAGE_KEYS.v6Variants),null);
+  assert.equal(values[api.STORAGE_KEYS.v6DomainDraft],pkg.data.draftRaw);
+  const saved=JSON.parse(values[api.STORAGE_KEYS.v4Project]);assert.equal(saved.project.id,JSON.parse(pkg.data.source4Json).id);
+  assert.equal(new TextDecoder().decode(Uint8Array.from(atob(saved.importSourceBase64),c=>c.charCodeAt(0))),pkg.data.source4Json);
+});
+
+test('7.12.A1: źródło 5 wymaga jawnego oryginału 4 i zachowuje oba źródła po ponownym imporcie',()=>{
+  const {api,port,values,source,at}=workspaceRestoreFixture(),pkgApi=require('../src/core/projectPackage');
+  const domain=require('../src/core/domainDraftStorage'),migration=require('../src/core/domainMigrationPreview');
+  const source5=JSON.stringify(JSON.parse(values[api.STORAGE_KEYS.v5Stations]).project);
+  port.removeItem(api.STORAGE_KEYS.v6DomainDraft);port.removeItem(api.STORAGE_KEYS.v6Variants);
+  domain.saveDomainDraft(port,prepareDomainMigration(migration.previewDomainMigrationFromV5(source5)),null,at);
+  const pkg=pkgApi.makeProjectPackage(port);assert.equal(pkg.data.source4Json,source);assert.equal(pkg.data.source5Json,source5);
+  port.removeItem(api.STORAGE_KEYS.v5Stations);
+  assert.throws(()=>pkgApi.makeProjectPackage(port),/oryginału 4/);
+  assert.deepEqual(pkgApi.makeProjectPackage(port,{source4Json:source}).data,pkg.data);
+  pkgApi.importProjectPackage(port,pkg,JSON.stringify(api.createWorkspaceBackup(port)));
+  assert.equal(JSON.parse(values[api.STORAGE_KEYS.v5Stations]).originalJson,source);
+  assert.equal(pkgApi.makeProjectPackage(port).data.source5Json,source5);
+});
+
+test('7.12.A1: odrzuca sumę, wersje, niekompletność, obce źródła i biblioteki bez mutacji',()=>{
+  const {api,port,values}=workspaceRestoreFixture(),pkgApi=require('../src/core/projectPackage');
+  const pkg=pkgApi.makeProjectPackage(port),before=JSON.stringify(values);
+  const changes=[
+    (p:any)=>{p.formatVersion=2;},(p:any)=>{p.checksumSha256='bad';},(p:any)=>{delete p.data.source5Json;},
+    (p:any)=>{p.data.dataOrigin='measured';},(p:any)=>{p.data.source4Json=JSON.stringify({...JSON.parse(p.data.source4Json),id:'OTHER'});},
+    (p:any)=>{p.data.source4Json+=' ';},(p:any)=>{p.data.source5Json='{}';},
+    (p:any)=>{const lib=JSON.parse(p.data.variantsRaw);lib.variants[0].originalJson+=' ';p.data.variantsRaw=JSON.stringify(lib);},
+    (p:any)=>{const lib=JSON.parse(p.data.variantsRaw);lib.variants[0].project.id='OTHER';p.data.variantsRaw=JSON.stringify(lib);},
+    (p:any)=>{const src=JSON.parse(p.data.source4Json);delete src.id;p.data.source4Json=JSON.stringify(src);},
+    (p:any)=>{p.extra='unsupported';},(p:any)=>{p.data.extra='unsupported';}
+  ];
+  for(const change of changes){const bad=structuredClone(pkg);change(bad);if(bad.checksumSha256!=='bad')bad.checksumSha256=api.sha256Hex(JSON.stringify(bad.data));
+    assert.throws(()=>pkgApi.importProjectPackage(port,bad,JSON.stringify(api.createWorkspaceBackup(port))));assert.equal(JSON.stringify(values),before);
+  }
+  assert.throws(()=>pkgApi.parseProjectPackage(' '.repeat(pkgApi.MAX_PROJECT_PACKAGE_BYTES+1)),/25 MB/);
+});
+
+test('7.12.A1: nie odrzuca po cichu obcej biblioteki i nie eksportuje projektu bez szkicu',()=>{
+  const {api,port,values}=workspaceRestoreFixture(),pkgApi=require('../src/core/projectPackage');
+  const lib=JSON.parse(values[api.STORAGE_KEYS.v6Variants]);lib.variants[0].originalJson+=' ';
+  values[api.STORAGE_KEYS.v6Variants]=JSON.stringify(lib);assert.throws(()=>pkgApi.makeProjectPackage(port),/źródło/);
+  port.removeItem(api.STORAGE_KEYS.v6DomainDraft);assert.throws(()=>pkgApi.makeProjectPackage(port),/szkic/);
+});
+
+test('7.12.A1: nieaktualna kopia ratunkowa blokuje zapis, każda awaria zapisu wycofuje cztery obszary',()=>{
+  const {api,port}=workspaceRestoreFixture(),pkgApi=require('../src/core/projectPackage');const pkg=pkgApi.makeProjectPackage(port);
+  const keys=Object.values(api.STORAGE_KEYS).filter(k=>k!==api.STORAGE_KEYS.v4Scenarios) as string[];
+  for(const failingKey of keys){
+    const values:Record<string,string>={[api.STORAGE_KEYS.v4Scenarios]:'keep',unrelated:'also keep'};
+    for(const key of keys)values[key]='old '+key;
+    const before={...values};let failed=false;
+    const target={getItem:(key:string)=>values[key]??null,setItem:(key:string,value:string)=>{values[key]=value;if(key===failingKey&&!failed){failed=true;throw new Error('quota');}},removeItem:(key:string)=>{delete values[key];if(key===failingKey&&!failed){failed=true;throw new Error('remove');}}};
+    const snapshot=JSON.stringify(api.createWorkspaceBackup(target));
+    assert.throws(()=>pkgApi.importProjectPackage(target,pkg,snapshot),(e:any)=>e instanceof api.WorkspaceRestoreError&&e.rollbackErrors.length===0);
+    assert.deepEqual(values,before);
+    values.unrelated='outside slots';values[api.STORAGE_KEYS.v4Project]='newer';
+    const changed={...values};assert.throws(()=>pkgApi.importProjectPackage(target,pkg,snapshot),/zmienił się/);assert.deepEqual(values,changed);
+  }
+});
+
 test('7.6a: walidacja wszystkich slotów, sumy, otoczek i bibliotek; podsumowanie pochodzi z danych',()=>{
   const {api,backup}=workspaceRestoreFixture();
   const original=JSON.stringify(backup),valid=api.validateWorkspaceBackup(original);

@@ -1,5 +1,13 @@
 # Zmiany v0.4.0 — 29.09.2026
 
+## Pakiet pojedynczego projektu — odbiór 21.10.2026 (7.12.A1)
+
+- Nowy przycisk **Pakiet projektu**: import i eksport rodziny źródła 4/5, zapisanego szkicu 6 i wariantów zgodnego źródła, w jednym JSON v1 z SHA-256 (do 25 MiB).
+- Podgląd i jawne pochodzenie danych; oryginał 4 przy źródle 5 może wymagać dołączenia pliku. Nie zgaduje się źródła ani nie pomija obcych wariantów.
+- Cztery obszary zastępowane po kopii ratunkowej i potwierdzeniu; brakujące 5/warianty 6 usuwają stary zapis, scenariusze 4 pozostają. Ochrona autozapisu i tła, kontrola snapshotu, wycofanie i odzyskanie po awarii. Bez migracji istniejących schematów.
+- Celowane 12/12, pełna integracyjna 382/382, build, API i Edge (czysty profil, źródła 4/5, rzeczywiste pobrania, anulowanie i awarie) PASS. Instrukcja MD/HTML/PDF: 53 strony/44 obrazy.
+- Ustawienia sesji pozostają jawne. A2 (integracja widoków) oraz kompletne przykłady B/C są nadal do wykonania. Vercel nie zweryfikowano.
+
 ## Naprawa odzyskiwania 19.10.2026 — 7.6a
 
 - Kopie środowiska v1: pełna walidacja pięciu obszarów i sumy, poprawny licznik wariantów; API odrzuca niepoprawną kopię przed zapisem.

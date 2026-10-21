@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**  
-Aktualizacja podręcznika: **19.10.2026 — bezpieczne odzyskiwanie kopii (7.6a), korekta KPI raportu (7.10a), odbiór importu i wariantów dwóch procesów (7.11a), przywrócenie opisu LOD/Popout i kontrola zgodności MD/HTML/PDF (7.8.2a)**.
+Aktualizacja podręcznika: **21.10.2026 — pakiet pojedynczego projektu ze szkicem i wariantami (7.12.A1); zachowano opis bezpiecznego odzyskiwania (7.6a), raportu i importu procesów (7.10a/7.11a) oraz LOD/Popout**.
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -638,3 +638,26 @@ W teście dla baterii zmiana przydziału zmniejszyła liczbę stanowisk z 6 do 1
 Biblioteka wariantów jest wspólna w danej przeglądarce. Migawki zachowują dane własnego projektu; stosuj nazwy zawierające nazwę projektu i wariantu. Test dwóch projektów potwierdził zachowanie pierwszych migawek podczas pracy nad drugim projektem oraz brak zmieszania procesu, BOM, waluty i układu przy eksporcie, imporcie i odświeżeniu. Obcy BOM z nieznanymi identyfikatorami operacji jest odrzucany bez częściowego nadpisania projektu.
 
 Niepotwierdzone wymiary hali i wygenerowany układ są oznaczane jako założenia. Wczytanie przykładu lub wygenerowanie rozmieszczenia nie zastępuje pomiarów hali, potwierdzenia wyposażenia i odbioru technologicznego.
+
+### 5.13. Przenoszenie projektu ze szkicem i wariantami — Pakiet projektu (7.12.A1)
+
+Przycisk **Pakiet projektu** w górnym pasku przenosi jedną rodzinę projektu: źródło 4, opcjonalne stanowiska 5, zapisany szkic 6 i jego bibliotekę wariantów. Zwykły **Eksport JSON** nadal zapisuje aktywny projekt 4. Pełna kopia `.lsbackup.json` służy do odzyskiwania całego środowiska, łącznie ze wspólną biblioteką scenariuszy 4.
+
+Aby wyeksportować rodzinę projektu:
+
+1. Zapisz potrzebne zmiany w szkicu 6 i wariantach w zakładce **Stanowiska v5**. Eksport pakietu pobiera zapisany szkic; może dotyczyć innego projektu niż widoczny w głównych zakładkach.
+2. Otwórz **Pakiet projektu**, wybierz **Pochodzenie danych** (dla przykładów: **Syntetyczne / pokazowe**) i kliknij **Pobierz pakiet projektu**. Domyślne „Nieokreślone” nie potwierdza pomiarów rzeczywistych. Sprawdź plik `Projekt_Layout_Studio.project.json` w folderze pobierania.
+3. Gdy szkic powstał ze źródła 5, a oryginału 4 nie ma w zapisie warsztatu, wskaż jego oryginalny plik w polu **Oryginalny plik 4**. Użytkownik odpowiada za wybór właściwego źródła; sama nazwa lub podobne ID go nie odtwarzają. Obca biblioteka wariantów 6 blokuje eksport zamiast być pominięta.
+
+Aby wczytać pakiet:
+
+1. Otwórz **Pakiet projektu** i wybierz **Plik pakietu** (JSON do 25 MB). Sprawdź podgląd nazwy, ID, liczników i pochodzenia oraz komunikat o integralności SHA-256. Nie używaj dotychczasowego importu JSON 4 do tego formatu.
+2. Import zastąpi **projekt 4, warsztat 5, szkic 6 i warianty 6**. Brak źródła 5 usuwa poprzedni warsztat; brak biblioteki 6 usuwa poprzednie warianty 6. Wspólna biblioteka scenariuszy 4 pozostaje zachowana. Przed importem zachowaj niezapisane zmiany przez zapis lub aktualny eksport JSON.
+3. Kliknij **Pobierz kopię ratunkową przed importem**, sprawdź zapisany plik i zaznacz potwierdzenie. Następnie wybierz **Wczytaj pakiet i przeładuj**. Zamknięcie okna przed tą czynnością anuluje import.
+4. Po przeładowaniu znajdziesz projekt źródłowy w głównych zakładkach, a pełny szkic i warianty w **Stanowiska v5**. Sprawdź dane przed uruchomieniem obliczeń. Ustaw jawnie liczbę sztuk, odstęp przybyć, tryb transportu/JIT i inne ustawienia eksperymentu sesji zgodnie z opisem projektu — pakiet ich automatycznie nie odtwarza.
+
+![Podgląd pakietu ze źródłem 5, szkicem 6 i jednym wariantem — syntetyczna próba formatu, nie kompletny proces](../outputs/qa/7_12a1_ui/preview_source5.png)
+
+Jeżeli dane zmieniły się od pobrania kopii, import zatrzyma się przed zapisem; pobierz nową kopię i ponownie sprawdź zakres. Błąd pamięci wywołuje wycofanie do poprzedniego stanu. Gdy wycofanie nie jest potwierdzone, edycja i zamknięcie okna pozostają zablokowane. **Pobierz stan sprzed błędu** zachowuje snapshot, a **Odtwórz pełną kopię ratunkową** otwiera odzyskiwanie całego środowiska. Po usunięciu przyczyny można też wczytać poprawny pakiet. Cofnij nie odwraca importu po przeładowaniu; użyj kopii ratunkowej.
+
+Poprawny import nie oznacza kompletności danych do symulacji. Główne widoki, animacja i raport 4 oraz obliczenia szkicu 6 pozostają odrębnymi ścieżkami; ich integracja jest osobnym punktem A2. Trzy kompletne projekty pokazowe dopiero powstaną w B/C. Pliki prób odbiorowych nie zastępują tych przykładów.

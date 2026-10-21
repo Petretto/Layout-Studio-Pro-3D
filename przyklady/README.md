@@ -1,6 +1,6 @@
 # Projekty pokazowe — kontrakt 7.12.A
 
-Status: **przygotowanie, nie gotowe przykłady do importu**. W tym pakiecie nie utworzono trzech projektów ani nowego importera. Syntetyczna próba z `outputs/qa/7_12a` służy audytowi formatów i jest celowo niekompletna technologicznie.
+Status: **przygotowanie, nie gotowe przykłady do importu**. Jest już importer i eksporter pojedynczej rodziny projektu A1 (przycisk **Pakiet projektu**). Trzy kompletne projekty pozostają do utworzenia w B/C. Syntetyczne próby z `outputs/qa/7_12a` i `outputs/qa/7_12a1` sprawdzają formaty; są celowo niekompletne technologicznie.
 
 Docelowe katalogi:
 
@@ -10,4 +10,4 @@ Docelowe katalogi:
 
 W każdym znajdą się kompletne pliki, instrukcja i jawne założenia syntetyczne. Szczegółowe nazwy plików, wymagania i warunki odbioru określa [KONTRAKT_PAKIETU.md](KONTRAKT_PAKIETU.md). Macierz obecnych możliwości i luk: [WERYFIKACJA_PAKIETOW_POKAZOWYCH_7_12_A.md](../WERYFIKACJA_PAKIETOW_POKAZOWYCH_7_12_A.md).
 
-Zewnętrzne pakiety będą ładowane przez interfejs aplikacji. Nie należy wklejać ich do localStorage. Pełna kopia środowiska `.lsbackup.json` nie jest docelowym formatem pojedynczego przykładu: obejmuje kilka obszarów danych, a wykryte w audycie luki odzyskiwania naprawiono w 7.6a. Nadal wymagany jest osobny importer pojedynczego pakietu 7.12.A1.
+Zewnętrzne pakiety są ładowane przez interfejs aplikacji. Nie należy wklejać ich do localStorage. Pełna kopia środowiska `.lsbackup.json` służy odzyskiwaniu wszystkich obszarów, a pojedynczy projekt przenosi otoczka `layout-studio-project-package` v1. Zakres zastąpienia, wymagania źródeł i jawne ustawienia sesji opisuje kontrakt. Integracja głównych widoków i wyników szkicu 6 pozostaje w A2.

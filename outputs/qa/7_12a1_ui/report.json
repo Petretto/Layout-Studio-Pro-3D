@@ -1,0 +1,24 @@
+{
+  "at": "2026-10-19T22:06:29.845Z",
+  "result": "PASS",
+  "scope": "isolated Edge, real file inputs and downloads; concurrency/quota/persistent faults explicitly injected",
+  "checks": {
+    "freshProfileImport": true,
+    "exportWithoutDraftBlocked": true,
+    "invalidChecksumBlocked": true,
+    "previewAndCancel": true,
+    "rescueAndConfirmationRequired": true,
+    "backgroundAndShortcutsBlocked": true,
+    "staleRescueBlocked": true,
+    "quotaRollback": true,
+    "persistentFailureLocksClose": true,
+    "nestedFullRescueRecovery": true,
+    "source4ImportReloadExportExact": true,
+    "source5ImportReloadExportExact": true,
+    "source4AttachmentWhenMissing": true,
+    "missing5DeletesPrevious": true,
+    "independent4LibraryPreserved": true,
+    "restoredDomainVisible": true
+  },
+  "runtimeErrors": []
+}

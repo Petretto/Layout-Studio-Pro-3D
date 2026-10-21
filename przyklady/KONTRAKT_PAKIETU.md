@@ -1,6 +1,26 @@
 # Kontrakt pakietu demonstracyjnego — 7.12.A
 
-Wersja kontraktu: **1, 2026-10-19**. Kontrakt zawartości jest ustalony; nowy format pliku wejściowego i importer pozostają do implementacji i odbioru 7.12.A1. Żaden opis poniżej nie oznacza, że aplikacja już wczytuje manifest lub kompletny pakiet szkicu 6. Bez zmiany schematów istniejących projektów w 7.12.A.
+Wersja kontraktu: **1, odbiór 2026-10-21**. W 7.12.A1 dostarczono format i importer pojedynczej rodziny projektu (opis poniżej). Manifest katalogu, trzy kompletne przykłady i integracja widoków A2 pozostają do realizacji. Schematy istniejących projektów nie zmieniły się.
+
+## Format pliku wejściowego A1
+
+Przycisk **Pakiet projektu** obsługuje JSON do 25 MiB (UTF-8). Nagłówek ma dokładnie pola `format: layout-studio-project-package`, `formatVersion: 1`, `appVersion`, `createdAt`, `checksumSha256` i `data`. `data` zawiera w tej kolejności:
+
+| Pole | Typ i znaczenie |
+| --- | --- |
+| `dataOrigin` | `synthetic`, `user`, `mixed` lub `unspecified`; domyślnie nieokreślone, dla nowych przykładów jawnie synthetic. |
+| `source4Json` | Dokładny tekst oryginału 4, obsługiwany przez dotychczasowy walidator projektu; wymagane trwałe ID. |
+| `source5Json` | Dokładny tekst źródła 5 szkicu albo null dla szkicu ze źródła 4. |
+| `draftRaw` | Dokładny tekst pełnej otoczki `domain-draft-save` v1, z projektem 6 i `originalJson`. |
+| `variantsRaw` | Dokładny tekst biblioteki `domain-variant-library` v1 albo null. |
+
+SHA-256 liczy się z tekstu UTF-8 `JSON.stringify(data)` po złożeniu powyższych pól w podanej kolejności, bez formatowania. Suma obejmuje dane, nie podpisuje ich autentyczności. Nieznane pola/wersje, uszkodzenia i niezgodność źródeł są odrzucane. Źródła i szkic mają to samo trwałe ID; `originalJson` szkicu jest identyczny bajtowo z odpowiednim tekstem 4/5, a każdy wariant ma ten sam dokładny oryginał i ID rodziny. Szkic może być niekompletny do symulacji: poprawny import nie jest odbiorem technologicznym.
+
+Eksport wybiera rodzinę **zapisanego szkicu 6**, niezależnie od aktywnego projektu 4. Dla źródła 5 oryginał 4 bierze tylko ze zgodnego zapisu warsztatu 5; jeśli go brakuje, użytkownik musi jawnie dołączyć plik 4. Nazwa lub podobne ID nie służą do odgadywania brakującego oryginału. Wskazanie pliku jest deklaracją użytkownika jego pochodzenia; zgodne ID nie dowodzi historycznego wyprowadzenia 5 z 4. Obca biblioteka 6 blokuje eksport zamiast znikać po cichu.
+
+Import pokazuje nazwę/ID/liczniki/pochodzenie i wymaga pobrania pełnej kopii ratunkowej oraz potwierdzenia jej zapisania. Zastępuje cztery obszary: aktywny 4, warsztat 5, szkic 6 i bibliotekę 6; null usuwa poprzedni obszar 5 lub bibliotekę 6. Niezależna wspólna biblioteka scenariuszy 4 i pozostałe klucze są zachowane. Zmiana obszarów od pobrania kopii blokuje import, a awaria zapisu uruchamia sprawdzone wycofanie. Po niepotwierdzonym wycofaniu edycja jest zablokowana; dostępne są snapshot i pełne odzyskiwanie. Sukces przeładowuje aplikację. Cofnij nie zastępuje kopii ratunkowej.
+
+Partia, odstęp przybyć, tryb JIT i pozostałe ustawienia eksperymentu przechowywane tylko w sesji nie są dodawane do projektu przez A1. README każdego przyszłego przykładu musi podać ich jawne ustawienie przed uruchomieniem. Manifest nie jest plikiem importowanym przyciskiem Pakiet projektu. Importery JSON/archiwów 4/5 pozostają bez zmian. A1 nie łączy jeszcze raportu/animacji 4 z wynikami 6 (osobny A2).
 
 ## Granice i źródło prawdy
 
@@ -15,10 +35,10 @@ Eko, baterie i silniki nie są zależnością żadnego nowego przykładu. Nie ko
 | Plik / katalog docelowy | Rola i wymagania |
 | --- | --- |
 | `manifest.json` | Inwentarz: format `layout-studio-demo-manifest`, `formatVersion: 1`, `packageId`, `packageVersion`, tytuł, poziom basic/intermediate/advanced, język, zgodność z wersją aplikacji i importerem, `dataOrigin: synthetic`, jednostki s/mm, plik wejściowy, lista wariantów i plików. Każdy plik ma względną ścieżkę, rolę, format, liczbę bajtów i SHA-256. Nie jest kopią środowiska ani projektem importowanym obecnym przyciskiem JSON. |
-| `projekt-pokazowy.json` | Docelowy pojedynczy punkt wczytania całego przykładu po 7.12.A1: aktywny projekt źródłowy 4, opcjonalny warsztat 5, szkic 6 wraz z dokładnym oryginałem 4/5 oraz biblioteka wariantów tego samego źródła. Proponowana nowa otoczka `layout-studio-project-package`, wersja 1, nie zmienia automatycznie schematów 4/5/6. Ostateczne pola i walidator dostarcza A1 przed wygenerowaniem przykładów. Nie wkładać tej otoczki do obecnego importera 4. |
+| `projekt-pokazowy.json` | Pojedynczy punkt wczytania przykładu: otoczka A1 opisana powyżej. Używać przycisku Pakiet projektu; nie wkładać tej otoczki do dotychczasowego importera 4. |
 | `dane/proces.xlsx`, `dane/bom.xlsx` | Arkusze zgodne z istniejącymi `processRows`/`bomRows` i importerami; kompletny graf ID, czasy w sekundach, jawne VA/NVA bez domyślnego 85%, poprawne odwołania BOM i jawne syntetyczne koszty/waluta. Bez formuł lub zależności od zewnętrznych skoroszytów. Źródło danych w arkuszu Dane; opis kolumn osobno. CSV można dodać jako równoważny eksport, nie jako dodatkowe źródło prawdy. |
 | `dane/slownik_pol.md` | Rozróżnia wymagane/opcjonalne pola, typy, jednostki, listy ID i zależności. Wskazuje, które pliki są importowane, a które tylko opisowe. Opisuje czasy zespołu, brak automatycznego skracania czasu przez zwiększenie obsady, kompetencje uzupełniające się w zespole i kopie geometryczne bez nowej zdolności. |
-| `dane/warunki_eksperymentu.json` | Dokument referencyjny dla UI: liczba wyrobów, odstęp przybyć [s], tryb transportu, stan początkowy i zakres wyniku; wspólne warunki pary baza/reorganizacja. Modelowane kalendarze, zużycie, bufory, dostawy i zasoby zawarte w projektach. W razie kosztów jawna waluta/stawki/podstawa; w razie Monte Carlo jawna konfiguracja, ziarno i replikacje. Ten plik nie ma dziś osobnego importera; UI przechowuje część ustawień sesyjnie. A1 określi ich bezpieczne odtworzenie lub jawny krok instrukcji. |
+| `dane/warunki_eksperymentu.json` | Dokument referencyjny dla UI: liczba wyrobów, odstęp przybyć [s], tryb transportu, stan początkowy i zakres wyniku; wspólne warunki pary baza/reorganizacja. Modelowane kalendarze, zużycie, bufory, dostawy i zasoby zawarte w projektach. W razie kosztów jawna waluta/stawki/podstawa; w razie Monte Carlo jawna konfiguracja, ziarno i replikacje. Ten plik nie ma osobnego importera; ustawienia sesyjne użytkownik ustawia jawnie według README. |
 | `referencje/oczekiwane_wyniki.json`, `referencje/obliczenia.md` | Warunki, metryki, oczekiwane wartości/jednostki, tolerancja bezwzględna lub względna, metoda i autor referencji. Wzorzec wyznaczony niezależnie od badanego silnika. Zawiera kontrolne starty/końce, kolejność i bilans ilościowy; pełny harmonogram tylko gdy niezależnie wyznaczony. Nie traktować wygenerowanego raportu silnika jako wzorca dla tego samego silnika. |
 | `README.md` | Opis procesu i poziomu, wyraźne dane syntetyczne, wersje, pliki i kolejność importu, uruchomienie symulacji, zapis/porównanie wariantów, interpretacja wyników, ograniczenia i pomysły własnych zmian. Wskazuje różnicę między samym importem arkuszy a kompletnym projektem oraz między raportem 4 a wynikami 6. |
 | `assets/` (jeśli potrzebny) | Wszystkie wymagane lokalne modele/podkłady i ich źródła/licencje lub lista wspieranych modeli dostarczanych z aplikacją. Bez ścieżek `C:\...`, prywatnych adresów, ukrytych plików i niezbędnych pobrań z internetu. Obecny model obsługuje wbudowane ID wyglądu oraz podkład `dataUrl`; manifest nie tworzy importera dowolnego GLB/STEP. |

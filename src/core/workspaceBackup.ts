@@ -411,11 +411,11 @@ export class WorkspaceRestoreError extends Error {
   }
 }
 
-/** Full restore, not merge. Null removes a slot. Every caller is revalidated before writes. */
+/** Full restore by default. Project-package imports preserve the independent v4 scenario library. */
 export function restoreWorkspaceBackup(
   storage: StoragePort,
   payload: WorkspaceBackupPayload,
-  options: {expectedCurrentSnapshot?: string; beforeWrite?: (snapshot: string) => void} = {},
+  options: {expectedCurrentSnapshot?: string; beforeWrite?: (snapshot: string) => void; preserveV4ScenarioLibrary?: boolean} = {},
 ): RestoreResult {
   const checked = validateWorkspaceBackup(JSON.stringify(payload));
   if (!checked.valid || !checked.payload) throw new Error(checked.error ?? 'Niepoprawna kopia.');
@@ -427,7 +427,7 @@ export function restoreWorkspaceBackup(
       throw new Error('Stan przeglądarki zmienił się od pobrania kopii ratunkowej. Pobierz ją ponownie.');
     }
   }
-  const changed = slotNames.filter(name => current.storage[name] !== checked.payload!.storage[name]);
+  const changed = slotNames.filter(name => !(options.preserveV4ScenarioLibrary && name === 'v4ScenariosRaw') && current.storage[name] !== checked.payload!.storage[name]);
   if (changed.length && typeof storage.removeItem !== 'function') throw new Error('Pamięć nie obsługuje usuwania ani pełnego wycofania zapisów.');
   const attempted: Slot[] = [];
   const put = (name: Slot, value: string | null) => value === null ? storage.removeItem(SLOT_MAP[name]) : storage.setItem(SLOT_MAP[name], value);
