@@ -1,0 +1,25 @@
+{
+  "dataOrigin": "synthetic",
+  "batch": 3,
+  "arrivalIntervalSeconds": 1,
+  "transportMode": "just-in-time",
+  "initialArrivalsSeconds": [
+    0,
+    1,
+    2
+  ],
+  "materialAvailability": "assumed-available-at-operation-start",
+  "physicalBodyLocations": "not-modelled-in-explicit-JIT",
+  "transportRoutesAndDurations": "not-modelled-in-explicit-JIT",
+  "bufferModel": "explicit linear buffers, input=3, intermediate output=3, final output=null (unbounded); local continuation holds the same copy",
+  "materialDeliveries": "not-modelled-in-this-example",
+  "costAssumptions": null,
+  "stochasticConfig": null,
+  "calendarWindowSeconds": [
+    0,
+    28800
+  ],
+  "calendarBreaks": [],
+  "sourceOfProductionMeasurements": "none — designed teaching example",
+  "sessionSettingsMustBeSelectedInUI": true
+}

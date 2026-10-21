@@ -1,5 +1,12 @@
 # Zmiany v0.4.0 — 29.09.2026
 
+## Podstawowy zewnętrzny projekt pokazowy — 21.10.2026 (7.12.B)
+
+- Katalog `przyklady/01_zestaw_montazowy/`: 12 plików, pełny pakiet projektu, dwa warianty, arkusze procesu/BOM, manifest i niezależne referencje. Wszystkie dane syntetyczne; bez wbudowania projektu w aplikację.
+- Manualna linia 20/30/40 s, takt 60 s, jawne bufory i JIT. Baza na 3 aktywnych stanowiskach/3 osoby: partia 170 s; konsolidacja na 2/2: 190 s. Czasy i popyt niezmienne, mniejsza obsada nadal spełnia takt, bez deklaracji wzrostu przepustowości.
+- Celowane 14/14, generator --check i Edge od pustego projektu przez import XLSX/pakietu do symulacji/raportu, undo/redo, własnego wariantu i eksportu/importu/reload PASS. Bez zmiany modułów aplikacji, nowego builda i pełnej regresji.
+- Instrukcja MD/HTML/PDF: 55 stron/45 obrazów. A2 i fizyczne przykłady C/D pozostają otwarte; główny raport 4 nie jest raportem konsolidacji 6. Vercel nie zweryfikowano.
+
 ## Pakiet pojedynczego projektu — odbiór 21.10.2026 (7.12.A1)
 
 - Nowy przycisk **Pakiet projektu**: import i eksport rodziny źródła 4/5, zapisanego szkicu 6 i wariantów zgodnego źródła, w jednym JSON v1 z SHA-256 (do 25 MiB).

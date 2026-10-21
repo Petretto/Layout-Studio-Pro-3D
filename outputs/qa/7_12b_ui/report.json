@@ -1,0 +1,26 @@
+{
+  "at": "2026-10-21T20:23:59.388Z",
+  "result": "PASS",
+  "scope": "synthetic basic demo, empty project through real file UI; no localStorage seeding",
+  "reference": {
+    "batch": 3,
+    "arrivalIntervalSeconds": 1,
+    "transportMode": "just-in-time"
+  },
+  "checks": {
+    "emptyProjectToPackage": true,
+    "xlsxProcessAndBomImported": true,
+    "taktAndSourceBalanceVisible": true,
+    "sourceLayoutThreeTablesVisible": true,
+    "jitOffUntilSelected": true,
+    "baseMakespan170": true,
+    "comparison170And190": true,
+    "reportDownloaded": true,
+    "restoreConsolidated": true,
+    "undoRedoExact": true,
+    "consolidatedMakespan190": true,
+    "savedOwnVariant": true,
+    "packageExportImportReloadExact": true
+  },
+  "runtimeErrors": []
+}

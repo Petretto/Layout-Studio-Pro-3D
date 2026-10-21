@@ -1,0 +1,37 @@
+{
+  "referenceVersion": 1,
+  "dataOrigin": "synthetic",
+  "method": "Ręczny rachunek zdarzeń dla jawnej linii szeregowej; autor: Codex, 2026-10-21. Liczby spisano przed pierwszym testem; po próbie bez buforów doprecyzowano jawny model buforów przed testem aktualnej konfiguracji. Historia w obliczenia.md.",
+  "conditions": {"batch": 3, "arrivalIntervalSeconds": 1, "transportMode": "just-in-time"},
+  "units": {"time": "s", "capacity": "szt./h", "cost": "PLN/szt."},
+  "absoluteToleranceSeconds": 0.000000001,
+  "bufferModel": "Jawne bufory: wejścia 3, wyjścia pośrednie 3, końcowe null (bez limitu w modelu JIT); lokalna kontynuacja zatrzymuje tę samą kopię stanowiska.",
+  "customerTaktSeconds": 60,
+  "targetCycleSeconds": 60,
+  "workContentSeconds": 90,
+  "vaSeconds": 75,
+  "nvaSeconds": 15,
+  "bomCostPerUnit": 25,
+  "variants": [
+    {
+      "id": "BASIC-BASE", "activeStations": 3, "selectedWorkers": 3,
+      "staticCopyLoadsSeconds": [20, 30, 40], "staticCapacityPerHour": 90,
+      "batchMakespanSeconds": 170, "completionSeconds": [90, 130, 170],
+      "operationWindows": [
+        [1, "ZM-OP10", 0, 20], [1, "ZM-OP20", 20, 50], [1, "ZM-OP30", 50, 90],
+        [2, "ZM-OP10", 20, 40], [2, "ZM-OP20", 50, 80], [2, "ZM-OP30", 90, 130],
+        [3, "ZM-OP10", 40, 60], [3, "ZM-OP20", 80, 110], [3, "ZM-OP30", 130, 170]
+      ]
+    },
+    {
+      "id": "BASIC-CONSOLIDATED", "activeStations": 2, "selectedWorkers": 2,
+      "staticCopyLoadsSeconds": [50, 0, 40], "staticCapacityPerHour": 72,
+      "batchMakespanSeconds": 190, "completionSeconds": [90, 140, 190],
+      "operationWindows": [
+        [1, "ZM-OP10", 0, 20], [1, "ZM-OP20", 20, 50], [1, "ZM-OP30", 50, 90],
+        [2, "ZM-OP10", 50, 70], [2, "ZM-OP20", 70, 100], [2, "ZM-OP30", 100, 140],
+        [3, "ZM-OP10", 100, 120], [3, "ZM-OP20", 120, 150], [3, "ZM-OP30", 150, 190]
+      ]
+    }
+  ]
+}

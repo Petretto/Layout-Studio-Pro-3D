@@ -122,6 +122,78 @@ import {layoutRoutes} from '../src/core/algorithms/routing';
 import {reviseStationProject,splitStationProject,mergeStationProject,removeStationOperation} from '../src/core/stationRevision';
 import {addStationEquipment,updateStationEquipment,removeStationEquipment} from '../src/core/stationGeometry';
 import {readFileSync} from 'node:fs';
+
+function basicDemoPackage(){
+  const {parseProjectPackage}=require('../src/core/projectPackage');
+  return parseProjectPackage(readFileSync('przyklady/01_zestaw_montazowy/projekt-pokazowy.json','utf8'));
+}
+
+test('7.12.B: manifest obejmuje wszystkie pliki, poprawne SHA, źródła i czytelne projekcje bez zależności od dawnych przykładów',()=>{
+  const root='przyklady/01_zestaw_montazowy/',pkg=basicDemoPackage();
+  const {createHash}=require('node:crypto'),{readdirSync}=require('node:fs');
+  const manifest=JSON.parse(readFileSync(root+'manifest.json','utf8'));
+  assert.equal(manifest.dataOrigin,'synthetic');assert.equal(manifest.entryFile,'projekt-pokazowy.json');
+  assert.equal(manifest.importer.format,pkg.format);assert.equal(pkg.data.dataOrigin,'synthetic');
+  assert.deepEqual(manifest.assets.externalFiles,[]);
+  const files=readdirSync(root,{recursive:true,withFileTypes:true}).filter((d:any)=>d.isFile()).map((d:any)=>require('node:path').relative(root,require('node:path').join(d.parentPath,d.name)).replaceAll('\\','/')).filter((p:string)=>p!=='manifest.json').sort();
+  assert.deepEqual(manifest.files.map((f:any)=>f.path).sort(),files);
+  for(const file of manifest.files){
+    assert.ok(!file.path.startsWith('/')&&!file.path.includes('..')&&!file.path.includes('\\'));
+    const bytes=readFileSync(root+file.path);assert.equal(file.bytes,bytes.length);assert.equal(file.sha256,createHash('sha256').update(bytes).digest('hex'));
+  }
+  for(const [path,raw] of [['dane/zrodlo4.json',pkg.data.source4Json],['dane/szkic6.json',pkg.data.draftRaw],['dane/warianty6.json',pkg.data.variantsRaw]])assert.deepEqual(JSON.parse(readFileSync(root+path,'utf8')),JSON.parse(raw));
+  const draft=JSON.parse(pkg.data.draftRaw).project;
+  assert.equal(draft.facility.isConfirmed,false);assert.ok(draft.layoutObjects.every((o:any)=>o.isVisualAssumption));
+  assert.ok(!/EKO|AUDIT-7|MOTOR|BATTERY/.test(JSON.stringify(draft)));
+  assert.equal(pkg.data.source5Json,null);assert.deepEqual(draft.subassemblies,[]);
+});
+
+test('7.12.B: arkusze procesu i BOM przechodzą istniejące importery i odpowiadają pełnemu modelowi',()=>{
+  const pkg=basicDemoPackage(),project=JSON.parse(pkg.data.draftRaw).project;
+  const excel=require('../src/core/export/excelImporter'),XLSX=require('xlsx');
+  const bytes=(path:string)=>{const b=readFileSync('przyklady/01_zestaw_montazowy/dane/'+path);return b.buffer.slice(b.byteOffset,b.byteOffset+b.byteLength);};
+  const process=excel.importProcess(bytes('proces.xlsx')),bom=excel.importBOM(bytes('bom.xlsx'),new Set(project.operations.map((o:any)=>o.id)));
+  assert.deepEqual(process.errors,[]);assert.equal(process.skipped,0);assert.equal(process.items.length,3);
+  assert.deepEqual(excel.processRows(process.items),excel.processRows(project.operations));
+  assert.deepEqual(bom.errors,[]);assert.equal(bom.skipped,0);assert.deepEqual(excel.bomRows(bom.items),excel.bomRows(project.bom));
+  for(const path of ['proces.xlsx','bom.xlsx']){const book=XLSX.read(bytes(path),{type:'array'});assert.deepEqual(book.SheetNames,['Dane','Opis kolumn','Pochodzenie']);
+    for(const sheet of Object.values(book.Sheets) as any[])for(const [key,cell] of Object.entries(sheet) as any[])if(!key.startsWith('!'))assert.equal(cell.f,undefined,'No formulas or external workbook dependencies');
+  }
+});
+
+test('7.12.B: takt, BOM i statyczny bilans zgadzają się z niezależnymi obliczeniami',()=>{
+  const pkg=basicDemoPackage(),ref=JSON.parse(readFileSync('przyklady/01_zestaw_montazowy/referencje/oczekiwane_wyniki.json','utf8'));
+  const {calculateTaktTime}=require('../src/core/algorithms/taktCalculator');
+  const source=derive(parseProject(pkg.data.source4Json));assert.deepEqual(source.issues.filter(i=>i.severity==='error'),[]);
+  const takt=calculateTaktTime(source.project.demand);assert.equal(takt.customerTaktSeconds,ref.customerTaktSeconds);assert.equal(takt.taktTimeSeconds,ref.targetCycleSeconds);
+  assert.equal(source.project.bom.reduce((n,b)=>n+b.quantityPerUnit*b.unitCost,0),ref.bomCostPerUnit);
+  const variants=JSON.parse(pkg.data.variantsRaw).variants;
+  for(const variant of variants){const summary=summarizeStaticVariant(variant.project),expected=ref.variants.find((r:any)=>r.id===variant.id);
+    assert.equal(summary.activeStationsCount,expected.activeStations);assert.equal(summary.teamWorkersCount,expected.selectedWorkers);assert.equal(summary.selectedWorkContentSeconds,ref.workContentSeconds);assert.equal(summary.staticCapacityPerHour,expected.staticCapacityPerHour);assert.equal(summary.timeBasis,'assumed');
+    assert.equal(variant.project.operations.reduce((s:number,o:any)=>s+o.vaTimeSeconds,0),ref.vaSeconds);
+    for(const op of variant.project.operations){const p=op.staffing.timeVariants[0].timeProfile;assert.equal(p.durationBasis,'assumed');assert.deepEqual(p.machineRun,[]);assert.equal(p.manualWork[0].endSeconds,p.durationSeconds);}
+  }
+  assert.deepEqual(variants[0].project.demand,variants[1].project.demand);
+});
+
+test('7.12.B: wszystkie okna ręcznego harmonogramu obu wariantów, brak podwójnych rezerwacji, JIT i niezmienność danych',()=>{
+  const pkg=basicDemoPackage(),ref=JSON.parse(readFileSync('przyklady/01_zestaw_montazowy/referencje/oczekiwane_wyniki.json','utf8'));
+  const variants=JSON.parse(pkg.data.variantsRaw).variants,before=JSON.stringify(variants);
+  for(const variant of variants){
+    const expected=ref.variants.find((r:any)=>r.id===variant.id),project=parseDomainProjectV6(JSON.stringify(variant.project));
+    const result=scheduleWorkerRun(project,ref.conditions.arrivalIntervalSeconds,ref.conditions.batch,undefined,undefined,{transportMode:'just-in-time'});
+    assert.equal(result.transportMode,'just-in-time');assert.equal(result.bodyBook,undefined);assert.equal(result.transportMovements,undefined);
+    assert.deepEqual(result.jobs.map(j=>j.finish),expected.completionSeconds);
+    const actual=result.runs.map(r=>[r.job,r.operationId,r.startSeconds,r.endSeconds]).sort((a,b)=>Number(a[0])-Number(b[0])||String(a[1]).localeCompare(String(b[1])));
+    assert.equal(actual.length,9);for(let i=0;i<actual.length;i++){assert.deepEqual(actual[i].slice(0,2),expected.operationWindows[i].slice(0,2));for(const j of [2,3])assert.ok(Math.abs(Number(actual[i][j])-expected.operationWindows[i][j])<=ref.absoluteToleranceSeconds);}
+    for(const worker of project.workerRunSelection!.teamWorkerIds){const runs=result.runs.filter(r=>r.workerIds.includes(worker)).sort((a,b)=>a.startSeconds-b.startSeconds);for(let i=1;i<runs.length;i++)assert.ok(runs[i-1].endSeconds<=runs[i].startSeconds);}
+    const single=scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'});assert.equal(single.jobs[0].finish,90);
+    const moved=structuredClone(project);moved.layoutObjects.forEach(o=>o.xMm+=100);assert.deepEqual(scheduleWorkerRun(moved,1,3,undefined,undefined,{transportMode:'just-in-time'}),result);
+  }
+  assert.equal(JSON.stringify(variants),before);
+  const comparison=compareDomainVariants(variants,'BASIC-BASE',ref.conditions);assert.ok(comparison.rows.every(r=>r.dynamic.status==='completed'));
+  assert.deepEqual(comparison.rows.map(r=>r.dynamic.status==='completed'?r.dynamic.makespanSeconds:null),[170,190]);
+});
 import {encodeImport} from '../src/core/importArchive';
 import {makePortableArchive,readPortableArchive} from '../src/core/portableArchive';
 import {createEkoTestScenario,EKO_TEST_PREPARATIONS,type EkoTestVariant} from './fixtures/ekoDomainScenarios';

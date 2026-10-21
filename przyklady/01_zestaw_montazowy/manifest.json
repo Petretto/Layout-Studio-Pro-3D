@@ -1,0 +1,108 @@
+{
+  "format": "layout-studio-demo-manifest",
+  "formatVersion": 1,
+  "packageId": "DEMO-ZESTAW-MONTAZOWY-1",
+  "packageVersion": "1.0.0",
+  "title": "Zestaw uchwytu montażowego — DEMO syntetyczne",
+  "level": "basic",
+  "language": "pl",
+  "compatibleAppVersion": "0.4.0",
+  "importer": {
+    "format": "layout-studio-project-package",
+    "formatVersion": 1
+  },
+  "dataOrigin": "synthetic",
+  "units": {
+    "time": "s",
+    "geometry": "mm",
+    "currency": "PLN"
+  },
+  "entryFile": "projekt-pokazowy.json",
+  "variants": [
+    "BASIC-BASE",
+    "BASIC-CONSOLIDATED"
+  ],
+  "assets": {
+    "externalFiles": [],
+    "appearance": "built-in Table geometry, synthetic dimensions; no external downloads"
+  },
+  "files": [
+    {
+      "path": "projekt-pokazowy.json",
+      "role": "entry-project-package",
+      "format": "json",
+      "bytes": 42986,
+      "sha256": "4ef1b6948de6e72df0fe71a9e5ca425bbdc3a834579300a31025012f577ba680"
+    },
+    {
+      "path": "dane/zrodlo4.json",
+      "role": "data-projection",
+      "format": "json",
+      "bytes": 4013,
+      "sha256": "c8f5443a64248fc235f34cf5f4723ba8c9cb5df9cb15fddd87278f8788284010"
+    },
+    {
+      "path": "dane/szkic6.json",
+      "role": "data-projection",
+      "format": "json",
+      "bytes": 18167,
+      "sha256": "9fc9b02763451e4582885714d5a5395a5f1a06251773c4fdaecf9218a46169e0"
+    },
+    {
+      "path": "dane/warianty6.json",
+      "role": "data-projection",
+      "format": "json",
+      "bytes": 41604,
+      "sha256": "85e2ba2ade7db79122d2c2f2260ea60076cd719fdbfba908a6d86ee7cdd421f3"
+    },
+    {
+      "path": "dane/warunki_eksperymentu.json",
+      "role": "session-settings-reference",
+      "format": "json",
+      "bytes": 809,
+      "sha256": "7278b7e185099ed01dc91daeda5f43f0ef12a679d46b90de1b4ab894b30aa2d9"
+    },
+    {
+      "path": "dane/proces.xlsx",
+      "role": "spreadsheet-template",
+      "format": "xlsx",
+      "bytes": 11996,
+      "sha256": "5b2140012d3c53c11e76ddd56fc1682f7d38405c70f2745f584463e9540ac493"
+    },
+    {
+      "path": "dane/bom.xlsx",
+      "role": "spreadsheet-template",
+      "format": "xlsx",
+      "bytes": 12206,
+      "sha256": "4a41730da8d18616fe2e9cb01b41c9e763516df7e2a3d14ed708386f29e43473"
+    },
+    {
+      "path": "README.md",
+      "role": "instructions",
+      "format": "md",
+      "bytes": 8185,
+      "sha256": "d9c549cb73479ebd81f07940fad7af18756e129a31bbe9a847249c7c77ad48f7"
+    },
+    {
+      "path": "dane/slownik_pol.md",
+      "role": "field-dictionary",
+      "format": "md",
+      "bytes": 4923,
+      "sha256": "b059d00077ab9be768eb8275df68c7c5a904bd6bcd0579ab2b0893ff70f9c420"
+    },
+    {
+      "path": "referencje/oczekiwane_wyniki.json",
+      "role": "independent-reference",
+      "format": "json",
+      "bytes": 1881,
+      "sha256": "ab3ad36fc7599692ff9bd6ffc0fad7d9a4e21afee56d2e1da2379b3bda7b6445"
+    },
+    {
+      "path": "referencje/obliczenia.md",
+      "role": "independent-calculation",
+      "format": "md",
+      "bytes": 4124,
+      "sha256": "4f3ceeac9867251f0965c0811c01f3af9a386ef7a9b0413e444ec7fb269fcce2"
+    }
+  ]
+}

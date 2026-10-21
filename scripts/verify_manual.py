@@ -25,7 +25,7 @@ with pdfplumber.open(pdf_path) as document:
         for word in page.extract_words():
             if word['x0'] < 0 or word['x1'] > page.width + 1 or word['top'] < 0 or word['bottom'] > page.height + 1:
                 bounds.append({'page': number, 'text': word['text']})
-    required = ['3.1.', '3.2.', '3.3.', '3.4.', '3.5.', '3.6.', '3.7.', '3.8.', '3.9.', '4. Ważne zasady'] + [f'5.{n}.' for n in range(1, 14)]
+    required = ['3.1.', '3.2.', '3.3.', '3.4.', '3.5.', '3.6.', '3.7.', '3.8.', '3.9.', '4. Ważne zasady'] + [f'5.{n}.' for n in range(1, 15)]
     joined = '\n'.join(texts)
     absent = [item for item in required if item not in joined]
     blank = [i + 1 for i, text in enumerate(texts) if not text.strip()]

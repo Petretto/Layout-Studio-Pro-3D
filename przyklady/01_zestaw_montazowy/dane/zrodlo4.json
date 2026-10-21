@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 4,
+  "id": "DEMO-ZESTAW-MONTAZOWY-1",
+  "name": "Zestaw uchwytu montażowego — DEMO syntetyczne",
+  "createdAt": "2026-10-21T00:00:00.000Z",
+  "updatedAt": "2026-10-21T00:00:00.000Z",
+  "timeUnit": "s",
+  "algorithm": "Manual",
+  "currency": "PLN",
+  "targetLayoutType": "Linear",
+  "layoutMode": "manual",
+  "layoutSettings": {
+    "tableWidthMm": 1200,
+    "tableLengthMm": 800,
+    "spacingMm": 800,
+    "aisleMm": 1500
+  },
+  "facility": {
+    "widthMm": 8000,
+    "lengthMm": 6000,
+    "heightMm": 3000,
+    "gridSizeMm": 100,
+    "isConfirmed": false
+  },
+  "obstacles": [],
+  "demand": {
+    "yearlyDemand": 120000,
+    "workingDaysPerYear": 250,
+    "shiftsPerDay": 1,
+    "hoursPerShift": 8,
+    "plannedBreaksMinutesPerShift": 0,
+    "oeePercent": 100
+  },
+  "processSteps": [
+    {
+      "id": "ZM-OP10",
+      "name": "Przygotowanie podstawy",
+      "standardTimeSeconds": 20,
+      "vaTimeSeconds": 16,
+      "nvaTimeSeconds": 4,
+      "sequenceNumber": 1,
+      "predecessorIds": [],
+      "assignedWorkstationId": "WS-1"
+    },
+    {
+      "id": "ZM-OP20",
+      "name": "Montaż uchwytu i pokręteł",
+      "standardTimeSeconds": 30,
+      "vaTimeSeconds": 25,
+      "nvaTimeSeconds": 5,
+      "sequenceNumber": 2,
+      "predecessorIds": [
+        "ZM-OP10"
+      ],
+      "assignedWorkstationId": "WS-2"
+    },
+    {
+      "id": "ZM-OP30",
+      "name": "Kontrola i opakowanie zestawu",
+      "standardTimeSeconds": 40,
+      "vaTimeSeconds": 34,
+      "nvaTimeSeconds": 6,
+      "sequenceNumber": 3,
+      "predecessorIds": [
+        "ZM-OP20"
+      ],
+      "assignedWorkstationId": "WS-3"
+    }
+  ],
+  "workstationSettings": {
+    "[\"ZM-OP10\"]": {
+      "operators": 1,
+      "parallelStations": 1
+    },
+    "[\"ZM-OP20\"]": {
+      "operators": 1,
+      "parallelStations": 1
+    },
+    "[\"ZM-OP30\"]": {
+      "operators": 1,
+      "parallelStations": 1
+    }
+  },
+  "bom": [
+    {
+      "id": "BOM-1",
+      "partNumber": "ZM-POD",
+      "name": "Podstawa uchwytu",
+      "quantityPerUnit": 1,
+      "container": "BoxKLT",
+      "packageQuantity": 20,
+      "associatedProcessStepId": "ZM-OP10",
+      "unitCost": 8
+    },
+    {
+      "id": "BOM-2",
+      "partNumber": "ZM-UCH",
+      "name": "Uchwyt",
+      "quantityPerUnit": 1,
+      "container": "BoxKLT",
+      "packageQuantity": 20,
+      "associatedProcessStepId": "ZM-OP20",
+      "unitCost": 12
+    },
+    {
+      "id": "BOM-3",
+      "partNumber": "ZM-POK",
+      "name": "Pokrętło ręczne",
+      "quantityPerUnit": 2,
+      "container": "BoxKLT",
+      "packageQuantity": 100,
+      "associatedProcessStepId": "ZM-OP20",
+      "unitCost": 1.5
+    },
+    {
+      "id": "BOM-4",
+      "partNumber": "ZM-OPAK",
+      "name": "Opakowanie zestawu",
+      "quantityPerUnit": 1,
+      "container": "Carton",
+      "packageQuantity": 20,
+      "associatedProcessStepId": "ZM-OP30",
+      "unitCost": 2
+    }
+  ],
+  "layoutObjects": [
+    {
+      "id": "ZM-TABLE-1",
+      "name": "Stół S1 — geometria koncepcyjna",
+      "type": "Table",
+      "workstationId": "WS-1",
+      "xMm": 1000,
+      "yMm": 2000,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 900,
+      "rotationDeg": 0,
+      "colorHex": "#3979a8",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "ZM-TABLE-2",
+      "name": "Stół S2 — geometria koncepcyjna",
+      "type": "Table",
+      "workstationId": "WS-2",
+      "xMm": 3000,
+      "yMm": 2000,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 900,
+      "rotationDeg": 0,
+      "colorHex": "#3979a8",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "ZM-TABLE-3",
+      "name": "Stół S3 — geometria koncepcyjna",
+      "type": "Table",
+      "workstationId": "WS-3",
+      "xMm": 5000,
+      "yMm": 2000,
+      "zMm": 0,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 900,
+      "rotationDeg": 0,
+      "colorHex": "#3979a8",
+      "isVisualAssumption": true
+    }
+  ]
+}

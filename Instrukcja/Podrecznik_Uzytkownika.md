@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**  
-Aktualizacja podręcznika: **21.10.2026 — pakiet pojedynczego projektu ze szkicem i wariantami (7.12.A1); zachowano opis bezpiecznego odzyskiwania (7.6a), raportu i importu procesów (7.10a/7.11a) oraz LOD/Popout**.
+Aktualizacja podręcznika: **21.10.2026 — zewnętrzny podstawowy projekt pokazowy (7.12.B), pakiet projektu ze szkicem i wariantami (7.12.A1); zachowano opis bezpiecznego odzyskiwania (7.6a), raportu i importu procesów (7.10a/7.11a) oraz LOD/Popout**.
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -660,4 +660,21 @@ Aby wczytać pakiet:
 
 Jeżeli dane zmieniły się od pobrania kopii, import zatrzyma się przed zapisem; pobierz nową kopię i ponownie sprawdź zakres. Błąd pamięci wywołuje wycofanie do poprzedniego stanu. Gdy wycofanie nie jest potwierdzone, edycja i zamknięcie okna pozostają zablokowane. **Pobierz stan sprzed błędu** zachowuje snapshot, a **Odtwórz pełną kopię ratunkową** otwiera odzyskiwanie całego środowiska. Po usunięciu przyczyny można też wczytać poprawny pakiet. Cofnij nie odwraca importu po przeładowaniu; użyj kopii ratunkowej.
 
-Poprawny import nie oznacza kompletności danych do symulacji. Główne widoki, animacja i raport 4 oraz obliczenia szkicu 6 pozostają odrębnymi ścieżkami; ich integracja jest osobnym punktem A2. Trzy kompletne projekty pokazowe dopiero powstaną w B/C. Pliki prób odbiorowych nie zastępują tych przykładów.
+Poprawny import nie oznacza kompletności danych do symulacji. Główne widoki, animacja i raport 4 oraz obliczenia szkicu 6 pozostają odrębnymi ścieżkami; ich integracja jest osobnym punktem A2. Pierwszy projekt pokazowy B opisano poniżej; pozostałe powstaną w C. Pliki prób odbiorowych A/A1 nie zastępują tych przykładów.
+
+### 5.14. Pierwszy zewnętrzny projekt pokazowy — zestaw uchwytu (7.12.B)
+
+Katalog **`przyklady/01_zestaw_montazowy/`** zawiera gotowy przykład i szablony: `projekt-pokazowy.json`, manifest z wersją i sumami, arkusze `dane/proces.xlsx` i `dane/bom.xlsx`, projekcje danych 4/6, warunki eksperymentu, słownik pól, README oraz niezależne obliczenia referencyjne. Wszystkie czasy, ceny i wymiary są syntetyczne. Projekt nie jest wbudowany w aplikację; trzeba wskazać plik z katalogu. Udostępnianie paczek z ekranu startowego pozostaje w 7.13.
+
+1. Zachowaj własną pracę. Na pulpicie możesz wybrać **Rozpocznij od zera**; potem otwórz **Pakiet projektu** i wybierz `projekt-pokazowy.json`. Podgląd ma pokazać trzy operacje, trzy stanowiska, trzy osoby i dwa warianty. Pobierz kopię ratunkową, potwierdź i wczytaj pakiet.
+2. W głównych zakładkach sprawdź bazę: takt **60 s**, czasy **20/30/40 s**, BOM **25 PLN/szt.** i trzy stanowiska. Hala i stoły mają wymiary koncepcyjne. Arkusze XLSX służą także do ćwiczenia importu w **2 Proces** i **3 BOM**, lecz sam arkusz nie odtwarza zasobów ani biblioteki 6; pełną demonstrację przywraca pakiet.
+3. Przejdź do **Stanowiska v5**, do panelu harmonogramu szkicu 6. Ustaw **3 sztuki**, **odstęp 1 s** i jawnie zaznacz **Symulacja bez transportu — just in time**. Oblicz harmonogram: baza kończy sztuki po **90/130/170 s**. Tryb JIT zakłada dostępne materiały, pomija transport i fizyczne lokalizacje korpusów. Jest wyłączony po ponownym otwarciu — trzeba wybrać go jawnie.
+4. W panelu porównania wariantów również ustaw **3 sztuki**, **1 s**, jawny **JIT** i oba zapisane warianty. Wybierz bazę na trzech stanowiskach i uruchom porównanie. Baza: **170 s**, trzy osoby i trzy aktywne stanowiska; konsolidacja: **190 s**, dwie osoby i dwa aktywne stanowiska. Nominalna zdolność statyczna wynosi odpowiednio **90 i 72 szt./h**. To odrębne miary od dynamicznej przepustowości małej partii. Pobierz **raport porównania (.md)**.
+
+![Porównanie bazowego zestawu i konsolidacji przy tych samych warunkach — dane syntetyczne, jawny JIT](../outputs/qa/7_12b_ui/comparison.png)
+
+Konsolidacja przenosi drugą operację do pierwszego stanowiska i osoby W1, nie zmieniając czasów. Trzecie stanowisko/osoba W3 nadal wykonuje kontrolę i pakowanie. S2/W2 pozostają rezerwą. Zdefiniowane bufory mają wejścia po 3 szt., wyjścia pośrednie po 3 szt. i jawnie nieograniczone końcowe wyjście w modelu (null). Lokalna kontynuacja na tej samej kopii nie jest przerywana inną sztuką. Pojemność nie blokuje tej partii; to założenie przykładu, nie stwierdzenie o rzeczywistym magazynie.
+
+Mniejsza obsada nadal mieści się w takcie 60 s, ale zmniejsza maksymalną zdolność i wydłuża partię. Bez stawek nie deklarujemy oszczędności pieniężnych. Zmieniono przydział, skład i położenie rezerwowego stołu, więc raport uczciwie ostrzega o wielu zmienionych czynnikach.
+
+Możesz wczytać konsolidację do szkicu przyciskiem **Wczytaj do szkicu 6**, użyć **Cofnij dane szkicu / Ponów dane szkicu**, zapisać własny wariant pod nową nazwą i wyeksportować pakiet. Ponowne wczytanie oraz odświeżenie zachowują szkic i warianty. Ustawienia sesji wybierz ponownie jawnie. Główne widoki i raport A4 schematu 4 nadal dotyczą źródłowej bazy; raportem konsolidacji jest tutaj raport porównania szkicu 6. To ograniczenie pozostaje do integracji A2, przed fizycznymi przykładami średnim i zaawansowanym.

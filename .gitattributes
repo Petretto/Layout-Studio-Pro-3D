@@ -1,0 +1,3 @@
+# Keep demo manifest byte counts/SHA-256 valid after checkout on Windows and Unix.
+przyklady/01_zestaw_montazowy/** text eol=lf
+przyklady/01_zestaw_montazowy/dane/*.xlsx -text
