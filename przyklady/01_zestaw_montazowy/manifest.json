@@ -80,8 +80,8 @@
       "path": "README.md",
       "role": "instructions",
       "format": "md",
-      "bytes": 8185,
-      "sha256": "d9c549cb73479ebd81f07940fad7af18756e129a31bbe9a847249c7c77ad48f7"
+      "bytes": 8625,
+      "sha256": "8e9bc13c3929db53ce44ce3202835f25365a9469b9aea11761cde5b4ffe7562e"
     },
     {
       "path": "dane/slownik_pol.md",

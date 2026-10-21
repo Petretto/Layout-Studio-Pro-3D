@@ -1,5 +1,12 @@
 # Zmiany v0.4.0 — 29.09.2026
 
+## Wspólny widok aktywnego modelu 6 — 21.10.2026 (7.12.A2a)
+
+- Nowy panel odczytu szkicu 6: przydziały rejestru, czasy wybranej obsady, dopuszczenia, rzut zapisanej geometrii i raport statyczny Markdown ze wspólnym SHA-256 modelu.
+- Aktualizacja po przywróceniu wariantu, Cofnij/Ponów i ponownym otwarciu. Bez konwersji do 4, ponownego bilansu, tworzenia geometrii i zgadywania brakujących czasów/kopii. Przy wielu dopuszczeniach zdolność pozostaje nieokreślona.
+- Backup 470 plików SHA-256 PASS; celowane 12/12 i manifest 1/1, TypeScript/Vite oraz Edge PASS, źródło 4 bez mutacji, JIT 190 s zachowane. Instrukcja 56 stron/46 obrazów.
+- A2 pozostaje w trakcie. 3D i animacja właściwego harmonogramu 6 są w A2b; główne widoki/A4 4 nadal oddzielne. Vercel nie zweryfikowano.
+
 ## Podstawowy zewnętrzny projekt pokazowy — 21.10.2026 (7.12.B)
 
 - Katalog `przyklady/01_zestaw_montazowy/`: 12 plików, pełny pakiet projektu, dwa warianty, arkusze procesu/BOM, manifest i niezależne referencje. Wszystkie dane syntetyczne; bez wbudowania projektu w aplikację.

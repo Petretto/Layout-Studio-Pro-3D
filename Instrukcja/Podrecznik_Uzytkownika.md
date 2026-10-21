@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**  
-Aktualizacja podręcznika: **21.10.2026 — zewnętrzny podstawowy projekt pokazowy (7.12.B), pakiet projektu ze szkicem i wariantami (7.12.A1); zachowano opis bezpiecznego odzyskiwania (7.6a), raportu i importu procesów (7.10a/7.11a) oraz LOD/Popout**.
+Aktualizacja podręcznika: **21.10.2026 — wspólny widok przydziałów, rzutu i raportu aktywnego szkicu 6 (7.12.A2a), projekt pokazowy (7.12.B) oraz pakiet projektu (7.12.A1); zachowano opis odzyskiwania (7.6a), raportu i importu procesów (7.10a/7.11a) oraz LOD/Popout**.
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -678,3 +678,18 @@ Konsolidacja przenosi drugą operację do pierwszego stanowiska i osoby W1, nie 
 Mniejsza obsada nadal mieści się w takcie 60 s, ale zmniejsza maksymalną zdolność i wydłuża partię. Bez stawek nie deklarujemy oszczędności pieniężnych. Zmieniono przydział, skład i położenie rezerwowego stołu, więc raport uczciwie ostrzega o wielu zmienionych czynnikach.
 
 Możesz wczytać konsolidację do szkicu przyciskiem **Wczytaj do szkicu 6**, użyć **Cofnij dane szkicu / Ponów dane szkicu**, zapisać własny wariant pod nową nazwą i wyeksportować pakiet. Ponowne wczytanie oraz odświeżenie zachowują szkic i warianty. Ustawienia sesji wybierz ponownie jawnie. Główne widoki i raport A4 schematu 4 nadal dotyczą źródłowej bazy; raportem konsolidacji jest tutaj raport porównania szkicu 6. To ograniczenie pozostaje do integracji A2, przed fizycznymi przykładami średnim i zaawansowanym.
+
+### 5.15. Przydziały, rzut i raport aktywnego szkicu 6 (7.12.A2a)
+
+W **Stanowiska v5**, pod informacją o zapisanym szkicu 6, znajduje się panel **Aktywny szkic 6 — przydziały, rzut i raport**. Wszystkie jego elementy korzystają z tego samego aktywnego modelu. Nie wykonuje się nowego bilansu źródła 4 ani automatycznej migracji. Panel jest do odczytu; dane zmieniasz w edytorach szkicu i przez przywracanie wariantów.
+
+1. Po wczytaniu projektu podstawowego panel pokazuje przydziały OP10/OP20/OP30 do trzech stanowisk, wybrane czasy 20/30/40 s, założone pochodzenie i pułap statyczny 90 szt./h. Rzut pokazuje zapisane stoły z trwałymi ID stanowisk.
+2. Wczytaj konsolidację z biblioteki wariantów do szkicu. Ten sam panel ma teraz OP10 i OP20 na ST-ZM-1 (suma 50 s), ST-ZM-2 jako rezerwę i OP30 na ST-ZM-3. W składzie są W1/W3, pułap statyczny to 72 szt./h, a rezerwowy stół S2 na rzucie ma Y=4000 mm zamiast 2000 mm. Cofnij/Ponów odtwarza także ten widok.
+3. Kliknij **Pobierz raport statyczny aktywnego szkicu 6 (.md)**. Raport zawiera bieżące przydziały, czasy, dopuszczenia i współrzędne geometrii. Skrót SHA-256 w nagłówku raportu musi być taki sam jak w panelu. Zmiana danych zmienia skrót; skrót identyfikuje model, nie jest certyfikatem jego poprawności ani podpisem autora.
+4. Zapis, eksport/import pakietu i ponowne otwarcie tego samego modelu zachowują widok i treść raportu statycznego. Harmonogram nadal wymaga osobnego uruchomienia dla jawnych warunków; w przykładzie konsolidacja dla 3 szt./1 s/JIT daje 190 s.
+
+![Spójny widok aktywnego szkicu 6 po przywróceniu konsolidacji — dane syntetyczne](../outputs/qa/7_12a2a_ui/consolidated_overview.png)
+
+Panel nie uzupełnia brakujących czasów domyślnym czasem standardowym. Nie wybiera też pierwszej z kilku dopuszczonych kopii i nie dzieli przez ich liczbę: gdy brak jednoznacznego wyboru, zdolność kopii pozostaje **brak**. Suma czasów według rejestru stanowisk i dopuszczenia kopii są pokazane odrębnie. Pułap statyczny nie potwierdza dostępności pracowników, kalendarzy, transportu ani dynamicznej przepustowości.
+
+Rzut przedstawia istniejące obrysy z obrotem, przypisania i przeszkody, bez podkładu i tras. Nie tworzy brakującego wyposażenia, nie jest edytorem ani oceną BHP. Główne widoki/raport A4 projektu 4 pozostają oddzielne; ich wyników nie należy podpisywać jako wyników aktywnego 6. Widok 3D i animacja związana z harmonogramem 6 pozostają w A2b; A2a nie zamyka całego A2.

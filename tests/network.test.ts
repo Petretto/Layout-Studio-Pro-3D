@@ -128,6 +128,47 @@ function basicDemoPackage(){
   return parseProjectPackage(readFileSync('przyklady/01_zestaw_montazowy/projekt-pokazowy.json','utf8'));
 }
 
+test('7.12.A2a: przydziały, geometria i raport są projekcją aktywnego 6 bez zmiany źródła i bez ponownego bilansu',()=>{
+  const api=require('../src/core/domainModelView'),pkg=basicDemoPackage();
+  const variants=JSON.parse(pkg.data.variantsRaw).variants,before=JSON.stringify(variants);
+  const [baseView,consView]=variants.map((v:any)=>api.buildDomainModelView(v.project));
+  assert.equal(baseView.maxCopyLoadSeconds,40);assert.equal(consView.maxCopyLoadSeconds,50);
+  assert.equal(baseView.staticCapacityPerHour,90);assert.equal(consView.staticCapacityPerHour,72);
+  assert.deepEqual(consView.stations.map((s:any)=>s.operationIds),[['ZM-OP10','ZM-OP20'],[],['ZM-OP30']]);
+  assert.deepEqual(consView.stations.map((s:any)=>s.assignedSeconds),[50,0,40]);
+  assert.deepEqual(consView.selectedWorkers,['ZM-W1','ZM-W3']);
+  assert.equal(baseView.geometry.find((o:any)=>o.id==='ZM-TABLE-2').yMm,2000);
+  assert.equal(consView.geometry.find((o:any)=>o.id==='ZM-TABLE-2').yMm,4000);
+  assert.notEqual(baseView.signatureSha256,consView.signatureSha256);
+  const report=api.domainModelViewReport(consView);assert.ok(report.includes(consView.signatureSha256));
+  assert.ok(report.includes('ST-ZM-1 | ZM-OP10, ZM-OP20 | 50'));assert.ok(report.includes('72 szt./h'));
+  assert.ok(report.includes('3000/4000/0'));assert.ok(report.includes('założenie'));
+  assert.equal(JSON.stringify(variants),before);assert.deepEqual(JSON.parse(pkg.data.source4Json).processSteps.map((o:any)=>o.assignedWorkstationId),['WS-1','WS-2','WS-3']);
+});
+
+test('7.12.A2a: brak obsady lub wiele dopuszczeń nie tworzy czasów, kopii ani pozornej zdolności',()=>{
+  const api=require('../src/core/domainModelView'),pkg=basicDemoPackage(),base=JSON.parse(pkg.data.draftRaw).project;
+  const noChoice=structuredClone(base);delete noChoice.workerRunSelection;
+  const missing=api.buildDomainModelView(noChoice);assert.equal(missing.selectedWorkSeconds,null);assert.equal(missing.maxCopyLoadSeconds,null);assert.equal(missing.staticCapacityPerHour,null);assert.equal(missing.operations[0].durationSeconds,null);assert.equal(missing.stations[0].assignedSeconds,null);
+  const alternate=structuredClone(base);alternate.stationRouting.operations[1].candidates.push({stationId:'ST-ZM-1',copy:1,requiredEquipmentIds:['ZM-EQ1']});
+  const alternatives=api.buildDomainModelView(alternate);assert.equal(alternatives.staticCapacityPerHour,null);assert.ok(alternatives.copies.every((c:any)=>c.loadSeconds===null));
+  const noRouting=structuredClone(base);delete noRouting.stationRouting;
+  const unrouted=api.buildDomainModelView(noRouting);assert.equal(unrouted.staticCapacityPerHour,null);assert.equal(unrouted.stations[0].assignedSeconds,20);
+  const noCopy=structuredClone(noRouting);delete noCopy.stationSettings['ST-ZM-1'];assert.equal(api.buildDomainModelView(noCopy).stations[0].copies,null);
+  const emptyGeometry=structuredClone(base);emptyGeometry.layoutObjects=[];emptyGeometry.equipment.forEach((e:any)=>{delete e.layoutObjectId;});assert.deepEqual(api.buildDomainModelView(emptyGeometry).geometry,[]);
+});
+
+test('7.12.A2a: rzut zachowuje obroty i odniesienia, tekst raportu nie wstrzykuje wierszy tabel',()=>{
+  const api=require('../src/core/domainModelView'),pkg=basicDemoPackage(),base=JSON.parse(pkg.data.draftRaw).project;
+  base.layoutObjects[0].rotationDeg=90;base.operations[0].name='Nazwa | kontrolna\nNowy wiersz';
+  const view=api.buildDomainModelView(base),object=view.geometry[0];
+  assert.deepEqual(object.points,require('../src/core/algorithms/layoutEngine').corners(base.layoutObjects[0]));assert.equal(object.workstationId,'ST-ZM-1');
+  const text=api.domainModelViewReport(view);assert.ok(text.includes('Nazwa \\| kontrolna Nowy wiersz'));
+  assert.equal(view.signatureSha256,api.buildDomainModelView(base).signatureSha256);
+  const source=JSON.stringify(base);scheduleWorkerRun(base,1,3,undefined,undefined,{transportMode:'just-in-time'});
+  assert.equal(JSON.stringify(base),source);assert.equal(api.buildDomainModelView(base).signatureSha256,view.signatureSha256);
+});
+
 test('7.12.B: manifest obejmuje wszystkie pliki, poprawne SHA, źródła i czytelne projekcje bez zależności od dawnych przykładów',()=>{
   const root='przyklady/01_zestaw_montazowy/',pkg=basicDemoPackage();
   const {createHash}=require('node:crypto'),{readdirSync}=require('node:fs');

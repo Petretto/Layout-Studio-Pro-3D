@@ -41,6 +41,8 @@ Ten projekt **jawnie demonstruje tryb procesowy JIT**: zakłada dostępną dosta
 
 Wariant konsolidacji przenosi OP20 do istniejącego ST-ZM-1, jawnie dopuszcza W1 i stół EQ1, a nieaktywny stół S2 przesuwa w strefę rezerwy. Zmienia przydział i skład przebiegu, więc nie jest eksperymentem izolującym jeden czynnik. Nie deklaruj wzrostu przepustowości z powodu zmniejszenia liczby stanowisk. Oba odstępy statyczne 40/50 s są poniżej taktu 60 s. Przepustowość małej partii (3/makespan) różni się od zdolności stacjonarnej.
 
+Po aktualizacji A2a panel **Aktywny szkic 6 — przydziały, rzut i raport** pokazuje własne przydziały i geometrię tego modelu. Po przywróceniu konsolidacji sprawdź sumę S1=50 s, rezerwę S2 i stół S2 przy Y=4000 mm. Możesz pobrać raport statyczny oznaczony tym samym SHA-256 co panel; nie zastępuje on dynamicznego raportu porównania. Główne widoki 4, widok 3D i animacja 6 nadal podlegają wskazanym ograniczeniom A2/A2b.
+
 ## Własna zmiana, zapis i ponowne otwarcie
 
 W tabeli wariantów użyj przywrócenia konsolidacji do szkicu. Sprawdź, że OP10 i OP20 należą do S1, S2 jest puste, a skład to W1 i W3. Cofnij/Ponów powinno odtwarzać tę zmianę; odczyt wyników przelicz po każdej zmianie. Możesz zapisać własną migawkę pod nową nazwą. Nie zmieniaj oryginalnej biblioteki wzorcowej w dostarczonym katalogu.

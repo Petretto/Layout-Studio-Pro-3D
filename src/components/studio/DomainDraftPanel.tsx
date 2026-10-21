@@ -15,6 +15,7 @@ import {download} from '../../core/project';
 import {DomainPeopleEditor} from './DomainPeopleEditor';
 import {DomainCompetencyEditor} from './DomainCompetencyEditor';
 import {DomainBalancingPanel} from './DomainBalancingPanel';
+import {DomainModelOverview} from './DomainModelOverview';
 import {DomainVariantComparisonPanel} from './DomainVariantComparisonPanel';
 import {editDomainCompetencies} from '../../core/domainCompetencyEditing';
 import {DomainProductEditor} from './DomainProductEditor';
@@ -176,7 +177,7 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
 
   return <section className="panel" aria-label="Podgląd modelu procesu v6">
     <h2>Model procesu — szkic schematu 6</h2>
-    <p className="muted">Podgląd pokazuje oddzielne operacje i stanowiska oraz dane, których obecny projekt nie zawiera. Szkic jest niekompletny; ma osobny podgląd harmonogramu zespołu, ale nie steruje aktywnym bilansem ani symulacją projektów 4/5. Zapisuje się pod osobnym kluczem przeglądarki.</p>
+    <p className="muted">Przydziały, rzut i raport statyczny poniżej pokazują aktywny szkic 6, z osobnym harmonogramem zespołu. Status szkicu pozostaje niekompletny; brakujące dane trzeba uzupełnić przed symulacją. Główne widoki projektów 4/5 pozostają oddzielne. Zapis szkicu ma osobny klucz przeglądarki.</p>
     <div className="toolbar">
       <button onClick={() => inspect(4)}>Podgląd z bieżącego projektu 4</button>
       <button disabled={!stationProject} onClick={() => inspect(5)}>Podgląd z warsztatu 5</button>
@@ -185,6 +186,7 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
     {draft.status === 'unavailable' && <p className="error" role="alert">Pamięć przeglądarki jest niedostępna: {draft.error}. Nie można zapisać szkicu.</p>}
     {draft.status === 'corrupt' && <div className="notice" role="alert"><p>Istniejący szkic jest uszkodzony: {draft.error}. Zachowano go bez zmian; zastąpienie wymaga pobrania surowej kopii i potwierdzenia.</p><button onClick={() => {download(draft.raw, 'Odzyskiwanie_szkicu_v6.json', 'application/json'); setDownloadedRaw(draft.raw);}}>Pobierz surową kopię szkicu</button></div>}
     {draft.status === 'valid' && <div className="notice"><p>Zapisany szkic: {draft.saved.project.name} · źródło v{draft.saved.sourceSchemaVersion} · {draft.saved.project.operations.length} operacji · {draft.saved.project.stations.length} stanowisk · {new Date(draft.saved.at).toLocaleString('pl-PL')}. Status: niekompletny.</p><div className="toolbar"><button onClick={() => {download(draft.raw, 'Szkic_modelu_v6_z_oryginalem.json', 'application/json'); setDownloadedRaw(draft.raw);}}>Pobierz szkic z oryginałem</button><button onClick={() => download(draft.saved.originalJson, `Oryginalny_projekt_v${draft.saved.sourceSchemaVersion}.json`, 'application/json')}>Pobierz źródło</button></div></div>}
+    {draft.status === 'valid' && <DomainModelOverview project={draft.saved.project}/>}
     {draft.status === 'valid' && <DomainPeopleEditor key={`people-${draft.raw}`} project={draft.saved.project} onApply={applyPeople}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
       canUndo={past.length > 0} canRedo={future.length > 0} />}

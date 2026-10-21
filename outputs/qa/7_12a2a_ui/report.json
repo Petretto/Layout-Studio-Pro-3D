@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-21T20:32:06.159Z",
+  "result": "PASS",
+  "scope": "isolated Edge; basic synthetic package imported through UI",
+  "checks": {
+    "baseAndConsolidatedDifferentSignatures": true,
+    "assignment20To50AndReserve": true,
+    "geometry2000To4000": true,
+    "reportContainsCurrentShaAnd72": true,
+    "undoRedoRestoresOverview": true,
+    "source4Preserved": true,
+    "schedule190Preserved": true,
+    "exportImportReloadSameModelAndReport": true
+  },
+  "baseSha": "b5c7800330b63748a27e658f1e5062c949db510ad391e0255fb7b8538c78b05d",
+  "consSha": "28dbde36a14be43e1122715da869a665c9e6676a0238b206e4fb1e83950a1680",
+  "runtimeErrors": []
+}
