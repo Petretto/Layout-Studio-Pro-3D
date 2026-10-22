@@ -128,6 +128,51 @@ function basicDemoPackage(){
   return parseProjectPackage(readFileSync('przyklady/01_zestaw_montazowy/projekt-pokazowy.json','utf8'));
 }
 
+test('7.12.A2b1: odtwarzanie korzysta z wyniku 190 s, zachowuje model, wynik i rzeczywiste przypisania geometrii',()=>{
+  const api=require('../src/core/domainPlayback'),pkg=basicDemoPackage(),project=JSON.parse(pkg.data.variantsRaw).variants[1].project;
+  const result=scheduleWorkerRun(project,1,3,undefined,undefined,{transportMode:'just-in-time'}),before=JSON.stringify({project,result});
+  const playback=api.prepareDomainPlayback(project,result,{batch:3,arrivalIntervalSeconds:1,transportMode:'just-in-time'});
+  assert.equal(playback.endSeconds,190);assert.equal(playback.modelSignature,api.domainModelSignature(project));
+  const at25=api.domainPlaybackFrame(playback,25),working=at25.states.filter((s:any)=>s.state==='work');
+  assert.deepEqual(working.map((s:any)=>[s.job,s.operationId,s.stationId]),[[1,'ZM-OP20','ST-ZM-1']]);
+  assert.equal(working[0].anchors[0].objectId,'ZM-TABLE-1');
+  assert.ok(at25.states.filter((s:any)=>s.state==='waiting').every((s:any)=>s.anchors.length===0));
+  assert.equal(api.domainPlaybackFrame(playback,190).completed,3);assert.deepEqual(api.domainPlaybackFrame(playback,190).states,[]);
+  for(const time of [0,20,25,50,90,100,190,200,-1,NaN])api.domainPlaybackFrame(playback,time);
+  assert.equal(JSON.stringify({project,result}),before);
+  assert.notEqual(playback.modelSignature,api.domainModelSignature(JSON.parse(pkg.data.draftRaw).project));
+});
+
+test('7.12.A2b1: granice pracy, przerwa i zajęcie po obróbce są czytane z półotwartych okien wyniku',()=>{
+  const api=require('../src/core/domainPlayback'),pkg=basicDemoPackage(),project=JSON.parse(pkg.data.draftRaw).project;
+  const result=scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'});
+  result.runs[0].workWindows=[{startSeconds:0,endSeconds:10},{startSeconds:15,endSeconds:20}];result.runs[0].stationReleaseSeconds=25;
+  const playback=api.prepareDomainPlayback(project,result,{batch:1,arrivalIntervalSeconds:1,transportMode:'just-in-time'});
+  const state=(t:number)=>api.domainPlaybackFrame(playback,t).states.find((s:any)=>s.id==='run-0')?.state;
+  assert.equal(state(9),'work');assert.equal(state(10),'calendar-pause');assert.equal(state(15),'work');assert.equal(state(20),'held');assert.equal(state(25),undefined);
+});
+
+test('7.12.A2b1: brak geometrii i niejednoznaczna kopia nie tworzą domyślnej lokalizacji znacznika',()=>{
+  const api=require('../src/core/domainPlayback'),pkg=basicDemoPackage(),project=JSON.parse(pkg.data.draftRaw).project;
+  const result=scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'});
+  project.layoutObjects=[];project.equipment.forEach((e:any)=>{delete e.layoutObjectId;});
+  const empty=api.prepareDomainPlayback(project,result,{batch:1,arrivalIntervalSeconds:1,transportMode:'just-in-time'});
+  assert.ok(empty.entries.every((e:any)=>e.anchors.length===0));assert.equal(api.domainPlaybackFrame(empty,5).states[0].state,'work');
+  const multiple=JSON.parse(pkg.data.draftRaw).project;multiple.stationSettings['ST-ZM-1'].parallelStations=2;multiple.equipment[0].layoutObjectId=undefined;
+  const ambiguous=api.prepareDomainPlayback(multiple,result,{batch:1,arrivalIntervalSeconds:1,transportMode:'just-in-time'});assert.deepEqual(ambiguous.entries[0].anchors,[]);
+  assert.throws(()=>api.prepareDomainPlayback(multiple,result,{batch:2,arrivalIntervalSeconds:1,transportMode:'just-in-time'}),/warunkom/);
+  assert.throws(()=>api.prepareDomainPlayback(multiple,result,{batch:1,arrivalIntervalSeconds:1,transportMode:'configured'}),/warunkom/);
+  const bad=structuredClone(result);bad.runs[0].copy=99;assert.throws(()=>api.prepareDomainPlayback(multiple,bad,{batch:1,arrivalIntervalSeconds:1,transportMode:'just-in-time'}),/odniesienie/);
+});
+
+test('7.12.A2b1: szybkość i krok zmieniają wyłącznie czas odczytu, nie harmonogram ani jego skrót',()=>{
+  const api=require('../src/core/domainPlayback'),{stepSimulationTime}=require('../src/core/algorithms/simulation');
+  const pkg=basicDemoPackage(),project=JSON.parse(pkg.data.draftRaw).project,result=scheduleWorkerRun(project,1,3,undefined,undefined,{transportMode:'just-in-time'});
+  const playback=api.prepareDomainPlayback(project,result,{batch:3,arrivalIntervalSeconds:1,transportMode:'just-in-time'}),before=JSON.stringify(playback);
+  for(const speed of [1,100,5000]){let time=0;for(let i=0;i<10;i++){time=stepSimulationTime(time,.2,speed,playback.endSeconds);api.domainPlaybackFrame(playback,time);}assert.ok(time<=170);}
+  assert.equal(JSON.stringify(playback),before);assert.equal(api.prepareDomainPlayback(project,result,{batch:3,arrivalIntervalSeconds:1,transportMode:'just-in-time'}).resultSignature,playback.resultSignature);
+});
+
 test('7.12.A2a: przydziały, geometria i raport są projekcją aktywnego 6 bez zmiany źródła i bez ponownego bilansu',()=>{
   const api=require('../src/core/domainModelView'),pkg=basicDemoPackage();
   const variants=JSON.parse(pkg.data.variantsRaw).variants,before=JSON.stringify(variants);

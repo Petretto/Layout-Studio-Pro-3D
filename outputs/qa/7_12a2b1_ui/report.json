@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-22T21:18:20.190Z",
+  "result": "PASS",
+  "scope": "isolated Edge with software WebGL; real imported demo and worker schedule",
+  "checks": {
+    "geometryBeforeCalculation": true,
+    "webglRendered": true,
+    "time25OperationSelection": true,
+    "stepAndPauseStable": true,
+    "speed5000KeepsResult": true,
+    "conditionsInvalidate": true,
+    "variantInvalidates": true,
+    "consolidated190": true,
+    "geometryToggleLifecycle": true,
+    "source4Preserved": true,
+    "reloadPreservesModelNotOldResult": true
+  },
+  "runtimeErrors": []
+}

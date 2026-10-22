@@ -41,7 +41,9 @@ Ten projekt **jawnie demonstruje tryb procesowy JIT**: zakłada dostępną dosta
 
 Wariant konsolidacji przenosi OP20 do istniejącego ST-ZM-1, jawnie dopuszcza W1 i stół EQ1, a nieaktywny stół S2 przesuwa w strefę rezerwy. Zmienia przydział i skład przebiegu, więc nie jest eksperymentem izolującym jeden czynnik. Nie deklaruj wzrostu przepustowości z powodu zmniejszenia liczby stanowisk. Oba odstępy statyczne 40/50 s są poniżej taktu 60 s. Przepustowość małej partii (3/makespan) różni się od zdolności stacjonarnej.
 
-Po aktualizacji A2a panel **Aktywny szkic 6 — przydziały, rzut i raport** pokazuje własne przydziały i geometrię tego modelu. Po przywróceniu konsolidacji sprawdź sumę S1=50 s, rezerwę S2 i stół S2 przy Y=4000 mm. Możesz pobrać raport statyczny oznaczony tym samym SHA-256 co panel; nie zastępuje on dynamicznego raportu porównania. Główne widoki 4, widok 3D i animacja 6 nadal podlegają wskazanym ograniczeniom A2/A2b.
+Po aktualizacji A2a panel **Aktywny szkic 6 — przydziały, rzut i raport** pokazuje własne przydziały i geometrię tego modelu. Po przywróceniu konsolidacji sprawdź sumę S1=50 s, rezerwę S2 i stół S2 przy Y=4000 mm. Możesz pobrać raport statyczny oznaczony tym samym SHA-256 co panel; nie zastępuje on dynamicznego raportu porównania. Główne widoki 4 nadal pozostają oddzielne.
+
+Po A2b1 panel harmonogramu ma **Pokaż geometrię 3D** oraz odtwarzanie jego wyniku: pauza, krok, suwak, prędkość i wybór wykonania operacji. W konsolidacji przy 25 s wybierz operację OP20 sztuki 1: znacznik powinien wskazywać stół S1, wynik końcowy nadal 190 s. To znacznik pracy, nie fizyczna lokalizacja wyrobu. Nie pokazuje tras ani ruchu wózków; w JIT ich pozycje nie są obliczane. Po zmianie warunków lub wariantu oraz po odświeżeniu wymagane są nowe obliczenia. Fizyczny ruch pozostaje A2b2.
 
 ## Własna zmiana, zapis i ponowne otwarcie
 

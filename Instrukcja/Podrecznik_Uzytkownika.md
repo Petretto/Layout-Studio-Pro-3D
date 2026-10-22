@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**  
-Aktualizacja podręcznika: **21.10.2026 — wspólny widok przydziałów, rzutu i raportu aktywnego szkicu 6 (7.12.A2a), projekt pokazowy (7.12.B) oraz pakiet projektu (7.12.A1); zachowano opis odzyskiwania (7.6a), raportu i importu procesów (7.10a/7.11a) oraz LOD/Popout**.
+Aktualizacja podręcznika: **22.10.2026 — geometria 3D i odtwarzanie operacji z harmonogramu (7.12.A2b1), wspólny widok przydziałów/rzutu/raportu (A2a) i zewnętrzny projekt pokazowy (B). Zachowano opis pakietów, odzyskiwania i wcześniejszych funkcji. Uproszczenie technicznych nazw interfejsu zaplanowano w 7.13.U**.
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -692,4 +692,21 @@ W **Stanowiska v5**, pod informacją o zapisanym szkicu 6, znajduje się panel *
 
 Panel nie uzupełnia brakujących czasów domyślnym czasem standardowym. Nie wybiera też pierwszej z kilku dopuszczonych kopii i nie dzieli przez ich liczbę: gdy brak jednoznacznego wyboru, zdolność kopii pozostaje **brak**. Suma czasów według rejestru stanowisk i dopuszczenia kopii są pokazane odrębnie. Pułap statyczny nie potwierdza dostępności pracowników, kalendarzy, transportu ani dynamicznej przepustowości.
 
-Rzut przedstawia istniejące obrysy z obrotem, przypisania i przeszkody, bez podkładu i tras. Nie tworzy brakującego wyposażenia, nie jest edytorem ani oceną BHP. Główne widoki/raport A4 projektu 4 pozostają oddzielne; ich wyników nie należy podpisywać jako wyników aktywnego 6. Widok 3D i animacja związana z harmonogramem 6 pozostają w A2b; A2a nie zamyka całego A2.
+Rzut przedstawia istniejące obrysy z obrotem, przypisania i przeszkody, bez podkładu i tras. Nie tworzy brakującego wyposażenia, nie jest edytorem ani oceną BHP. Główne widoki/raport A4 projektu 4 pozostają oddzielne; ich wyników nie należy podpisywać jako wyników aktywnego 6. Geometria 3D i odtwarzanie operacji są opisane poniżej; fizyczny ruch korpusów i wózków pozostaje do A2b2. A2a/b1 nie zamykają całego A2.
+
+### 5.16. Widok 3D i odtwarzanie operacji projektu (7.12.A2b1)
+
+W panelu harmonogramu zespołu znajduje się **Widok 3D i odtwarzanie operacji projektu**. Wczytuje geometrię tego samego aktywnego projektu, z którego obliczono harmonogram. Nie korzysta z głównej symulacji starszego projektu i nie uruchamia drugiego silnika obliczeń.
+
+1. Zaznacz **Pokaż geometrię 3D**. Możesz obracać kamerę i przybliżać widok myszą. Geometria jest dostępna także przed obliczeniem harmonogramu; sterowanie czasem pojawia się dopiero po poprawnym obliczeniu wyniku. Obiekty mają zapisane wymiary, współrzędne, obrót i wygląd. Widok służy do odczytu.
+2. Dla przykładu zestawu ustaw 3 sztuki, odstęp 1 s, jawny JIT i oblicz harmonogram. Baza ma koniec 170 s, konsolidacja 190 s. Odtwarzanie pokazuje dokładnie ten wynik i jego warunki, oznaczone skrótem wyniku. JIT nie oblicza fizycznej lokalizacji wyrobu ani transportu.
+3. Wybierz **Odtwarzaj harmonogram**, **Pauza odtwarzania**, **Krok +1 s**, **Początek odtwarzania** lub **Koniec odtwarzania**. Czas możesz wpisać liczbowo lub przesunąć suwak. Zmiana czasu zatrzymuje odtwarzanie. Prędkości od 1× do 5000× zmieniają tempo oglądania, nie czasy operacji i wynik partii.
+4. W polu **Wybierz wykonanie** wskaż konkretną sztukę i operację. Możesz również kliknąć przycisk operacji w tabeli bieżących stanów. Wybrany znacznik jest żółty; pozostałe kolory: zielony — praca, niebieski — przerwa kalendarza, pomarańczowy — zajęcie stanowiska po obróbce. Tabela odróżnia też oczekiwanie na start.
+
+![Operacja montażu zaznaczona w 25 s harmonogramu konsolidacji — dane syntetyczne, JIT](../outputs/qa/7_12a2b1_ui/consolidated_operation_3d.png)
+
+**Znacznik oznacza operację na stanowisku, a nie fizyczny wyrób lub jego trasę.** Pokazuje się nad wyposażeniem powiązanym w danych; niejednoznaczna kopia albo brak geometrii oznaczają brak znacznika, bez dopowiadania pozycji. Operacja nadal pozostaje w tabeli. Operacje oczekujące na start nie są przedstawiane jako znajdujące się już na stanowisku. Przejazdy korpusów i wózków pozostają do integracji A2b2.
+
+Zmiana liczby sztuk, odstępu przybyć, trybu transportu lub danych projektu usuwa stary wynik i odtwarzanie. Po przywróceniu innego wariantu trzeba ponownie obliczyć harmonogram. Zapis i odświeżenie zachowują projekt, ale nie wznawiają starego wyniku sesji — ustaw warunki i uruchom obliczenia ponownie. Kamera, wybór i prędkość nie zmieniają projektu ani zapisanego harmonogramu.
+
+Widok 3D wymaga WebGL. Jeżeli nie jest dostępny, komunikat zastępuje scenę, a wynik i tabela harmonogramu pozostają dostępne. Dla dużej liczby obiektów używany jest uproszczony wygląd. Główne widoki i raport A4 starszego projektu pozostają oddzielne. Techniczne nazwy „szkic”, „schemat” i „Stanowiska v5” mają zostać uporządkowane w 7.13.U; na razie wskazują bieżącą ścieżkę tego panelu.

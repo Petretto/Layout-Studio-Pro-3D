@@ -1,5 +1,12 @@
 # Zmiany v0.4.0 — 29.09.2026
 
+## 3D i odtwarzanie operacji — 22.10.2026 (7.12.A2b1)
+
+- Geometria aktywnego projektu oraz odczyt pracy/przerw/zajęcia stanowisk z rzeczywistego harmonogramu; bez drugiej symulacji. Pauza, krok, czas/suwak, prędkości do 5000× i wybór konkretnego wykonania.
+- Powiązanie modelu, warunków i wyniku; po zmianach unieważniane są stare dane i odpowiedzi. Po odświeżeniu zachowany jest projekt, a wynik wymaga ponownego obliczenia. Znacznik operacji nie jest fizycznym wyrobem; brak geometrii nie tworzy domyślnej pozycji.
+- Backup 474 SHA-256 PASS, celowane 11/11 i manifest 1/1, build oraz Edge SwiftShader PASS. Pełna sekwencyjna 393/393 PASS; równoległe testy wydajności 3.9 niestabilne czasowo, bez zmiany progów — szczegóły w raporcie A2.
+- Instrukcja 58 stron/47 obrazów. A2b2 (ruch fizyczny) nadal przed nami. Zaplanowano 7.13.U, upraszczający techniczne nazwy interfejsu. Vercel nie zweryfikowano.
+
 ## Wspólny widok aktywnego modelu 6 — 21.10.2026 (7.12.A2a)
 
 - Nowy panel odczytu szkicu 6: przydziały rejestru, czasy wybranej obsady, dopuszczenia, rzut zapisanej geometrii i raport statyczny Markdown ze wspólnym SHA-256 modelu.

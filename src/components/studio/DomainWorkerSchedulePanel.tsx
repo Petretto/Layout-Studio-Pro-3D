@@ -8,6 +8,8 @@ import {parseProcessStallDiagnostic} from '../../core/processStallDetection';
 import {ScheduleGanttChart} from './ScheduleGanttChart';
 import {ThroughputExplanationPanel} from './ThroughputExplanationPanel';
 import type {GanttSelectionTarget} from '../../core/scheduleGantt';
+import {prepareDomainPlayback,type DomainPlayback} from '../../core/domainPlayback';
+import {DomainSchedulePlayback} from './DomainSchedulePlayback';
 
 /** Inspect full operation spans, including pauses; transport is listed separately in the result. */
 function simultaneousPeriods(runs: readonly WorkerScheduleRun[]) {
@@ -49,17 +51,21 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
   const [arrivalInterval, setArrivalInterval] = useState('');
   const [justInTime,setJustInTime]=useState(false);
   const [result, setResult] = useState<WorkerScheduleResult | null>(null);
+  const [playback,setPlayback]=useState<DomainPlayback|null>(null);
   const [selectedTarget, setSelectedTarget] = useState<GanttSelectionTarget | null>(null);
   const [error, setError] = useState('');
   const stallDiagnostic = useMemo(() => parseProcessStallDiagnostic(error), [error]);
   const [progress, setProgress] = useState<ScheduleProgress | null>(null);
   const [message, setMessage] = useState('');
   const cancelRef = useRef<(() => void) | null>(null);
-  useEffect(() => () => {cancelRef.current?.();}, []);
-  const cancel = () => {cancelRef.current?.();cancelRef.current = null;setProgress(null);setMessage('Anulowano obliczenia.');setSelectedTarget(null);};
+  const requestId=useRef(0);
+  useEffect(() => {requestId.current++;cancelRef.current?.();setResult(null);setPlayback(null);return()=>{requestId.current++;cancelRef.current?.();};}, [project]);
+  const cancel = () => {requestId.current++;cancelRef.current?.();cancelRef.current = null;setPlayback(null);setProgress(null);setMessage('Anulowano obliczenia.');setSelectedTarget(null);};
   const calculate = () => {
     cancelRef.current?.();
+    const token=++requestId.current;
     setResult(null);
+    setPlayback(null);
     setSelectedTarget(null);
     setError('');
     setMessage('');
@@ -69,10 +75,11 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
         throw new Error('Podgląd dopuszcza partię od 1 do 100 sztuk.');
       }
       setProgress({completed: 0, total: project.operations.length * count});
-      cancelRef.current = startScheduleTask({project, batch: count, arrivalIntervalSeconds: Number(arrivalInterval),transportMode:justInTime?'just-in-time':'configured'}, {
-        progress: setProgress,
-        result: value => {cancelRef.current = null;setProgress(null);setResult(value);},
-        error: value => {cancelRef.current = null;setProgress(null);setError(value);},
+      const conditions={batch:count,arrivalIntervalSeconds:Number(arrivalInterval),transportMode:justInTime?'just-in-time' as const:'configured' as const};
+      cancelRef.current = startScheduleTask({project,...conditions}, {
+        progress: value=>{if(token===requestId.current)setProgress(value);},
+        result: value => {if(token!==requestId.current)return;cancelRef.current = null;setProgress(null);setResult(value);try{setPlayback(prepareDomainPlayback(project,value,conditions));}catch(failure){setPlayback(null);setMessage(`Odtwarzanie niedostępne: ${(failure as Error).message}`);}},
+        error: value => {if(token!==requestId.current)return;cancelRef.current = null;setProgress(null);setError(value);},
       }, () => new Worker(new URL('../../core/schedule.worker.ts', import.meta.url), {type: 'module'}));
     } catch (failure) { setError((failure as Error).message); }
   };
@@ -100,6 +107,7 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
       {progress && <button onClick={cancel}>Anuluj obliczenia szkicu 6</button>}</div>
     {progress && <div role="status" aria-label="Postęp obliczeń szkicu 6"><progress max={progress.total} value={progress.completed} /> {progress.completed} / {progress.total} zakończonych operacji. Obliczenia w tle.</div>}
     {message && <p role="status">{message}</p>}
+    <DomainSchedulePlayback project={project} playback={playback}/>
     {error && (stallDiagnostic ? (
       <div className="process-stall-diagnostic" role="alert" aria-label="Diagnostyka zatrzymania lub zakleszczenia procesu">
         <h3>⛔ {stallDiagnostic.title} <small style={{fontSize: '12px', color: '#fca5a5', fontWeight: 500}}>(chwila zatrzymania: {stallDiagnostic.atSeconds} s)</small></h3>
