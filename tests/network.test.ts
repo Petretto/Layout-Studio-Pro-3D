@@ -122,6 +122,109 @@ import {layoutRoutes} from '../src/core/algorithms/routing';
 import {reviseStationProject,splitStationProject,mergeStationProject,removeStationOperation} from '../src/core/stationRevision';
 import {addStationEquipment,updateStationEquipment,removeStationEquipment} from '../src/core/stationGeometry';
 import {readFileSync} from 'node:fs';
+import {prepareDomainPhysicalPlayback, domainPhysicalPlaybackFrame} from '../src/core/domainPhysicalPlayback';
+
+test('7.12.A2b2a: fizyczne granice przejazdu i powrotu, cofanie oraz niezmienność rejestrów',()=>{
+  const {project}=assemblyMovementFixture();addReturnRoute(project);
+  project.assemblyTransport!.carts[0].afterUnload='return-to-initial';
+  const input=assemblyScheduleInput(),result=scheduleWorkerRun(project,1,1,input);
+  const before=JSON.stringify({project,input,result});
+  const playback=prepareDomainPhysicalPlayback(project,result,{batch:1,arrivalIntervalSeconds:1,transportMode:'configured'},input);
+  assert.equal(playback.endSeconds,27);assert.equal(result.jobs[0].finish,22);
+  const frame=(at:number)=>domainPhysicalPlaybackFrame(playback,at);
+  assert.equal(frame(9).bodies[0].status,'reserved');
+  assert.equal(frame(10).bodies[0].status,'moving');assert.equal(frame(10).bodies[0].location.kind,'unknown');
+  assert.equal(frame(11).carts[0].location,null);assert.equal(frame(11).carts[0].movement!.kind,'loaded');
+  assert.equal(frame(12).bodies[0].status,'reserved');assert.equal(frame(12).carts[0].movement,null);
+  assert.equal(frame(22).bodies[0].status,'available');assert.equal(frame(22).carts[0].movement!.kind,'empty');
+  assert.deepEqual(frame(27).bodies,result.bodyBook!.bodies);assert.deepEqual(frame(27).carts,result.cartBook!.carts);
+  assert.deepEqual(frame(0),frame(-10));assert.deepEqual(frame(27),frame(999));assert.deepEqual(frame(NaN),frame(0));
+  const old=frame(0);old.bodies[0].id='CHANGED';old.carts[0].location!.stationId='CHANGED';
+  for(const at of [27,10,26,0,12,9,27])assert.equal(frame(at).bodies[0].id,'BODY');
+  assert.equal(JSON.stringify({project,input,result}),before);
+});
+
+test('7.12.A2b2a: dojazd nie przesuwa korpusu, wspólny moment przyjazdu i wyjazdu nie teleportuje wózka',()=>{
+  const {project}=assemblyMovementFixture();addReturnRoute(project);
+  project.assemblyTransport!.carts[0].initialLocation={stationId:'ST-C',copy:1};
+  const input=assemblyScheduleInput(),result=scheduleWorkerRun(project,1,1,input);
+  const playback=prepareDomainPhysicalPlayback(project,result,{batch:1,arrivalIntervalSeconds:1,transportMode:'configured'},input);
+  const during=domainPhysicalPlaybackFrame(playback,14),depart=domainPhysicalPlaybackFrame(playback,15);
+  assert.equal(during.carts[0].movement!.kind,'empty');assert.equal(during.bodies[0].location.kind,'station');
+  assert.equal(depart.carts[0].movement!.kind,'loaded');assert.equal(depart.bodies[0].status,'moving');
+  assert.deepEqual(depart.carts[0].movement!.from,{stationId:'ST-A',copy:1});
+});
+
+test('7.12.A2b2a: bufory i lokalna kontynuacja zachowują korpus na kopii aż do rzeczywistego wyjazdu',()=>{
+  const {project,input}=localContinuationFixture();
+  project.resourceCalendars!.stations['ST-A'].shifts[0].startSeconds=0;
+  project.resourceCalendars!.workers[project.workers[1].id].shifts[0].startSeconds=25;
+  const result=scheduleWorkerRun(project,1,2,input),before=JSON.stringify(result);
+  const playback=prepareDomainPhysicalPlayback(project,result,{batch:2,arrivalIntervalSeconds:1,transportMode:'configured'});
+  for(const at of [10,24.999,25,30.999]){
+    const body=domainPhysicalPlaybackFrame(playback,at).bodies.find(b=>b.id===input.jobs[0].bodyId)!;
+    assert.equal(body.status,'reserved');assert.deepEqual(body.location,{kind:'station',stationId:'ST-A',copy:1});
+  }
+  const final=domainPhysicalPlaybackFrame(playback,playback.endSeconds);
+  assert.deepEqual(final.bodies,result.bodyBook!.bodies);assert.deepEqual(final.carts,result.cartBook!.carts);
+  assert.equal(JSON.stringify(result),before);
+  const other=bufferedPhysicalFixture(5),blocked=scheduleWorkerRun(other.project,1,5,other.input);
+  const held=blocked.runs.find(run=>run.blockedSeconds!>0)!;
+  const history=prepareDomainPhysicalPlayback(other.project,blocked,{batch:5,arrivalIntervalSeconds:1,transportMode:'configured'});
+  const body=domainPhysicalPlaybackFrame(history,held.endSeconds).bodies.find(b=>b.id===held.bodyId)!;
+  assert.equal(body.status,'reserved');assert.deepEqual(body.location,{kind:'station',stationId:held.stationId,copy:held.copy});
+});
+
+test('7.12.A2b2a: wielowózkowy zestaw zachowuje sekwencję dojazdów i wspólny wyjazd',()=>{
+  for(const reverse of [false,true]){
+    const project=multipleApproachFixture(),input=assemblyScheduleInput();
+    if(reverse)project.assemblyTransport!.routes[0].alternatives[0].equipmentIds.reverse();
+    const result=scheduleWorkerRun(project,1,1,input);
+    const history=prepareDomainPhysicalPlayback(project,result,{batch:1,arrivalIntervalSeconds:1,transportMode:'configured'},input);
+    assert.equal(domainPhysicalPlaybackFrame(history,12).carts.filter(c=>c.movement?.kind==='empty').length,1);
+    assert.equal(domainPhysicalPlaybackFrame(history,20).carts.filter(c=>c.movement?.kind==='empty').length,1);
+    assert.ok(domainPhysicalPlaybackFrame(history,23).carts.every(c=>c.movement?.kind==='loaded'));
+    assert.deepEqual(domainPhysicalPlaybackFrame(history,history.endSeconds).carts,result.cartBook!.carts);
+  }
+});
+
+test('7.12.A2b2a: JIT nie uzyskuje fizycznych lokalizacji z geometrii',()=>{
+  const {project,input}=bufferedPhysicalFixture(1),conditions={batch:1,arrivalIntervalSeconds:1,transportMode:'just-in-time' as const};
+  const result=scheduleWorkerRun(project,1,1,input,undefined,{transportMode:'just-in-time'});
+  const playback=prepareDomainPhysicalPlayback(project,result,conditions);
+  assert.equal(playback.mode,'just-in-time');assert.deepEqual(domainPhysicalPlaybackFrame(playback,5).bodies,[]);
+  assert.deepEqual(domainPhysicalPlaybackFrame(playback,5).carts,[]);
+  assert.throws(()=>prepareDomainPhysicalPlayback(project,{...result,bodyEvents:[]},conditions),/JIT/);
+  const logical=JSON.parse(basicDemoPackage().data.draftRaw).project;
+  const jit=scheduleWorkerRun(logical,1,3,undefined,undefined,{transportMode:'just-in-time'});
+  assert.equal(prepareDomainPhysicalPlayback(logical,jit,{...conditions,batch:3}).bodies.length,0);
+});
+
+test('7.12.A2b2a: równoległe operacje mają jeden korpus, a kolejne zwolnienie nie przenosi go na inną kopię',()=>{
+  const project=concurrentBodyFixture(),input=bodyInputFor(),result=scheduleWorkerRun(project,1,1,input);
+  const history=prepareDomainPhysicalPlayback(project,result,{batch:1,arrivalIntervalSeconds:1,transportMode:'configured'},input);
+  const busy=domainPhysicalPlaybackFrame(history,5);
+  assert.equal(busy.bodies.length,1);const body=busy.bodies[0];assert.equal(body.status,'reserved');
+  if(body.status==='reserved')assert.equal(body.additionalReservations!.length,1);
+  const later=domainPhysicalPlaybackFrame(history,10).bodies[0];assert.equal(later.status,'reserved');
+  assert.deepEqual(later.location,body.location);
+  assert.deepEqual(domainPhysicalPlaybackFrame(history,history.endSeconds).bodies,result.bodyBook!.bodies);
+});
+
+test('7.12.A2b2a: niepełna historia, błędne przypisania i zmieniony końcowy rejestr są odrzucane',()=>{
+  const {project}=assemblyMovementFixture(),input=assemblyScheduleInput(),conditions={batch:1,arrivalIntervalSeconds:1,transportMode:'configured' as const};
+  const result=scheduleWorkerRun(project,1,1,input);
+  const check=(change:(copy:typeof result)=>void)=>{const copy=structuredClone(result);change(copy);assert.throws(()=>prepareDomainPhysicalPlayback(project,copy,conditions,input));};
+  check(r=>{r.bodyEvents=r.bodyEvents!.slice(1);});
+  check(r=>{r.bodyBook!.bodies[0].id='OTHER';});
+  check(r=>{r.runs[0].bodyId='OTHER';});
+  check(r=>{r.cartBook!.carts[0].location={stationId:'ST-A',copy:1};});
+  check(r=>{r.transportMovements=[];});
+  check(r=>{r.transportMovements=[{...r.transportMovements![0],endSeconds:13}];});
+  check(r=>{r.transportMovements=[{...r.transportMovements![0],routeId:'UNKNOWN'}];});
+  check(r=>{r.transportMovements=[...r.transportMovements!,structuredClone(r.transportMovements![0])];});
+  assert.throws(()=>prepareDomainPhysicalPlayback(project,result,conditions),/instancji/);
+});
 
 function basicDemoPackage(){
   const {parseProjectPackage}=require('../src/core/projectPackage');

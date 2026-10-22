@@ -1,5 +1,10 @@
 # Zmiany v0.4.0 — 29.09.2026
 
+## Historia lokalizacji i plan UI/UX — 23.10.2026 (7.12.A2b2a, 7.13.X)
+
+- Odebrano wewnętrzny rdzeń odczytu historii korpusów i wózków z gotowego harmonogramu: granice czasu, cofanie, weryfikacja rejestrów końcowych, brak pozycji w JIT. 20/20 testów celowanych (7 nowych) i build PASS; backup 478 plików SHA-256 PASS. Algorytmy, zapis i interfejs bez zmian. Podłączenie i odbiór UI pozostają w A2b2b; całe A2 nadal w trakcie.
+- Rozpisano wymagany w bieżącym wydaniu 7.13.X1–X3: audyt i projekt, ikony z podpowiedziami, listy/menu, zwijane panele i pomoc na żądanie oraz odbiór obszaru sceny/dostępności. Zachowano układ B — duży rzut i panele na żądanie. To plan, nie wdrożenie zmian UI. Instrukcja nadal opisuje dotychczasową funkcjonalność; jej aktualizacja nastąpi wraz ze zmianą interakcji.
+
 ## 3D i odtwarzanie operacji — 22.10.2026 (7.12.A2b1)
 
 - Geometria aktywnego projektu oraz odczyt pracy/przerw/zajęcia stanowisk z rzeczywistego harmonogramu; bez drugiej symulacji. Pauza, krok, czas/suwak, prędkości do 5000× i wybór konkretnego wykonania.
