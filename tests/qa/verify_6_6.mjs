@@ -104,6 +104,12 @@ try{
   })()`);
   await sleep(600);
 
+  const playbackTime=()=>evaluate(`Number(document.querySelector('input[aria-label="Oś czasu symulacji"]').value)`);
+  const startedTime=await playbackTime();
+  ok(startedTime>1,'Start 3D powinien przesuwać czas przez wiele klatek, nie zatrzymać się po pierwszej');
+  await sleep(250);
+  ok(await playbackTime()>startedTime,'Odtwarzanie musi pozostać uruchomione');
+
   // Zapauzuj odtwarzanie
   await evaluate(`(()=>{
     const bar = document.querySelector('.sim-mini-playback-bar');
@@ -111,17 +117,31 @@ try{
     if(pauseBtn) pauseBtn.click();
   })()`);
   await sleep(300);
+  const pausedTime=await playbackTime();
+  await sleep(250);
+  strictEqual(await playbackTime(),pausedTime,'Pauza musi utrzymać stały czas');
 
   // Przesuń suwak czasu w mini-pasku
   await evaluate(`(()=>{
     const slider = document.querySelector('.sim-mini-playback-bar input[type="range"]');
     if(slider){
-      slider.value = '35';
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(slider,'35');
       slider.dispatchEvent(new Event('input', { bubbles: true }));
       slider.dispatchEvent(new Event('change', { bubbles: true }));
     }
   })()`);
   await sleep(400);
+  ok(Math.abs(await playbackTime()-35)<.01,'Suwak 3D ustawia właściwy czas');
+
+  // A consumed reset/seek command must not freeze a later start from the main controls.
+  await evaluate(`[...document.querySelector('.sim-mini-playback-bar').querySelectorAll('button')].find(b=>b.textContent.includes('Reset')).click()`);
+  await sleep(100);
+  strictEqual(await playbackTime(),0);
+  await click('Start symulacji');
+  await sleep(600);
+  ok(await playbackTime()>1,'Dolny Start musi działać po resecie z paska 3D');
+  await click('Pauza');
+  const afterRestart=await playbackTime();await sleep(250);strictEqual(await playbackTime(),afterRestart);
 
   await screenshot('verify_6_6_3d_playback_scrubbed');
 
@@ -145,6 +165,14 @@ try{
   ok(inspectorText.includes('BOM') || inspectorText.includes('Części z BOM:'), 'Karta powinna wyświetlać komponenty BOM');
 
   await screenshot('verify_6_6_inspection_card_3d');
+
+  await click('Pulpit');
+  await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(b=>b.textContent.includes('6 3D i symulacja')).click()`);
+  await until(`Number(document.querySelector('input[aria-label="Oś czasu symulacji"]')?.max)>0`);
+  await sleep(200);
+  strictEqual(await playbackTime(),0,'Powrót do zakładki nie wykonuje ponownie starego polecenia');
+  await click('Start symulacji');await sleep(600);ok(await playbackTime()>1);
+  await click('Pauza');
 
   // 4. Test Mobile Viewport (600px)
   await viewport(600);

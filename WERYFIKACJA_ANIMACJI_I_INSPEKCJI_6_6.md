@@ -1,5 +1,7 @@
 # Raport Weryfikacji — ID 6.6: Animacja produktów, podzespołów i transportu w 3D oraz inspekcja stanu
 
+Aktualizacja 2026-10-23: po zgłoszeniu regresji Start wykonano ponowny odbiór sterowania opisany na końcu. Poniższy odbiór z 18 października zachowano jako historię.
+
 Data weryfikacji: 2026-10-18  
 Status: **Wdrożone (PASS)**  
 Powiązany punkt planu: `PLAN_ROZWOJU.md` — **ID 6.6** (*„Animować produkty, podzespoły i transport zgodnie z harmonogramem symulacji; umożliwić pauzę i inspekcję stanu.”*)  
@@ -95,3 +97,20 @@ PASS 6.6: Animacja 3D produktów i transportu, mini-pasek sterowania w 3D, suwak
 - **Zasada 6**: Wyliczanie animacji i podgląd stanu wyrobu nie modyfikują struktury procesu (`processSteps`), bilansu (`balancing`) ani wyników symulacji (`runs`, `jobs`).
 - **Niezmiennik transportu**: Ruch wózków bazuje ściśle na harmonogramie symulacji, pozycjonując wyroby na wysokości transportowej (280–300 mm) lub stole roboczym (890 mm).
 - **Zasada kompatybilności**: Schemat projektu oraz format persystencji JSON pozostają w 100% zgodne wstecznie.
+
+## 4. Regresja uruchamiania — 2026-10-23 (6.6-fix)
+
+Użytkownik zgłosił brak startu w głównej zakładce. Odtworzono na stronie Vercel: po kliknięciu Start na pasku 3D czas przesunął się o kilka milisekund i odtwarzanie wróciło do pauzy. Dolny przycisk Wznów również zatrzymywał się natychmiast. Przyczyna: efekt w `Simulation.tsx` zależy od `controlCommand`, `end` i `time`; nieprzetworzone jednorazowo polecenie `toggle_run` było powtarzane po każdej zmianie czasu. Analogicznie pozostawiony `reset`/`set_time` blokował kolejne wznowienie.
+
+Dodano referencję ostatnio obsłużonego polecenia. Efekt zachowuje aktualne granice i czas, lecz daną instancję polecenia wykonuje tylko raz. Referencja jest inicjalizowana wartością zastaną przy montowaniu, więc nowa sesja nie powtarza starego kliknięcia po powrocie do zakładki. Nie zmieniano harmonogramowania, stanów technologicznych, prędkości, schematów i zapisu. To przywrócenie zachowania już opisanego w instrukcji, bez nowych kroków obsługi; podręcznik MD/HTML/PDF nie wymaga regeneracji.
+
+Backup `backup/v0.4.0_przed_6_6_start_fix_20261023`: **479 plików**, osobno odczytane skopiowane bajty i sprawdzone SHA-256 **PASS**.
+
+Wykonane sprawdzenia:
+
+- `node scripts/test.mjs --suite=core '--test-name-pattern=3\.10:|6\.6:'`: **4/4 PASS**, krok czasu i limity prędkości, snapshot animacji, inspekcja oraz niezmienność obliczeń.
+- `npm.cmd run build`: **TypeScript/Vite PASS**, wcześniejsze ostrzeżenie o dużych chunkach pozostaje.
+- Rzeczywisty UI przez `cua_repl`, Vite na 5173 (zastany projekt Eko, bez edycji danych) i produkcyjny build na 5302 (domyślny przykład silników EV): **PASS**. Start z paska 3D, ciągły przyrost czasu, pauza utrzymująca identyczną wartość, reset z paska i dolny Start, zmiana suwaka klawiaturą i wznowienie, powrót Pulpit → Symulacja z czasem 0 i bez starego polecenia. W buildzie czas po starcie wzrósł z 2,421 do 109,504 s, kolejne odtworzenie działało po ukończeniu i resecie. Przycisk Oblicz całą partię dał **30/30, 4936 s, WIP 0**; odczyt konsoli produkcyjnej karty: **0 błędów**.
+- Rozszerzono `tests/qa/verify_6_6.mjs`: przyrost czasu przez wiele klatek, stabilna pauza, skuteczny suwak, start po resecie i ponownym montowaniu; poprawiono ustawienie wartości suwaka tak, aby React otrzymał rzeczywistą zmianę. `node --check` **PASS**. **Całego skryptu CDP w tym odbiorze nie uruchamiano**; powyższe próby UI wykonano interaktywnie. Nie powtarzano mobilnego odbioru, inspekcji i pełnej regresji, gdyż ich zachowania nie zmieniono; ostatnia pełna sekwencyjna to 393/393 z A2b1, obecna poprawka jest drugim pakietem od tego przebiegu.
+
+Dowody: `outputs/qa/6_6_start_fix/production_running.png`, `production_complete.png`. Lokalny zastany plik audytu Eko oraz pozostałe pliki użytkownika zachowane. Status 6.6: ponownie **wdrożone** po weryfikacji; wcześniejsze odebranie nie wykryło tej regresji, ponieważ sam widoczny pasek nie potwierdzał ciągłego przyrostu czasu. Postęp 61/72 = **84,7%**, pierwsze wydanie 61/68 = **89,7%**. Wysyłka Git i odbiór Vercel to odrębne zdarzenia; wynik zdalnego wdrożenia należy odnotować po jego sprawdzeniu.

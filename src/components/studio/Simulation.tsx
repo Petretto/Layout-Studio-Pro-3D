@@ -47,6 +47,9 @@ export function Simulation({
   const unit=p.timeUnit??'s';
   const [batch,setBatch]=useState(initialBatch),[interval,setIntervalValue]=useState(p.balancing?.taktTimeSeconds??60),[speed,setSpeed]=useState(10),[time,setTime]=useState(0),[running,setRunning]=useState(false);
   const timeRef=useRef(0),last=useRef(0);
+  // Commands are click events, not persistent playback settings. A remounted view
+  // must also ignore the command left over from the previous simulation session.
+  const handledCommand=useRef(controlCommand);
   const cycles=p.balancing?.workstations.map(s=>s.cycleTimeSeconds)??[];
   const resultKey=JSON.stringify([p.processSteps,p.balancing,interval,batch]);
   const [calculation,setCalculation]=useState<{key:string;status:'computing'|'ready'|'cancelled'|'error';result?:NetworkResult;progress?:CalculationProgress;error?:string}>({key:resultKey,status:'computing'});
@@ -82,7 +85,8 @@ export function Simulation({
     });
   },[time,running,speed,end,batch,interval,result,onPlaybackChange]);
   useEffect(()=>{
-    if(!controlCommand)return;
+    if(!controlCommand||handledCommand.current===controlCommand)return;
+    handledCommand.current=controlCommand;
     if(controlCommand.type==='toggle_run'){
       if(end&&time<end)setRunning(r=>!r);
     }else if(controlCommand.type==='set_time'&&controlCommand.time!==undefined){

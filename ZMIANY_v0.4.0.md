@@ -1,5 +1,10 @@
 # Zmiany v0.4.0 — 29.09.2026
 
+## Naprawa Start w głównej symulacji — 23.10.2026 (6.6-fix)
+
+- Usunięto ponawianie polecenia paska 3D po każdej zmianie czasu, które zatrzymywało animację po pierwszej klatce i zakłócało start po resecie/przewinięciu. Polecenie działa raz; powrót do zakładki nie odtwarza starego kliknięcia.
+- 4/4 testów celowanych, build i rzeczywisty UI Vite/produkcja PASS. Test UI rozszerzony o przyrost czasu, pauzę i start po resecie/remoncie; w tym odbiorze zweryfikowany interaktywnie, pełny skrypt CDP nie był ponownie uruchamiany. Wyniki obliczeń, zapis i kontrolki bez zmian.
+
 ## Historia lokalizacji i plan UI/UX — 23.10.2026 (7.12.A2b2a, 7.13.X)
 
 - Odebrano wewnętrzny rdzeń odczytu historii korpusów i wózków z gotowego harmonogramu: granice czasu, cofanie, weryfikacja rejestrów końcowych, brak pozycji w JIT. 20/20 testów celowanych (7 nowych) i build PASS; backup 478 plików SHA-256 PASS. Algorytmy, zapis i interfejs bez zmian. Podłączenie i odbiór UI pozostają w A2b2b; całe A2 nadal w trakcie.
