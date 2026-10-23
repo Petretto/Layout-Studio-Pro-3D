@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-23",
+  "commit": "5adb875bfbd966f37c73056ad9a33b50fe113114",
+  "url": "https://layout-studio-pro-3d.vercel.app/?v=5adb875",
+  "bundle": "/assets/index-Be2HTMZ7.js",
+  "githubVercelStatus": "success",
+  "timeFirst": 3.115,
+  "timeLater": 89.956,
+  "continuous": true,
+  "pauseStable": true,
+  "scope": "Interactive CUA main-tab 3D start and pause after deployment; local broader UI acceptance recorded in report"
+}
