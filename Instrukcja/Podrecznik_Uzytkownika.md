@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**
-Aktualizacja podręcznika: **24.10.2026 — UI1a oraz UI2a/UI2b: kompaktowa nawigacja, narzędzia i skupienie hali 2D/3D. Dalsze widoki i zbiorczy odbiór UI2 pozostają w planie.**
+Aktualizacja podręcznika: **24.10.2026 — UI1a oraz UI2a/UI2b/UI2c: kompaktowa nawigacja, narzędzia i skupienie hali 2D/3D. Dalsze widoki i zbiorczy odbiór UI2 pozostają w planie.**
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -743,9 +743,9 @@ W obszarze **Hala i symulacja → Hala i CAD 2D** narzędzia znajdują się tera
 
 **Tryb skupienia** powiększa edytor na całe okno. Przycisk **Opuść tryb skupienia** przywraca nawigację; Escape najpierw zamyka otwartą grupę lub panel, a następnie opuszcza skupienie. Tab pozostaje w widocznym edytorze; globalne skróty Cofnij/Ponów/Zapisz działają nadal. Powiększanie, oddalanie, dopasowanie i przesuwanie widoku mają ikony z dostępnymi nazwami i podpowiedziami. Na telefonie pasek przewija się poziomo, a narzędzia otwierają się u dołu okna.
 
-Oznaczenia **Geometria koncepcyjna** i **Wymiary hali niepotwierdzone** pozostają widoczne przy zwiniętym opisie; pełne objaśnienia otwiera **Założenia i obsługa**. Aktywny pomiar lub kalibracja są oznaczone nad rzutem także po zamknięciu narzędzi. Zmiany tego pakietu dotyczą 2D; porządkowanie widoku 3D i symulacji pozostaje kolejnym krokiem UI2b. Przy 1280×720 zwykły widok może wymagać przewinięcia dolnego fragmentu rzutu; pełny obszar uzyskasz w trybie skupienia.
+Oznaczenia **Geometria koncepcyjna** i **Wymiary hali niepotwierdzone** pozostają widoczne przy zwiniętym opisie; pełne objaśnienia otwiera **Założenia i obsługa**. Aktywny pomiar lub kalibracja są oznaczone nad rzutem także po zamknięciu narzędzi. Zmiany tego pakietu dotyczą 2D; porządkowanie widoku 3D i symulacji pozostaje kolejnym krokiem UI2b. Po korekcie UI2c zwykły widok przy 1280×720 i 1440×900 mieści cały rzut o wysokości 60% okna, gdy panele i opisy są zamknięte. Powrót z 3D zachowuje możliwość edycji zaznaczonego obiektu w panelu Właściwości. Cofnij/Ponów odczytuje aktualną geometrię projektu i usuwa niezapisane zmiany formularza.
 
-![Edytor hali w trybie skupienia](../outputs/qa/ui2a/focus_1280.png)
+![Zwarty zwykły widok hali 2D](../outputs/qa/ui2c/normal_1280.png)
 
 ### Hala 3D — narzędzia i parametry na żądanie (UI2b)
 

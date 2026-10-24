@@ -94,8 +94,13 @@ export function LayoutEditor({project:p,change,confirm,simulation,selectedIds:pr
     ownerWindow.addEventListener('keydown',handleKeyDown);
     return ()=>ownerWindow.removeEventListener('keydown',handleKeyDown);
   },[panel,focused,calibrateMode,measureMode,selectedIds,snap,snapEdges,snapConnections,stationAssembly,p]);
-  // A history/import change invalidates unsaved geometry drafts.
-  useEffect(()=>{setDraft(null);setObs(null);if(!propSelectedIds)setInternalSelectedIds(ids=>ids.filter(id=>p.layoutObjects.some(o=>o.id===id)));},[p]);
+  // History/import is authoritative: discard unsaved edits, but keep an existing
+  // selection editable when returning from 3D or after undo/redo.
+  useEffect(()=>{
+    const saved=selectedIds.length===1?p.layoutObjects.find(o=>o.id===selectedIds[0]):undefined;
+    setDraft(saved?{...saved}:null);setObs(null);
+    if(!propSelectedIds)setInternalSelectedIds(ids=>ids.filter(id=>p.layoutObjects.some(o=>o.id===id)));
+  },[p]);
   const [preview,setPreview]=useState<LayoutObject|null>(null),[guides,setGuides]=useState<SnapGuide[]>([]);
   const svg=useRef<SVGSVGElement>(null),drag=useRef<{x:number;y:number;id?:string;ids?:string[];startX:number;startY:number}|null>(null);
   const settings=p.layoutSettings??defaultLayoutSettings;
@@ -199,15 +204,21 @@ export function LayoutEditor({project:p,change,confirm,simulation,selectedIds:pr
   };
   return <section ref={workspace} role={focused?'dialog':undefined} aria-modal={focused?true:undefined} aria-label={focused?'Edytor hali — tryb skupienia':undefined} className={`page hall-workspace hall-compact ${focused?'hall-focused':''}`} onKeyDown={e=>{
     if(!focused||e.key!=='Tab')return;
-    const nodes=Array.from(workspace.current?.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select:not(:disabled),summary,[tabindex="0"]')??[]).filter(el=>el.getClientRects().length>0);
+    const nodes=Array.from(workspace.current?.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select:not(:disabled),summary,[tabindex="0"]')??[]).filter(el=>{
+      if(!el.getClientRects().length)return false;
+      for(let parent=el.parentElement;parent;parent=parent.parentElement){
+        if(parent.tagName==='DETAILS'&&!(parent as HTMLDetailsElement).open&&parent.querySelector(':scope > summary')!==el)return false;
+      }
+      return true;
+    });
     const first=nodes[0],last=nodes[nodes.length-1];
     if(e.shiftKey&&workspace.current?.ownerDocument.activeElement===first){e.preventDefault();last?.focus();}
     else if(!e.shiftKey&&workspace.current?.ownerDocument.activeElement===last){e.preventDefault();first?.focus();}
   }}>
-  <div className="hall-title"><h1>Hala i edytor CAD 2D</h1><span>mm · {p.layoutMode==='manual'?'układ ręczny':'układ automatyczny'}</span><button ref={focusToggle} type="button" aria-pressed={focused} onClick={()=>setFocused(!focused)}>{focused?<Minimize2 size={16}/>:<Maximize2 size={16}/>} {focused?'Opuść tryb skupienia':'Tryb skupienia'}</button></div>
+  <div className="hall-title"><h1>Hala i edytor CAD 2D</h1><span>mm · {p.layoutMode==='manual'?'układ ręczny':'układ automatyczny'}</span>
   <details className="hall-context"><summary>{hasVisualAssumptions?'Geometria koncepcyjna · ':''}{!isFacilityConfirmed?'Wymiary hali niepotwierdzone · ':''}Założenia i obsługa</summary><p>Wymiary w milimetrach. Wybierz obiekt na rzucie, aby zmienić jego geometrię. Przesuwanie wyposażenia włącza tryb ręczny.</p>
   {hasVisualAssumptions&&<p className="notice visual-assumption-note" role="note"><strong>Założenie wizualne (5.13):</strong> {VISUAL_ASSUMPTION_DISCLAIMER}</p>}
-  {!isFacilityConfirmed&&<p className="notice facility-unconfirmed-note" role="note"><strong>Wymiary hali (5.13):</strong> {FACILITY_UNCONFIRMED_NOTE}</p>}</details>
+  {!isFacilityConfirmed&&<p className="notice facility-unconfirmed-note" role="note"><strong>Wymiary hali (5.13):</strong> {FACILITY_UNCONFIRMED_NOTE}</p>}</details><button ref={focusToggle} type="button" aria-pressed={focused} onClick={()=>setFocused(!focused)}>{focused?<Minimize2 size={16}/>:<Maximize2 size={16}/>} {focused?'Opuść tryb skupienia':'Tryb skupienia'}</button></div>
   <div className="hall-command-bar"><div className="toolbar hall-panel-controls">{([['tree','Biblioteka i drzewo'],['hall','Parametry hali'],['properties','Właściwości']] as const).map(([id,label])=><button key={id} aria-expanded={panel===id} aria-controls={`hall-${id}`} onClick={e=>{panelToggle.current=e.currentTarget;setPanel(panel===id?null:id);}}>{label}</button>)}</div>
 <details className="hall-tool-popover" onToggle={toolToggle}><summary>Zaznaczenie i kopie</summary><div className="hall-tool-content"><button type="button" className="hall-tools-close" onClick={e=>{const details=e.currentTarget.closest('details');if(details){details.open=false;details.querySelector('summary')?.focus();}}}>Zamknij narzędzia</button>  <div className="toolbar" aria-label="Narzędzia wielokrotnego zaznaczenia"><span role="status">Zaznaczono: {selectedIds.length}</span><button onClick={()=>{updateSelectedIds(p.layoutObjects.map(o=>o.id));setDraft(null);}} title="Zaznacz całe wyposażenie hali">Zaznacz wyposażenie</button><button disabled={!selectedIds.some(id=>p.layoutObjects.find(o=>o.id===id)?.workstationId)} onClick={()=>{const ids=expandMoveSelection(p.layoutObjects,selectedIds,true);updateSelectedIds(ids);setDraft(ids.length===1?{...p.layoutObjects.find(x=>x.id===ids[0])!}:null);}} title="Rozszerz zaznaczenie na powiązany stół, FIFO i strefę operatora">Zaznacz zespół stanowiska</button><button disabled={!selectedIds.length} onClick={()=>{updateSelectedIds([]);setSelected('');setDraft(null);}} title="Wyczyść zaznaczenie (Esc)">Wyczyść zaznaczenie</button>{([['left','Do lewej'],['right','Do prawej'],['top','Do góry'],['bottom','Do dołu']] as const).map(([a,label])=><button key={a} disabled={selectedIds.length<2} onClick={()=>align(a)}>{label}</button>)}<button disabled={!selectedIds.length} onClick={()=>lockSelected(true)} title="Zablokuj zaznaczone obiekty przed przypadkowym przesunięciem (L)">Zablokuj zaznaczone</button><button disabled={!selectedIds.some(id=>p.layoutObjects.find(o=>o.id===id)?.locked)} onClick={()=>lockSelected(false)} title="Odblokuj zaznaczone obiekty">Odblokuj zaznaczone</button><small>Shift/Ctrl + wybór dodaje lub usuwa obiekt. Wyrównanie do obrysu pierwszego zaznaczonego.</small></div>
   <details className="hall-bottom"><summary>Grupowanie i kopiowanie wyposażenia</summary><p>Grupy są wizualne. Kopie otrzymują nowe ID bez przypisania do stanowiska; nie zwiększają zdolności produkcyjnej. Przesunięcie kopii podaj jawnie.</p><div className="toolbar"><button disabled={selectedIds.length<2} onClick={()=>change({...p,layoutMode:'manual',layoutObjects:groupLayoutObjects(p.layoutObjects,selectedIds,crypto.randomUUID())})}>Grupuj zaznaczone</button><button disabled={!selectedIds.some(id=>p.layoutObjects.find(o=>o.id===id)?.visualGroupId)} onClick={()=>change({...p,layoutMode:'manual',layoutObjects:groupLayoutObjects(p.layoutObjects,selectedIds,null)})}>Rozgrupuj zaznaczone</button></div><form onSubmit={copySelection}><div className="form-grid"><NumberField label="Przesunięcie kopii X [mm]" min={-500000} max={500000} value={copyX} onChange={setCopyX}/><NumberField label="Przesunięcie kopii Y [mm]" min={-500000} max={500000} value={copyY} onChange={setCopyY}/></div><button disabled={!selectedIds.length}>Kopiuj zaznaczone</button></form>{selectionError&&<p role="alert">{selectionError}</p>}</details>

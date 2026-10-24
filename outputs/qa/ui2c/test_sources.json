@@ -1,0 +1,6 @@
+{
+  "date": "2026-10-24",
+  "coreSha256": "685c4dba8dd81d47ed89b320000cdf3579d279e5166f0d5a070829c75657487f",
+  "networkSha256": "926f09610ece874c47b4448df55522b70178737e3364573c69719c2078482187",
+  "note": "Full regression of current workspace: core 108 + network 309. Independent local network-test changes are not included in the UI2c commit."
+}

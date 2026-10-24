@@ -7,7 +7,9 @@
 .hall-title>button { margin-left:auto; display:inline-flex; align-items:center; gap:6px; }
 .studio .hall-context { position:relative; margin:6px 0; padding:5px 9px; font-size:11px; }
 .hall-context[open] { background:#142238; }
-.hall-command-bar { display:flex; align-items:center; flex-wrap:wrap; gap:6px; position:relative; z-index:5; margin:6px 0; }
+.studio .hall-title>.hall-context { flex:1 1 400px; margin:0; }
+.studio .hall-title>.hall-context[open] { flex-basis:100%; order:3; }
+.hall-command-bar { display:flex; align-items:center; flex-wrap:wrap; gap:6px; position:relative; z-index:5; margin:4px 0; }
 .hall-command-bar>.toolbar,.hall-command-bar .toolbar { margin:0; gap:4px; }
 .studio .hall-command-bar button { font-size:11px; min-height:32px; padding:6px 8px; }
 .studio .hall-command-bar .hall-tool-popover { margin:0; padding:6px 8px; font-size:11px; border-color:#40536f; }
@@ -28,6 +30,7 @@
   .studio .hall-compact { padding:8px; }
   .hall-title>span { display:none; }
   .studio .hall-title h1 { font-size:16px; }
+  .studio .hall-title>.hall-context { flex-basis:100%; order:3; }
   .studio .hall-title button,.studio .hall-command-bar button { min-height:44px; }
   .hall-tool-content { max-height:55dvh; }
   .studio .hall-command-bar .hall-tool-popover { padding:12px 8px; }

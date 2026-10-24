@@ -1,5 +1,23 @@
 # 7.13.X/UI2a — narzędzia hali 2D i tryb skupienia
 
+## Aktualizacja UI2c — 2026-10-24
+
+**UI2c odebrany w zakresie poniższych poprawek; całe UI2 nadal w trakcie.** Zamknięty opis założeń znajduje się w jednym wierszu z tytułem na desktopie, otwarty opis zajmuje pełny wiersz; na telefonie oznaczenia pozostają w osobnym wierszu. Rzut bez skupienia jest w całości widoczny: **1242,4×432 przy 1280×720** (góra 285,1, dół 717,1 px) i **1402,4×540 przy 1440×900**. Próg 70% szerokości / 60% wysokości PASS dla zamkniętych paneli/opisów. To zastępuje ograniczenie 55,1% z wcześniejszego UI2a. Mobilne skupienie: 368,8×574 przy 390×844, bez globalnego overflow.
+
+Odbiór ujawnił pusty formularz 2D po powrocie z 3D przy zachowanym zaznaczeniu. Efekt historii/importu resetował formularz także po inicjalnym odczycie zaznaczenia. Teraz odczytuje istniejący zaznaczony obiekt z aktualnego projektu; niezapisane zmiany nie są ponownie nakładane na model. Usunięty obiekt/wielokrotne zaznaczenie nie tworzą formularza pojedynczego obiektu. Poprawiono też filtr kontrolek w zamkniętych sekcjach przy zawijaniu Tab w 2D, analogicznie do odebranego 3D. Kontener PopoutWindow otrzymał klasę `.studio`, aby skopiowane arkusze ze scoped selektorami obejmowały jego zawartość. Sam ten przegląd kodu nie zastępuje odbioru zewnętrznego okna.
+
+Backup `backup/v0.4.0_przed_ui2c_20261024`: **565 plików**, niezależny odczyt SHA-256 skopiowanych bajtów PASS. Bez zmiany schematów, tożsamości, geometrii algorytmicznej ani reguł symulacji.
+
+- Końcowy TypeScript/Vite build PASS, znane ostrzeżenie dużych chunków. Następnie **pełna okresowa regresja 417/417 PASS**, sekwencyjnie 108 core i 309 network, po trzech pakietach od UI1a. Logi w `outputs/qa/ui2c/`. Liczba network obejmuje również niezwiązane lokalne zmiany `tests/network.test.ts`; nie włączono ich ani zmian `przyklady/README.md` do commitu UI2c. Zapisano hashe źródeł testów przy sporządzaniu raportu; bazowy commit UI1a miał 402 testy. Nie zmieniano progów wydajności.
+- Rzeczywisty UI produkcyjny localhost:5305 przez cua_repl: wybór SVG `TBL-WS-1`, zmiana X 12650→12750 i szerokości 1800→1810, zapis/Cofnij/Ponów, zapis lokalny i odświeżenie; wartości potwierdzone także w formularzu 3D. Testowe przyrosty są wyłącznie danymi tej próby na nowym lokalnym originie, nie pomiarami hali.
+- Edycja formularza 3D: wysokość 850→860, Cofnij 850, Ponów 860. Przesunięcie klawiaturą przy siatce projektu daje X 13750, odczyt 2D zgodny. Po odświeżeniu odczyt X 13750, szerokość 1810, wysokość 860. Po końcowej poprawce powrót 3D→2D udostępnia formularz tego samego zaznaczonego obiektu bez ponownego klikania na SVG.
+- Tab/Shift+Tab w skupieniu 2D zawijają między nagłówkiem założeń a ostatnią widoczną sekcją wyników, pomijając zamknięte formularze. Mobilny układ i pomiary desktop PASS. Jedna próba CUA zgłosiła timeout po wykonaniu Cofnij; stan pokazał już cofnięcie. Nie powtórzono kliknięcia w ciemno, kontynuowano od jawnego Ponów. Inny timeout ujawnił opisany pusty formularz; poprawiono i ponownie sprawdzono tę ścieżkę.
+- Instrukcja MD/HTML/PDF z nowym zrzutem zwykłego widoku i opisem zachowania zaznaczenia; 61 stron, 50 ilustracji, 6 771 144 bajty PDF. Kontrola zgodności/renderu w `outputs/qa/manual_ui2c/`.
+
+**Pozostały odbiór UI2:** rzeczywiste przeciąganie wskaźnikiem w 2D/3D, zawartość/sterowanie osobnych okien i wymuszony brak WebGL. Dostępne powierzchnie CUA to IAB i MCP Apps; brak zewnętrznej przeglądarki/native apps. IAB nie udostępnił utworzonego popout jako kontrolowanej karty, a dostępna powierzchnia nie oferuje wyłączenia WebGL. Nie omijano tych ograniczeń CDP lub uruchamianiem innego sterowania UI. Wcześniejsze przekazanie/powrót głównego widoku i istniejący catch błędu nie są dowodem tych prób. Lista do wykonania w obsługiwanej przeglądarce: `outputs/qa/ui2c/ODBIOR_ZEWNETRZNY.md`. Vercel niezweryfikowany. UI3 nie rozpoczęto w tym pakiecie.
+
+Poniższe pomiary UI2a/UI2b są historyczne; aktualny stan 2D opisano powyżej.
+
 ## Aktualizacja UI2b — 2026-10-24
 
 **UI2b wdrożony w zakresie ramy 3D i parametrów na żądanie. Całe UI2 nadal w trakcie.** Nowy `SimulationWorkspace` utrzymuje te same dzieci Scene/Simulation podczas przełączania skupienia. W App zastosowany w głównym 3D i w osobnym oknie. `Scene` ma dwie grupy narzędzi, ikony kamery, opis na żądanie z widocznymi oznaczeniami założeń. Pasek odtwarzania pod sceną pozostaje dostępny bez rozwijania parametrów. `Simulation compact` zwija formularz/wyniki, zachowując instancję i stan; postęp, błędy, anulowanie i stan aktualności CSV są poza sekcją. Pozostali odbiorcy Simulation mają domyślnie otwarte szczegóły. Bez zmian efektów obliczeń, kluczy wyniku, reguł animacji, schematów i historii.

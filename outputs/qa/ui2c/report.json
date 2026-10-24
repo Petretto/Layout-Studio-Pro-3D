@@ -1,0 +1,70 @@
+{
+  "package": "7.13.X/UI2c",
+  "date": "2026-10-24",
+  "build": "production localhost:5305",
+  "metrics": [
+    {
+      "bottom": 717.1000061035156,
+      "height": 432,
+      "overflow": false,
+      "visibleHeight": 432,
+      "width": 1242.4000244140625,
+      "window": [
+        1280,
+        720
+      ],
+      "y": 285.1000061035156
+    },
+    {
+      "bottom": 825.1000061035156,
+      "height": 540,
+      "overflow": false,
+      "visibleHeight": 540,
+      "width": 1402.4000244140625,
+      "window": [
+        1440,
+        900
+      ],
+      "y": 285.1000061035156
+    }
+  ],
+  "geometry": {
+    "initial": {
+      "x": 12650,
+      "width": 1800,
+      "height": 850
+    },
+    "saved2D": {
+      "x": 12750,
+      "width": 1810
+    },
+    "reopened": {
+      "x": "13750",
+      "width": "1810",
+      "height": "860"
+    },
+    "heightSaved": 860,
+    "heightUndone": 850,
+    "heightRedone": 860,
+    "keyboardNudgeX": 13750,
+    "retainedSelectionHeight": 860
+  },
+  "keyboard": {
+    "end": "Wyniki i oś czasu — aktywny projekt 4",
+    "start": "Geometria koncepcyjna · Wymiary hali niepotwierdzone · Założenia i obsługa",
+    "pass": true
+  },
+  "tests": {
+    "core": 108,
+    "network": 309,
+    "total": 417,
+    "full": true,
+    "note": "Current workspace includes independent local network-test edits not staged in UI2c"
+  },
+  "remaining": {
+    "pointerDragVerified": false,
+    "externalPopupContentVerified": false,
+    "webglUnavailableVerified": false
+  },
+  "deploymentVerified": false
+}

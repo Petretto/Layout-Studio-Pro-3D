@@ -54,7 +54,7 @@ export const PopoutWindow: React.FC<PopoutWindowProps> = ({
 
     // Create wrapper container for React portal
     const container = win.document.createElement('div');
-    container.className = 'popout-window-root';
+    container.className = 'popout-window-root studio';
     container.style.width = '100vw';
     container.style.height = '100vh';
     container.style.margin = '0';

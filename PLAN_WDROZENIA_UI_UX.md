@@ -91,7 +91,7 @@ Następnie wprowadzić lokalne tokeny oraz wspólne `IconButton`, `Menu`, `Inspe
 
 ### UI2 — duży obszar Hala i symulacja (X2, priorytet użytkowy)
 
-Stan 2026-10-24: UI2a wdrożony — kompaktowe narzędzia i skupienie 2D. UI2b: 3D/sterowanie odebrane 2026-10-24 w zakresie ramy, parametrów i odtwarzania (14/14 celowanych, build, UI). Pozostaje końcowy odbiór całości: widoczny zwykły CAD 2D 1280×720, gesty/zapis geometrii, zawartość osobnych okien i brak WebGL. Zwykły 1280×720 ma jeszcze 55,1% widocznej wysokości rzutu; w skupieniu 75,3%. Raport `WERYFIKACJA_UI_UX_UI2.md`.
+Stan 2026-10-24: UI2a wdrożony — kompaktowe narzędzia i skupienie 2D. UI2b: 3D/sterowanie odebrane 2026-10-24 w zakresie ramy, parametrów i odtwarzania (14/14 celowanych, build, UI). UI2c odebrany 2026-10-24: zwykły CAD 2D spełnia 70%/60% przy 1280×720 i 1440×900; edycja formularzy 2D/3D, historia, zapis/odświeżenie i przesunięcie klawiaturą PASS. Pozostały przeciąganie wskaźnikiem, zawartość osobnych okien i wymuszony brak WebGL. Pełna regresja bieżącego workspace 417/417 PASS; całe UI2 nadal w trakcie. Raport `WERYFIKACJA_UI_UX_UI2.md`.
 
 Przebudować kontener `LayoutEditor`/`Scene`: pasek narzędzi, tryb 2D/3D, biblioteka/drzewo/właściwości na żądanie, tryb skupienia i dolny panel wyników. Połączyć prezentację sterowania, zachowując jedną sesję odtwarzania dla wybranego źródła; nie uruchamiać drugiego workera przez otwarcie inspektora. Wykorzystać istniejącą logikę Cofnij/Ponów, selekcji, blokad, jednostek, siatki i manipulatorów. Nie przepisywać geometrii ani silnika Three.js dla samego wyglądu.
 
