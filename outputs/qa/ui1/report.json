@@ -1,0 +1,21 @@
+{
+  "package": "7.13.X/UI1a",
+  "accepted": "2026-10-24",
+  "build": "production localhost:5303",
+  "simulation": {
+    "startTime": 2.071000000238419,
+    "laterTime": 43.340000000238426,
+    "pausedTime": 67.33800000023861,
+    "pausedLater": 67.33800000023861,
+    "pass": true
+  },
+  "automated": {
+    "focused": 2,
+    "core": 108,
+    "network": 294,
+    "total": 402,
+    "build": "PASS"
+  },
+  "earlierInteractiveEvidence": "WERYFIKACJA_UI_UX_UI1.md",
+  "deploymentVerified": false
+}

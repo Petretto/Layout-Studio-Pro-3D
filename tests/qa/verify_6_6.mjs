@@ -69,6 +69,14 @@ try{
     writeFileSync(`outputs/qa/${name}.png`,Buffer.from((await send('Page.captureScreenshot',{format:'png'})).data,'base64'));
   };
 
+  const openSimulation=async()=>{
+    if(await evaluate(`!!document.querySelector('.shell-nav')`)){
+      await click('Hala i symulacja');
+      await until(`!!document.querySelector('button[data-view="simulation"]')`);
+      await evaluate(`document.querySelector('button[data-view="simulation"]').click()`);
+    }else await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(b=>b.textContent.includes('6 3D i symulacja')).click()`);
+  };
+
   await send('Runtime.enable');
   await send('Page.enable');
   await viewport(1440);
@@ -78,7 +86,7 @@ try{
   await until(`!!document.querySelector('.studio-nav')`);
 
   // Navigate to 6 3D i symulacja
-  await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(b=>b.textContent.includes('6 3D i symulacja')).click()`);
+  await openSimulation();
   await until(`!!document.querySelector('.scene canvas')`);
   await sleep(600);
 
@@ -167,7 +175,7 @@ try{
   await screenshot('verify_6_6_inspection_card_3d');
 
   await click('Pulpit');
-  await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(b=>b.textContent.includes('6 3D i symulacja')).click()`);
+  await openSimulation();
   await until(`Number(document.querySelector('input[aria-label="Oś czasu symulacji"]')?.max)>0`);
   await sleep(200);
   strictEqual(await playbackTime(),0,'Powrót do zakładki nie wykonuje ponownie starego polecenia');

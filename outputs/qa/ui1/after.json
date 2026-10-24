@@ -1,0 +1,26 @@
+[
+  {
+    "header": 56,
+    "headerOverflow": false,
+    "height": 900,
+    "main": 776,
+    "pageOverflow": false,
+    "width": 1440
+  },
+  {
+    "header": 56,
+    "headerOverflow": false,
+    "height": 720,
+    "main": 596,
+    "pageOverflow": false,
+    "width": 1280
+  },
+  {
+    "header": 104,
+    "headerOverflow": false,
+    "height": 844,
+    "main": 648,
+    "pageOverflow": false,
+    "width": 390
+  }
+]

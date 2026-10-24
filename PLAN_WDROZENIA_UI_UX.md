@@ -1,6 +1,6 @@
 # Plan wdrożenia nowego UI/UX Layout Studio Pro 3D
 
-Data: 2026-10-23. Powiązanie: **PLAN_ROZWOJU.md — 7.13.X oraz 7.13.U**. Status: analiza materiałów i plan przygotowane; wdrożenie UI **nierozpoczęte**. To uszczegółowienie bieżącego wydania, bez dodawania głównego ID do licznika i bez zmiany historycznego odbioru Etapu 5.
+Data: 2026-10-23. Powiązanie: **PLAN_ROZWOJU.md — 7.13.X oraz 7.13.U**. Status: **UI1 w trakcie — wdrożony UI1a, kompaktowa rama i nawigacja**; UI2–UI4 nierozpoczęte. Raport `WERYFIKACJA_UI_UX_UI1.md`. To uszczegółowienie bieżącego wydania, bez dodawania głównego ID do licznika i bez zmiany historycznego odbioru Etapu 5.
 
 ## 1. Materiały i wynik przeglądu
 
@@ -124,4 +124,4 @@ Wdrożyć Pulpit i Raporty i eksport w tym samym stylu, z aktualnością wynikó
 
 A2b2b oraz przykłady C/D pozostają otwartymi zadaniami technologicznymi. Nie trzeba czekać z UI1 na ich zakończenie, ale nie można odebrać pełnej fizycznej symulacji ani gotowego zestawu przykładów bez tych punktów. W razie konfliktu priorytetów aktualizować bieżący pakiet w PLAN_ROZWOJU.md, nie wykonywać ukrytych równoległych przebudów.
 
-Redesign jest ukończony dopiero, gdy sześć obszarów udostępnia rzeczywiste dotychczasowe możliwości, widoki mają wspólne zasady i język, sceny odzyskują wymagany obszar, podstawowa ścieżka nie wymaga znajomości schematów, zapis i wyniki są zachowane oraz instrukcja/tutorial odzwierciedlają nowy interfejs. W chwili przygotowania tego planu **żaden z UI1–UI4 nie został zaimplementowany ani odebrany**.
+Redesign jest ukończony dopiero, gdy sześć obszarów udostępnia rzeczywiste dotychczasowe możliwości, widoki mają wspólne zasady i język, sceny odzyskują wymagany obszar, podstawowa ścieżka nie wymaga znajomości schematów, zapis i wyniki są zachowane oraz instrukcja/tutorial odzwierciedlają nowy interfejs. Aktualizacja 2026-10-23: **odebrano UI1a — ramę/menu/nawigację; cały UI1 i redesign pozostają w trakcie**, nie odebrano docelowego wnętrza wszystkich obszarów. 402/402 pełnej regresji sekwencyjnej, build i interaktywny UI PASS; instrukcja 59 stron/48 obrazów. Szczegóły i ograniczenia w raporcie UI1.
