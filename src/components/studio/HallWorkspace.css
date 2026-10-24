@@ -1,4 +1,45 @@
 .hall-workspace { max-width: none; padding: 18px; }
+/* UI2a: presentation only; the existing CAD remains the geometry owner. */
+.studio .hall-compact { padding: 10px 16px; }
+.hall-title { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.studio .hall-title h1 { margin:0; font-size:19px; }
+.hall-title>span { font-size:11px; color:#9cb4ca; }
+.hall-title>button { margin-left:auto; display:inline-flex; align-items:center; gap:6px; }
+.studio .hall-context { position:relative; margin:6px 0; padding:5px 9px; font-size:11px; }
+.hall-context[open] { background:#142238; }
+.hall-command-bar { display:flex; align-items:center; flex-wrap:wrap; gap:6px; position:relative; z-index:5; margin:6px 0; }
+.hall-command-bar>.toolbar,.hall-command-bar .toolbar { margin:0; gap:4px; }
+.studio .hall-command-bar button { font-size:11px; min-height:32px; padding:6px 8px; }
+.studio .hall-command-bar .hall-tool-popover { margin:0; padding:6px 8px; font-size:11px; border-color:#40536f; }
+.hall-tool-content { position:absolute; left:0; top:calc(100% + 4px); z-index:6; width:min(520px,100%); max-height:min(400px,60dvh); overflow:auto; box-sizing:border-box; padding:14px; background:#142238; border:1px solid #64748b; border-radius:8px; box-shadow:0 12px 28px #0009; }
+.hall-tool-content .toolbar { display:flex; flex-wrap:wrap; }
+.hall-tool-content label { display:flex; align-items:center; gap:6px; font-size:12px; }
+.hall-tool-content input[type=checkbox] { width:auto; }
+.hall-mode-status { font-size:12px; color:#7dd3fc; }
+.hall-mode-status:empty { display:none; }
+.hall-title button svg { flex-shrink:0; }
+.hall-command-bar button:focus-visible,.hall-command-bar summary:focus-visible { outline:2px solid #38bdf8; outline-offset:2px; }
+.studio .hall-compact .cad-canvas { height:60dvh; min-height:360px; }
+.studio .hall-focused { position:fixed; inset:0; z-index:60; background:#091523; overflow:auto; padding:10px 16px; }
+.studio .hall-focused .cad-canvas { height:calc(100dvh - 178px); min-height:260px; }
+.studio .layout-choice { padding:6px 16px 0; max-width:none; font-size:11px; }
+.studio .layout-choice button,.studio .layout-choice select { min-height:30px; padding:5px 8px; font-size:11px; }
+@media(max-width:700px) {
+  .studio .hall-compact { padding:8px; }
+  .hall-title>span { display:none; }
+  .studio .hall-title h1 { font-size:16px; }
+  .studio .hall-title button,.studio .hall-command-bar button { min-height:44px; }
+  .hall-tool-content { max-height:55dvh; }
+  .studio .hall-command-bar .hall-tool-popover { padding:12px 8px; }
+  .hall-command-bar { flex-wrap:nowrap; overflow-x:auto; position:static; padding-bottom:4px; }
+  .hall-command-bar>.toolbar { flex-shrink:0; flex-wrap:nowrap; }
+  .hall-command-bar .hall-panel-controls button { flex:0 0 auto; }
+  .hall-command-bar>.hall-tool-popover { flex-shrink:0; white-space:nowrap; }
+  .hall-command-bar .hall-tool-content { position:fixed; left:8px; right:8px; top:auto; bottom:8px; width:auto; max-height:55dvh; white-space:normal; z-index:70; }
+  .studio .hall-focused .cad-canvas { height:calc(100dvh - 270px); }
+  .studio .layout-choice { flex-wrap:wrap; gap:6px; }
+}
+@media print { .studio .hall-focused { position:static; } .hall-command-bar,.hall-title>button { display:none; } }
 .hall-stage { position: relative; }
 .hall-workspace .cad-canvas { height: clamp(420px, 64vh, 850px); display: block; }
 .hall-drawer { position: absolute; top: 0; bottom: 0; z-index: 3; width: min(380px, 90%); overflow-y: auto; overscroll-behavior: contain; padding: 16px; background: #142238; border: 1px solid #64748b; border-radius: 12px; box-shadow: 0 12px 28px #0009; }

@@ -1,6 +1,6 @@
 # Plan wdrożenia nowego UI/UX Layout Studio Pro 3D
 
-Data: 2026-10-23. Powiązanie: **PLAN_ROZWOJU.md — 7.13.X oraz 7.13.U**. Status: **UI1 w trakcie — wdrożony UI1a, kompaktowa rama i nawigacja**; UI2–UI4 nierozpoczęte. Raport `WERYFIKACJA_UI_UX_UI1.md`. To uszczegółowienie bieżącego wydania, bez dodawania głównego ID do licznika i bez zmiany historycznego odbioru Etapu 5.
+Data: 2026-10-23. Powiązanie: **PLAN_ROZWOJU.md — 7.13.X oraz 7.13.U**. Status: **UI1 w trakcie — wdrożony UI1a, kompaktowa rama i nawigacja**; UI2 w trakcie (UI2a odebrany, UI2b przed nami); UI3–UI4 nierozpoczęte. Raport `WERYFIKACJA_UI_UX_UI1.md`. To uszczegółowienie bieżącego wydania, bez dodawania głównego ID do licznika i bez zmiany historycznego odbioru Etapu 5.
 
 ## 1. Materiały i wynik przeglądu
 
@@ -90,6 +90,8 @@ Następnie wprowadzić lokalne tokeny oraz wspólne `IconButton`, `Menu`, `Inspe
 **Odbiór UI1:** wszystkie dawne działania mają nowe miejsce; Zapisz/Eksport/Kopie, Cofnij/Ponów, skróty i blokady migracji działają jak wcześniej. Na 1440×900 nagłówek nie zawija się do kilku rzędów, a brak miejsca otwiera menu zamiast przycinać przyciski. Klawiatura, Escape i powrót focusu działają. Bez utraty danych/projektu po zmianie obszaru. Zakres X1 pozostaje otwarty do przeglądu nowych propozycji i rzeczywistego baseline'u — niniejszy dokument nie jest takim odbiorem.
 
 ### UI2 — duży obszar Hala i symulacja (X2, priorytet użytkowy)
+
+Stan 2026-10-24: UI2a wdrożony — kompaktowe narzędzia i skupienie 2D. UI2b: 3D/sterowanie i całościowy odbiór. Zwykły 1280×720 ma jeszcze 55,1% widocznej wysokości rzutu; w skupieniu 75,3%. Raport `WERYFIKACJA_UI_UX_UI2.md`.
 
 Przebudować kontener `LayoutEditor`/`Scene`: pasek narzędzi, tryb 2D/3D, biblioteka/drzewo/właściwości na żądanie, tryb skupienia i dolny panel wyników. Połączyć prezentację sterowania, zachowując jedną sesję odtwarzania dla wybranego źródła; nie uruchamiać drugiego workera przez otwarcie inspektora. Wykorzystać istniejącą logikę Cofnij/Ponów, selekcji, blokad, jednostek, siatki i manipulatorów. Nie przepisywać geometrii ani silnika Three.js dla samego wyglądu.
 

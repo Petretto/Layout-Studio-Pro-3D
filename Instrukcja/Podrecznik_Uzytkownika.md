@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**  
-Aktualizacja podręcznika: **23.10.2026 — kompaktowy nagłówek i sześć obszarów nawigacji (7.13.X/UI1a). Podwidoki i mechanizmy danych zachowano; przebudowa ich treści pozostaje w UI2–UI4.**
+Aktualizacja podręcznika: **24.10.2026 — UI1a i UI2a: kompaktowa nawigacja oraz pasek narzędzi/tryb skupienia hali 2D. Przebudowa 3D i dalszych widoków pozostaje w kolejnych pakietach.**
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -735,3 +735,14 @@ Nagłówek zawiera 56 px wysokości na desktopie i dwa zwarte wiersze na telefon
 ![Nawigacja mobilna UI1a](../outputs/qa/ui1/after_390.png)
 
 Ten pakiet zmienia dojście do istniejących funkcji. Same formularze, duży viewport CAD, panele sceny, raport i Pulpit są przebudowywane w kolejnych pakietach. Nie dodano importu STEP, nowych ocen ergonomii ani certyfikacji bezpieczeństwa. Wspólny nagłówek nie oznacza jeszcze połączenia zapisów projektu głównego i modelu domenowego.
+
+
+### Edytor hali 2D — zwarty pasek i tryb skupienia (UI2a)
+
+W obszarze **Hala i symulacja → Hala i CAD 2D** narzędzia znajdują się teraz w grupach **Zaznaczenie i kopie**, **Przyciąganie i układ** oraz **Warstwy i pomiary**. Otwarta jest jedna grupa naraz. Zamknij ją przyciskiem **Zamknij narzędzia**, ponownym wyborem nagłówka albo klawiszem Escape. Rozwinięcie narzędzi nie zapisuje zmian projektu ani nie kasuje wpisanych wartości kopiowania. Biblioteka/drzewo, parametry hali i właściwości pozostają panelami na żądanie.
+
+**Tryb skupienia** powiększa edytor na całe okno. Przycisk **Opuść tryb skupienia** przywraca nawigację; Escape najpierw zamyka otwartą grupę lub panel, a następnie opuszcza skupienie. Tab pozostaje w widocznym edytorze; globalne skróty Cofnij/Ponów/Zapisz działają nadal. Powiększanie, oddalanie, dopasowanie i przesuwanie widoku mają ikony z dostępnymi nazwami i podpowiedziami. Na telefonie pasek przewija się poziomo, a narzędzia otwierają się u dołu okna.
+
+Oznaczenia **Geometria koncepcyjna** i **Wymiary hali niepotwierdzone** pozostają widoczne przy zwiniętym opisie; pełne objaśnienia otwiera **Założenia i obsługa**. Aktywny pomiar lub kalibracja są oznaczone nad rzutem także po zamknięciu narzędzi. Zmiany tego pakietu dotyczą 2D; porządkowanie widoku 3D i symulacji pozostaje kolejnym krokiem UI2b. Przy 1280×720 zwykły widok może wymagać przewinięcia dolnego fragmentu rzutu; pełny obszar uzyskasz w trybie skupienia.
+
+![Edytor hali w trybie skupienia](../outputs/qa/ui2a/focus_1280.png)

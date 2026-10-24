@@ -1,0 +1,69 @@
+{
+  "package": "7.13.X/UI2a",
+  "date": "2026-10-24",
+  "metrics": [
+    {
+      "mode": "normal",
+      "bottom": 755.2000122070312,
+      "h": 432,
+      "height": 720,
+      "overflow": false,
+      "visibleH": 396.7999877929687,
+      "w": 1242.4000244140625,
+      "width": 1280,
+      "x": 16,
+      "y": 323.20001220703125
+    },
+    {
+      "mode": "focus",
+      "bottom": 667.2000045776367,
+      "h": 542,
+      "height": 720,
+      "overflow": false,
+      "visibleH": 542,
+      "w": 1242.4000244140625,
+      "width": 1280,
+      "x": 16,
+      "y": 125.20000457763672
+    },
+    {
+      "mode": "focus",
+      "bottom": 847.2000045776367,
+      "h": 722,
+      "height": 900,
+      "overflow": false,
+      "visibleH": 722,
+      "w": 1402.4000244140625,
+      "width": 1440,
+      "x": 16,
+      "y": 125.20000457763672
+    },
+    {
+      "mode": "normal",
+      "bottom": 863.2000122070312,
+      "h": 540,
+      "height": 900,
+      "overflow": false,
+      "visibleH": 540,
+      "w": 1402.4000244140625,
+      "width": 1440,
+      "x": 16,
+      "y": 323.20001220703125
+    }
+  ],
+  "checks": {
+    "layers": true,
+    "zoomFit": true,
+    "draftCloseReopen": true,
+    "saveUndoRedo": true,
+    "saveReopen": true,
+    "escapeFocus": true,
+    "oneToolGroup": true,
+    "mobile": true,
+    "measureStatus": true
+  },
+  "tests": {
+    "coreFocused": 19
+  },
+  "fullUI2Accepted": false
+}
