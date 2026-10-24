@@ -1,5 +1,22 @@
 # 7.13.X/UI2a — narzędzia hali 2D i tryb skupienia
 
+## Aktualizacja UI2b — 2026-10-24
+
+**UI2b wdrożony w zakresie ramy 3D i parametrów na żądanie. Całe UI2 nadal w trakcie.** Nowy `SimulationWorkspace` utrzymuje te same dzieci Scene/Simulation podczas przełączania skupienia. W App zastosowany w głównym 3D i w osobnym oknie. `Scene` ma dwie grupy narzędzi, ikony kamery, opis na żądanie z widocznymi oznaczeniami założeń. Pasek odtwarzania pod sceną pozostaje dostępny bez rozwijania parametrów. `Simulation compact` zwija formularz/wyniki, zachowując instancję i stan; postęp, błędy, anulowanie i stan aktualności CSV są poza sekcją. Pozostali odbiorcy Simulation mają domyślnie otwarte szczegóły. Bez zmian efektów obliczeń, kluczy wyniku, reguł animacji, schematów i historii.
+
+Backup `backup/v0.4.0_przed_ui2b_20261024`: **563 pliki**, odczyt skopiowanych bajtów względem SHA256.txt PASS. Weryfikacja:
+
+- **14/14 celowanych PASS**: core `--test-name-pattern="3\.10|6\.[5-7]"` 13/13 oraz network `--test-name-pattern="3\.9: scenariusz 5"` 1/1. Zakres: czas/prędkości, współrzędne i blokady, warstwy/ukrywanie, niezmienniki technologii, inspekcja, deterministyczna animacja, dopasowanie kamery, LOD/popout. Pełnej regresji nie powtarzano: drugi pakiet prezentacyjny od bazowej 402/402 w UI1a. Nie zmieniano progów ani testów domenowych.
+- **Końcowy TypeScript/Vite build PASS**, istniejące ostrzeżenie dużych chunków. Odbiór produkcyjnego buildu na localhost:5304 przez cua_repl. Po wykryciu ucieczki Tab przez kontrolki zwiniętych details poprawiono filtr przodków, ponowny build i próba Shift+Tab/Tab PASS: obie granice zawijają focus w widocznym edytorze. Escape zamyka sekcję albo opuszcza skupienie. Otwarta jedna grupa narzędzi naraz.
+- Start: 1,919 → 60,944 s; rozwinięcie parametrów nie zeruje czasu. Pauza 61,731 s stabilna po zwinięciu i wyjściu ze skupienia. 1×: 0,2253 → 4,4674 s. 5000×: **30/30 przy 4936 s**. CSV po odtwarzaniu identyczny bajt w bajt z bazowym: 2419 bajtów, SHA-256 `14dc11ebd58763bffcc77ef3b11edffbf73be9eb0da90bc02512329d7710976d`. Suwak 0,1 s zatrzymuje odtwarzanie; reset i ponowne wejście dają 0, nowy Start ponownie zwiększa czas (72,775 s w odczycie po powrocie). To odrębne próby, nie jeden ciąg czasu.
+- UI: warstwa stanowisk OFF/ON, LOD OFF/ON, obrót manipulatora, widok z góry/dopasowanie, inspekcja/jej zamknięcie, mobilny panel i brak globalnego overflow PASS. Nie testowano ponownie fizycznych gestów przeciągania obiektów ani zapisu nowej geometrii 3D. Przeniesiono dostęp do istniejących komend, nie mechanizm transformacji.
+- Popout: główny widok pokazuje stan przekazania, Przywróć odtwarza canvas. Zewnętrzne okno nie było dostępne w inwentarzu IAB, więc jego zawartości i sterowania **nie uznajemy za odebrane**. Nie obiecujemy zachowania czasu przy opuszczeniu zakładki/przeniesieniu — dotychczasowe warunkowe montowanie może rozpoczynać sesję ponownie. Skupienie i same disclosures zachowują instancję.
+- Instrukcja MD/HTML/PDF: 61 stron, 50 ilustracji, 6 770 423 bajty; kontrola zgodności i renderu w `outputs/qa/manual_ui2b/`. Aktualne pomiary, zrzuty, bazowy CSV i raport w `outputs/qa/ui2b/`.
+
+Końcowy rzeczywisty canvas: normalny 1440×900 **1401×540**, 1280×720 **1241×432** — cały widoczny, bez poziomego overflow. Skupienie odpowiednio **1401×733** i **1241×553**. Zmierzono canvas WebGL, nie kartę. Przy 1280×720 zwykły pasek pod sceną może wymagać przewinięcia. Pozostaje końcowy odbiór UI2: zwykły CAD 2D 1280×720 (55,1% widocznej wysokości), gesty/edycja i zapis geometrii, osobne okna w obsługiwanej przeglądarce oraz faktyczna próba braku WebGL. Nie deklarujemy PASS tej ostatniej na podstawie samego zachowania istniejącego catch/komunikatu. Fizyczna integracja A2b2b i UI3/UI4 są odrębne. Vercel niezweryfikowany.
+
+Poniżej zachowano odbiór UI2a bez zmiany jego historii.
+
 Odbiór ograniczonego pakietu: 2026-10-24. **UI2a wdrożony; całe UI2 nadal w trakcie.** UI2b obejmie 3D i wspólne sterowanie/odbiór symulacji. Nie zamyka to X1/X3, prototypów pozostałych ekranów ani fizycznej integracji A2b2b.
 
 ## Zmiana

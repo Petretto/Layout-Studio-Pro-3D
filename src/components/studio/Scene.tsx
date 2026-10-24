@@ -1,3 +1,5 @@
+import {Scan,ArrowDownToLine} from 'lucide-react';
+import './SimulationWorkspace.css';
 import {EquipmentAppearanceEditor} from './EquipmentAppearanceEditor';
 import {sceneContentBounds} from '../../core/equipment/sceneFraming';
 import {applyEquipmentAppearance} from '../../core/equipment/equipmentAppearance';
@@ -52,6 +54,7 @@ export function Scene({
   simulationPlayback?: SimulationPlaybackState | null;
   onSimulationCommand?: (cmd: SimulationControlCommand) => void;
 }) {
+  const sceneWorkspace=useRef<HTMLDivElement>(null);
   const host=useRef<HTMLDivElement>(null),fit=useRef<()=>void>(()=>{}),[error,setError]=useState('');
   const [editing,setEditing]=useState(false),[snap,setSnap]=useState(true),[draft,setDraft]=useState<LayoutObject|null>(null);
   const [showZones,setShowZones]=useState(false),[showEnvelopes,setShowEnvelopes]=useState(false);
@@ -549,9 +552,9 @@ export function Scene({
   const isFacilityConfirmed=!!(p.facility.underlay?.calibratedDistanceMm||p.facility.isConfirmed);
 
   return (
-    <>
-      <div className="toolbar" aria-label="Narzędzia 3D, manipulatory i warstwy">
-        {!readOnly&& (
+    <div className="scene-workspace" ref={sceneWorkspace} onKeyDown={e=>{if(e.key!=='Escape')return;const open=sceneWorkspace.current?.querySelector<HTMLDetailsElement>('details[open]');if(open){e.preventDefault();e.stopPropagation();open.open=false;open.querySelector('summary')?.focus();}}}>
+      <div className="toolbar scene-tools" aria-label="Narzędzia 3D, manipulatory i warstwy">
+<details hidden={readOnly} className="scene-tool-group" onToggle={e=>{if(e.currentTarget.open)sceneWorkspace.current?.querySelectorAll<HTMLDetailsElement>('.scene-tool-group[open]').forEach(el=>{if(el!==e.currentTarget)el.open=false;});}}><summary>Edycja i manipulatory</summary><div className="scene-tool-content"><button type="button" onClick={e=>{const d=e.currentTarget.closest('details');if(d){d.open=false;d.querySelector('summary')?.focus();}}}>Zamknij narzędzia 3D</button>        {!readOnly&& (
           <>
             <button aria-pressed={editing} onClick={()=>setEditing(!editing)} title="Włącz lub wyłącz edycję i przeciąganie 3D (M)">
               {editing?'Edycja 3D włączona':'Włącz edycję 3D'}
@@ -583,11 +586,11 @@ export function Scene({
             </button>
           </>
         )}
-        <button onClick={()=>fit.current()} title="Dopasuj widok do hali 3D (F)">Dopasuj halę 3D</button>
-        <button onClick={()=>topView.current()} title="Widok hali prostopadle z góry (T)">Widok z góry</button>
+</div></details>        <button onClick={()=>fit.current()} title="Dopasuj widok do hali 3D (F)" aria-label="Dopasuj halę 3D"><Scan size={17} aria-hidden="true"/></button>
+        <button onClick={()=>topView.current()} title="Widok hali prostopadle z góry (T)" aria-label="Widok z góry"><ArrowDownToLine size={17} aria-hidden="true"/></button>
         {!readOnly&&draft&&<button onClick={()=>focusObject.current(draft.id)} title="Zbliż kamerę 3D na aktywny obiekt">Zbliż na wybrany obiekt</button>}
         
-        <details className="layer-controls-dropdown" title="Widoczność warstw 3D">
+<details className="scene-tool-group" onToggle={e=>{if(e.currentTarget.open)sceneWorkspace.current?.querySelectorAll<HTMLDetailsElement>('.scene-tool-group[open]').forEach(el=>{if(el!==e.currentTarget)el.open=false;});}}><summary>Warstwy i widoczność</summary><div className="scene-tool-content"><button type="button" onClick={e=>{const d=e.currentTarget.closest('details');if(d){d.open=false;d.querySelector('summary')?.focus();}}}>Zamknij narzędzia 3D</button>        <details className="layer-controls-dropdown" title="Widoczność warstw 3D">
           <summary>Warstwy 3D</summary>
           <div className="layer-checkboxes">
             <label><input type="checkbox" checked={layers3D.stations} onChange={e=>setLayers3D(l=>({...l,stations:e.target.checked}))}/> Stanowiska</label>
@@ -637,10 +640,18 @@ export function Scene({
             🔒 Zablokowany (brak manipulacji)
           </span>
         )}
-      </div>
+</div></details>      </div>
 
+      <details className="scene-context"><summary>{hasVisualAssumptions?'Geometria koncepcyjna · ':''}{!isFacilityConfirmed?'Wymiary hali niepotwierdzone · ':''}Założenia i obsługa 3D</summary>
       {hasVisualAssumptions&&<p className="notice visual-assumption-note" role="note"><strong>Założenie wizualne (5.13):</strong> {VISUAL_ASSUMPTION_DISCLAIMER}</p>}
       {!isFacilityConfirmed&&<p className="notice facility-unconfirmed-note" role="note"><strong>Wymiary hali (5.13):</strong> {FACILITY_UNCONFIRMED_NOTE}</p>}
+      <p className="muted">
+        Lewy przycisk: obrót kamery · Prawy: przesuwanie kamery · Kółko: zoom.
+        {readOnly
+          ? ' Podgląd czyta zapisane obiekty warsztatu v5.'
+          : ' Manipulatory 3D: Przesuwanie (W) i Obrót (E) pozwalają precyzyjnie modyfikować wyposażenie bezpośrednio w przestrzeni 3D z przyciąganiem do siatki (G). Ukrywanie obiektów (H) i warstw 3D ułatwia pracę w gęstym układzie hali. Żółty kontur: zablokowany (🔒), błękitny: zaznaczony.'}
+      </p>
+      </details>
       {error&&<p role="alert" className="error">{error}</p>}
 
       <div className="scene-container" style={{position:'relative'}}>
@@ -756,12 +767,7 @@ export function Scene({
         )}
       </div>
 
-      <p className="muted">
-        Lewy przycisk: obrót kamery · Prawy: przesuwanie kamery · Kółko: zoom.
-        {readOnly
-          ? ' Podgląd czyta zapisane obiekty warsztatu v5.'
-          : ' Manipulatory 3D: Przesuwanie (W) i Obrót (E) pozwalają precyzyjnie modyfikować wyposażenie bezpośrednio w przestrzeni 3D z przyciąganiem do siatki (G). Ukrywanie obiektów (H) i warstw 3D ułatwia pracę w gęstym układzie hali. Żółty kontur: zablokowany (🔒), błękitny: zaznaczony.'}
-      </p>
+
 
       {!readOnly&&draft&&p.layoutObjects.some(o=>o.id===draft.id)&& (
         <EquipmentAppearanceEditor
@@ -850,8 +856,6 @@ export function Scene({
           ))}
         </div>
       </details>
-    </>
+    </div>
   );
 }
-
-

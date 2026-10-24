@@ -31,6 +31,7 @@ export function Simulation({
   onExportResult,
   initialBatch=30,
   showStableIds=false,
+  compact=false,
   onPlaybackChange,
   controlCommand
 }:{
@@ -41,6 +42,7 @@ export function Simulation({
   onExportResult:(key:string)=>void;
   initialBatch?:number;
   showStableIds?:boolean;
+  compact?:boolean;
   onPlaybackChange?:(state:SimulationPlaybackState)=>void;
   controlCommand?:SimulationControlCommand|null;
 }){
@@ -106,15 +108,21 @@ export function Simulation({
   },[controlCommand,end,time]);
   const stats=simulationAt(result.jobs,time);
   const exportCSV=()=>{spreadsheet(result.jobs.map(j=>({'Sztuka':j.id,'Wejście [s]':j.arrival,'Wyjście [s]':j.finish,'Przejście [s]':j.finish-j.arrival,...Object.fromEntries(j.starts.flatMap((s,i)=>[[`${result.stepIds[i]} start [s]`,s],[`${result.stepIds[i]} koniec [s]`,j.ends[i]]]))})),'Symulacja_partii','csv');onExportResult(resultKey);notify('Przekazano Symulacja_partii.csv do pobrania.');};
-  return <div className="panel"><h2>Symulacja przepływu produkcji</h2><p className="muted">Model grafowy: gałęzie wykonują się równolegle, operacja czeka na wszystkich poprzedników tej samej sztuki. Każda kopia stanowiska wykonuje jedną operację naraz. Kolejki bez limitu, kolejność gotowości (remisy: numer sztuki i sekwencja). Cykl zespołu skaluje czasy jego operacji proporcjonalnie. Zerowy czas transportu; operatorzy są dedykowani, bez współdzielenia między stanowiskami. OEE służy do wyznaczenia celu cyklu i nie jest ponownie odejmowane w symulacji. Parametry opisują założenia, a nie prognozę awarii.</p><div className="form-grid"><NumberField label="Cel partii [szt.]" min={1} max={10000} step="1" value={batch} onChange={setBatch}/><TimeField label="Odstęp uruchamiania sztuk" min={.001} seconds={interval} unit={unit} onChange={setIntervalValue}/><label className="field">Szybkość odtwarzania<select aria-label="Szybkość odtwarzania" value={speed} onChange={e=>setSpeed(Number(e.target.value))}>{SIMULATION_SPEEDS.map(v=><option key={v} value={v}>{v}×</option>)}</select></label></div>{current?.error&&<p role="alert" className="error">{current.error}</p>}
-  {computing&&<p role="status">Obliczanie partii: {current?.progress?.completed??0} / {current?.progress?.total??p.processSteps.length*batch} wykonań operacji.</p>}
-  {current?.status==='cancelled'&&<p role="status">Obliczenia symulacji anulowane.</p>}
+  return <div className={compact?'panel simulation-compact':'panel simulation-full'}>
+  {current?.error&&<p role="alert" className="error">{current.error}</p>}
+{computing&&<p role="status">Obliczanie partii: {current?.progress?.completed??0} / {current?.progress?.total??p.processSteps.length*batch} wykonań operacji.</p>}
+{current?.status==='cancelled'&&<p role="status">Obliczenia symulacji anulowane.</p>}
+{exportedResultKey!==null&&<p role="status" className={exportedResultKey===resultKey?'success':'error'}>{exportedResultKey===resultKey?'Raport CSV odpowiada bieżącej partii i odstępowi.':'Raport CSV jest nieaktualny po zmianie danych symulacji. Pobierz go ponownie.'}</p>}
+  {compact&&<div className="simulation-brief" role="status"><span>Partia: {batch} szt.</span><span>Czas: {formatTimeWithUnit(time,unit)} / {formatTimeWithUnit(end,unit)}</span><span>Wyprodukowano: {stats.completed} / {batch}</span><span>Odtwarzanie: {speed}×</span></div>}
+  <details className="simulation-details" open={compact?undefined:true}><summary>Parametry, wyniki i eksport symulacji</summary><h2>Symulacja przepływu produkcji</h2><p className="muted">Model grafowy: gałęzie wykonują się równolegle, operacja czeka na wszystkich poprzedników tej samej sztuki. Każda kopia stanowiska wykonuje jedną operację naraz. Kolejki bez limitu, kolejność gotowości (remisy: numer sztuki i sekwencja). Cykl zespołu skaluje czasy jego operacji proporcjonalnie. Zerowy czas transportu; operatorzy są dedykowani, bez współdzielenia między stanowiskami. OEE służy do wyznaczenia celu cyklu i nie jest ponownie odejmowane w symulacji. Parametry opisują założenia, a nie prognozę awarii.</p><div className="form-grid"><NumberField label="Cel partii [szt.]" min={1} max={10000} step="1" value={batch} onChange={setBatch}/><TimeField label="Odstęp uruchamiania sztuk" min={.001} seconds={interval} unit={unit} onChange={setIntervalValue}/><label className="field">Szybkość odtwarzania<select aria-label="Szybkość odtwarzania" value={speed} onChange={e=>setSpeed(Number(e.target.value))}>{SIMULATION_SPEEDS.map(v=><option key={v} value={v}>{v}×</option>)}</select></label></div>
+
+
   <div className="toolbar">{computing?<button onClick={()=>{cancelRef.current();setCalculation({key:resultKey,status:'cancelled'});}}>Anuluj obliczenia symulacji</button>:<button onClick={()=>setRetry(value=>value+1)}>Oblicz ponownie symulację</button>}</div>
   <div className="toolbar"><button className="primary" disabled={!end||time>=end} onClick={()=>setRunning(!running)}>{running?'Pauza':time>0?'Wznów':'Start symulacji'}</button><button onClick={()=>{setRunning(false);timeRef.current=0;setTime(0);}}>Reset symulacji</button><button disabled={!end} onClick={()=>{setRunning(false);timeRef.current=end;setTime(end);}}>Oblicz całą partię</button><button disabled={!end} onClick={exportCSV}>Raport symulacji CSV</button></div>
-  {exportedResultKey!==null&&<p role="status" className={exportedResultKey===resultKey?'success':'error'}>{exportedResultKey===resultKey?'Raport CSV odpowiada bieżącej partii i odstępowi.':'Raport CSV jest nieaktualny po zmianie danych symulacji. Pobierz go ponownie.'}</p>}
+
   <div className="metrics"><Metric label="Czas symulowany" value={`${formatTimeValue(time, unit)} / ${formatTimeWithUnit(end, unit)}`}/><Metric label="Wyprodukowano" value={`${stats.completed} / ${batch}`}/><Metric label="WIP w systemie" value={`${stats.wip} szt.`} hint="Sztuki rozpoczęte, jeszcze nieukończone"/><Metric label="Średnia wydajność" value={`${fmt(stats.throughput)} szt./h`} hint="Od rozpoczęcia partii, z rozruchem linii"/></div>
   <label className="field">Oś czasu<input aria-label="Oś czasu symulacji" type="range" min={0} max={end||1} step="0.01" value={time} disabled={!end} onChange={e=>{setRunning(false);timeRef.current=Number(e.target.value);setTime(timeRef.current);}}/></label>
   {time>=end&&end>0&&<p role="status" className="success">Partia ukończona. Czas: {formatTimeWithUnit(end, unit)}; średnio {fmt(batch/end*3600)} szt./h.</p>}
   <div className="station-strip">{cycles.map((c,i)=>{const station=p.balancing!.workstations[i];const active=result.runs.filter(r=>r.stationId===station.id&&r.start<=time&&r.end>time);const queue=result.runs.filter(r=>r.stationId===station.id&&r.ready<=time&&r.start>time).length;return <div className="station" key={station.id}><strong>{showStableIds?`${station.name} · ${station.id}`:`WS-${i+1}`}</strong><p>{active.length?active.map(r=>`Szt. ${r.job} / ${r.stepId} / kopia ${r.copy}`).join(', '):'Wolne'}</p><progress max={c} value={active.length?time-active[0].start:0}/><small>Kolejka: {queue} · Cykl {formatTimeWithUnit(c, unit)}</small></div>;})}</div>
-  </div>;
+  </details></div>;
 }

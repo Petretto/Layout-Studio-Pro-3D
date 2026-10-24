@@ -1,0 +1,37 @@
+.studio .simulation-workspace { max-width:none; padding:10px 16px; }
+.simulation-workspace-title { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px; }
+.studio .simulation-workspace-title h1 { font-size:19px; margin:0; }
+.simulation-workspace-title>div { display:flex; gap:6px; }
+.studio .simulation-workspace-title button { display:inline-flex; align-items:center; gap:6px; font-size:11px; min-height:32px; padding:5px 8px; }
+.scene-workspace { position:relative; }
+.studio .scene-tools { display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin:6px 0; }
+.studio .scene-tools button { display:inline-flex; align-items:center; justify-content:center; min-height:32px; padding:6px 8px; font-size:11px; }
+.studio .scene-tool-group { margin:0; padding:6px 8px; font-size:11px; }
+.scene-tool-content { position:absolute; top:40px; left:0; z-index:20; box-sizing:border-box; width:min(520px,100%); max-height:55dvh; overflow:auto; padding:12px; background:#142238; border:1px solid #64748b; border-radius:8px; box-shadow:0 12px 28px #0009; display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.scene-tool-content label { display:flex; align-items:center; gap:5px; font-size:12px; }
+.scene-tool-content input[type=checkbox] { width:auto; }
+.studio .scene-context { margin:5px 0; padding:5px 9px; font-size:11px; }
+.scene-context>p { margin:6px 0; }
+.studio .simulation-workspace .scene { height:calc(60dvh + 2px); min-height:362px; }
+.studio .simulation-focused { position:fixed; inset:0; z-index:60; overflow:auto; background:#091523; }
+.studio .simulation-focused .scene { height:calc(100dvh - 165px); min-height:300px; }
+.studio .simulation-compact { margin:6px 0; padding:0; border:0; background:transparent; }
+.studio .simulation-details { margin:0; }
+.simulation-full>.simulation-details { padding:0; border:0; }
+.simulation-full>.simulation-details>summary { display:none; }
+.simulation-brief { display:flex; flex-wrap:wrap; gap:12px; padding:5px 8px; font-size:11px; color:#9cb4ca; }
+.simulation-workspace .sim-mini-playback-bar { position:static; transform:none; max-width:none; border-radius:8px; margin-top:4px; box-sizing:border-box; padding:5px 10px; justify-content:center; }
+.simulation-workspace .sim-mini-playback-bar input[type=range] { flex:1; min-width:60px; max-width:480px; }
+@media(max-width:700px){
+  .studio .simulation-workspace { padding:8px; }
+  .studio .simulation-workspace-title h1 { font-size:16px; }
+  .simulation-workspace-title>div { flex-wrap:wrap; }
+  .studio .simulation-workspace-title button,.studio .scene-tools button { min-height:44px; }
+  .studio .scene-tool-group { padding:12px 8px; }
+  .scene-tool-content { position:fixed; left:8px; right:8px; top:auto; bottom:8px; width:auto; z-index:70; }
+  .simulation-workspace .sim-mini-playback-bar { flex-wrap:wrap; gap:6px; }
+  .simulation-workspace .sim-mini-playback-bar input[type=range] { min-width:90px; }
+  .studio .simulation-focused .scene { height:calc(100dvh - 280px); }
+  .simulation-workspace .simulation-inspector-card { width:min(290px,calc(100% - 24px)); right:8px; box-sizing:border-box; max-height:65%; overflow:auto; }
+}
+@media print { .studio .simulation-focused { position:static; } .scene-tools,.simulation-workspace-title>div { display:none; } }

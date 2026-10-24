@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
-Wersja aplikacji: **0.4.0**  
-Aktualizacja podręcznika: **24.10.2026 — UI1a i UI2a: kompaktowa nawigacja oraz pasek narzędzi/tryb skupienia hali 2D. Przebudowa 3D i dalszych widoków pozostaje w kolejnych pakietach.**
+Wersja aplikacji: **0.4.0**
+Aktualizacja podręcznika: **24.10.2026 — UI1a oraz UI2a/UI2b: kompaktowa nawigacja, narzędzia i skupienie hali 2D/3D. Dalsze widoki i zbiorczy odbiór UI2 pozostają w planie.**
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -746,3 +746,15 @@ W obszarze **Hala i symulacja → Hala i CAD 2D** narzędzia znajdują się tera
 Oznaczenia **Geometria koncepcyjna** i **Wymiary hali niepotwierdzone** pozostają widoczne przy zwiniętym opisie; pełne objaśnienia otwiera **Założenia i obsługa**. Aktywny pomiar lub kalibracja są oznaczone nad rzutem także po zamknięciu narzędzi. Zmiany tego pakietu dotyczą 2D; porządkowanie widoku 3D i symulacji pozostaje kolejnym krokiem UI2b. Przy 1280×720 zwykły widok może wymagać przewinięcia dolnego fragmentu rzutu; pełny obszar uzyskasz w trybie skupienia.
 
 ![Edytor hali w trybie skupienia](../outputs/qa/ui2a/focus_1280.png)
+
+### Hala 3D — narzędzia i parametry na żądanie (UI2b)
+
+Wybierz **Hala i symulacja → 3D i symulacja**. Pasek zawiera grupy **Edycja i manipulatory** oraz **Warstwy i widoczność**, a także ikony dopasowania hali i widoku z góry. Otwarta jest jedna grupa naraz. Zamknij ją przyciskiem **Zamknij narzędzia 3D**, nagłówkiem lub Escape. **Założenia i obsługa 3D** zawierają objaśnienia geometrii, wymiarów hali i sterowania kamerą; oznaczenia niepotwierdzonych danych są widoczne również przy zwiniętym opisie.
+
+**Tryb skupienia 3D** powiększa scenę. **Opuść tryb skupienia 3D** lub Escape przywraca nawigację; przy otwartej sekcji Escape najpierw ją zamyka. Tab i Shift+Tab pozostają w widocznym edytorze. Skupienie i zwijanie sekcji zachowują tę samą instancję symulacji oraz jej czas. Nie są zapisywane w projekcie.
+
+Sterowanie **Start/Pauza, Reset, suwak i Inspekcja 3D** pozostaje bezpośrednio pod sceną. Przewinięcie czasu zatrzymuje odtwarzanie. Zwięzłe podsumowanie pokazuje partię, czas, liczbę ukończonych sztuk i prędkość. Rozwiń **Parametry, wyniki i eksport symulacji**, aby zmienić partię/odstęp/prędkość, przeliczyć wynik, obejrzeć szczegóły lub pobrać CSV. Błędy obliczeń, postęp, anulowanie oraz stan aktualności CSV pozostają poza zwijaną sekcją. Gdy WebGL nie działa, komunikat błędu sceny i dane symulacji są nadal dostępne.
+
+Prędkość odtwarzania zmienia animację, a nie harmonogram. Po wyjściu z zakładki lub przeniesieniu widoku do osobnego okna sesja może zostać uruchomiona od początku; pakiet nie wprowadza przenoszenia czasu między zamontowaniami widoku. Odczyt fizycznej historii modelu domenowego pozostaje zakresem A2b2b.
+
+![Hala 3D w trybie skupienia](../outputs/qa/ui2b/focus_1280.png)

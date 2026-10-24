@@ -1,0 +1,98 @@
+{
+  "package": "7.13.X/UI2b",
+  "date": "2026-10-24",
+  "build": "production localhost:5304",
+  "scope": "3D shell, disclosures, focus; full UI2 pending",
+  "metrics": [
+    {
+      "mode": "normal",
+      "bottom": 713.8999938964844,
+      "height": 432,
+      "overflow": false,
+      "visibleHeight": 432,
+      "width": 1241,
+      "window": [
+        1280,
+        720
+      ],
+      "y": 281.8999938964844
+    },
+    {
+      "mode": "focus",
+      "bottom": 672.9000015258789,
+      "height": 553,
+      "overflow": false,
+      "visibleHeight": 553,
+      "width": 1241,
+      "window": [
+        1280,
+        720
+      ],
+      "y": 119.9000015258789
+    },
+    {
+      "mode": "focus",
+      "bottom": 852.9000015258789,
+      "height": 733,
+      "overflow": false,
+      "visibleHeight": 733,
+      "width": 1401,
+      "window": [
+        1440,
+        900
+      ],
+      "y": 119.9000015258789
+    },
+    {
+      "mode": "normal",
+      "bottom": 821.8999938964844,
+      "height": 540,
+      "overflow": false,
+      "visibleHeight": 540,
+      "width": 1401,
+      "window": [
+        1440,
+        900
+      ],
+      "y": 281.8999938964844
+    }
+  ],
+  "playback": {
+    "tStart": 1.9190000002384109,
+    "tLater": 60.944000000238624,
+    "tPause": 61.731000000238595,
+    "stableAfterClosing": 61.731000000238595,
+    "oneStart": 0.22529999992848027,
+    "oneLater": 4.467399999928457,
+    "fastEnd": 4936,
+    "completed": 30,
+    "seekValue": 0.1,
+    "returnLater": 72.7749999995232,
+    "finalStart": 2.239000000476808,
+    "finalLater": 154.4680000004783,
+    "finalPause": 155.25600000047822
+  },
+  "csv": {
+    "bytes": 2419,
+    "equal": true,
+    "sha256": "14dc11ebd58763bffcc77ef3b11edffbf73be9eb0da90bc02512329d7710976d"
+  },
+  "checks": {
+    "keyboardAfterFix": true,
+    "openOneGroup": true,
+    "layers": true,
+    "lod": true,
+    "camera": true,
+    "inspection": true,
+    "mobile": true,
+    "popoutHandoffAndRestore": true,
+    "popoutContentVerified": false,
+    "webglFallbackTested": false
+  },
+  "tests": {
+    "core": 13,
+    "network": 1,
+    "build": "PASS"
+  },
+  "deploymentVerified": false
+}

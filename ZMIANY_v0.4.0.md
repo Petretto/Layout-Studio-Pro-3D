@@ -1,5 +1,7 @@
 # Zmiany v0.4.0 — 29.09.2026
 
+UI2b (7.13.X, 2026-10-24): zwarta rama 3D z trybem skupienia, grupy narzędzi i parametry/wyniki na żądanie. Rozwijanie i skupienie zachowują czas tej samej instancji symulacji; błędy/postęp/aktualność CSV pozostają widoczne. 14/14 celowanych, build i UI PASS: Start/pauza/reset/suwak, 1×/5000× i identyczny CSV. Instrukcja 61 stron/50 ilustracji. Bez zmiany schematów i obliczeń. UI2 nadal w trakcie do zbiorczego odbioru wskazanego w `WERYFIKACJA_UI_UX_UI2.md`; Vercel niezweryfikowany.
+
 UI2a (7.13.X, 2026-10-24): edytor hali 2D ma zwarty pasek ikon i grup narzędzi, mobilne przewijanie oraz tryb skupienia z Escape i obsługą focusu. Oznaczenia założeń i aktywnego pomiaru pozostają widoczne. Bez zmiany obliczeń i schematów. 19/19 testów celowanych, build i rzeczywisty UI PASS; instrukcja 60 stron/49 obrazów. Pełne UI2 pozostaje w trakcie: 3D/sterowanie, zbiorczy odbiór i poprawa zwykłego widoku 1280×720. Raport `WERYFIKACJA_UI_UX_UI2.md`.
 
 ## Kompaktowa nawigacja — 24.10.2026 (7.13.X/UI1a)
