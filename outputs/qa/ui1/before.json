@@ -1,0 +1,23 @@
+[
+  {
+    "header": 171,
+    "height": 900,
+    "main": 638.1000366210938,
+    "pageOverflow": false,
+    "width": 1440
+  },
+  {
+    "header": 171,
+    "height": 720,
+    "main": 458.1000061035156,
+    "pageOverflow": false,
+    "width": 1280
+  },
+  {
+    "header": 421.8999938964844,
+    "height": 844,
+    "main": 329.6000061035156,
+    "pageOverflow": false,
+    "width": 390
+  }
+]

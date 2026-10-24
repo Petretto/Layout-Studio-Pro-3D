@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**  
-Aktualizacja podręcznika: **22.10.2026 — geometria 3D i odtwarzanie operacji z harmonogramu (7.12.A2b1), wspólny widok przydziałów/rzutu/raportu (A2a) i zewnętrzny projekt pokazowy (B). Zachowano opis pakietów, odzyskiwania i wcześniejszych funkcji. Uproszczenie technicznych nazw interfejsu zaplanowano w 7.13.U**.
+Aktualizacja podręcznika: **23.10.2026 — kompaktowy nagłówek i sześć obszarów nawigacji (7.13.X/UI1a). Podwidoki i mechanizmy danych zachowano; przebudowa ich treści pozostaje w UI2–UI4.**
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -25,6 +25,26 @@ Aplikacja działa w przeglądarce. Adres wersji hostowanej: [Layout Studio Pro 3
 
 ## 2. Krok po kroku: Praca z aplikacją
 
+### Nowa nawigacja (UI1a)
+
+Na komputerze wybierz obszar na górnym pasku, a następnie jego podwidok. Na telefonie służą do tego listy **Obszar pracy** i **Widok obszaru**. Powrót do obszaru pamięta ostatni podwidok w bieżącej sesji; odświeżenie zaczyna od Pulpitu.
+
+- **Pulpit** — projekt, przykłady i warianty projektu głównego.
+- **Popyt i materiały** — Popyt i takt; Materiały (BOM).
+- **Proces i stanowiska** — Operacje; Przepływ; Stanowiska i zasoby.
+- **Bilansowanie** — bilans i Yamazumi.
+- **Hala i symulacja** — Hala i CAD 2D; 3D i symulacja.
+- **Raporty i eksport** — raport projektu głównego.
+
+Wiersz pod nagłówkiem pokazuje źródło danych widoku. Obszar stanowisk nadal zawiera osobne dokumenty warsztatu i modelu domenowego; wspólna nawigacja nie scala ich z projektem głównym. W ich wnętrzu pozostają techniczne nazwy v5/szkic 6 do czasu dalszego wdrożenia. Starsze ilustracje szczegółowych funkcji mogą pokazywać dawny pasek etapów — dojście do nich wskazuje powyższa tabela.
+
+Ikony **Cofnij**, **Ponów**, **Zapisz lokalnie** są stale dostępne. Kliknięcie nazwy projektu otwiera **Menu projektu**: ustawienia nazwy/jednostek, Nowy projekt, Otwórz projekt JSON lub archiwum, Pakiet projektu, Kopie i odzyskiwanie oraz warianty. **Eksport** zawiera JSON, archiwum v4, pierwotny import i DXF; pozycje niedostępne są wyłączone. **Ustawienia i pomoc** prowadzą do danych projektu, słownika i raportu.
+
+**Dane projektu i jednostki** dotyczą projektu głównego. Zmiany w tym oknie są stosowane od razu i podlegają Cofnij/Ponów; Zamknij ustawienia zamyka okno, nie anuluje edycji. Zwykły stan zapisu jest krótki, a godzina i stan eksportów dostępne w **Szczegóły zapisu i eksportów**. Błędy zapisu oraz ostrzeżenia o nieaktualnych eksportach pozostają widoczne bez rozwijania.
+
+Menu obsługuje Tab, strzałki, Home/End i Escape; Escape przywraca focus do przycisku. Wybór Nowy/Otwórz lub przywracania nadal wymaga właściwych potwierdzeń. Plików i reguł migracji nie zmieniono.
+
+
 ### Krok 1: Pulpit projektu (Wybór szablonu lub własny proces)
 Na ekranie startowym możesz wybrać jeden z gotowych przykładów referencyjnych lub rozpocząć czysty projekt:
 - **Rozpocznij od zera**: Czysta baza do wprowadzenia własnego procesu klienta i BOM.
@@ -32,17 +52,13 @@ Na ekranie startowym możesz wybrać jeden z gotowych przykładów referencyjnyc
 - **Przykład — baterie EV**: 6 operacji w przepływie liniowym.
 - **Przykład — Eko, rybia ość**: Złożony proces montażowy (16 operacji, 60 pozycji BOM, równoległe podmontaże).
 
-![Pulpit startowy](01_pulpit.png)
+![Pulpit z kompaktowym nagłówkiem UI1a](../outputs/qa/ui1/after_1440.png)
 
-Na pasku górnym masz stały dostęp do:
-- **Cofnij / Ponów**: Historia do 40 operacji w danej sesji.
-- **Jednostka czasu**: Globalne przełączanie między sekundami (`s`), minutami (`min`) i godzinami (`h`).
-- **Zapis lokalny & Eksport JSON / Archiwum**: Natychmiastowe zabezpieczenie stanu pracy.
-- **Eksport DXF**: Eksport rzutu hali do systemów CAD.
+Na pasku górnym masz dostęp do ikon Cofnij/Ponów/Zapisz lokalnie, menu nazwy projektu oraz Eksport i Ustawienia i pomoc. Nazwę i jednostkę czasu zmienisz przez **Menu projektu → Dane projektu i jednostki**. Warianty i przykłady na Pulpicie nadal działają jak wcześniej; pusty start bez danych wbudowanych zostanie wdrożony w dalszej części 7.13.
 
 ---
 
-### Krok 2: Zakładka 1 — Popyt, Takt i Czas Pracy
+### Krok 2: Popyt i materiały → Popyt i takt
 Zdefiniuj założenia wejściowe klienta:
 - **Popyt roczny i dni robocze**: Wyliczają średni popyt dzienny.
 - **Liczba zmian, godziny zmiany i planowane przerwy**: Wyliczają dostępny czas netto.
@@ -53,7 +69,7 @@ Zdefiniuj założenia wejściowe klienta:
 
 ---
 
-### Krok 3: Zakładka 2 — Proces i operacje technologiczne
+### Krok 3: Proces i stanowiska → Operacje
 Tabela operacji pozwala na pełną kontrolę struktury technologicznej:
 - **ID i Nazwa operacji**: Unikalne identyfikatory kroków (np. `OP10`, `OP20`).
 - **Czas standardowy, VA (wartość dodana) i NVA (strata)**: Rozbicie czasu pracy.
@@ -64,7 +80,7 @@ Tabela operacji pozwala na pełną kontrolę struktury technologicznej:
 
 ---
 
-### Krok 4: Zakładka 2a — Wizualny diagram przepływu
+### Krok 4: Proces i stanowiska → Przepływ
 Interaktywny edytor grafu sieciowego:
 - **Kafelki operacji**: Prezentują ID, czas, udział VA oraz liczbę przypisanych części.
 - **Przeciąganie i układ**: Pełna swoboda rozmieszczania, siatka 20 px, zoom oraz funkcja *Ułóż według zależności*.
@@ -74,7 +90,7 @@ Interaktywny edytor grafu sieciowego:
 
 ---
 
-### Krok 5: Zakładka 3 — BOM i logistyka pojemników
+### Krok 5: Popyt i materiały → Materiały (BOM)
 Zarządzanie strukturą materiałową:
 - Powiązanie komponentów z konkretnymi operacjami procesu.
 - Dobór nośników logistycznych: **BoxKLT**, **Tray**, **Carton**, **Pallet**.
@@ -84,7 +100,7 @@ Zarządzanie strukturą materiałową:
 
 ---
 
-### Krok 6: Zakładka 4 — Bilansowanie linii i wykres Yamazumi
+### Krok 6: Bilansowanie — bilans i Yamazumi
 Narzędzie do optymalizacji obsady i równoważenia obciążenia:
 - **Algorytmy i ręczny balans**: Wsparcie dla metod RPW, LCR lub ręcznego podziału na stacje.
 - **Dynamiczny wykres Yamazumi**: Słupki reprezentują obciążenie poszczególnych stanowisk względem linii taktu docelowego (żółta linia przerywana).
@@ -94,7 +110,7 @@ Narzędzie do optymalizacji obsady i równoważenia obciążenia:
 
 ---
 
-### Krok 7: Zakładka 5 — Hala i edytor CAD 2D
+### Krok 7: Hala i symulacja → Hala i CAD 2D
 Projektowanie przestrzenne rozmieszczenia stacji roboczych:
 - **Geometria hali**: Szerokość, długość i wysokość obiektu oraz regulowana siatka przyciągania.
 - **Automatyczny generator layoutu**: Generowanie układów w kształcie **U**, **Liniowym**, **L** lub **Z procesu (rybia ość)**.
@@ -148,7 +164,7 @@ Pod rzutem panel **Strefy funkcjonalne i kontrola geometryczna rzutu (nie BHP)**
 
 ---
 
-### Krok 8: Zakładka 6 — Widok 3D i Symulacja partii produkcyjnej
+### Krok 8: Hala i symulacja → 3D i symulacja
 Cyfrowy bliźniak i symulator zdarzeniowy:
 - **Nawigacja 3D**: Lewy przycisk myszy – obrót sceny, prawy – przesuwanie (pan), kółko – zoom.
 - **Tryb edycji 3D**: Przesuwanie wyposażenia po posadzce hali z zachowaniem siatki.
@@ -202,7 +218,7 @@ Cyfrowy bliźniak i symulator zdarzeniowy:
 
 ---
 
-### Krok 9: Zakładka 7 — Raport inżynierski
+### Krok 9: Raporty i eksport — raport inżynierski
 Zestawienie podsumowujące projekt:
 - Parametry popytu, taktu i dostępności.
 - Bilans stanowisk, obsada, wąskie gardła i wyliczona sprawność.
@@ -211,7 +227,7 @@ Zestawienie podsumowujące projekt:
 
 ---
 
-### Krok 10: Moduł zaawansowany — Stanowiska v5 i Szkic Schematu 6
+### Krok 10: Proces i stanowiska → Stanowiska i zasoby
 Dedykowane środowisko dla złożonych procesów montażowych:
 - **Trwałe identyfikatory (`ST-...`)**: Powiązania odnoszą się do ID, nie numeru na liście. Wycofanie stanowiska z zasobami wymaga jawnego rozstrzygnięcia jego powiązań; komunikatu walidacji nie należy omijać przez ręczną zmianę JSON.
 - **Kontrola layoutu**: Zabezpieczenie przed brakującymi stołami lub wyposażeniem przed uruchomieniem symulacji.
@@ -710,3 +726,12 @@ W panelu harmonogramu zespołu znajduje się **Widok 3D i odtwarzanie operacji p
 Zmiana liczby sztuk, odstępu przybyć, trybu transportu lub danych projektu usuwa stary wynik i odtwarzanie. Po przywróceniu innego wariantu trzeba ponownie obliczyć harmonogram. Zapis i odświeżenie zachowują projekt, ale nie wznawiają starego wyniku sesji — ustaw warunki i uruchom obliczenia ponownie. Kamera, wybór i prędkość nie zmieniają projektu ani zapisanego harmonogramu.
 
 Widok 3D wymaga WebGL. Jeżeli nie jest dostępny, komunikat zastępuje scenę, a wynik i tabela harmonogramu pozostają dostępne. Dla dużej liczby obiektów używany jest uproszczony wygląd. Główne widoki i raport A4 starszego projektu pozostają oddzielne. Techniczne nazwy „szkic”, „schemat” i „Stanowiska v5” mają zostać uporządkowane w 7.13.U; na razie wskazują bieżącą ścieżkę tego panelu.
+
+
+### 5.17. Kompaktowa rama aplikacji i menu mobilne (UI1a)
+
+Nagłówek zawiera 56 px wysokości na desktopie i dwa zwarte wiersze na telefonie. Na małym ekranie wszystkie sześć obszarów wybierzesz z jednej listy; dodatkowa lista pojawia się tylko w obszarze z kilkoma widokami. Pasek nie wymaga przewijania przez dziesięć zakładek. Zamknięcie menu nie zmienia danych.
+
+![Nawigacja mobilna UI1a](../outputs/qa/ui1/after_390.png)
+
+Ten pakiet zmienia dojście do istniejących funkcji. Same formularze, duży viewport CAD, panele sceny, raport i Pulpit są przebudowywane w kolejnych pakietach. Nie dodano importu STEP, nowych ocen ergonomii ani certyfikacji bezpieczeństwa. Wspólny nagłówek nie oznacza jeszcze połączenia zapisów projektu głównego i modelu domenowego.

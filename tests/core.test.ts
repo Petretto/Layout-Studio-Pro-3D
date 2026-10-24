@@ -1,4 +1,19 @@
 import { strict as assert } from 'node:assert';
+import {APP_AREAS,areaForView,areaDestination} from '../src/core/uiNavigation';
+
+test('UI1: sześć obszarów zachowuje wszystkie dziesięć istniejących widoków bez duplikowania',()=>{
+  const views=APP_AREAS.flatMap(area=>area.views.map(view=>view.id));
+  assert.equal(APP_AREAS.length,6);assert.equal(new Set(views).size,10);
+  assert.deepEqual([...views].sort(),['dashboard','demand','bom','process','flow','stations','balance','layout','simulation','report'].sort());
+  for(const view of views)assert.ok(areaForView(view).views.some(item=>item.id===view));
+});
+test('UI1: nawigacja pamięta podwidok i nie przełącza go po ponownym kliknięciu aktywnego obszaru',()=>{
+  assert.equal(areaDestination('hall','simulation',{}),'simulation');
+  assert.equal(areaDestination('hall','bom',{hall:'simulation'}),'simulation');
+  assert.equal(areaDestination('process','bom',{process:'stations'}),'stations');
+  assert.equal(areaDestination('demand','flow',{demand:'stations'}),'demand');
+  assert.equal(areaForView('missing').id,'home');
+});
 import {nominalReportCapacity} from '../src/core/reportCapacity';
 import {Box3,Group,Mesh,BoxGeometry,PlaneGeometry,MeshBasicMaterial,Vector3} from 'three';
 import {sceneContentBounds} from '../src/core/equipment/sceneFraming';

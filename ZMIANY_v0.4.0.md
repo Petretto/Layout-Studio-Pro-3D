@@ -1,5 +1,9 @@
 # Zmiany v0.4.0 — 29.09.2026
 
+## Kompaktowa nawigacja — 24.10.2026 (7.13.X/UI1a)
+
+UI1a — kompaktowa rama aplikacji (7.13.X, odbiór 2026-10-24): sześć obszarów z zachowaniem wszystkich dziesięciu widoków, menu projektu/eksportu/pomocy, ikony Cofnij/Ponów/Zapisz i mobilne listy. Dane projektu i jednostki w oknie ustawień. Nagłówek 56 px desktop / 104 px telefon. Pełna regresja 402/402, build i interaktywny UI PASS; Start i stabilna pauza potwierdzone w buildzie produkcyjnym. Instrukcja MD/HTML/PDF: 59 stron/48 obrazów. Bez zmiany schematów i obliczeń. Całe UI1 oraz UI2–UI4 pozostają w trakcie/do wykonania; Vercel dla UI1a niezweryfikowany. Raport `WERYFIKACJA_UI_UX_UI1.md`.
+
 ## Naprawa Start w głównej symulacji — 23.10.2026 (6.6-fix)
 
 - Usunięto ponawianie polecenia paska 3D po każdej zmianie czasu, które zatrzymywało animację po pierwszej klatce i zakłócało start po resecie/przewinięciu. Polecenie działa raz; powrót do zakładki nie odtwarza starego kliknięcia.
