@@ -105,6 +105,8 @@ Do not invoke every skill for every task.
 - Commit and push completed, verified scoped work to GitHub. Preserve unrelated local changes. Do not equate a Git push with verified Vercel deployment; record deployment evidence separately when available.
 
 ## Transport scope — user clarification 2026-10-09
+
+User clarification 2026-10-25: assemblers perform transport only between operations within the assembly line/process. Other people deliver materials from the warehouse. Never assign warehouse deliveries to assembly workers or treat the C1 assembler-transport decision as warehouse staffing. Warehouse replenishment remains availability events, without modeling warehouse crew workload in the current scope.
 - PLAN 3.4 covers inter-operation transport on the assembly line; do not infer a warehouse fleet from the choice of physical cart motion (1B).
 - Do not count warehouse operators' work time, workload, calendars, or resource reservations.
 - Warehouse replenishment is material availability: use explicit stock, consumption, delivery quantity and timing/frequency to determine whether production remains supplied (3.5/3.6).
