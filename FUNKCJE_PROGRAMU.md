@@ -1,5 +1,7 @@
 # Layout Studio Pro 3D v0.4.0 — funkcje programu
 
+A2b2b (2026-10-25): odtwarzanie historii korpusów i wózków tego samego wyniku, z tabelą przejazdów i symbolicznymi znacznikami przy jednoznacznych stanowiskach. Statyczny obiekt śledzonego wózka jest ukryty. W trakcie przejazdu brak pozycji geometrycznej jest jawny; długość/czas nie tworzą trasy 3D. Oś obejmuje powrót wózka po produkcji, JIT nie generuje fizycznych lokalizacji. 23 celowane testy, build i rzeczywisty UI PASS. Bez zmian obliczeń i schematów. Całe A2/7.12 nadal w trakcie; raport A2.
+
 ## Aktualizacja 7.13.3 (2026-10-25)
 
 Pulpit udostępnia rozwijany katalog czterech zewnętrznych przykładów: JSON do importu i kompletny ZIP (12 plików, arkusze procesu/BOM, warianty, referencje, instrukcja, manifest). Pobranie sprawdza SHA-256 i nie zmienia aktywnego projektu; wczytanie pozostaje osobną operacją z kopią ratunkową i potwierdzeniem. Karty wskazują pochodzenie danych i zakres sprawdzonych eksperymentów. Lokalna dystrybucja zawiera pliki do pracy bez internetu; hostowana wymaga połączenia do pobrania.

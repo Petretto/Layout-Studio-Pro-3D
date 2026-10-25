@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-25",
+  "url": "http://127.0.0.1:5308/",
+  "method": "cua_repl, actual file import and worker result",
+  "productionFinishSeconds": 22,
+  "playbackEndSeconds": 27,
+  "observedResultSha": "151861a088b9d9fce06a293faa0a16e0f4a9a62d8985471e91d96d39f910e357",
+  "observedFrames": [
+    {"time":0,"body":"ST-A#1 reserved","cart":"ST-A#1 available"},
+    {"time":10,"body":"moving A to C, no stationary position","cart":"loaded A to C"},
+    {"time":11,"body":"moving, 50% time","cart":"loaded, 50% time"},
+    {"time":12,"body":"ST-C#1 reserved","cart":"ST-C#1 available"},
+    {"time":22,"body":"ST-C#1 available","cart":"empty C to A"},
+    {"time":27,"body":"ST-C#1 available","cart":"ST-A#1 available"},
+    {"time":0,"body":"ST-A#1 reserved","cart":"ST-A#1 available"}
+  ],
+  "checks": {
+    "webglMarkersVisible":true,
+    "staticCartSuppressed":true,
+    "sameResultShaAfterSeekAndSpeed5000":true,
+    "speed5000EndsAt27":true,
+    "conditionsRemoveOldTimeInputAndPhysicalRows":true,
+    "jitMessageVisible":true,
+    "variantRemovesOldResult":true,
+    "missingStationCGeometryReported":true,
+    "reloadPreservesVariantNotResult":true,
+    "baseVariantRestores27SecondResult":true,
+    "toggle3D":true,
+    "playAtSpeed1TimeAdvanced":true,
+    "pauseClickedTimeSeconds":0.28,
+    "longPauseStabilityTested":false
+  },
+  "limitations": ["No geometric route declared; no interpolated travel position", "QA tab closed on next user turn; no final console log audit"],
+  "vercelVerified":false
+}

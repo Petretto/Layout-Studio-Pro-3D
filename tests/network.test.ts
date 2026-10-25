@@ -123,6 +123,55 @@ import {reviseStationProject,splitStationProject,mergeStationProject,removeStati
 import {addStationEquipment,updateStationEquipment,removeStationEquipment} from '../src/core/stationGeometry';
 import {readFileSync} from 'node:fs';
 import {prepareDomainPhysicalPlayback, domainPhysicalPlaybackFrame} from '../src/core/domainPhysicalPlayback';
+import {prepareDomainPhysicalScene,domainPhysicalSceneFrame} from '../src/core/domainPhysicalScene';
+import {physicalPlaybackUiFixture,physicalPlaybackUiPackage} from './fixtures/physicalPlaybackUi';
+import {parseProjectPackage as parsePhysicalQaPackage} from '../src/core/projectPackage';
+
+test('7.12.A2b2b: scena pokazuje jeden korpus i wózek na granicach czasu, bez interpolacji lub mutacji',()=>{
+  const {project}=physicalPlaybackUiFixture(),conditions={batch:1,arrivalIntervalSeconds:1,transportMode:'configured' as const};
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput),before=JSON.stringify({project,result});
+  assert.equal(result.jobs[0].finish,22);
+  const history=prepareDomainPhysicalPlayback(project,result,conditions),scene=prepareDomainPhysicalScene(project,history);
+  assert.equal(history.endSeconds,27);assert.deepEqual(scene.hiddenObjectIds,['CART-SHAPE']);
+  const frame=(at:number)=>domainPhysicalSceneFrame(scene,domainPhysicalPlaybackFrame(history,at));
+  assert.equal(frame(0).find(e=>e.kind==='body')!.anchor!.objectId,'TABLE-A');
+  for(const at of [10,11.999])assert.ok(frame(at).every(e=>e.anchor===null&&e.movement!==null));
+  assert.equal(frame(11).find(e=>e.kind==='cart')!.progress,.5);
+  assert.equal(frame(12).find(e=>e.kind==='body')!.anchor!.objectId,'TABLE-C');
+  assert.equal(frame(22).find(e=>e.kind==='cart')!.anchor,null);
+  assert.equal(frame(27).find(e=>e.kind==='cart')!.anchor!.objectId,'TABLE-A');
+  assert.equal(frame(27).find(e=>e.kind==='body')!.anchor!.objectId,'TABLE-C');
+  assert.deepEqual(frame(0),frame(-1));assert.equal(frame(0).length,2);
+  const mutable=frame(0);mutable[0].anchor!.xMm=-999;assert.equal(frame(0)[0].anchor!.xMm,1500);
+  for(const at of [27,0,10,12,22,0])frame(at);
+  assert.equal(JSON.stringify({project,result}),before);
+  parsePhysicalQaPackage(JSON.stringify(physicalPlaybackUiPackage()));
+});
+
+test('7.12.A2b2b: brak lub niejednoznaczna geometria nie tworzy pozycji, JIT nie ukrywa statycznych wózków',()=>{
+  const {project}=physicalPlaybackUiFixture();
+  const check=(mode:'configured'|'just-in-time')=>{
+    const result=scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:mode});
+    const history=prepareDomainPhysicalPlayback(project,result,{batch:1,arrivalIntervalSeconds:1,transportMode:mode});
+    const scene=prepareDomainPhysicalScene(project,history);
+    return {scene,frame:domainPhysicalSceneFrame(scene,domainPhysicalPlaybackFrame(history,0))};
+  };
+  assert.deepEqual(check('just-in-time').scene.hiddenObjectIds,[]);assert.deepEqual(check('just-in-time').frame,[]);
+  project.layoutObjects=project.layoutObjects.filter(o=>o.id!=='TABLE-C');
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput),history=prepareDomainPhysicalPlayback(project,result,{batch:1,arrivalIntervalSeconds:1,transportMode:'configured'});
+  assert.equal(domainPhysicalSceneFrame(prepareDomainPhysicalScene(project,history),domainPhysicalPlaybackFrame(history,12))[0].anchor,null);
+  project.name+=' changed';assert.throws(()=>prepareDomainPhysicalScene(project,history),/nie odpowiada/);
+});
+
+test('7.12.A2b2b: wiele jawnych punktów stanowiska pozostaje niejednoznaczne',()=>{
+  const {project}=physicalPlaybackUiFixture();
+  project.layoutObjects.push({...project.layoutObjects[0],id:'TABLE-OTHER'});
+  project.equipment.push({id:'EQ-OTHER',name:'Drugi punkt testowy',stationId:'ST-A',layoutObjectId:'TABLE-OTHER'});
+  project.stationRouting!.equipmentPlacements.push({equipmentId:'EQ-OTHER',stationId:'ST-A',copy:1});
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput),history=prepareDomainPhysicalPlayback(project,result,{batch:1,arrivalIntervalSeconds:1,transportMode:'configured'});
+  const scene=prepareDomainPhysicalScene(project,history);
+  assert.equal(domainPhysicalSceneFrame(scene,domainPhysicalPlaybackFrame(history,0))[0].anchor,null);
+});
 
 test('7.12.A2b2a: fizyczne granice przejazdu i powrotu, cofanie oraz niezmienność rejestrów',()=>{
   const {project}=assemblyMovementFixture();addReturnRoute(project);

@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**
-Aktualizacja podręcznika: **25.10.2026 — 7.13.3: katalog przykładów, pobieranie kompletnych plików i kontrola integralności.**
+Aktualizacja podręcznika: **25.10.2026 — A2b2b: historia fizyczna korpusów i wózków w odtwarzaniu; katalog przykładów 7.13.3.**
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -717,9 +717,9 @@ W **Stanowiska v5**, pod informacją o zapisanym szkicu 6, znajduje się panel *
 
 Panel nie uzupełnia brakujących czasów domyślnym czasem standardowym. Nie wybiera też pierwszej z kilku dopuszczonych kopii i nie dzieli przez ich liczbę: gdy brak jednoznacznego wyboru, zdolność kopii pozostaje **brak**. Suma czasów według rejestru stanowisk i dopuszczenia kopii są pokazane odrębnie. Pułap statyczny nie potwierdza dostępności pracowników, kalendarzy, transportu ani dynamicznej przepustowości.
 
-Rzut przedstawia istniejące obrysy z obrotem, przypisania i przeszkody, bez podkładu i tras. Nie tworzy brakującego wyposażenia, nie jest edytorem ani oceną BHP. Główne widoki/raport A4 projektu 4 pozostają oddzielne; ich wyników nie należy podpisywać jako wyników aktywnego 6. Geometria 3D i odtwarzanie operacji są opisane poniżej; fizyczny ruch korpusów i wózków pozostaje do A2b2. A2a/b1 nie zamykają całego A2.
+Rzut przedstawia istniejące obrysy z obrotem, przypisania i przeszkody, bez podkładu i tras. Nie tworzy brakującego wyposażenia, nie jest edytorem ani oceną BHP. Główne widoki/raport A4 projektu 4 pozostają oddzielne; ich wyników nie należy podpisywać jako wyników aktywnego 6. Odtwarzanie operacji i historii fizycznych instancji opisano poniżej. Całe A2 pozostaje w trakcie do pozostałego odbioru.
 
-### 5.16. Widok 3D i odtwarzanie operacji projektu (7.12.A2b1)
+### 5.16. Widok 3D i historia fizyczna projektu (7.12.A2b1/A2b2b)
 
 W panelu harmonogramu zespołu znajduje się **Widok 3D i odtwarzanie operacji projektu**. Wczytuje geometrię tego samego aktywnego projektu, z którego obliczono harmonogram. Nie korzysta z głównej symulacji starszego projektu i nie uruchamia drugiego silnika obliczeń.
 
@@ -730,7 +730,15 @@ W panelu harmonogramu zespołu znajduje się **Widok 3D i odtwarzanie operacji p
 
 ![Operacja montażu zaznaczona w 25 s harmonogramu konsolidacji — dane syntetyczne, JIT](../outputs/qa/7_12a2b1_ui/consolidated_operation_3d.png)
 
-**Znacznik oznacza operację na stanowisku, a nie fizyczny wyrób lub jego trasę.** Pokazuje się nad wyposażeniem powiązanym w danych; niejednoznaczna kopia albo brak geometrii oznaczają brak znacznika, bez dopowiadania pozycji. Operacja nadal pozostaje w tabeli. Operacje oczekujące na start nie są przedstawiane jako znajdujące się już na stanowisku. Przejazdy korpusów i wózków pozostają do integracji A2b2.
+**Kula oznacza operację na stanowisku.** Pokazuje się nad wyposażeniem powiązanym w danych; niejednoznaczna kopia albo brak geometrii oznaczają brak znacznika. Operacje oczekujące na start nie są przedstawiane jako znajdujące się już na stanowisku.
+
+Rozwiń **Korpusy i wózki — historia fizyczna**. Tabela pokazuje zadeklarowane instancje, stan i kopię stanowiska albo końce i czas przejazdu. Procent przejazdu oznacza upływ czasu, nie przebytą drogę. Dane pochodzą z tego samego wyniku obliczeń; można cofać czas i sprawdzać granice zdarzeń. Oś odtwarzania obejmuje także powrót wózka po zakończeniu produkcji, bez zmiany czasu ukończenia wyrobu.
+
+W 3D **fioletowy romb oznacza korpus**, a **błękitny sześcian wózek** przy symbolicznym punkcie odniesienia stanowiska. Nie są to gabaryty wyrobu ani dokładna pozycja dokowania wózka. Statyczny model śledzonego wózka jest ukryty, aby nie pokazywać drugiego egzemplarza w pozycji edytora. Przy braku jednoznacznej geometrii instancja pozostaje w tabeli bez znacznika.
+
+**Model tras zawiera końce, długość i czas, ale nie geometryczny przebieg drogi.** Dlatego podczas przejazdu znacznik fizycznej instancji znika, a tabela zgłasza brak pozycji 3D. Nie jest rysowany pozorny ruch po prostej. W JIT lokalizacje fizyczne nie są obliczane; widoczna statyczna geometria przedstawia projekt hali. Bez deklaracji instancji aplikacja nie tworzy ich z wyposażenia lub numeru sztuki.
+
+![Symboliczne znaczniki fizycznych instancji z harmonogramu — dane syntetyczne](../outputs/qa/7_12a2b2b_ui/final_3d.png)
 
 Zmiana liczby sztuk, odstępu przybyć, trybu transportu lub danych projektu usuwa stary wynik i odtwarzanie. Po przywróceniu innego wariantu trzeba ponownie obliczyć harmonogram. Zapis i odświeżenie zachowują projekt, ale nie wznawiają starego wyniku sesji — ustaw warunki i uruchom obliczenia ponownie. Kamera, wybór i prędkość nie zmieniają projektu ani zapisanego harmonogramu.
 

@@ -1,5 +1,7 @@
 # Zmiany v0.4.0 — 29.09.2026
 
+A2b2b (2026-10-25): podłączono historię fizyczną korpusów i wózków do odtwarzania oraz 3D. Dodano tabelę stanów/przejazdów, symboliczne punkty stanowisk, ochronę przed starym wynikiem i ukrycie statycznego wózka. Powroty po produkcji wydłużają odtwarzanie, bez zmiany wyniku produkcyjnego. Brak geometrycznego przebiegu trasy i brak geometrii kopii są jawne, bez pozornej interpolacji. 23/23 celowanych testów, build i UI PASS; instrukcja zaktualizowana. Bez migracji lub zmian symulacji; całe A2/7.12 nadal otwarte.
+
 ## 7.13.3 — katalog przykładów (2026-10-25)
 
 Dodano do Pulpitu pobieranie czterech zewnętrznych projektów JSON oraz kompletnych katalogów ZIP z kontrolą SHA-256. Rozwijane opisy wskazują pochodzenie danych i ograniczenia. Pobranie nie zastępuje aktywnej pracy; import korzysta z dotychczasowej ochrony. Pliki przygotowywane są przy uruchamianiu deweloperskim i budowaniu aplikacji, bez danych demonstracyjnych w kodzie katalogu. Brak zmian schematów, migracji i reguł symulacji.

@@ -1,0 +1,31 @@
+✔ 7.12.A2b2b: scena pokazuje jeden korpus i wózek na granicach czasu, bez interpolacji lub mutacji (40.6083ms)
+✔ 7.12.A2b2b: brak lub niejednoznaczna geometria nie tworzy pozycji, JIT nie ukrywa statycznych wózków (8.4142ms)
+✔ 7.12.A2b2b: wiele jawnych punktów stanowiska pozostaje niejednoznaczne (3.5432ms)
+✔ 7.12.A2b2a: fizyczne granice przejazdu i powrotu, cofanie oraz niezmienność rejestrów (4.4676ms)
+✔ 7.12.A2b2a: dojazd nie przesuwa korpusu, wspólny moment przyjazdu i wyjazdu nie teleportuje wózka (3.1957ms)
+✔ 7.12.A2b2a: bufory i lokalna kontynuacja zachowują korpus na kopii aż do rzeczywistego wyjazdu (16.3503ms)
+✔ 7.12.A2b2a: wielowózkowy zestaw zachowuje sekwencję dojazdów i wspólny wyjazd (7.8004ms)
+✔ 7.12.A2b2a: JIT nie uzyskuje fizycznych lokalizacji z geometrii (9.6633ms)
+✔ 7.12.A2b2a: równoległe operacje mają jeden korpus, a kolejne zwolnienie nie przenosi go na inną kopię (2.4789ms)
+✔ 7.12.A2b2a: niepełna historia, błędne przypisania i zmieniony końcowy rejestr są odrzucane (9.3967ms)
+✔ 7.12.A2b1: odtwarzanie korzysta z wyniku 190 s, zachowuje model, wynik i rzeczywiste przypisania geometrii (5.9169ms)
+✔ 7.12.A2b1: granice pracy, przerwa i zajęcie po obróbce są czytane z półotwartych okien wyniku (5.8005ms)
+✔ 7.12.A2b1: brak geometrii i niejednoznaczna kopia nie tworzą domyślnej lokalizacji znacznika (6.6412ms)
+✔ 7.12.A2b1: szybkość i krok zmieniają wyłącznie czas odczytu, nie harmonogram ani jego skrót (6.2414ms)
+✔ 3.4k: rozłączne osoby nie zrównoleglają dojazdów zestawu, przewóz czeka na oba przyjazdy (5.0974ms)
+✔ 3.4k: kolejność urządzeń steruje dojazdami, wspólna osoba i przerwa pozostają respektowane (5.3395ms)
+✔ 3.4k: wózek przy odbiorze pomija dojazd, brak drogi lub okna drugiego nie publikuje przegranej alternatywy (6.343ms)
+✔ 3.4k: kolejna partia nie przejmuje wózka w ruchu ani osób pierwszego dojazdu (5.6797ms)
+✔ 3.5b2c4: korpus przechodzi lokalnie bez buforów, zachowuje stanowisko i wyposażenie, osoby według profili (7.6111ms)
+✔ 3.5b2c4: lokalny przebieg bez trasy i zestawu transportowego działa fizycznie oraz w JIT (1.8107ms)
+✔ 3.5b2c4: późniejsza obecność przy bbas kończy się dopiero po rzeczywistym zwolnieniu (5.4482ms)
+✔ 3.5b2c4: możliwa przyszła blokada nie przejmuje już obiecanej obecności tej samej osoby (2.9556ms)
+✔ 3.5b2c4: błędna lokalna kontynuacja nie zwalnia korpusu ani nie zmienia lokalizacji (1.3684ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1380.8609
