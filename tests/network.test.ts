@@ -1,4 +1,6 @@
 import {planDirectOperation} from '../src/core/directHandoffPlan';
+import {createSubassemblyBufferBook, applySubassemblyBufferEvent, subassemblyBufferLoad,
+  type SubassemblyBufferPlace, type SubassemblyBufferBook} from '../src/core/subassemblyBufferState';
 import {explainThroughput} from '../src/core/throughputExplanation';
 import {
   DOMAIN_VARIANTS_STORAGE_KEY,
@@ -62,6 +64,105 @@ import {
 } from '../src/core/scheduleGantt';
 import {strict as assert} from 'node:assert';
 import {test} from 'node:test';
+
+const branchPlace: SubassemblyBufferPlace = {stationId:'JOIN',copy:1,side:'input',capacity:5,subassemblyId:'SUB',unit:'szt.'};
+const branchLot = {id:'L1',subassemblyId:'SUB',unit:'szt.',quantity:5};
+function deliverBranchLot(book: SubassemblyBufferBook, to=branchPlace, lot=branchLot) {
+  let next=applySubassemblyBufferEvent(book,{kind:'reserve',lot,to,atSeconds:book.atSeconds});
+  next=applySubassemblyBufferEvent(next,{kind:'depart',id:lot.id,atSeconds:book.atSeconds});
+  return applySubassemblyBufferEvent(next,{kind:'arrive',id:lot.id,atSeconds:book.atSeconds+1});
+}
+
+test('7.12.C2-B1: partia 5 zajmuje 5 sztuk przed odjazdem i po przyjeździe; pojemność 4 odmawia',()=>{
+  const book=createSubassemblyBufferBook([branchPlace]), before=JSON.stringify(book);
+  const reserved=applySubassemblyBufferEvent(book,{kind:'reserve',lot:branchLot,to:branchPlace,atSeconds:0});
+  assert.deepEqual(subassemblyBufferLoad(reserved,branchPlace),{occupied:0,reserved:5,total:5});
+  assert.throws(()=>applySubassemblyBufferEvent(reserved,{kind:'reserve',lot:{...branchLot,id:'L2',quantity:1},to:branchPlace,atSeconds:0}),/pełny/);
+  const delivered=deliverBranchLot(book);
+  assert.deepEqual(subassemblyBufferLoad(delivered,branchPlace),{occupied:5,reserved:0,total:5});
+  assert.equal(JSON.stringify(book),before);
+  assert.throws(()=>deliverBranchLot(createSubassemblyBufferBook([{...branchPlace,capacity:4}])),/pełny/);
+});
+
+test('7.12.C2-B1: dwaj producenci współdzielą pojemność; całe zużycie zwalnia dokładną ilość',()=>{
+  let book=createSubassemblyBufferBook([branchPlace]);
+  book=deliverBranchLot(book,branchPlace,{...branchLot,quantity:3});
+  book=deliverBranchLot(book,branchPlace,{...branchLot,id:'L2',quantity:2});
+  assert.equal(subassemblyBufferLoad(book,branchPlace).total,5);
+  const before=JSON.stringify(book);
+  assert.throws(()=>applySubassemblyBufferEvent(book,{kind:'consume',id:'L1',quantity:4,at:branchPlace,atSeconds:2}),/przekracza/);
+  assert.equal(JSON.stringify(book),before);
+  book=applySubassemblyBufferEvent(book,{kind:'consume',id:'L1',quantity:3,at:branchPlace,atSeconds:2});
+  assert.equal(subassemblyBufferLoad(book,branchPlace).total,2);
+  assert.throws(()=>applySubassemblyBufferEvent(book,{kind:'consume',id:'L1',quantity:3,at:branchPlace,atSeconds:2}),/zużyta/);
+  assert.throws(()=>applySubassemblyBufferEvent(book,{kind:'reserve',lot:{...branchLot,quantity:3},to:branchPlace,atSeconds:2}),/zużyte ID/);
+});
+
+test('7.12.C2-B1: źródło zwalnia się przy odjeździe, kopie mają osobne pojemności, anulowanie zachowuje źródło',()=>{
+  const second={...branchPlace,copy:2};
+  let book=deliverBranchLot(createSubassemblyBufferBook([branchPlace,second]));
+  book=applySubassemblyBufferEvent(book,{kind:'reserve',lot:branchLot,to:second,atSeconds:1});
+  assert.equal(subassemblyBufferLoad(book,branchPlace).occupied,5);
+  assert.equal(subassemblyBufferLoad(book,second).reserved,5);
+  const cancelled=applySubassemblyBufferEvent(book,{kind:'cancel',id:'L1',atSeconds:1});
+  assert.equal(subassemblyBufferLoad(cancelled,branchPlace).total,5);
+  assert.equal(subassemblyBufferLoad(cancelled,second).total,0);
+  book=applySubassemblyBufferEvent(book,{kind:'depart',id:'L1',atSeconds:1});
+  assert.equal(subassemblyBufferLoad(book,branchPlace).total,0);
+  assert.throws(()=>applySubassemblyBufferEvent(book,{kind:'cancel',id:'L1',atSeconds:1}),/w ruchu/);
+  book=applySubassemblyBufferEvent(book,{kind:'arrive',id:'L1',atSeconds:2});
+  assert.deepEqual(subassemblyBufferLoad(book,second),{occupied:5,reserved:0,total:5});
+  assert.throws(()=>applySubassemblyBufferEvent(book,{kind:'consume',id:'L1',quantity:5,at:branchPlace,atSeconds:2}),/obecności/);
+});
+
+test('7.12.C2-B1: pobranie 3 z 5 pozostawia jawny zapas 2 w buforze; reszta bez przypisania nie jest zużywana ani przenoszona',()=>{
+  const second={...branchPlace,copy:2};
+  const delivered=deliverBranchLot(createSubassemblyBufferBook([branchPlace,second]));
+  let book=applySubassemblyBufferEvent(delivered,{kind:'consume',id:'L1',quantity:3,at:branchPlace,atSeconds:1});
+  assert.deepEqual(subassemblyBufferLoad(book,branchPlace),{occupied:2,reserved:0,total:2});
+  assert.equal(book.tokens[0].quantity,5);
+  assert.equal(book.tokens[0].remainingQuantity,2);
+  assert.equal(book.tokens[0].residual,true);
+  assert.deepEqual(book.tokens[0].location,{stationId:'JOIN',copy:1,side:'input'});
+  assert.equal(delivered.tokens[0].remainingQuantity,5);
+  assert.throws(()=>applySubassemblyBufferEvent(book,{kind:'consume',id:'L1',quantity:2,at:branchPlace,atSeconds:1}),/nieprzypisana reszta/);
+  assert.throws(()=>applySubassemblyBufferEvent(book,{kind:'reserve',lot:branchLot,to:second,atSeconds:1}),/nieprzypisana reszta/);
+  assert.throws(()=>deliverBranchLot(book,branchPlace,{...branchLot,id:'L2',quantity:4}),/pełny/);
+  book=deliverBranchLot(book,branchPlace,{...branchLot,id:'L2',quantity:3});
+  assert.equal(subassemblyBufferLoad(book,branchPlace).total,5);
+});
+
+test('7.12.C2-B1: nie dopowiada jednostek, pojemności 0, kopii ani niebezpiecznych ilości',()=>{
+  const book=createSubassemblyBufferBook([branchPlace]);
+  for(const lot of [{...branchLot,unit:'kg'},{...branchLot,subassemblyId:'OTHER'},{...branchLot,quantity:1.5},{...branchLot,quantity:NaN},{...branchLot,quantity:Number.MAX_SAFE_INTEGER+1}]) {
+    assert.throws(()=>applySubassemblyBufferEvent(book,{kind:'reserve',lot,to:branchPlace,atSeconds:0}));
+  }
+  assert.throws(()=>deliverBranchLot(createSubassemblyBufferBook([{...branchPlace,capacity:0}])),/bezpośredniego przekazania/);
+  assert.throws(()=>createSubassemblyBufferBook([branchPlace,{...branchPlace,unit:'kg'}]),/nakładające/);
+  assert.throws(()=>createSubassemblyBufferBook([{...branchPlace,copy:0}]),/konkretna kopia/);
+  const unlimited=createSubassemblyBufferBook([{...branchPlace,capacity:null}]);
+  const large=applySubassemblyBufferEvent(unlimited,{kind:'reserve',lot:{...branchLot,quantity:Number.MAX_SAFE_INTEGER},to:branchPlace,atSeconds:0});
+  assert.throws(()=>applySubassemblyBufferEvent(large,{kind:'reserve',lot:{...branchLot,id:'L2',quantity:1},to:branchPlace,atSeconds:0}),/bezpieczny zakres/);
+});
+
+test('7.12.C2-B1: błędna kolejność zdarzeń i zmiana tożsamości nie modyfikują rejestru',()=>{
+  const book=createSubassemblyBufferBook([branchPlace]);
+  const reserved=applySubassemblyBufferEvent(book,{kind:'reserve',lot:branchLot,to:branchPlace,atSeconds:2});
+  const before=JSON.stringify(reserved);
+  assert.throws(()=>applySubassemblyBufferEvent(reserved,{kind:'arrive',id:'L1',atSeconds:2}),/rozpoczętego/);
+  assert.throws(()=>applySubassemblyBufferEvent(reserved,{kind:'depart',id:'L1',atSeconds:1}),/czasu/);
+  assert.throws(()=>applySubassemblyBufferEvent(reserved,{kind:'reserve',lot:{...branchLot,quantity:4},to:branchPlace,atSeconds:2}),/zmiana partii/);
+  const moving=applySubassemblyBufferEvent(reserved,{kind:'depart',id:'L1',atSeconds:2});
+  assert.throws(()=>applySubassemblyBufferEvent(moving,{kind:'depart',id:'L1',atSeconds:2}),/powtórzony/);
+  assert.throws(()=>applySubassemblyBufferEvent(moving,{kind:'consume',id:'L1',quantity:5,at:branchPlace,atSeconds:2}),/obecności/);
+  assert.equal(JSON.stringify(reserved),before);
+  const cancelled=applySubassemblyBufferEvent(reserved,{kind:'cancel',id:'L1',atSeconds:2});
+  assert.equal(cancelled.tokens.length,0);
+  const external=[{...branchPlace}];
+  const copied=createSubassemblyBufferBook(external);
+  external[0].capacity=100;
+  assert.equal(copied.places[0].capacity,5);
+});
 import {DEFAULT_MOTOR_PROJECT as base} from '../src/core/models/defaultProjects';
 import {ProcessStep,ProjectData} from '../src/core/models/types';
 import {derive} from '../src/core/project';

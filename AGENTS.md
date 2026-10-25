@@ -127,6 +127,8 @@ User clarification 2026-10-25: assemblers perform transport only between operati
 
 User decision 2026-10-25 (C2 finite buffers): capacity counts pieces of subassembly, not lots. A lot of 5 pieces occupies 5 capacity units. Integration remains pending under `MODEL_BUFOROW_PODMONTOW_C2.md`; do not claim finite branch buffers are supported by C2-A.
 
+User decision 2026-10-25 (C2 remainder): when 3 of 5 pieces are consumed, the remaining 2 stay in the recipient buffer, continue to occupy capacity and remain visible as stock. Without an explicit new assignment, do not consume or transport the remainder again. B1 implements this only in the internal quantity ledger; scheduler and UI integration remain pending.
+
 
 ## Buffers and material supply — user decisions 2026-10-14
 - Material consumption quantities must be explicit for each operation. Consume the whole assigned quantity at actual operation start; process deliveries before consumption at equal time.
