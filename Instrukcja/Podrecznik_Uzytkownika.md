@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**
-Aktualizacja podręcznika: **24.10.2026 — przegląd zewnętrznych przykładów i 7.13.2: pusty start, import z plików, jawne tryby eksperymentów.**
+Aktualizacja podręcznika: **25.10.2026 — 7.13.3: katalog przykładów, pobieranie kompletnych plików i kontrola integralności.**
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -55,7 +55,13 @@ Bez zapisu lokalnego aplikacja otwiera **Nowy projekt linii**: zero operacji i m
 
 ![Pusty start i jawny import plików](../outputs/qa/review_demos_20261024/empty_start.png)
 
-Przykłady nie są automatycznie wczytywane z kodu. Komplety plików wejściowych i instrukcje są w osobnych podkatalogach przyklady; katalog do pobierania z UI pozostaje kolejnym krokiem. Źródła projektu głównego i warsztatu nadal są oddzielne.
+Na Pulpicie rozwiń **Przykłady do pobrania**. Katalog zawiera trzy projekty o rosnącej złożoności oraz dodatkowe Eko. Każda karta podaje pochodzenie danych i rozwijane **Warunki i ograniczenia**. Przykłady nie wczytują się automatycznie. Źródła projektu głównego i warsztatu nadal są oddzielne.
+
+1. Wybierz **Pobierz projekt JSON**, aby otrzymać jeden plik do importera pakietów. **Pobierz komplet ZIP** zawiera cały osobny katalog: 12 plików, w tym arkusze procesu/BOM, warianty, referencje, instrukcję i manifest SHA-256.
+2. Komunikat potwierdza sprawdzenie SHA-256 i przekazanie pliku do pobrania. Sprawdź jego zapis w pobranych plikach przeglądarki. Pobranie nie zmienia aktywnego projektu.
+3. Wybierz **Wczytaj pobrany pakiet**, wskaż pobrany plik `.project.json`, sprawdź podgląd, pobierz kopię ratunkową i potwierdź zastąpienie danych. Z kompletu ZIP najpierw rozpakuj katalog i wybierz `projekt-pokazowy.json`. Zamknięcie importera przed zatwierdzeniem zachowuje pracę.
+
+Katalog i pliki są częścią dystrybucji: lokalny serwer aplikacji udostępnia je bez internetu. Wersja hostowana wymaga połączenia do pobrania — nie zapewnia automatycznej pamięci offline. Zachowaj ZIP oraz kopie projektów lokalnie. Przy błędzie katalogu wybierz **Ponów odczyt katalogu**; przy błędzie lub niezgodnej sumie pliku ponów pobieranie po sprawdzeniu połączenia. Błąd nie zastępuje bieżącej pracy.
 
 C1/C2: wyniki procesowe przy jawnym JIT (C1 390/315 s, poprawione równoległe C2 320/270 s dla 3 sztuk, odstęp 1 s); nie potwierdzają transportu fizycznego ani zaopatrzenia. Eko: 1 sztuka, odstęp 1 s, JIT wyłączony — 13550/14150/14150 s. JIT jest innym eksperymentem. Pakowanie Eko ma dwie osoby przez 1320 s, a przypisania innych ról są testowe; nie odtwarzają znanych tylko łącznie 13 osób pomiaru.
 

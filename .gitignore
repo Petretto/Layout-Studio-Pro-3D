@@ -32,3 +32,6 @@ outputs/qa/profiles/
 
 .vercel
 .env*
+
+# Generated external demo distribution (npm predev/prebuild).
+/public/demo-projects/

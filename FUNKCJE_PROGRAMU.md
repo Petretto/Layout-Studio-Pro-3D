@@ -1,5 +1,9 @@
 # Layout Studio Pro 3D v0.4.0 — funkcje programu
 
+## Aktualizacja 7.13.3 (2026-10-25)
+
+Pulpit udostępnia rozwijany katalog czterech zewnętrznych przykładów: JSON do importu i kompletny ZIP (12 plików, arkusze procesu/BOM, warianty, referencje, instrukcja, manifest). Pobranie sprawdza SHA-256 i nie zmienia aktywnego projektu; wczytanie pozostaje osobną operacją z kopią ratunkową i potwierdzeniem. Karty wskazują pochodzenie danych i zakres sprawdzonych eksperymentów. Lokalna dystrybucja zawiera pliki do pracy bez internetu; hostowana wymaga połączenia do pobrania.
+
 Przegląd 7.12/7.13 (2026-10-24): poprawiono równoległość C2 (320/270 s), dwuosobowe pakowanie i oznaczenia Eko oraz tryb jego wzorca (bez JIT). Pełna regresja 420/420, build i UI importu/pustego startu PASS. Wdrożono 7.13.2 bez wbudowanych projektów; poprawne zapisy zachowano. 7.12 ponownie w trakcie do pełnego zakresu fizycznego C/D/A2, 7.13 nadal w trakcie do dystrybucji i UI. Raport `WERYFIKACJA_PRZEGLADU_DEMO_I_STARTU_7_13.md`.
 
 UI2c (7.13.X, 2026-10-24): zwykły rzut 2D mieści pełne 60% wysokości okna przy 1280×720 i 1440×900. Panel właściwości zachowuje zaznaczenie po powrocie z 3D, klawiatura pomija zwinięte formularze, kontener popout otrzymał zakres stylów aplikacji. Build, edycja/historia/zapis i pełna regresja bieżącego workspace 417/417 PASS (w tym niezwiązane lokalne testy). Instrukcja zaktualizowana. Całe UI2 nadal w trakcie do brakujących prób wskaźnika, osobnych okien i braku WebGL; szczegóły w `WERYFIKACJA_UI_UX_UI2.md`.
@@ -643,6 +647,3 @@ W ramach Etapu 7 wdrożono zestaw modułów inżynierskich przygotowujących apl
 7. **Uniwersalność procesowa niezależna od Eko (Plan 7.11)**:
    - Potwierdzona praca na modułach baterii EV (przepływ liniowy) oraz silnikach EV (układ U).
    - Import procesów z arkuszy XLSX, budowa wariantu bazowego i usprawnionego, izolacja danych i jawne odnotowywanie braków danych hali.
-
-
-

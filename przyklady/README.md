@@ -3,6 +3,8 @@
 Status po przeglądzie 2026-10-24: **pakiety są dostępne i zweryfikowane w opisanych trybach; pełny fizyczny zakres C/D oraz integracja A2 pozostają otwarte, 7.12 ponownie w trakcie**. C1/C2: jawny JIT, nie odbiór transportu i zapasów. Eko: logiczny wzorzec korpusu bez JIT, nie odwzorowanie obsady 13 osób.
 Importer i eksporter formatu `layout-studio-project-package` v1 działają przez przycisk **Pakiet projektu** (w menu projektu).
 
+Od 7.13.3 na Pulpicie dostępne są **Przykłady do pobrania**: osobny JSON projektu oraz ZIP zawierający wszystkie 12 plików katalogu. Pobieranie z kontrolą SHA-256 nie zastępuje aktywnego projektu. Wczytanie odbywa się osobno przez importer z kopią ratunkową i potwierdzeniem. `katalog.json` opisuje karty; `npm run dev` i `npm run build` przygotowują zewnętrzne pliki dystrybucji z weryfikacją manifestów. Dane nie są importowane do kodu JS. Lokalny serwer działa bez internetu; wersja hostowana wymaga połączenia do pobrania.
+
 ## Kompletne pakiety pokazowe
 
 1. **`01_zestaw_montazowy/` — montaż zestawu montażowego (podstawowy, 7.12.B):**

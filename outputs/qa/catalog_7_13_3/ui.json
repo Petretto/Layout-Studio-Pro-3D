@@ -1,0 +1,65 @@
+{
+  "downloads": [
+    {
+      "file": "01_zestaw_montazowy.project.json",
+      "bytes": 42986,
+      "sha256": "4ef1b6948de6e72df0fe71a9e5ca425bbdc3a834579300a31025012f577ba680"
+    },
+    {
+      "file": "01_zestaw_montazowy.zip",
+      "bytes": 156776,
+      "sha256": "d55cfe4a1a605e2a8d65fa5d20d15dc4228ed49cffec871c1eca361a8ff3a8fb"
+    },
+    {
+      "file": "02_wozek_warsztatowy.project.json",
+      "bytes": 71561,
+      "sha256": "4355c30a4ed6541db8d5e0273de6332e15778290185b5fd591692f607bdd906d"
+    },
+    {
+      "file": "02_wozek_warsztatowy.zip",
+      "bytes": 221765,
+      "sha256": "b18b9ebab533a83e414181cf567e31eb47e792aeca180c166edd91bdcf182b24"
+    },
+    {
+      "file": "03_modul_urzadzenia.project.json",
+      "bytes": 79345,
+      "sha256": "328c86cffa13c91bd0aa1dc7de92a317665ecff3344ef02852361ffcffda05b2"
+    },
+    {
+      "file": "03_modul_urzadzenia.zip",
+      "bytes": 240882,
+      "sha256": "8a91034a21b0e9d464ff48cae9ca052deda4eba1bc8fb3092dff1351f262a071"
+    },
+    {
+      "file": "04_eko.project.json",
+      "bytes": 377404,
+      "sha256": "948d98713b1b736e413c0fc8bb04254f61d4089c42c552be3120f9b678b807d3"
+    },
+    {
+      "file": "04_eko.zip",
+      "bytes": 856638,
+      "sha256": "270b319afdd950edb2aa49bd93ff547fdb345c7351323cd1a56fd9754af49d1f"
+    }
+  ],
+  "imports": [
+    "Zestaw uchwytu montażowego — DEMO syntetyczne",
+    "Wózek warsztatowy 3-półkowy — DEMO syntetyczne",
+    "Moduł urządzenia przemysłowego — DEMO syntetyczne zaawansowane",
+    "Eko — wariant testowy (czasy montażu przykładowe)"
+  ],
+  "cancelPreserved": "Nowy projekt linii",
+  "reloadPreserved": "Eko — wariant testowy (czasy montażu przykładowe)",
+  "keyboardToggle": "PASS",
+  "desktop": {
+    "width": 1280,
+    "scrollWidth": 1280
+  },
+  "mobile": {
+    "width": 390,
+    "scrollWidth": 390
+  },
+  "missingIndex": "error with retry, project preserved",
+  "retry": "PASS",
+  "corruptPackage": "download refused, project preserved",
+  "finalBuildDownload": "04_eko.zip PASS"
+}
