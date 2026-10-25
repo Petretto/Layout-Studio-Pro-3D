@@ -1,0 +1,273 @@
+{
+  "schemaVersion": 4,
+  "id": "DEMO-MODUL-URZADZENIA-1",
+  "name": "Moduł urządzenia przemysłowego — DEMO syntetyczne zaawansowane",
+  "createdAt": "2026-10-24T00:00:00.000Z",
+  "updatedAt": "2026-10-24T00:00:00.000Z",
+  "timeUnit": "s",
+  "algorithm": "Manual",
+  "currency": "PLN",
+  "targetLayoutType": "ProcessFlow",
+  "layoutMode": "manual",
+  "layoutSettings": {
+    "tableWidthMm": 1600,
+    "tableLengthMm": 1000,
+    "spacingMm": 1200,
+    "aisleMm": 2000
+  },
+  "facility": {
+    "widthMm": 14000,
+    "lengthMm": 10000,
+    "heightMm": 3500,
+    "gridSizeMm": 100,
+    "isConfirmed": false
+  },
+  "obstacles": [],
+  "demand": {
+    "yearlyDemand": 30000,
+    "workingDaysPerYear": 250,
+    "shiftsPerDay": 1,
+    "hoursPerShift": 8,
+    "plannedBreaksMinutesPerShift": 0,
+    "oeePercent": 100
+  },
+  "processSteps": [
+    {
+      "id": "MU-OP10-A",
+      "name": "Montaż bloku zasilania i sterownika (Podmontaż A)",
+      "standardTimeSeconds": 50,
+      "vaTimeSeconds": 40,
+      "nvaTimeSeconds": 10,
+      "sequenceNumber": 1,
+      "predecessorIds": [],
+      "assignedWorkstationId": "WS-1"
+    },
+    {
+      "id": "MU-OP10-B",
+      "name": "Montaż napędu i przekładni śrubowej (Podmontaż B)",
+      "standardTimeSeconds": 60,
+      "vaTimeSeconds": 50,
+      "nvaTimeSeconds": 10,
+      "sequenceNumber": 2,
+      "predecessorIds": [],
+      "assignedWorkstationId": "WS-2"
+    },
+    {
+      "id": "MU-OP10-M",
+      "name": "Inspekcja i przygotowanie korpusu nośnego",
+      "standardTimeSeconds": 40,
+      "vaTimeSeconds": 32,
+      "nvaTimeSeconds": 8,
+      "sequenceNumber": 3,
+      "predecessorIds": [],
+      "assignedWorkstationId": "WS-3"
+    },
+    {
+      "id": "MU-OP20-M",
+      "name": "Integracja podzespołów A+B w korpusie i okablowanie",
+      "standardTimeSeconds": 70,
+      "vaTimeSeconds": 58,
+      "nvaTimeSeconds": 12,
+      "sequenceNumber": 4,
+      "predecessorIds": [
+        "MU-OP10-M",
+        "MU-OP10-A",
+        "MU-OP10-B"
+      ],
+      "assignedWorkstationId": "WS-4"
+    },
+    {
+      "id": "MU-OP30-M",
+      "name": "Test funkcjonalny, kalibracja i pakowanie końcowe",
+      "standardTimeSeconds": 50,
+      "vaTimeSeconds": 42,
+      "nvaTimeSeconds": 8,
+      "sequenceNumber": 5,
+      "predecessorIds": [
+        "MU-OP20-M"
+      ],
+      "assignedWorkstationId": "WS-5"
+    }
+  ],
+  "workstationSettings": {
+    "[\"MU-OP10-A\"]": {
+      "operators": 1,
+      "parallelStations": 1
+    },
+    "[\"MU-OP10-B\"]": {
+      "operators": 1,
+      "parallelStations": 1
+    },
+    "[\"MU-OP10-M\"]": {
+      "operators": 1,
+      "parallelStations": 1
+    },
+    "[\"MU-OP20-M\"]": {
+      "operators": 1,
+      "parallelStations": 1
+    },
+    "[\"MU-OP30-M\"]": {
+      "operators": 1,
+      "parallelStations": 1
+    }
+  },
+  "bom": [
+    {
+      "id": "BOM-1",
+      "partNumber": "MU-ZASIL",
+      "name": "Zasilacz impulsowy przemysłowy 24V",
+      "quantityPerUnit": 1,
+      "container": "BoxKLT",
+      "packageQuantity": 10,
+      "associatedProcessStepId": "MU-OP10-A",
+      "unitCost": 180
+    },
+    {
+      "id": "BOM-2",
+      "partNumber": "MU-STER",
+      "name": "Sterownik mikroprocesorowy PLC",
+      "quantityPerUnit": 1,
+      "container": "BoxKLT",
+      "packageQuantity": 10,
+      "associatedProcessStepId": "MU-OP10-A",
+      "unitCost": 250
+    },
+    {
+      "id": "BOM-3",
+      "partNumber": "MU-SILNIK",
+      "name": "Silnik krokowy z enkoderem",
+      "quantityPerUnit": 1,
+      "container": "BoxKLT",
+      "packageQuantity": 5,
+      "associatedProcessStepId": "MU-OP10-B",
+      "unitCost": 210
+    },
+    {
+      "id": "BOM-4",
+      "partNumber": "MU-PRZEKL",
+      "name": "Przekładnia śrubowa toczna z łożyskami",
+      "quantityPerUnit": 1,
+      "container": "BoxKLT",
+      "packageQuantity": 5,
+      "associatedProcessStepId": "MU-OP10-B",
+      "unitCost": 160
+    },
+    {
+      "id": "BOM-5",
+      "partNumber": "MU-KORPUS",
+      "name": "Aluminiowy korpus odlewany korpusu",
+      "quantityPerUnit": 1,
+      "container": "Pallet",
+      "packageQuantity": 5,
+      "associatedProcessStepId": "MU-OP10-M",
+      "unitCost": 340
+    },
+    {
+      "id": "BOM-6",
+      "partNumber": "MU-WIAZKA",
+      "name": "Wiązka przewodów i złącza sygnałowe",
+      "quantityPerUnit": 1,
+      "container": "BoxKLT",
+      "packageQuantity": 20,
+      "associatedProcessStepId": "MU-OP20-M",
+      "unitCost": 65
+    },
+    {
+      "id": "BOM-7",
+      "partNumber": "MU-OBUD",
+      "name": "Panele osłonowe z plexi i blachy",
+      "quantityPerUnit": 1,
+      "container": "Pallet",
+      "packageQuantity": 5,
+      "associatedProcessStepId": "MU-OP30-M",
+      "unitCost": 95
+    },
+    {
+      "id": "BOM-8",
+      "partNumber": "MU-SKRZY",
+      "name": "Skrzynia transportowa wyściełana",
+      "quantityPerUnit": 1,
+      "container": "Carton",
+      "packageQuantity": 5,
+      "associatedProcessStepId": "MU-OP30-M",
+      "unitCost": 50
+    }
+  ],
+  "layoutObjects": [
+    {
+      "id": "MU-TABLE-PWR",
+      "name": "Stół podmontażu zasilania i sterowania",
+      "type": "Table",
+      "workstationId": "WS-1",
+      "xMm": 2000,
+      "yMm": 2000,
+      "zMm": 0,
+      "widthMm": 1600,
+      "lengthMm": 1000,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2a5a8a",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "MU-TABLE-DRV",
+      "name": "Stół podmontażu napędu i przekładni",
+      "type": "Table",
+      "workstationId": "WS-2",
+      "xMm": 2000,
+      "yMm": 5000,
+      "zMm": 0,
+      "widthMm": 1600,
+      "lengthMm": 1000,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#2a5a8a",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "MU-TABLE-M1",
+      "name": "Stół przygotowania korpusu (M1)",
+      "type": "Table",
+      "workstationId": "WS-3",
+      "xMm": 6000,
+      "yMm": 2000,
+      "zMm": 0,
+      "widthMm": 1600,
+      "lengthMm": 1000,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#3979a8",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "MU-TABLE-M2",
+      "name": "Stół integracji podzespołów (M2)",
+      "type": "Table",
+      "workstationId": "WS-4",
+      "xMm": 6000,
+      "yMm": 4500,
+      "zMm": 0,
+      "widthMm": 1600,
+      "lengthMm": 1000,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#3979a8",
+      "isVisualAssumption": true
+    },
+    {
+      "id": "MU-TABLE-M3",
+      "name": "Stół testu końcowego i pakowania (M3)",
+      "type": "Table",
+      "workstationId": "WS-5",
+      "xMm": 6000,
+      "yMm": 7000,
+      "zMm": 0,
+      "widthMm": 1600,
+      "lengthMm": 1000,
+      "heightMm": 850,
+      "rotationDeg": 0,
+      "colorHex": "#3979a8",
+      "isVisualAssumption": true
+    }
+  ]
+}

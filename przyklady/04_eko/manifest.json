@@ -1,0 +1,86 @@
+{
+  "format": "layout-studio-demo-manifest",
+  "formatVersion": 1,
+  "packageId": "04_eko",
+  "packageVersion": "1.0.0",
+  "title": "Eko — montaż ramy 1.4 (realne dane procesu)",
+  "level": "advanced",
+  "language": "pl",
+  "dataOrigin": "mixed",
+  "entryFile": "projekt-pokazowy.json",
+  "importer": {
+    "format": "layout-studio-project-package",
+    "formatVersion": 1
+  },
+  "assets": {
+    "externalFiles": []
+  },
+  "files": [
+    {
+      "path": "dane/bom.xlsx",
+      "bytes": 34969,
+      "sha256": "cc23df997ca5775155dfe05653fa0900504834265f0fad41a01f4706ab90f834",
+      "role": "data"
+    },
+    {
+      "path": "dane/proces.xlsx",
+      "bytes": 24127,
+      "sha256": "32ec58c4b1022be34d23c49011c6d68cba7d85525106e8d4554e2443ac6c9ced",
+      "role": "data"
+    },
+    {
+      "path": "dane/slownik_pol.md",
+      "bytes": 2612,
+      "sha256": "8fa2447a11a885133649c0d92c72b0d534a0d4acfe708a0308deaf67b0cdc10e",
+      "role": "data"
+    },
+    {
+      "path": "dane/szkic6.json",
+      "bytes": 85121,
+      "sha256": "bd4edf5b98c1bb6fa7cb5f5f4156370f2b2bc5f16c2513324db44e66c913a258",
+      "role": "data"
+    },
+    {
+      "path": "dane/warianty6.json",
+      "bytes": 278111,
+      "sha256": "d81290611de5c8de9874847d52fcf4f7536049fcc444eec2ebc4b1d4b1ca3c51",
+      "role": "data"
+    },
+    {
+      "path": "dane/warunki_eksperymentu.json",
+      "bytes": 434,
+      "sha256": "c559b3b2a4220a19eee36b2602545d7f10456183fb9e987135b9e591d6559ffc",
+      "role": "data"
+    },
+    {
+      "path": "dane/zrodlo4.json",
+      "bytes": 45082,
+      "sha256": "01c4e9c28c2e6b855be2c2388eea18156bccfc4f62e967105a2a13c17ed0a995",
+      "role": "data"
+    },
+    {
+      "path": "projekt-pokazowy.json",
+      "bytes": 377404,
+      "sha256": "948d98713b1b736e413c0fc8bb04254f61d4089c42c552be3120f9b678b807d3",
+      "role": "entry-package"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2545,
+      "sha256": "e32f1eb970af56b91570c45bef7a80bb59822a7f4a9a85707d4dc57a70616362",
+      "role": "documentation"
+    },
+    {
+      "path": "referencje/obliczenia.md",
+      "bytes": 1353,
+      "sha256": "8173090231defc0ec2e716a089847ec116ae2368a8b844b20c752ca4279b3afe",
+      "role": "reference"
+    },
+    {
+      "path": "referencje/oczekiwane_wyniki.json",
+      "bytes": 898,
+      "sha256": "b7d2c742361ec6c313b1a8d6ef484dee024fd1675ceff242070b86a38e9ac7f8",
+      "role": "reference"
+    }
+  ]
+}

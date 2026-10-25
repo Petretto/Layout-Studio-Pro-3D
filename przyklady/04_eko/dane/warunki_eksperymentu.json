@@ -1,0 +1,13 @@
+{
+  "format": "layout-studio-experiment-conditions",
+  "formatVersion": 1,
+  "packageId": "04_eko",
+  "dataOrigin": "mixed",
+  "conditions": {
+    "batch": 1,
+    "arrivalIntervalSeconds": 1,
+    "transportMode": "configured",
+    "initialState": "empty-line",
+    "notes": "Symulacja montażu 1 sztuki wyrobu Eko. Grupy równoległe ramy i drzwi. Pomiary rzeczywiste lipiec 2026 (OP10–OP21), czasy przykładowe OP22–OP25."
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "reviewDate": "2026-10-24",
+  "finalizedDate": "2026-10-25",
+  "scope": "7.12.C1/C2/D and Eko review; 7.13.2 empty startup",
+  "tests": {"core": {"pass": 109, "fail": 0}, "network": {"pass": 311, "fail": 0}, "focusedDemos": {"pass": 35, "fail": 0}},
+  "generatorsChecked": 4,
+  "build": "PASS",
+  "ui": {"method": "cua_repl", "url": "http://127.0.0.1:5306/", "emptyStartup": "PASS", "advancedJit3PiecesSeconds": 320, "ekoJit1PieceSeconds": 14150, "ekoConfigured1PieceSeconds": 13550, "packingCrew": 2, "reloadImportedProject": "PASS"},
+  "manual": {"pages": 61, "imageReferences": 50, "automatedCheck": "PASS", "visualReviewPages": "1-16"},
+  "remaining": ["7.12 physical transport, buffers and material supply acceptance", "A2b2b physical integration", "7.13.3 external demo catalog UI", "remaining UI2 acceptance"],
+  "vercelVerified": false,
+  "plan": {"complete": 61, "total": 72, "firstReleaseComplete": 61, "firstReleaseTotal": 68}
+}

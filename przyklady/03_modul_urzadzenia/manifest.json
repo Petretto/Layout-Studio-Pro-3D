@@ -1,0 +1,108 @@
+{
+  "format": "layout-studio-demo-manifest",
+  "formatVersion": 1,
+  "packageId": "DEMO-MODUL-URZADZENIA-1",
+  "packageVersion": "1.0.0",
+  "title": "Moduł urządzenia przemysłowego — DEMO syntetyczne zaawansowane",
+  "level": "advanced",
+  "language": "pl",
+  "compatibleAppVersion": "0.4.0",
+  "importer": {
+    "format": "layout-studio-project-package",
+    "formatVersion": 1
+  },
+  "dataOrigin": "synthetic",
+  "units": {
+    "time": "s",
+    "geometry": "mm",
+    "currency": "PLN"
+  },
+  "entryFile": "projekt-pokazowy.json",
+  "variants": [
+    "ADVANCED-BASE",
+    "ADVANCED-BALANCED"
+  ],
+  "assets": {
+    "externalFiles": [],
+    "appearance": "built-in Table geometry, synthetic dimensions; no external downloads"
+  },
+  "files": [
+    {
+      "path": "projekt-pokazowy.json",
+      "role": "entry-project-package",
+      "format": "json",
+      "bytes": 79345,
+      "sha256": "328c86cffa13c91bd0aa1dc7de92a317665ecff3344ef02852361ffcffda05b2"
+    },
+    {
+      "path": "dane/zrodlo4.json",
+      "role": "data-projection",
+      "format": "json",
+      "bytes": 6826,
+      "sha256": "fd516a95a05cd432cfeedb4b1b1c9f7d60f878f8738190e818e7785722e1d034"
+    },
+    {
+      "path": "dane/szkic6.json",
+      "role": "data-projection",
+      "format": "json",
+      "bytes": 34384,
+      "sha256": "32eafcfa23f9b0701337ba6145778fbf43de63f809894763d33e20da16f1b075"
+    },
+    {
+      "path": "dane/warianty6.json",
+      "role": "data-projection",
+      "format": "json",
+      "bytes": 78477,
+      "sha256": "283cadbc911304306d2e002e103f29255a0660df7e7111551b4fecc7300a5be1"
+    },
+    {
+      "path": "dane/warunki_eksperymentu.json",
+      "role": "session-settings-reference",
+      "format": "json",
+      "bytes": 852,
+      "sha256": "96c7e300733ef443bf9c77fcba648b48f49b45e78cb65a2d6859a9a8f1432fad"
+    },
+    {
+      "path": "dane/proces.xlsx",
+      "role": "spreadsheet-template",
+      "format": "xlsx",
+      "bytes": 12351,
+      "sha256": "72525c0739e2c7761600e6622196f807a357e0efb8dd959aca0c5b0be4b0d9f4"
+    },
+    {
+      "path": "dane/bom.xlsx",
+      "role": "spreadsheet-template",
+      "format": "xlsx",
+      "bytes": 12783,
+      "sha256": "b826560ed4b825ecb6f17c1bd6add89fc27a63145dae786c2a8912cdbb002d7d"
+    },
+    {
+      "path": "README.md",
+      "role": "instructions",
+      "format": "md",
+      "bytes": 3142,
+      "sha256": "99c268c8109fe73edf7a89d8223a106cb95780e9be2e734c2a6fe84d46b2646b"
+    },
+    {
+      "path": "dane/slownik_pol.md",
+      "role": "field-dictionary",
+      "format": "md",
+      "bytes": 2106,
+      "sha256": "69e53bb026eaf49d37b9dafb6d8d93aae21766b6d05a357edb16a17137ef3363"
+    },
+    {
+      "path": "referencje/oczekiwane_wyniki.json",
+      "role": "independent-reference",
+      "format": "json",
+      "bytes": 4209,
+      "sha256": "670862d8ea6d84d8e6e5bf513cecd69cf77829114984754e209c27b6e6b17a9e"
+    },
+    {
+      "path": "referencje/obliczenia.md",
+      "role": "independent-calculation",
+      "format": "md",
+      "bytes": 1413,
+      "sha256": "97da954ea1b83c5857138508605f8867cfd90a6b98b5d51d1fac9004e6b7f869"
+    }
+  ]
+}

@@ -1,0 +1,237 @@
+{
+  "referenceVersion": 1,
+  "dataOrigin": "synthetic",
+  "method": "Niezależny rachunek 2026-10-24: A co 50 s, B co 60 s, korpus co 40 s od zera; integracja po wszystkich trzech poprzednikach, potem test 50 s. Jawna grupa równoległości, JIT; bez uruchamiania silnika przy tworzeniu wzorca.",
+  "conditions": {
+    "batch": 3,
+    "arrivalIntervalSeconds": 1,
+    "transportMode": "just-in-time"
+  },
+  "units": {
+    "time": "s",
+    "capacity": "szt./h",
+    "cost": "PLN/szt."
+  },
+  "absoluteToleranceSeconds": 1e-9,
+  "subassemblyModel": "Reguła A: partia podzespołu dostępna po zakończeniu producenta; atomowe pobranie przy starcie odbiorcy; węzeł złączenia MU-OP20-M czeka na obie gałęzie i korpus.",
+  "customerTaktSeconds": 240,
+  "targetCycleSecondsBase": 70,
+  "targetCycleSecondsBalanced": 60,
+  "workContentSecondsBase": 270,
+  "workContentSecondsBalanced": 280,
+  "bomCostPerUnit": 1350,
+  "variants": [
+    {
+      "id": "ADVANCED-BASE",
+      "activeStations": 5,
+      "selectedWorkers": 5,
+      "bottleneckStationId": "ST-MU-MAIN2",
+      "bottleneckCycleSeconds": 70,
+      "staticCapacityPerHour": 51.429,
+      "batchMakespanSeconds": 320,
+      "completionSeconds": [
+        180,
+        250,
+        320
+      ],
+      "operationWindows": [
+        [
+          1,
+          "MU-OP10-A",
+          0,
+          50
+        ],
+        [
+          1,
+          "MU-OP10-B",
+          0,
+          60
+        ],
+        [
+          1,
+          "MU-OP10-M",
+          0,
+          40
+        ],
+        [
+          1,
+          "MU-OP20-M",
+          60,
+          130
+        ],
+        [
+          1,
+          "MU-OP30-M",
+          130,
+          180
+        ],
+        [
+          2,
+          "MU-OP10-A",
+          50,
+          100
+        ],
+        [
+          2,
+          "MU-OP10-B",
+          60,
+          120
+        ],
+        [
+          2,
+          "MU-OP10-M",
+          40,
+          80
+        ],
+        [
+          2,
+          "MU-OP20-M",
+          130,
+          200
+        ],
+        [
+          2,
+          "MU-OP30-M",
+          200,
+          250
+        ],
+        [
+          3,
+          "MU-OP10-A",
+          100,
+          150
+        ],
+        [
+          3,
+          "MU-OP10-B",
+          120,
+          180
+        ],
+        [
+          3,
+          "MU-OP10-M",
+          80,
+          120
+        ],
+        [
+          3,
+          "MU-OP20-M",
+          200,
+          270
+        ],
+        [
+          3,
+          "MU-OP30-M",
+          270,
+          320
+        ]
+      ]
+    },
+    {
+      "id": "ADVANCED-BALANCED",
+      "activeStations": 5,
+      "selectedWorkers": 6,
+      "bottleneckStationId": "ST-MU-DRV",
+      "bottleneckCycleSeconds": 60,
+      "staticCapacityPerHour": 60,
+      "batchMakespanSeconds": 270,
+      "completionSeconds": [
+        150,
+        210,
+        270
+      ],
+      "operationWindows": [
+        [
+          1,
+          "MU-OP10-A",
+          0,
+          50
+        ],
+        [
+          1,
+          "MU-OP10-B",
+          0,
+          60
+        ],
+        [
+          1,
+          "MU-OP10-M",
+          0,
+          40
+        ],
+        [
+          1,
+          "MU-OP20-M",
+          60,
+          100
+        ],
+        [
+          1,
+          "MU-OP30-M",
+          100,
+          150
+        ],
+        [
+          2,
+          "MU-OP10-A",
+          50,
+          100
+        ],
+        [
+          2,
+          "MU-OP10-B",
+          60,
+          120
+        ],
+        [
+          2,
+          "MU-OP10-M",
+          40,
+          80
+        ],
+        [
+          2,
+          "MU-OP20-M",
+          120,
+          160
+        ],
+        [
+          2,
+          "MU-OP30-M",
+          160,
+          210
+        ],
+        [
+          3,
+          "MU-OP10-A",
+          100,
+          150
+        ],
+        [
+          3,
+          "MU-OP10-B",
+          120,
+          180
+        ],
+        [
+          3,
+          "MU-OP10-M",
+          80,
+          120
+        ],
+        [
+          3,
+          "MU-OP20-M",
+          180,
+          220
+        ],
+        [
+          3,
+          "MU-OP30-M",
+          220,
+          270
+        ]
+      ]
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 # Zmiany v0.4.0 — 29.09.2026
 
+Przegląd 7.12/7.13 (2026-10-24): poprawiono równoległość C2 (320/270 s), dwuosobowe pakowanie i oznaczenia Eko oraz tryb jego wzorca (bez JIT). Pełna regresja 420/420, build i UI importu/pustego startu PASS. Wdrożono 7.13.2 bez wbudowanych projektów; poprawne zapisy zachowano. 7.12 ponownie w trakcie do pełnego zakresu fizycznego C/D/A2, 7.13 nadal w trakcie do dystrybucji i UI. Raport `WERYFIKACJA_PRZEGLADU_DEMO_I_STARTU_7_13.md`.
+
 UI2c (7.13.X, 2026-10-24): zwykły rzut 2D mieści pełne 60% wysokości okna przy 1280×720 i 1440×900. Panel właściwości zachowuje zaznaczenie po powrocie z 3D, klawiatura pomija zwinięte formularze, kontener popout otrzymał zakres stylów aplikacji. Build, edycja/historia/zapis i pełna regresja bieżącego workspace 417/417 PASS (w tym niezwiązane lokalne testy). Instrukcja zaktualizowana. Całe UI2 nadal w trakcie do brakujących prób wskaźnika, osobnych okien i braku WebGL; szczegóły w `WERYFIKACJA_UI_UX_UI2.md`.
 
 UI2b (7.13.X, 2026-10-24): zwarta rama 3D z trybem skupienia, grupy narzędzi i parametry/wyniki na żądanie. Rozwijanie i skupienie zachowują czas tej samej instancji symulacji; błędy/postęp/aktualność CSV pozostają widoczne. 14/14 celowanych, build i UI PASS: Start/pauza/reset/suwak, 1×/5000× i identyczny CSV. Instrukcja 61 stron/50 ilustracji. Bez zmiany schematów i obliczeń. UI2 nadal w trakcie do zbiorczego odbioru wskazanego w `WERYFIKACJA_UI_UX_UI2.md`; Vercel niezweryfikowany.

@@ -1,11 +1,17 @@
 import { applyResources } from './resources';
-import { DEFAULT_MOTOR_PROJECT } from './models/defaultProjects';
 import { ProjectData } from './models/types';
 import { validateProject, Issue } from './validation';
 import { calculateTaktTime } from './algorithms/taktCalculator';
 import { runLineBalancing } from './algorithms/lineBalancingEngine';
 import { defaultLayoutSettings, generate3DLayout, layoutWarnings } from './algorithms/layoutEngine';
-export function newProject():ProjectData{return {...structuredClone(DEFAULT_MOTOR_PROJECT),id:crypto.randomUUID(),name:'Nowy projekt linii',schemaVersion:4,algorithm:'RPW',currency:'PLN',layoutMode:'auto',layoutSettings:{...defaultLayoutSettings},processSteps:[],bom:[],obstacles:[],layoutObjects:[],createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};}
+/** Empty document; numeric defaults preserve the previous new-project setup. */
+export function newProject():ProjectData{
+  const at=new Date().toISOString();
+  return {id:crypto.randomUUID(),name:'Nowy projekt linii',schemaVersion:4,algorithm:'RPW',currency:'PLN',layoutMode:'auto',targetLayoutType:'UShape',
+    facility:{widthMm:24000,lengthMm:32000,heightMm:6000,gridSizeMm:1000},
+    demand:{yearlyDemand:75000,workingDaysPerYear:250,shiftsPerDay:2,hoursPerShift:8,plannedBreaksMinutesPerShift:30,oeePercent:90},
+    layoutSettings:{...defaultLayoutSettings},processSteps:[],bom:[],obstacles:[],layoutObjects:[],createdAt:at,updatedAt:at};
+}
 export function derive(p:ProjectData){
   const issues=validateProject(p);let project={...p,balancing:undefined} as ProjectData;
   if(!issues.some(i=>i.area==='demand'||i.area==='process'))try{

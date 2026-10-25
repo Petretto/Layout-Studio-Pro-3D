@@ -1,0 +1,43 @@
+✔ 7.12.A2b2a: fizyczne granice przejazdu i powrotu, cofanie oraz niezmienność rejestrów (28.6771ms)
+✔ 7.12.A2b2a: dojazd nie przesuwa korpusu, wspólny moment przyjazdu i wyjazdu nie teleportuje wózka (4.2343ms)
+✔ 7.12.A2b2a: bufory i lokalna kontynuacja zachowują korpus na kopii aż do rzeczywistego wyjazdu (16.8157ms)
+✔ 7.12.A2b2a: wielowózkowy zestaw zachowuje sekwencję dojazdów i wspólny wyjazd (8.8498ms)
+✔ 7.12.A2b2a: JIT nie uzyskuje fizycznych lokalizacji z geometrii (12.8167ms)
+✔ 7.12.A2b2a: równoległe operacje mają jeden korpus, a kolejne zwolnienie nie przenosi go na inną kopię (2.9889ms)
+✔ 7.12.A2b2a: niepełna historia, błędne przypisania i zmieniony końcowy rejestr są odrzucane (11.021ms)
+✔ 7.12.A2b1: odtwarzanie korzysta z wyniku 190 s, zachowuje model, wynik i rzeczywiste przypisania geometrii (7.0789ms)
+✔ 7.12.A2b1: granice pracy, przerwa i zajęcie po obróbce są czytane z półotwartych okien wyniku (5.4589ms)
+✔ 7.12.A2b1: brak geometrii i niejednoznaczna kopia nie tworzą domyślnej lokalizacji znacznika (7.3237ms)
+✔ 7.12.A2b1: szybkość i krok zmieniają wyłącznie czas odczytu, nie harmonogram ani jego skrót (6.8061ms)
+✔ 7.12.A2a: przydziały, geometria i raport są projekcją aktywnego 6 bez zmiany źródła i bez ponownego bilansu (6.1463ms)
+✔ 7.12.A2a: brak obsady lub wiele dopuszczeń nie tworzy czasów, kopii ani pozornej zdolności (7.2268ms)
+✔ 7.12.A2a: rzut zachowuje obroty i odniesienia, tekst raportu nie wstrzykuje wierszy tabel (7.095ms)
+✔ 7.12.B: manifest obejmuje wszystkie pliki, poprawne SHA, źródła i czytelne projekcje bez zależności od dawnych przykładów (16.7069ms)
+✔ 7.12.B: arkusze procesu i BOM przechodzą istniejące importery i odpowiadają pełnemu modelowi (87.9321ms)
+✔ 7.12.B: takt, BOM i statyczny bilans zgadzają się z niezależnymi obliczeniami (5.9287ms)
+✔ 7.12.B: wszystkie okna ręcznego harmonogramu obu wariantów, brak podwójnych rezerwacji, JIT i niezmienność danych (17.9168ms)
+✔ 7.12.C1: manifest obejmuje wszystkie pliki, poprawne SHA, źródła i brak powiązań z Eko/bateriami/silnikami (16.9529ms)
+✔ 7.12.C1: arkusze procesu i BOM przechodzą istniejące importery i odpowiadają pełnemu modelowi (14.0758ms)
+✔ 7.12.C1: takt, BOM, kompetencje i bilans zgadzają się z niezależnymi obliczeniami (6.3417ms)
+✔ 7.12.C1: symulacja harmonogramu obu wariantów wózka warsztatowego, czasy partii 390s i 315s, brak podwójnych rezerwacji (21.5059ms)
+✔ 7.12.C2: manifest obejmuje wszystkie pliki, poprawne SHA, źródła i brak powiązań z Eko/bateriami/silnikami (18.0335ms)
+✔ 7.12.C2: arkusze procesu i BOM przechodzą istniejące importery i odpowiadają pełnemu modelowi rozgałęzionemu (16.0072ms)
+✔ 7.12.C2: takt, BOM, podzespoły i bilans zgadzają się z niezależnymi obliczeniami (7.2482ms)
+✔ 7.12.C2: symulacja harmonogramu obu wariantów modułu urządzenia z gałęziami, czasy partii 320s i 270s, brak podwójnych rezerwacji (20.2808ms)
+✔ 7.12.D: wszystkie 3 pakiety (01, 02, 03) spełniają kontrakt formatu, unikalności ID, separacji danych i braku powiązań z Eko (37.7291ms)
+✔ 7.12.D: arkusze procesu i BOM we wszystkich 3 pakietach oraz szablony wzorcowe przechodzą bezbłędnie importery (34.4243ms)
+✔ 7.12.D: walidacja formatu layout-studio-project-package, round-trip oraz odporność na uszkodzenia sum i źródeł (101.3021ms)
+✔ 7.12.D / 7.2: łączna weryfikacja analityczna taktu, bilansu i symulacji wszystkich 6 wariantów w 3 pakietach (27.3582ms)
+✔ 7.13: pakiet demonstracyjny Eko (04_eko) spełnia kontrakt, zawiera realne pomiary i zgodne sumy SHA-256 (32.2579ms)
+✔ 7.13: arkusze procesu i BOM pakietu Eko przechodzą importery Excela z zerem błędów (32.9893ms)
+✔ 7.13: symulacja harmonogramu trzech wariantów Eko (parallel 13550s, sequential 14150s, shared-worker 14150s) (40.3898ms)
+✔ 7.13: demo Eko respektuje dwie osoby pakowania i odróżnia pomiary od testowych przydziałów (32.1111ms)
+✔ 7.13: dokumentacja Eko ma rzeczywiste nazwy/czasy i poprawną sumę bez zmyślonych wartości (21.4323ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1953.6687

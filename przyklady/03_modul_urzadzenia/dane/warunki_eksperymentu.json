@@ -1,0 +1,24 @@
+{
+  "dataOrigin": "synthetic",
+  "batch": 3,
+  "arrivalIntervalSeconds": 1,
+  "transportMode": "just-in-time",
+  "initialArrivalsSeconds": [
+    0,
+    1,
+    2
+  ],
+  "materialAvailability": "explicit-subassemblies-rule-A",
+  "subassemblyFlowRule": "Rule A: producer-finish lot availability, consumer-start atomic consumption",
+  "convergingBranches": "Branch A (SUB-PWR: OP10-A, 50s) and Branch B (SUB-DRV: OP10-B, 60s) converge at OP20-M (Integration)",
+  "jointOperation": "MU-OP20-M starts only when main body, subassembly A, and subassembly B are all ready",
+  "costAssumptions": null,
+  "stochasticConfig": null,
+  "calendarWindowSeconds": [
+    0,
+    28800
+  ],
+  "calendarBreaks": [],
+  "sourceOfProductionMeasurements": "none — designed teaching example for advanced multi-branch complexity",
+  "sessionSettingsMustBeSelectedInUI": true
+}

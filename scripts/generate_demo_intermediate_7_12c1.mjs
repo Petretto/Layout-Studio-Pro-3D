@@ -1,0 +1,633 @@
+import {build} from 'esbuild';
+import {readFileSync, writeFileSync, mkdirSync} from 'node:fs';
+import {resolve, dirname} from 'node:path';
+import {createHash} from 'node:crypto';
+import XLSX from 'xlsx';
+
+process.on('uncaughtException', error => {
+  console.error(error.message);
+  process.exitCode = 1;
+});
+
+// Authoring of synthetic demo data only. No scheduler is called to create a reference.
+const bundle = await build({
+  stdin: {
+    contents: `
+export * from './src/core/validation';
+export * from './src/core/domainProject';
+export * from './src/core/domainMigrationPreview';
+export * from './src/core/domainDraftStorage';
+export * from './src/core/domainVariantComparison';
+export * from './src/core/projectPackage';
+export * from './src/core/export/excelImporter';
+`,
+    resolveDir: process.cwd()
+  },
+  bundle: true,
+  platform: 'node',
+  format: 'esm',
+  write: false
+});
+
+const api = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64'));
+const out = resolve('przyklady/02_wozek_warsztatowy');
+const check = process.argv.includes('--check');
+const at = '2026-10-24T00:00:00.000Z';
+const projectId = 'DEMO-WOZEK-WARSZTATOWY-1';
+const stations = ['ST-WW-1', 'ST-WW-2', 'ST-WW-3', 'ST-WW-4'];
+const ids = ['WW-OP10', 'WW-OP20', 'WW-OP30', 'WW-OP40'];
+const durations = [60, 80, 50, 40];
+const va = [48, 65, 40, 32];
+const names = [
+  'Montaż ramy dolnej i kół skrętnych',
+  'Montaż półek i burt wózka',
+  'Montaż uchwytu ergonomicznego i akcesoriów',
+  'Kontrola odbiorcza, próba toczenia i pakowanie'
+];
+
+const source4 = api.parseProject(JSON.stringify({
+  schemaVersion: 4,
+  id: projectId,
+  name: 'Wózek warsztatowy 3-półkowy — DEMO syntetyczne',
+  createdAt: at,
+  updatedAt: at,
+  timeUnit: 's',
+  algorithm: 'Manual',
+  currency: 'PLN',
+  targetLayoutType: 'Linear',
+  layoutMode: 'manual',
+  layoutSettings: {tableWidthMm: 1500, tableLengthMm: 900, spacingMm: 1000, aisleMm: 1800},
+  facility: {widthMm: 12000, lengthMm: 8000, heightMm: 3500, gridSizeMm: 100, isConfirmed: false},
+  obstacles: [],
+  demand: {yearlyDemand: 40000, workingDaysPerYear: 250, shiftsPerDay: 1, hoursPerShift: 8, plannedBreaksMinutesPerShift: 0, oeePercent: 100},
+  processSteps: ids.map((id, i) => ({
+    id,
+    name: names[i],
+    standardTimeSeconds: durations[i],
+    vaTimeSeconds: va[i],
+    nvaTimeSeconds: durations[i] - va[i],
+    sequenceNumber: i + 1,
+    predecessorIds: i ? [ids[i - 1]] : [],
+    assignedWorkstationId: `WS-${i + 1}`
+  })),
+  workstationSettings: Object.fromEntries(ids.map(id => [JSON.stringify([id]), {operators: 1, parallelStations: 1}])),
+  bom: [
+    ['WW-RAMA', 'Rama spawana wózka', 1, 'Pallet', 5, ids[0], 120],
+    ['WW-KOLA', 'Zestaw 4 kół skrętnych z hamulcem', 1, 'BoxKLT', 10, ids[0], 45],
+    ['WW-POLKI', 'Zestaw 3 półek blaszanych z rantem', 1, 'Pallet', 10, ids[1], 75],
+    ['WW-SRUBY', 'Zestaw łączników i śrub M8', 1, 'BoxKLT', 50, ids[1], 15],
+    ['WW-UCHWYT', 'Uchwyt transportowy z osłoną', 1, 'BoxKLT', 20, ids[2], 25],
+    ['WW-WIESZ', 'Listwa boczna z wieszakami narzędziowymi', 1, 'BoxKLT', 25, ids[2], 30],
+    ['WW-OPAK', 'Karton ochronny i narożniki piankowe', 1, 'Carton', 10, ids[3], 18]
+  ].map((b, i) => ({
+    id: `BOM-${i + 1}`,
+    partNumber: b[0],
+    name: b[1],
+    quantityPerUnit: b[2],
+    container: b[3],
+    packageQuantity: b[4],
+    associatedProcessStepId: b[5],
+    unitCost: b[6]
+  })),
+  layoutObjects: ids.map((_, i) => ({
+    id: `WW-TABLE-${i + 1}`,
+    name: `Stół S${i + 1} — ${names[i]}`,
+    type: 'Table',
+    workstationId: `WS-${i + 1}`,
+    xMm: 1200 + i * 2600,
+    yMm: 2500,
+    zMm: 0,
+    widthMm: 1500,
+    lengthMm: 900,
+    heightMm: 850,
+    rotationDeg: 0,
+    colorHex: '#3979a8',
+    isVisualAssumption: true
+  }))
+}));
+
+const originalJson = JSON.stringify(source4);
+let index = 0;
+const base = api.prepareDomainMigration(api.previewDomainMigrationFromV4(originalJson, () => stations[index++])).project;
+
+base.workers = [
+  {id: 'WW-W1', name: 'Jan Monter (konstrukcja)'},
+  {id: 'WW-W2', name: 'Adam Mechanik (konstrukcja i montaż)'},
+  {id: 'WW-W3', name: 'Piotr Wyposażeniowiec (osprzęt)'},
+  {id: 'WW-W4', name: 'Ewa Kontroler (kontrola i pakowanie)'},
+  {id: 'WW-W5', name: 'Marek Monter wspierający (rezerwa/wsparcie)'}
+];
+
+base.workerPools = [
+  {id: 'WW-P-MECH', name: 'Zespół mechaniczny', workerIds: ['WW-W1', 'WW-W2', 'WW-W5']},
+  {id: 'WW-P-FIT', name: 'Zespół wyposażenia', workerIds: ['WW-W3']},
+  {id: 'WW-P-QC', name: 'Zespół kontroli jakości', workerIds: ['WW-W4']}
+];
+
+base.product = {id: 'WW-PRODUCT', name: 'Wózek warsztatowy — wyrób syntetyczny'};
+
+// Staffing with time variants: OP20 has 1 worker (80s) or 2 workers (45s)
+base.operations.forEach((op, i) => {
+  const dur = durations[i];
+  const profile1 = {
+    durationSeconds: dur,
+    durationBasis: 'assumed',
+    manualWork: [{startSeconds: 0, endSeconds: dur, basis: 'assumed'}],
+    machineRun: [],
+    operatorPresence: [{startSeconds: 0, endSeconds: dur, basis: 'assumed'}]
+  };
+  op.timeProfile = structuredClone(profile1);
+  op.physicalRole = {kind: 'body-work'};
+  if (op.id === 'WW-OP20') {
+    const profile2 = {
+      durationSeconds: 45,
+      durationBasis: 'assumed',
+      manualWork: [{startSeconds: 0, endSeconds: 45, basis: 'assumed'}],
+      machineRun: [],
+      operatorPresence: [{startSeconds: 0, endSeconds: 45, basis: 'assumed'}]
+    };
+    op.staffing = {
+      requiredWorkers: 1,
+      timeVariants: [
+        {workerCount: 1, timeProfile: profile1},
+        {workerCount: 2, timeProfile: profile2}
+      ]
+    };
+  } else {
+    op.staffing = {
+      requiredWorkers: 1,
+      timeVariants: [{workerCount: 1, timeProfile: profile1}]
+    };
+  }
+});
+
+base.stations.forEach((s, i) => {
+  s.name = `S${i + 1} — ${names[i]}`;
+});
+
+const calendar = {shifts: [{startSeconds: 0, endSeconds: 28800, basis: 'assumed'}], breaks: []};
+base.resourceCalendars = {
+  workers: Object.fromEntries(base.workers.map(w => [w.id, structuredClone(calendar)])),
+  stations: Object.fromEntries(stations.map(id => [id, structuredClone(calendar)]))
+};
+
+// Base worker selection: 4 workers on 4 stations
+base.workerRunSelection = {
+  teamWorkerIds: ['WW-W1', 'WW-W2', 'WW-W3', 'WW-W4'],
+  operations: [
+    {operationId: ids[0], workerCount: 1, eligibleWorkerIds: ['WW-W1']},
+    {operationId: ids[1], workerCount: 1, eligibleWorkerIds: ['WW-W2']},
+    {operationId: ids[2], workerCount: 1, eligibleWorkerIds: ['WW-W3']},
+    {operationId: ids[3], workerCount: 1, eligibleWorkerIds: ['WW-W4']}
+  ]
+};
+
+base.equipment = [
+  ...stations.map((stationId, i) => ({
+    id: `WW-EQ${i + 1}`,
+    name: `Stół montażowy S${i + 1}`,
+    stationId,
+    layoutObjectId: `WW-TABLE-${i + 1}`,
+    capableOperationIds: [ids[i]]
+  })),
+  {id: 'WW-CART-1', name: 'Wózek transferowy T1 (S1 -> S2)'},
+  {id: 'WW-CART-2', name: 'Wózek transferowy T2 (S2 -> S3)'},
+  {id: 'WW-CART-3', name: 'Wózek transferowy T3 (S3 -> S4)'}
+];
+
+base.stationRouting = {
+  selectionRule: 'earliest-start-then-shortest-route',
+  equipmentPlacements: stations.map((stationId, i) => ({
+    equipmentId: `WW-EQ${i + 1}`,
+    stationId,
+    copy: 1
+  })),
+  operations: ids.map((operationId, i) => ({
+    operationId,
+    candidates: [{stationId: stations[i], copy: 1, requiredEquipmentIds: [`WW-EQ${i + 1}`]}]
+  })),
+  routes: [
+    {
+      id: 'WW-R1-2',
+      from: {stationId: stations[0], copy: 1},
+      to: {stationId: stations[1], copy: 1},
+      distanceMm: 2600,
+      basis: 'confirmed',
+      source: 'Rzut hali 2D — odległość osi stołów',
+      transportTime: {durationSeconds: 10, basis: 'assumed', source: 'Przejazd wózka montażowego ze zwalnianiem'}
+    },
+    {
+      id: 'WW-R2-3',
+      from: {stationId: stations[1], copy: 1},
+      to: {stationId: stations[2], copy: 1},
+      distanceMm: 2600,
+      basis: 'confirmed',
+      source: 'Rzut hali 2D — odległość osi stołów',
+      transportTime: {durationSeconds: 10, basis: 'assumed', source: 'Przejazd wózka montażowego ze zwalnianiem'}
+    },
+    {
+      id: 'WW-R3-4',
+      from: {stationId: stations[2], copy: 1},
+      to: {stationId: stations[3], copy: 1},
+      distanceMm: 2600,
+      basis: 'confirmed',
+      source: 'Rzut hali 2D — odległość osi stołów',
+      transportTime: {durationSeconds: 10, basis: 'assumed', source: 'Przejazd wózka montażowego ze zwalnianiem'}
+    }
+  ]
+};
+
+base.stationBuffers = {
+  buffers: stations.map((stationId, i) => ({
+    stationId,
+    copy: 1,
+    inputCapacity: 2,
+    outputCapacity: i === 3 ? null : 2,
+    blockingPolicy: 'bbas-worker-released'
+  }))
+};
+
+base.competencyRequirements = {
+  competencies: [
+    {id: 'WW-C-MECH', name: 'Montaż konstrukcyjny i mechaniczny'},
+    {id: 'WW-C-FIT', name: 'Montaż wyposażenia i detali'},
+    {id: 'WW-C-QC', name: 'Kontrola jakości i odbiór'}
+  ],
+  workers: [
+    {workerId: 'WW-W1', competencyIds: ['WW-C-MECH']},
+    {workerId: 'WW-W2', competencyIds: ['WW-C-MECH', 'WW-C-FIT']},
+    {workerId: 'WW-W3', competencyIds: ['WW-C-FIT']},
+    {workerId: 'WW-W4', competencyIds: ['WW-C-QC']},
+    {workerId: 'WW-W5', competencyIds: ['WW-C-MECH', 'WW-C-FIT']}
+  ],
+  operations: [
+    {operationId: ids[0], requiredCompetencyIds: ['WW-C-MECH']},
+    {operationId: ids[1], requiredCompetencyIds: ['WW-C-MECH']},
+    {operationId: ids[2], requiredCompetencyIds: ['WW-C-FIT']},
+    {operationId: ids[3], requiredCompetencyIds: ['WW-C-QC']}
+  ]
+};
+
+base.materialSupply = {
+  items: [
+    {
+      id: 'SUP-RAMA',
+      componentId: 'WW-RAMA',
+      targetStationId: stations[0],
+      initialStock: 10,
+      unit: 'szt.',
+      schedule: {kind: 'periodic', batchQuantity: 10, intervalSeconds: 900, firstDeliverySeconds: 900},
+      source: 'Dostawa paletowa z magazynu konstrukcji'
+    },
+    {
+      id: 'SUP-KOLA',
+      componentId: 'WW-KOLA',
+      targetStationId: stations[0],
+      initialStock: 10,
+      unit: 'kpl.',
+      schedule: {kind: 'periodic', batchQuantity: 10, intervalSeconds: 900, firstDeliverySeconds: 900},
+      source: 'KLT z magazynu komponentów znormalizowanych'
+    },
+    {
+      id: 'SUP-POLKI',
+      componentId: 'WW-POLKI',
+      targetStationId: stations[1],
+      initialStock: 10,
+      unit: 'kpl.',
+      schedule: {kind: 'periodic', batchQuantity: 10, intervalSeconds: 900, firstDeliverySeconds: 900},
+      source: 'Dostawa półek z wydziału gięcia'
+    },
+    {
+      id: 'SUP-UCHWYT',
+      componentId: 'WW-UCHWYT',
+      targetStationId: stations[2],
+      initialStock: 10,
+      unit: 'kpl.',
+      schedule: {kind: 'periodic', batchQuantity: 10, intervalSeconds: 900, firstDeliverySeconds: 900},
+      source: 'Pojemniki KLT z osprzętem montażowym'
+    },
+    {
+      id: 'SUP-OPAK',
+      componentId: 'WW-OPAK',
+      targetStationId: stations[3],
+      initialStock: 10,
+      unit: 'kpl.',
+      schedule: {kind: 'periodic', batchQuantity: 10, intervalSeconds: 900, firstDeliverySeconds: 900},
+      source: 'Kartonage z magazynu opakowań'
+    }
+  ],
+  consumptions: [
+    {operationId: ids[0], supplyId: 'SUP-RAMA', quantity: 1, source: 'Pobranie ramy na start OP10'},
+    {operationId: ids[0], supplyId: 'SUP-KOLA', quantity: 1, source: 'Pobranie kompletu 4 kół na start OP10'},
+    {operationId: ids[1], supplyId: 'SUP-POLKI', quantity: 1, source: 'Pobranie 3 półek na start OP20'},
+    {operationId: ids[2], supplyId: 'SUP-UCHWYT', quantity: 1, source: 'Pobranie uchwytu na start OP30'},
+    {operationId: ids[3], supplyId: 'SUP-OPAK', quantity: 1, source: 'Pobranie opakowania na start OP40'}
+  ]
+};
+
+api.parseDomainProjectV6(JSON.stringify(base));
+
+// Balanced variant: 2 workers on bottleneck OP20 (W2 and W5)
+const balanced = structuredClone(base);
+balanced.workerRunSelection.teamWorkerIds = ['WW-W1', 'WW-W2', 'WW-W3', 'WW-W4', 'WW-W5'];
+balanced.workerRunSelection.operations[1] = {
+  operationId: ids[1],
+  workerCount: 2,
+  eligibleWorkerIds: ['WW-W2', 'WW-W5']
+};
+
+api.parseDomainProjectV6(JSON.stringify(balanced));
+
+const values = {};
+const port = {
+  getItem: k => values[k] ?? null,
+  setItem: (k, v) => { values[k] = v; },
+  removeItem: k => { delete values[k]; }
+};
+
+api.saveDomainDraft(port, {project: base, originalJson}, null, at);
+for (const [id, name, category, project] of [
+  ['INTERMEDIATE-BASE', 'Baza — 4 stanowiska / 4 osoby / wąskie gardło OP20 (80s)', 'baseline', base],
+  ['INTERMEDIATE-BALANCED', 'Zbalansowany — wsparcie OP20 2-osobowe (45s) / takt 60s', 'additional-worker', balanced]
+]) {
+  api.saveDomainVariant(port, {id, name, category, project, originalJson, at}, port.getItem(api.DOMAIN_VARIANTS_STORAGE_KEY));
+}
+
+const pkg = api.makeProjectPackage(port, {dataOrigin: 'synthetic', at});
+
+const files = new Map();
+const json = (path, data) => files.set(path, Buffer.from(JSON.stringify(data, null, 2) + '\n'));
+
+json('projekt-pokazowy.json', pkg);
+json('dane/zrodlo4.json', source4);
+json('dane/szkic6.json', JSON.parse(pkg.data.draftRaw));
+json('dane/warianty6.json', JSON.parse(pkg.data.variantsRaw));
+json('dane/warunki_eksperymentu.json', {
+  dataOrigin: 'synthetic',
+  batch: 3,
+  arrivalIntervalSeconds: 1,
+  transportMode: 'just-in-time',
+  initialArrivalsSeconds: [0, 1, 2],
+  materialAvailability: 'explicit-material-supply-configured-with-initial-stock',
+  physicalBodyLocations: 'linear buffered model with explicit capacities',
+  transportRoutesAndDurations: 'inter-station routes 2600mm / 10s declared in routing',
+  bufferModel: 'explicit linear buffers: input=2, output=2, final output=null; policy=bbas-worker-released',
+  materialDeliveries: 'periodic 10 pcs every 900s; initialStock=10 covers batch 3 without starving',
+  competencyCoverage: '3 competencies (WW-C-MECH, WW-C-FIT, WW-C-QC) fully satisfied by assigned workers',
+  costAssumptions: null,
+  stochasticConfig: null,
+  calendarWindowSeconds: [0, 28800],
+  calendarBreaks: [],
+  sourceOfProductionMeasurements: 'none — designed teaching example for intermediate complexity',
+  sessionSettingsMustBeSelectedInUI: true
+});
+
+for (const [kind, rows, docs] of [
+  ['proces', api.processRows(base.operations), api.PROCESS_COLUMN_DOCS],
+  ['bom', api.bomRows(base.bom), api.BOM_COLUMN_DOCS]
+]) {
+  const book = XLSX.utils.book_new();
+  book.Props = {Title: `DEMO syntetyczne: ${kind}`, Author: 'Layout Studio Pro', CreatedDate: new Date(at), ModifiedDate: new Date(at)};
+  const sheet = XLSX.utils.json_to_sheet(rows);
+  sheet['!cols'] = Object.keys(rows[0]).map(key => ({wch: key.includes('Nazwa') ? 43 : Math.max(key.length + 2, 18)}));
+  sheet['!autofilter'] = {ref: sheet['!ref']};
+  XLSX.utils.book_append_sheet(book, sheet, 'Dane');
+  XLSX.utils.book_append_sheet(book, XLSX.utils.json_to_sheet(docs), 'Opis kolumn');
+  XLSX.utils.book_append_sheet(book, XLSX.utils.json_to_sheet([
+    {Pole: 'Pochodzenie', Wartosc: 'Dane syntetyczne, brak pomiarów produkcyjnych'},
+    {Pole: 'Jednostki', Wartosc: 'Czas s, geometria mm, koszty PLN'},
+    {Pole: 'Pełny projekt', Wartosc: 'Wczytaj projekt-pokazowy.json przez Pakiet projektu; sam arkusz nie odtwarza zasobów ani wariantów'}
+  ]), 'Pochodzenie');
+  files.set(`dane/${kind}.xlsx`, Buffer.from(XLSX.write(book, {type: 'buffer', bookType: 'xlsx', compression: true})));
+}
+
+// Markdown and reference documents
+const slownikPolMd = `# Słownik pól i jednostek — Projekt średni: Wózek warsztatowy
+
+Pochodzenie danych: **syntetyczne**. Projekt demonstracyjny poziomu średniego (7.12.C) przygotowany zgodnie ze standardem 7.12.A.
+
+## Jednostki miar
+
+| Wielkość | Jednostka | Uwagi |
+| --- | --- | --- |
+| Czas | sekundy [s] | Wewnętrzny format wszystkich czasów w silniku symulacji |
+| Geometria / Długość | milimetry [mm] | Koordynaty 2D/3D, odległości między stołami, gabaryty wyposażenia |
+| Zdolność produkcyjna | [szt./h] | Zdolność nominalna: $3600 / \\text{takt}$ |
+| Waluta / Koszty | PLN | Koszty jednostkowe komponentów BOM |
+
+## Struktura procesu i operacji
+
+- **WW-OP10** — *Montaż ramy dolnej i kół skrętnych*: czas standardowy 60 s (VA 48 s, NVA 12 s). Wymagana kompetencja: \`WW-C-MECH\`.
+- **WW-OP20** — *Montaż półek i burt wózka*:
+  - Obsada 1 osoba: czas standardowy 80 s (VA 65 s, NVA 15 s) — wąskie gardło wariantu bazowego.
+  - Obsada 2 osoby: czas standardowy 45 s (VA 36 s, NVA 9 s) — zbalansowany wariant reorganizacji.
+  - Wymagana kompetencja: \`WW-C-MECH\`.
+- **WW-OP30** — *Montaż uchwytu ergonomicznego i akcesoriów*: czas standardowy 50 s (VA 40 s, NVA 10 s). Wymagana kompetencja: \`WW-C-FIT\`.
+- **WW-OP40** — *Kontrola odbiorcza, próba toczenia i pakowanie*: czas standardowy 40 s (VA 32 s, NVA 8 s). Wymagana kompetencja: \`WW-C-QC\`.
+
+## Zespoły, pracownicy i kompetencje
+
+- **WW-C-MECH** (Montaż mechaniczny / konstrukcyjny): posiadają \`WW-W1\`, \`WW-W2\`, \`WW-W5\`.
+- **WW-C-FIT** (Montaż wyposażenia i detali): posiadają \`WW-W2\`, \`WW-W3\`, \`WW-W5\`.
+- **WW-C-QC** (Kontrola jakości i odbiór): posiada \`WW-W4\`.
+
+## Buforowanie i zaopatrzenie materiałowe
+
+- **Pojemności buforów**: wejście 2 szt., wyjście 2 szt. Polityka: \`bbas-worker-released\` (operator zwalniany po zakończeniu pracy nawet przy zablokowanym wyjściu).
+- **Zaopatrzenie**: 5 zdefiniowanych pozycji materiałowych z zapasem początkowym 10 szt. i harmonogramem dostaw co 900 s.
+`;
+
+const oczekiwaneWynikiJson = {
+  referenceVersion: 1,
+  dataOrigin: "synthetic",
+  method: "Ręczny rachunek zdarzeń i stanów dla 4-stanowiskowej linii montażu wózka warsztatowego; autor: Antigravity Codex, 2026-10-24. Obliczenia analityczne wyznaczone niezależnie od silnika symulacji.",
+  conditions: {"batch": 3, "arrivalIntervalSeconds": 1, "transportMode": "just-in-time"},
+  units: {"time": "s", "capacity": "szt./h", "cost": "PLN/szt."},
+  absoluteToleranceSeconds: 0.000000001,
+  bufferModel: "Jawne bufory: wejścia 2 szt., wyjścia 2 szt., końcowe wyjście null; polityka bbas-worker-released.",
+  customerTaktSeconds: 180,
+  targetCycleSeconds: 80,
+  workContentSecondsBase: 230,
+  workContentSecondsBalanced: 240,
+  bomCostPerUnit: 328,
+  variants: [
+    {
+      id: "INTERMEDIATE-BASE",
+      activeStations: 4,
+      selectedWorkers: 4,
+      bottleneckStationId: "ST-WW-2",
+      bottleneckCycleSeconds: 80,
+      staticCapacityPerHour: 45,
+      batchMakespanSeconds: 390,
+      completionSeconds: [230, 310, 390],
+      operationWindows: [
+        [1, "WW-OP10", 0, 60], [1, "WW-OP20", 60, 140], [1, "WW-OP30", 140, 190], [1, "WW-OP40", 190, 230],
+        [2, "WW-OP10", 60, 120], [2, "WW-OP20", 140, 220], [2, "WW-OP30", 220, 270], [2, "WW-OP40", 270, 310],
+        [3, "WW-OP10", 120, 180], [3, "WW-OP20", 220, 300], [3, "WW-OP30", 300, 350], [3, "WW-OP40", 350, 390]
+      ]
+    },
+    {
+      id: "INTERMEDIATE-BALANCED",
+      activeStations: 4,
+      selectedWorkers: 5,
+      bottleneckStationId: "ST-WW-1",
+      bottleneckCycleSeconds: 60,
+      staticCapacityPerHour: 60,
+      batchMakespanSeconds: 315,
+      completionSeconds: [195, 255, 315],
+      operationWindows: [
+        [1, "WW-OP10", 0, 60], [1, "WW-OP20", 60, 105], [1, "WW-OP30", 105, 155], [1, "WW-OP40", 155, 195],
+        [2, "WW-OP10", 60, 120], [2, "WW-OP20", 120, 165], [2, "WW-OP30", 165, 215], [2, "WW-OP40", 215, 255],
+        [3, "WW-OP10", 120, 180], [3, "WW-OP20", 180, 225], [3, "WW-OP30", 225, 275], [3, "WW-OP40", 275, 315]
+      ]
+    }
+  ]
+};
+
+const obliczeniaMd = `# Niezależny analityczny rachunek wzorcowy — Projekt średni
+
+Data: **2026-10-24**. Autor: **Antigravity Codex**.
+Projekt: **02_wozek_warsztatowy** (poziom intermediate, 7.12.C).
+
+Obliczenia wyprowadzono ręcznie na podstawie prawideł inżynierii przemysłowej i teorii kolejek, całkowicie niezależnie od kodu symulatora aplikacji.
+
+## 1. Popyt, czas dostępny i takt klienta
+
+- Roczne zapotrzebowanie: $D = 40\\,000$ szt./rok.
+- Dni robocze: $250$ dni/rok $\\rightarrow$ popyt dzienny: $40\\,000 / 250 = 160$ szt./dzień.
+- Czas dostępny: $1$ zmiana $\\times 8$ h $= 28\\,800$ s/dzień.
+- **Takt klienta (Takt Time)**:
+  $$TT = \\frac{28\\,800\\text{ s}}{160\\text{ szt.}} = 180\\text{ s/szt.}$$
+  Oba warianty montażu bez trudu pokrywają zapotrzebowanie klienta z dużym marginesem bezpieczeństwa.
+
+## 2. Wariant Bazowy (INTERMEDIATE-BASE)
+
+- **Obsada**: 4 pracowników jednoosobowo na 4 stanowiskach:
+  - $S_1$ (OP10): $60$ s (Jan Monter, kompetencja WW-C-MECH)
+  - $S_2$ (OP20): $80$ s (Adam Mechanik, kompetencja WW-C-MECH) — **wąskie gardło linii**
+  - $S_3$ (OP30): $50$ s (Piotr Wyposażeniowiec, kompetencja WW-C-FIT)
+  - $S_4$ (OP40): $40$ s (Ewa Kontroler, kompetencja WW-C-QC)
+- **Czas cyklu linii (takt nominalny)**:
+  $$CT_{\\text{base}} = \\max(60, 80, 50, 40) = 80\\text{ s/szt.}$$
+- **Nominalna zdolność produkcyjna**:
+  $$Cap_{\\text{base}} = \\frac{3600}{80} = 45\\text{ szt./h}$$
+- **Czas przejścia pierwszej sztuki (Lead Time)**:
+  $$LT_1 = 60 + 80 + 50 + 40 = 230\\text{ s}$$
+- **Czas realizacji partii $N=3$ sztuki**:
+  Kolejne sztuki opuszczają wąskie gardło co $80$ s:
+  - Sztuka 1: $230$ s
+  - Sztuka 2: $230 + 80 = 310$ s
+  - Sztuka 3: $310 + 80 = 390$ s
+  - Makespan partii 3 sztuk: **390 s**.
+
+## 3. Wariant Zbalansowany (INTERMEDIATE-BALANCED)
+
+- **Reorganizacja**: Do wąskiego gardła OP20 przydzielono drugiego pracownika (Marek Monter wspierający, WW-W5).
+- **Czasy operacji**:
+  - $S_1$ (OP10): $60$ s (1 monter) — **nowe wąskie gardło**
+  - $S_2$ (OP20): $45$ s (2 monterów wspólnie)
+  - $S_3$ (OP30): $50$ s (1 monter)
+  - $S_4$ (OP40): $40$ s (1 kontroler)
+- **Nowy czas cyklu linii**:
+  $$CT_{\\text{bal}} = \\max(60, 45, 50, 40) = 60\\text{ s/szt.}$$
+- **Nominalna zdolność produkcyjna**:
+  $$Cap_{\\text{bal}} = \\frac{3600}{60} = 60\\text{ szt./h} \\quad (+33,3\\%)$$
+- **Czas przejścia pierwszej sztuki**:
+  $$LT_1 = 60 + 45 + 50 + 40 = 195\\text{ s} \\quad (-35\\text{ s})$$
+- **Czas realizacji partii $N=3$ sztuki**:
+  Kolejne sztuki opuszczają nowe wąskie gardło co $60$ s:
+  - Sztuka 1: $195$ s
+  - Sztuka 2: $195 + 60 = 255$ s
+  - Sztuka 3: $255 + 60 = 315$ s
+  - Makespan partii 3 sztuk: **315 s** (skrócenie o $75$ s, czyli $19,2\\%$).
+`;
+
+const readmeMd = `# Projekt pokazowy średni — Montaż wózka warsztatowego 3-półkowego
+
+Pakiet demonstracyjny: \`02_wozek_warsztatowy\`
+Wersja: **1.0.0**
+Pochodzenie danych: **jawnie syntetyczne** (dane demonstracyjno-dydaktyczne, brak pomiarów produkcyjnych)
+Identyfikator: \`DEMO-WOZEK-WARSZTATOWY-1\`
+Zgodność: **Layout Studio Pro 3D v0.4.0+**
+
+## Cel i zakres demonstracji
+
+Pakiet reprezentuje średni poziom złożoności (**intermediate**) i demonstruje:
+1. **Wielowariantową obsadę i czasy zespołowe**: operacja OP20 posiada zdefiniowane warianty obsady — 1 pracownik (80 s) oraz zespół 2-osobowy (45 s).
+2. **Macierz kompetencji personelu**: trzej pracownicy montażu mechanicznego, jeden montażysta wyposażenia i kontroler jakości. Zespół zbalansowany angażuje pracownika wielozadaniowego.
+3. **Zaopatrzenie materiałowe i bufory**: jawne zapasy początkowe komponentów, zużycie atomowe na operacjach oraz bufory stanowiskowe z polityką \`bbas-worker-released\`.
+4. **Porównanie wariantów**: wariant bazowy (wąskie gardło na montażu półek, takt 80 s) vs wariant zreorganizowany z obsadą 2-osobową (nowy takt 60 s, wzrost wydajności o +33,3%).
+
+## Zawartość katalogu
+
+- \`projekt-pokazowy.json\` — główny plik pakietu (importowany przez przycisk **Pakiet projektu**).
+- \`manifest.json\` — inwentarz pakietu z sumami kontrolnymi SHA-256.
+- \`dane/proces.xlsx\` — arkusz procesu technologicznego z czasami VA/NVA.
+- \`dane/bom.xlsx\` — zestawienie materiałowe z cenami i pojemnikami magazynowymi.
+- \`dane/szkic6.json\`, \`dane/warianty6.json\`, \`dane/zrodlo4.json\` — projekcje danych JSON.
+- \`dane/warunki_eksperymentu.json\` — zalecane parametry sesji symulacji.
+- \`dane/slownik_pol.md\` — słownik pojęć, jednostek i kompetencji.
+- \`referencje/oczekiwane_wyniki.json\`, \`referencje/obliczenia.md\` — niezależny analityczny wzorzec wyników.
+
+## Instrukcja uruchomienia w aplikacji
+
+1. W aplikacji kliknij **Pakiet projektu** i wczytaj plik \`projekt-pokazowy.json\`.
+2. Pobierz automatyczną kopię ratunkową i zatwierdź import.
+3. W module **Symulacja**:
+   - Ustaw partię: **3 sztuki**.
+   - Odstęp przybyć: **1 s**.
+4. Wybierz wariant **INTERMEDIATE-BASE** i uruchom symulację. Zwróć uwagę na czas zakończenia partii: **390 s** oraz obciążenie stanowiska S2.
+5. Przełącz na wariant **INTERMEDIATE-BALANCED** i ponów symulację. Czas partii spada do **315 s**, a obciążenie stacji ulega zrównoważeniu.
+6. Przejdź do modułu **Porównanie wariantów**, aby wyświetlić tabelę syntezy i pobrać raport.
+`;
+
+files.set('README.md', Buffer.from((readmeMd+'\n\n## Zakres odbioru\n\nPodane wyniki są procesowe: jawny tryb just-in-time z założoną dostępnością materiałów. Nie stanowią odbioru fizycznych przejazdów, rezerwacji wózków, rzeczywistych zapasów/dostaw ani blokowania fizycznego przepływu. Konfiguracja zasobów wymaga osobnego odbioru bez JIT przed użyciem jako wzorzec fizyczny. Główne widoki projektu 4 i warsztat 6 mają oddzielne źródła; wyniki wariantów odczytuj w warsztacie.\n').replace(/\r\n/g, '\n')));
+files.set('dane/slownik_pol.md', Buffer.from(slownikPolMd.replace(/\r\n/g, '\n')));
+files.set('referencje/oczekiwane_wyniki.json', Buffer.from(JSON.stringify(oczekiwaneWynikiJson, null, 2) + '\n'));
+files.set('referencje/obliczenia.md', Buffer.from(obliczeniaMd.replace(/\r\n/g, '\n')));
+
+const hash = bytes => createHash('sha256').update(bytes).digest('hex');
+const roles = {
+  'projekt-pokazowy.json': 'entry-project-package',
+  'README.md': 'instructions',
+  'dane/slownik_pol.md': 'field-dictionary',
+  'referencje/oczekiwane_wyniki.json': 'independent-reference',
+  'referencje/obliczenia.md': 'independent-calculation',
+  'dane/warunki_eksperymentu.json': 'session-settings-reference'
+};
+
+json('manifest.json', {
+  format: 'layout-studio-demo-manifest',
+  formatVersion: 1,
+  packageId: projectId,
+  packageVersion: '1.0.0',
+  title: source4.name,
+  level: 'intermediate',
+  language: 'pl',
+  compatibleAppVersion: '0.4.0',
+  importer: {format: api.PROJECT_PACKAGE_FORMAT, formatVersion: 1},
+  dataOrigin: 'synthetic',
+  units: {time: 's', geometry: 'mm', currency: 'PLN'},
+  entryFile: 'projekt-pokazowy.json',
+  variants: ['INTERMEDIATE-BASE', 'INTERMEDIATE-BALANCED'],
+  assets: {externalFiles: [], appearance: 'built-in Table geometry, synthetic dimensions; no external downloads'},
+  files: [...files].map(([path, bytes]) => ({
+    path,
+    role: roles[path] ?? (path.endsWith('.xlsx') ? 'spreadsheet-template' : 'data-projection'),
+    format: path.split('.').pop(),
+    bytes: bytes.length,
+    sha256: hash(bytes)
+  }))
+});
+
+for (const [path, bytes] of files) {
+  const target = resolve(out, path);
+  if (check) {
+    if (!readFileSync(target).equals(bytes)) throw new Error(`Nieaktualny plik: ${path}`);
+  } else {
+    mkdirSync(dirname(target), {recursive: true});
+    writeFileSync(target, bytes);
+  }
+}
+
+console.log(`${check ? 'PASS reproducibility' : 'Generated'} 7.12.C1: ${files.size} files, synthetic intermediate example; independent references preserved, scheduler not invoked`);

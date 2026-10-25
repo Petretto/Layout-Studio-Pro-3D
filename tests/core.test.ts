@@ -76,6 +76,14 @@ import { exportToDxf } from '../src/core/export/dxfExporter';
 import { parseDxfImport, applyDxfImportToProject, DXF_UNITS } from '../src/core/export/dxfImporter';
 import { parseProject,processErrors,topologicalSort,validateProject } from '../src/core/validation';
 import { derive, newProject, engineeringReport } from '../src/core/project';
+test('7.13: nowy dokument jest pusty, niezależny i nie zawiera danych demonstracyjnych',()=>{
+  const first=newProject(),second=newProject();
+  assert.notEqual(first.id,second.id);assert.equal(first.schemaVersion,4);
+  for(const p of [first,second])for(const key of ['processSteps','bom','layoutObjects','obstacles'] as const)assert.deepEqual(p[key],[]);
+  first.facility.widthMm=100;assert.notEqual(second.facility.widthMm,100);
+  first.layoutSettings!.tableWidthMm=100;assert.notEqual(second.layoutSettings!.tableWidthMm,100);
+  assert.equal(second.name,'Nowy projekt linii');assert.equal(second.currency,'PLN');
+});
 import {applyEquipmentAppearance,EQUIPMENT_VISUAL_MODELS} from '../src/core/equipment/equipmentAppearance';
 import {createConceptVisual} from '../src/core/equipment/conceptVisual';
 import { deriveStationProject } from '../src/core/stationDerivation';

@@ -1,0 +1,1070 @@
+{
+  "kind": "domain-draft-save",
+  "version": 1,
+  "sourceSchemaVersion": 4,
+  "originalJson": "{\"schemaVersion\":4,\"id\":\"DEMO-WOZEK-WARSZTATOWY-1\",\"name\":\"Wózek warsztatowy 3-półkowy — DEMO syntetyczne\",\"createdAt\":\"2026-10-24T00:00:00.000Z\",\"updatedAt\":\"2026-10-24T00:00:00.000Z\",\"timeUnit\":\"s\",\"algorithm\":\"Manual\",\"currency\":\"PLN\",\"targetLayoutType\":\"Linear\",\"layoutMode\":\"manual\",\"layoutSettings\":{\"tableWidthMm\":1500,\"tableLengthMm\":900,\"spacingMm\":1000,\"aisleMm\":1800},\"facility\":{\"widthMm\":12000,\"lengthMm\":8000,\"heightMm\":3500,\"gridSizeMm\":100,\"isConfirmed\":false},\"obstacles\":[],\"demand\":{\"yearlyDemand\":40000,\"workingDaysPerYear\":250,\"shiftsPerDay\":1,\"hoursPerShift\":8,\"plannedBreaksMinutesPerShift\":0,\"oeePercent\":100},\"processSteps\":[{\"id\":\"WW-OP10\",\"name\":\"Montaż ramy dolnej i kół skrętnych\",\"standardTimeSeconds\":60,\"vaTimeSeconds\":48,\"nvaTimeSeconds\":12,\"sequenceNumber\":1,\"predecessorIds\":[],\"assignedWorkstationId\":\"WS-1\"},{\"id\":\"WW-OP20\",\"name\":\"Montaż półek i burt wózka\",\"standardTimeSeconds\":80,\"vaTimeSeconds\":65,\"nvaTimeSeconds\":15,\"sequenceNumber\":2,\"predecessorIds\":[\"WW-OP10\"],\"assignedWorkstationId\":\"WS-2\"},{\"id\":\"WW-OP30\",\"name\":\"Montaż uchwytu ergonomicznego i akcesoriów\",\"standardTimeSeconds\":50,\"vaTimeSeconds\":40,\"nvaTimeSeconds\":10,\"sequenceNumber\":3,\"predecessorIds\":[\"WW-OP20\"],\"assignedWorkstationId\":\"WS-3\"},{\"id\":\"WW-OP40\",\"name\":\"Kontrola odbiorcza, próba toczenia i pakowanie\",\"standardTimeSeconds\":40,\"vaTimeSeconds\":32,\"nvaTimeSeconds\":8,\"sequenceNumber\":4,\"predecessorIds\":[\"WW-OP30\"],\"assignedWorkstationId\":\"WS-4\"}],\"workstationSettings\":{\"[\\\"WW-OP10\\\"]\":{\"operators\":1,\"parallelStations\":1},\"[\\\"WW-OP20\\\"]\":{\"operators\":1,\"parallelStations\":1},\"[\\\"WW-OP30\\\"]\":{\"operators\":1,\"parallelStations\":1},\"[\\\"WW-OP40\\\"]\":{\"operators\":1,\"parallelStations\":1}},\"bom\":[{\"id\":\"BOM-1\",\"partNumber\":\"WW-RAMA\",\"name\":\"Rama spawana wózka\",\"quantityPerUnit\":1,\"container\":\"Pallet\",\"packageQuantity\":5,\"associatedProcessStepId\":\"WW-OP10\",\"unitCost\":120},{\"id\":\"BOM-2\",\"partNumber\":\"WW-KOLA\",\"name\":\"Zestaw 4 kół skrętnych z hamulcem\",\"quantityPerUnit\":1,\"container\":\"BoxKLT\",\"packageQuantity\":10,\"associatedProcessStepId\":\"WW-OP10\",\"unitCost\":45},{\"id\":\"BOM-3\",\"partNumber\":\"WW-POLKI\",\"name\":\"Zestaw 3 półek blaszanych z rantem\",\"quantityPerUnit\":1,\"container\":\"Pallet\",\"packageQuantity\":10,\"associatedProcessStepId\":\"WW-OP20\",\"unitCost\":75},{\"id\":\"BOM-4\",\"partNumber\":\"WW-SRUBY\",\"name\":\"Zestaw łączników i śrub M8\",\"quantityPerUnit\":1,\"container\":\"BoxKLT\",\"packageQuantity\":50,\"associatedProcessStepId\":\"WW-OP20\",\"unitCost\":15},{\"id\":\"BOM-5\",\"partNumber\":\"WW-UCHWYT\",\"name\":\"Uchwyt transportowy z osłoną\",\"quantityPerUnit\":1,\"container\":\"BoxKLT\",\"packageQuantity\":20,\"associatedProcessStepId\":\"WW-OP30\",\"unitCost\":25},{\"id\":\"BOM-6\",\"partNumber\":\"WW-WIESZ\",\"name\":\"Listwa boczna z wieszakami narzędziowymi\",\"quantityPerUnit\":1,\"container\":\"BoxKLT\",\"packageQuantity\":25,\"associatedProcessStepId\":\"WW-OP30\",\"unitCost\":30},{\"id\":\"BOM-7\",\"partNumber\":\"WW-OPAK\",\"name\":\"Karton ochronny i narożniki piankowe\",\"quantityPerUnit\":1,\"container\":\"Carton\",\"packageQuantity\":10,\"associatedProcessStepId\":\"WW-OP40\",\"unitCost\":18}],\"layoutObjects\":[{\"id\":\"WW-TABLE-1\",\"name\":\"Stół S1 — Montaż ramy dolnej i kół skrętnych\",\"type\":\"Table\",\"workstationId\":\"WS-1\",\"xMm\":1200,\"yMm\":2500,\"zMm\":0,\"widthMm\":1500,\"lengthMm\":900,\"heightMm\":850,\"rotationDeg\":0,\"colorHex\":\"#3979a8\",\"isVisualAssumption\":true},{\"id\":\"WW-TABLE-2\",\"name\":\"Stół S2 — Montaż półek i burt wózka\",\"type\":\"Table\",\"workstationId\":\"WS-2\",\"xMm\":3800,\"yMm\":2500,\"zMm\":0,\"widthMm\":1500,\"lengthMm\":900,\"heightMm\":850,\"rotationDeg\":0,\"colorHex\":\"#3979a8\",\"isVisualAssumption\":true},{\"id\":\"WW-TABLE-3\",\"name\":\"Stół S3 — Montaż uchwytu ergonomicznego i akcesoriów\",\"type\":\"Table\",\"workstationId\":\"WS-3\",\"xMm\":6400,\"yMm\":2500,\"zMm\":0,\"widthMm\":1500,\"lengthMm\":900,\"heightMm\":850,\"rotationDeg\":0,\"colorHex\":\"#3979a8\",\"isVisualAssumption\":true},{\"id\":\"WW-TABLE-4\",\"name\":\"Stół S4 — Kontrola odbiorcza, próba toczenia i pakowanie\",\"type\":\"Table\",\"workstationId\":\"WS-4\",\"xMm\":9000,\"yMm\":2500,\"zMm\":0,\"widthMm\":1500,\"lengthMm\":900,\"heightMm\":850,\"rotationDeg\":0,\"colorHex\":\"#3979a8\",\"isVisualAssumption\":true}]}",
+  "project": {
+    "id": "DEMO-WOZEK-WARSZTATOWY-1",
+    "name": "Wózek warsztatowy 3-półkowy — DEMO syntetyczne",
+    "createdAt": "2026-10-24T00:00:00.000Z",
+    "updatedAt": "2026-10-24T00:00:00.000Z",
+    "timeUnit": "s",
+    "algorithm": "Manual",
+    "currency": "PLN",
+    "targetLayoutType": "Linear",
+    "layoutMode": "manual",
+    "layoutSettings": {
+      "tableWidthMm": 1500,
+      "tableLengthMm": 900,
+      "spacingMm": 1000,
+      "aisleMm": 1800
+    },
+    "facility": {
+      "widthMm": 12000,
+      "lengthMm": 8000,
+      "heightMm": 3500,
+      "gridSizeMm": 100,
+      "isConfirmed": false
+    },
+    "obstacles": [],
+    "demand": {
+      "yearlyDemand": 40000,
+      "workingDaysPerYear": 250,
+      "shiftsPerDay": 1,
+      "hoursPerShift": 8,
+      "plannedBreaksMinutesPerShift": 0,
+      "oeePercent": 100
+    },
+    "bom": [
+      {
+        "id": "BOM-1",
+        "partNumber": "WW-RAMA",
+        "name": "Rama spawana wózka",
+        "quantityPerUnit": 1,
+        "container": "Pallet",
+        "packageQuantity": 5,
+        "associatedProcessStepId": "WW-OP10",
+        "unitCost": 120
+      },
+      {
+        "id": "BOM-2",
+        "partNumber": "WW-KOLA",
+        "name": "Zestaw 4 kół skrętnych z hamulcem",
+        "quantityPerUnit": 1,
+        "container": "BoxKLT",
+        "packageQuantity": 10,
+        "associatedProcessStepId": "WW-OP10",
+        "unitCost": 45
+      },
+      {
+        "id": "BOM-3",
+        "partNumber": "WW-POLKI",
+        "name": "Zestaw 3 półek blaszanych z rantem",
+        "quantityPerUnit": 1,
+        "container": "Pallet",
+        "packageQuantity": 10,
+        "associatedProcessStepId": "WW-OP20",
+        "unitCost": 75
+      },
+      {
+        "id": "BOM-4",
+        "partNumber": "WW-SRUBY",
+        "name": "Zestaw łączników i śrub M8",
+        "quantityPerUnit": 1,
+        "container": "BoxKLT",
+        "packageQuantity": 50,
+        "associatedProcessStepId": "WW-OP20",
+        "unitCost": 15
+      },
+      {
+        "id": "BOM-5",
+        "partNumber": "WW-UCHWYT",
+        "name": "Uchwyt transportowy z osłoną",
+        "quantityPerUnit": 1,
+        "container": "BoxKLT",
+        "packageQuantity": 20,
+        "associatedProcessStepId": "WW-OP30",
+        "unitCost": 25
+      },
+      {
+        "id": "BOM-6",
+        "partNumber": "WW-WIESZ",
+        "name": "Listwa boczna z wieszakami narzędziowymi",
+        "quantityPerUnit": 1,
+        "container": "BoxKLT",
+        "packageQuantity": 25,
+        "associatedProcessStepId": "WW-OP30",
+        "unitCost": 30
+      },
+      {
+        "id": "BOM-7",
+        "partNumber": "WW-OPAK",
+        "name": "Karton ochronny i narożniki piankowe",
+        "quantityPerUnit": 1,
+        "container": "Carton",
+        "packageQuantity": 10,
+        "associatedProcessStepId": "WW-OP40",
+        "unitCost": 18
+      }
+    ],
+    "layoutObjects": [
+      {
+        "id": "WW-TABLE-1",
+        "name": "Stół S1 — Montaż ramy dolnej i kół skrętnych",
+        "type": "Table",
+        "workstationId": "ST-WW-1",
+        "xMm": 1200,
+        "yMm": 2500,
+        "zMm": 0,
+        "widthMm": 1500,
+        "lengthMm": 900,
+        "heightMm": 850,
+        "rotationDeg": 0,
+        "colorHex": "#3979a8",
+        "isVisualAssumption": true
+      },
+      {
+        "id": "WW-TABLE-2",
+        "name": "Stół S2 — Montaż półek i burt wózka",
+        "type": "Table",
+        "workstationId": "ST-WW-2",
+        "xMm": 3800,
+        "yMm": 2500,
+        "zMm": 0,
+        "widthMm": 1500,
+        "lengthMm": 900,
+        "heightMm": 850,
+        "rotationDeg": 0,
+        "colorHex": "#3979a8",
+        "isVisualAssumption": true
+      },
+      {
+        "id": "WW-TABLE-3",
+        "name": "Stół S3 — Montaż uchwytu ergonomicznego i akcesoriów",
+        "type": "Table",
+        "workstationId": "ST-WW-3",
+        "xMm": 6400,
+        "yMm": 2500,
+        "zMm": 0,
+        "widthMm": 1500,
+        "lengthMm": 900,
+        "heightMm": 850,
+        "rotationDeg": 0,
+        "colorHex": "#3979a8",
+        "isVisualAssumption": true
+      },
+      {
+        "id": "WW-TABLE-4",
+        "name": "Stół S4 — Kontrola odbiorcza, próba toczenia i pakowanie",
+        "type": "Table",
+        "workstationId": "ST-WW-4",
+        "xMm": 9000,
+        "yMm": 2500,
+        "zMm": 0,
+        "widthMm": 1500,
+        "lengthMm": 900,
+        "heightMm": 850,
+        "rotationDeg": 0,
+        "colorHex": "#3979a8",
+        "isVisualAssumption": true
+      }
+    ],
+    "schemaVersion": 6,
+    "modelStatus": "incomplete",
+    "operations": [
+      {
+        "id": "WW-OP10",
+        "name": "Montaż ramy dolnej i kół skrętnych",
+        "standardTimeSeconds": 60,
+        "vaTimeSeconds": 48,
+        "nvaTimeSeconds": 12,
+        "sequenceNumber": 1,
+        "predecessorIds": [],
+        "timeProfile": {
+          "durationSeconds": 60,
+          "durationBasis": "assumed",
+          "manualWork": [
+            {
+              "startSeconds": 0,
+              "endSeconds": 60,
+              "basis": "assumed"
+            }
+          ],
+          "machineRun": [],
+          "operatorPresence": [
+            {
+              "startSeconds": 0,
+              "endSeconds": 60,
+              "basis": "assumed"
+            }
+          ]
+        },
+        "physicalRole": {
+          "kind": "body-work"
+        },
+        "staffing": {
+          "requiredWorkers": 1,
+          "timeVariants": [
+            {
+              "workerCount": 1,
+              "timeProfile": {
+                "durationSeconds": 60,
+                "durationBasis": "assumed",
+                "manualWork": [
+                  {
+                    "startSeconds": 0,
+                    "endSeconds": 60,
+                    "basis": "assumed"
+                  }
+                ],
+                "machineRun": [],
+                "operatorPresence": [
+                  {
+                    "startSeconds": 0,
+                    "endSeconds": 60,
+                    "basis": "assumed"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "WW-OP20",
+        "name": "Montaż półek i burt wózka",
+        "standardTimeSeconds": 80,
+        "vaTimeSeconds": 65,
+        "nvaTimeSeconds": 15,
+        "sequenceNumber": 2,
+        "predecessorIds": [
+          "WW-OP10"
+        ],
+        "timeProfile": {
+          "durationSeconds": 80,
+          "durationBasis": "assumed",
+          "manualWork": [
+            {
+              "startSeconds": 0,
+              "endSeconds": 80,
+              "basis": "assumed"
+            }
+          ],
+          "machineRun": [],
+          "operatorPresence": [
+            {
+              "startSeconds": 0,
+              "endSeconds": 80,
+              "basis": "assumed"
+            }
+          ]
+        },
+        "physicalRole": {
+          "kind": "body-work"
+        },
+        "staffing": {
+          "requiredWorkers": 1,
+          "timeVariants": [
+            {
+              "workerCount": 1,
+              "timeProfile": {
+                "durationSeconds": 80,
+                "durationBasis": "assumed",
+                "manualWork": [
+                  {
+                    "startSeconds": 0,
+                    "endSeconds": 80,
+                    "basis": "assumed"
+                  }
+                ],
+                "machineRun": [],
+                "operatorPresence": [
+                  {
+                    "startSeconds": 0,
+                    "endSeconds": 80,
+                    "basis": "assumed"
+                  }
+                ]
+              }
+            },
+            {
+              "workerCount": 2,
+              "timeProfile": {
+                "durationSeconds": 45,
+                "durationBasis": "assumed",
+                "manualWork": [
+                  {
+                    "startSeconds": 0,
+                    "endSeconds": 45,
+                    "basis": "assumed"
+                  }
+                ],
+                "machineRun": [],
+                "operatorPresence": [
+                  {
+                    "startSeconds": 0,
+                    "endSeconds": 45,
+                    "basis": "assumed"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "WW-OP30",
+        "name": "Montaż uchwytu ergonomicznego i akcesoriów",
+        "standardTimeSeconds": 50,
+        "vaTimeSeconds": 40,
+        "nvaTimeSeconds": 10,
+        "sequenceNumber": 3,
+        "predecessorIds": [
+          "WW-OP20"
+        ],
+        "timeProfile": {
+          "durationSeconds": 50,
+          "durationBasis": "assumed",
+          "manualWork": [
+            {
+              "startSeconds": 0,
+              "endSeconds": 50,
+              "basis": "assumed"
+            }
+          ],
+          "machineRun": [],
+          "operatorPresence": [
+            {
+              "startSeconds": 0,
+              "endSeconds": 50,
+              "basis": "assumed"
+            }
+          ]
+        },
+        "physicalRole": {
+          "kind": "body-work"
+        },
+        "staffing": {
+          "requiredWorkers": 1,
+          "timeVariants": [
+            {
+              "workerCount": 1,
+              "timeProfile": {
+                "durationSeconds": 50,
+                "durationBasis": "assumed",
+                "manualWork": [
+                  {
+                    "startSeconds": 0,
+                    "endSeconds": 50,
+                    "basis": "assumed"
+                  }
+                ],
+                "machineRun": [],
+                "operatorPresence": [
+                  {
+                    "startSeconds": 0,
+                    "endSeconds": 50,
+                    "basis": "assumed"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "id": "WW-OP40",
+        "name": "Kontrola odbiorcza, próba toczenia i pakowanie",
+        "standardTimeSeconds": 40,
+        "vaTimeSeconds": 32,
+        "nvaTimeSeconds": 8,
+        "sequenceNumber": 4,
+        "predecessorIds": [
+          "WW-OP30"
+        ],
+        "timeProfile": {
+          "durationSeconds": 40,
+          "durationBasis": "assumed",
+          "manualWork": [
+            {
+              "startSeconds": 0,
+              "endSeconds": 40,
+              "basis": "assumed"
+            }
+          ],
+          "machineRun": [],
+          "operatorPresence": [
+            {
+              "startSeconds": 0,
+              "endSeconds": 40,
+              "basis": "assumed"
+            }
+          ]
+        },
+        "physicalRole": {
+          "kind": "body-work"
+        },
+        "staffing": {
+          "requiredWorkers": 1,
+          "timeVariants": [
+            {
+              "workerCount": 1,
+              "timeProfile": {
+                "durationSeconds": 40,
+                "durationBasis": "assumed",
+                "manualWork": [
+                  {
+                    "startSeconds": 0,
+                    "endSeconds": 40,
+                    "basis": "assumed"
+                  }
+                ],
+                "machineRun": [],
+                "operatorPresence": [
+                  {
+                    "startSeconds": 0,
+                    "endSeconds": 40,
+                    "basis": "assumed"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "stations": [
+      {
+        "id": "ST-WW-1",
+        "name": "S1 — Montaż ramy dolnej i kół skrętnych",
+        "operationIds": [
+          "WW-OP10"
+        ]
+      },
+      {
+        "id": "ST-WW-2",
+        "name": "S2 — Montaż półek i burt wózka",
+        "operationIds": [
+          "WW-OP20"
+        ]
+      },
+      {
+        "id": "ST-WW-3",
+        "name": "S3 — Montaż uchwytu ergonomicznego i akcesoriów",
+        "operationIds": [
+          "WW-OP30"
+        ]
+      },
+      {
+        "id": "ST-WW-4",
+        "name": "S4 — Kontrola odbiorcza, próba toczenia i pakowanie",
+        "operationIds": [
+          "WW-OP40"
+        ]
+      }
+    ],
+    "stationSettings": {
+      "ST-WW-1": {
+        "operators": 1,
+        "parallelStations": 1
+      },
+      "ST-WW-2": {
+        "operators": 1,
+        "parallelStations": 1
+      },
+      "ST-WW-3": {
+        "operators": 1,
+        "parallelStations": 1
+      },
+      "ST-WW-4": {
+        "operators": 1,
+        "parallelStations": 1
+      }
+    },
+    "workers": [
+      {
+        "id": "WW-W1",
+        "name": "Jan Monter (konstrukcja)"
+      },
+      {
+        "id": "WW-W2",
+        "name": "Adam Mechanik (konstrukcja i montaż)"
+      },
+      {
+        "id": "WW-W3",
+        "name": "Piotr Wyposażeniowiec (osprzęt)"
+      },
+      {
+        "id": "WW-W4",
+        "name": "Ewa Kontroler (kontrola i pakowanie)"
+      },
+      {
+        "id": "WW-W5",
+        "name": "Marek Monter wspierający (rezerwa/wsparcie)"
+      }
+    ],
+    "workerPools": [
+      {
+        "id": "WW-P-MECH",
+        "name": "Zespół mechaniczny",
+        "workerIds": [
+          "WW-W1",
+          "WW-W2",
+          "WW-W5"
+        ]
+      },
+      {
+        "id": "WW-P-FIT",
+        "name": "Zespół wyposażenia",
+        "workerIds": [
+          "WW-W3"
+        ]
+      },
+      {
+        "id": "WW-P-QC",
+        "name": "Zespół kontroli jakości",
+        "workerIds": [
+          "WW-W4"
+        ]
+      }
+    ],
+    "equipment": [
+      {
+        "id": "WW-EQ1",
+        "name": "Stół montażowy S1",
+        "stationId": "ST-WW-1",
+        "layoutObjectId": "WW-TABLE-1",
+        "capableOperationIds": [
+          "WW-OP10"
+        ]
+      },
+      {
+        "id": "WW-EQ2",
+        "name": "Stół montażowy S2",
+        "stationId": "ST-WW-2",
+        "layoutObjectId": "WW-TABLE-2",
+        "capableOperationIds": [
+          "WW-OP20"
+        ]
+      },
+      {
+        "id": "WW-EQ3",
+        "name": "Stół montażowy S3",
+        "stationId": "ST-WW-3",
+        "layoutObjectId": "WW-TABLE-3",
+        "capableOperationIds": [
+          "WW-OP30"
+        ]
+      },
+      {
+        "id": "WW-EQ4",
+        "name": "Stół montażowy S4",
+        "stationId": "ST-WW-4",
+        "layoutObjectId": "WW-TABLE-4",
+        "capableOperationIds": [
+          "WW-OP40"
+        ]
+      },
+      {
+        "id": "WW-CART-1",
+        "name": "Wózek transferowy T1 (S1 -> S2)"
+      },
+      {
+        "id": "WW-CART-2",
+        "name": "Wózek transferowy T2 (S2 -> S3)"
+      },
+      {
+        "id": "WW-CART-3",
+        "name": "Wózek transferowy T3 (S3 -> S4)"
+      }
+    ],
+    "product": {
+      "id": "WW-PRODUCT",
+      "name": "Wózek warsztatowy — wyrób syntetyczny"
+    },
+    "subassemblies": [],
+    "resourceCalendars": {
+      "workers": {
+        "WW-W1": {
+          "shifts": [
+            {
+              "startSeconds": 0,
+              "endSeconds": 28800,
+              "basis": "assumed"
+            }
+          ],
+          "breaks": []
+        },
+        "WW-W2": {
+          "shifts": [
+            {
+              "startSeconds": 0,
+              "endSeconds": 28800,
+              "basis": "assumed"
+            }
+          ],
+          "breaks": []
+        },
+        "WW-W3": {
+          "shifts": [
+            {
+              "startSeconds": 0,
+              "endSeconds": 28800,
+              "basis": "assumed"
+            }
+          ],
+          "breaks": []
+        },
+        "WW-W4": {
+          "shifts": [
+            {
+              "startSeconds": 0,
+              "endSeconds": 28800,
+              "basis": "assumed"
+            }
+          ],
+          "breaks": []
+        },
+        "WW-W5": {
+          "shifts": [
+            {
+              "startSeconds": 0,
+              "endSeconds": 28800,
+              "basis": "assumed"
+            }
+          ],
+          "breaks": []
+        }
+      },
+      "stations": {
+        "ST-WW-1": {
+          "shifts": [
+            {
+              "startSeconds": 0,
+              "endSeconds": 28800,
+              "basis": "assumed"
+            }
+          ],
+          "breaks": []
+        },
+        "ST-WW-2": {
+          "shifts": [
+            {
+              "startSeconds": 0,
+              "endSeconds": 28800,
+              "basis": "assumed"
+            }
+          ],
+          "breaks": []
+        },
+        "ST-WW-3": {
+          "shifts": [
+            {
+              "startSeconds": 0,
+              "endSeconds": 28800,
+              "basis": "assumed"
+            }
+          ],
+          "breaks": []
+        },
+        "ST-WW-4": {
+          "shifts": [
+            {
+              "startSeconds": 0,
+              "endSeconds": 28800,
+              "basis": "assumed"
+            }
+          ],
+          "breaks": []
+        }
+      }
+    },
+    "workerRunSelection": {
+      "teamWorkerIds": [
+        "WW-W1",
+        "WW-W2",
+        "WW-W3",
+        "WW-W4"
+      ],
+      "operations": [
+        {
+          "operationId": "WW-OP10",
+          "workerCount": 1,
+          "eligibleWorkerIds": [
+            "WW-W1"
+          ]
+        },
+        {
+          "operationId": "WW-OP20",
+          "workerCount": 1,
+          "eligibleWorkerIds": [
+            "WW-W2"
+          ]
+        },
+        {
+          "operationId": "WW-OP30",
+          "workerCount": 1,
+          "eligibleWorkerIds": [
+            "WW-W3"
+          ]
+        },
+        {
+          "operationId": "WW-OP40",
+          "workerCount": 1,
+          "eligibleWorkerIds": [
+            "WW-W4"
+          ]
+        }
+      ]
+    },
+    "stationRouting": {
+      "selectionRule": "earliest-start-then-shortest-route",
+      "equipmentPlacements": [
+        {
+          "equipmentId": "WW-EQ1",
+          "stationId": "ST-WW-1",
+          "copy": 1
+        },
+        {
+          "equipmentId": "WW-EQ2",
+          "stationId": "ST-WW-2",
+          "copy": 1
+        },
+        {
+          "equipmentId": "WW-EQ3",
+          "stationId": "ST-WW-3",
+          "copy": 1
+        },
+        {
+          "equipmentId": "WW-EQ4",
+          "stationId": "ST-WW-4",
+          "copy": 1
+        }
+      ],
+      "operations": [
+        {
+          "operationId": "WW-OP10",
+          "candidates": [
+            {
+              "stationId": "ST-WW-1",
+              "copy": 1,
+              "requiredEquipmentIds": [
+                "WW-EQ1"
+              ]
+            }
+          ]
+        },
+        {
+          "operationId": "WW-OP20",
+          "candidates": [
+            {
+              "stationId": "ST-WW-2",
+              "copy": 1,
+              "requiredEquipmentIds": [
+                "WW-EQ2"
+              ]
+            }
+          ]
+        },
+        {
+          "operationId": "WW-OP30",
+          "candidates": [
+            {
+              "stationId": "ST-WW-3",
+              "copy": 1,
+              "requiredEquipmentIds": [
+                "WW-EQ3"
+              ]
+            }
+          ]
+        },
+        {
+          "operationId": "WW-OP40",
+          "candidates": [
+            {
+              "stationId": "ST-WW-4",
+              "copy": 1,
+              "requiredEquipmentIds": [
+                "WW-EQ4"
+              ]
+            }
+          ]
+        }
+      ],
+      "routes": [
+        {
+          "id": "WW-R1-2",
+          "from": {
+            "stationId": "ST-WW-1",
+            "copy": 1
+          },
+          "to": {
+            "stationId": "ST-WW-2",
+            "copy": 1
+          },
+          "distanceMm": 2600,
+          "basis": "confirmed",
+          "source": "Rzut hali 2D — odległość osi stołów",
+          "transportTime": {
+            "durationSeconds": 10,
+            "basis": "assumed",
+            "source": "Przejazd wózka montażowego ze zwalnianiem"
+          }
+        },
+        {
+          "id": "WW-R2-3",
+          "from": {
+            "stationId": "ST-WW-2",
+            "copy": 1
+          },
+          "to": {
+            "stationId": "ST-WW-3",
+            "copy": 1
+          },
+          "distanceMm": 2600,
+          "basis": "confirmed",
+          "source": "Rzut hali 2D — odległość osi stołów",
+          "transportTime": {
+            "durationSeconds": 10,
+            "basis": "assumed",
+            "source": "Przejazd wózka montażowego ze zwalnianiem"
+          }
+        },
+        {
+          "id": "WW-R3-4",
+          "from": {
+            "stationId": "ST-WW-3",
+            "copy": 1
+          },
+          "to": {
+            "stationId": "ST-WW-4",
+            "copy": 1
+          },
+          "distanceMm": 2600,
+          "basis": "confirmed",
+          "source": "Rzut hali 2D — odległość osi stołów",
+          "transportTime": {
+            "durationSeconds": 10,
+            "basis": "assumed",
+            "source": "Przejazd wózka montażowego ze zwalnianiem"
+          }
+        }
+      ]
+    },
+    "stationBuffers": {
+      "buffers": [
+        {
+          "stationId": "ST-WW-1",
+          "copy": 1,
+          "inputCapacity": 2,
+          "outputCapacity": 2,
+          "blockingPolicy": "bbas-worker-released"
+        },
+        {
+          "stationId": "ST-WW-2",
+          "copy": 1,
+          "inputCapacity": 2,
+          "outputCapacity": 2,
+          "blockingPolicy": "bbas-worker-released"
+        },
+        {
+          "stationId": "ST-WW-3",
+          "copy": 1,
+          "inputCapacity": 2,
+          "outputCapacity": 2,
+          "blockingPolicy": "bbas-worker-released"
+        },
+        {
+          "stationId": "ST-WW-4",
+          "copy": 1,
+          "inputCapacity": 2,
+          "outputCapacity": null,
+          "blockingPolicy": "bbas-worker-released"
+        }
+      ]
+    },
+    "competencyRequirements": {
+      "competencies": [
+        {
+          "id": "WW-C-MECH",
+          "name": "Montaż konstrukcyjny i mechaniczny"
+        },
+        {
+          "id": "WW-C-FIT",
+          "name": "Montaż wyposażenia i detali"
+        },
+        {
+          "id": "WW-C-QC",
+          "name": "Kontrola jakości i odbiór"
+        }
+      ],
+      "workers": [
+        {
+          "workerId": "WW-W1",
+          "competencyIds": [
+            "WW-C-MECH"
+          ]
+        },
+        {
+          "workerId": "WW-W2",
+          "competencyIds": [
+            "WW-C-MECH",
+            "WW-C-FIT"
+          ]
+        },
+        {
+          "workerId": "WW-W3",
+          "competencyIds": [
+            "WW-C-FIT"
+          ]
+        },
+        {
+          "workerId": "WW-W4",
+          "competencyIds": [
+            "WW-C-QC"
+          ]
+        },
+        {
+          "workerId": "WW-W5",
+          "competencyIds": [
+            "WW-C-MECH",
+            "WW-C-FIT"
+          ]
+        }
+      ],
+      "operations": [
+        {
+          "operationId": "WW-OP10",
+          "requiredCompetencyIds": [
+            "WW-C-MECH"
+          ]
+        },
+        {
+          "operationId": "WW-OP20",
+          "requiredCompetencyIds": [
+            "WW-C-MECH"
+          ]
+        },
+        {
+          "operationId": "WW-OP30",
+          "requiredCompetencyIds": [
+            "WW-C-FIT"
+          ]
+        },
+        {
+          "operationId": "WW-OP40",
+          "requiredCompetencyIds": [
+            "WW-C-QC"
+          ]
+        }
+      ]
+    },
+    "materialSupply": {
+      "items": [
+        {
+          "id": "SUP-RAMA",
+          "componentId": "WW-RAMA",
+          "targetStationId": "ST-WW-1",
+          "initialStock": 10,
+          "unit": "szt.",
+          "schedule": {
+            "kind": "periodic",
+            "batchQuantity": 10,
+            "intervalSeconds": 900,
+            "firstDeliverySeconds": 900
+          },
+          "source": "Dostawa paletowa z magazynu konstrukcji"
+        },
+        {
+          "id": "SUP-KOLA",
+          "componentId": "WW-KOLA",
+          "targetStationId": "ST-WW-1",
+          "initialStock": 10,
+          "unit": "kpl.",
+          "schedule": {
+            "kind": "periodic",
+            "batchQuantity": 10,
+            "intervalSeconds": 900,
+            "firstDeliverySeconds": 900
+          },
+          "source": "KLT z magazynu komponentów znormalizowanych"
+        },
+        {
+          "id": "SUP-POLKI",
+          "componentId": "WW-POLKI",
+          "targetStationId": "ST-WW-2",
+          "initialStock": 10,
+          "unit": "kpl.",
+          "schedule": {
+            "kind": "periodic",
+            "batchQuantity": 10,
+            "intervalSeconds": 900,
+            "firstDeliverySeconds": 900
+          },
+          "source": "Dostawa półek z wydziału gięcia"
+        },
+        {
+          "id": "SUP-UCHWYT",
+          "componentId": "WW-UCHWYT",
+          "targetStationId": "ST-WW-3",
+          "initialStock": 10,
+          "unit": "kpl.",
+          "schedule": {
+            "kind": "periodic",
+            "batchQuantity": 10,
+            "intervalSeconds": 900,
+            "firstDeliverySeconds": 900
+          },
+          "source": "Pojemniki KLT z osprzętem montażowym"
+        },
+        {
+          "id": "SUP-OPAK",
+          "componentId": "WW-OPAK",
+          "targetStationId": "ST-WW-4",
+          "initialStock": 10,
+          "unit": "kpl.",
+          "schedule": {
+            "kind": "periodic",
+            "batchQuantity": 10,
+            "intervalSeconds": 900,
+            "firstDeliverySeconds": 900
+          },
+          "source": "Kartonage z magazynu opakowań"
+        }
+      ],
+      "consumptions": [
+        {
+          "operationId": "WW-OP10",
+          "supplyId": "SUP-RAMA",
+          "quantity": 1,
+          "source": "Pobranie ramy na start OP10"
+        },
+        {
+          "operationId": "WW-OP10",
+          "supplyId": "SUP-KOLA",
+          "quantity": 1,
+          "source": "Pobranie kompletu 4 kół na start OP10"
+        },
+        {
+          "operationId": "WW-OP20",
+          "supplyId": "SUP-POLKI",
+          "quantity": 1,
+          "source": "Pobranie 3 półek na start OP20"
+        },
+        {
+          "operationId": "WW-OP30",
+          "supplyId": "SUP-UCHWYT",
+          "quantity": 1,
+          "source": "Pobranie uchwytu na start OP30"
+        },
+        {
+          "operationId": "WW-OP40",
+          "supplyId": "SUP-OPAK",
+          "quantity": 1,
+          "source": "Pobranie opakowania na start OP40"
+        }
+      ]
+    }
+  },
+  "at": "2026-10-24T00:00:00.000Z"
+}

@@ -1,0 +1,26 @@
+{
+  "dataOrigin": "synthetic",
+  "batch": 3,
+  "arrivalIntervalSeconds": 1,
+  "transportMode": "just-in-time",
+  "initialArrivalsSeconds": [
+    0,
+    1,
+    2
+  ],
+  "materialAvailability": "explicit-material-supply-configured-with-initial-stock",
+  "physicalBodyLocations": "linear buffered model with explicit capacities",
+  "transportRoutesAndDurations": "inter-station routes 2600mm / 10s declared in routing",
+  "bufferModel": "explicit linear buffers: input=2, output=2, final output=null; policy=bbas-worker-released",
+  "materialDeliveries": "periodic 10 pcs every 900s; initialStock=10 covers batch 3 without starving",
+  "competencyCoverage": "3 competencies (WW-C-MECH, WW-C-FIT, WW-C-QC) fully satisfied by assigned workers",
+  "costAssumptions": null,
+  "stochasticConfig": null,
+  "calendarWindowSeconds": [
+    0,
+    28800
+  ],
+  "calendarBreaks": [],
+  "sourceOfProductionMeasurements": "none — designed teaching example for intermediate complexity",
+  "sessionSettingsMustBeSelectedInUI": true
+}

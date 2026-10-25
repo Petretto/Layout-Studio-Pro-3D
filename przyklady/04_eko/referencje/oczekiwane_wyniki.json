@@ -1,0 +1,41 @@
+{
+  "format": "layout-studio-expected-results",
+  "formatVersion": 1,
+  "packageId": "04_eko",
+  "dataOrigin": "mixed",
+  "conditions": {
+    "batch": 1,
+    "arrivalIntervalSeconds": 1,
+    "transportMode": "configured"
+  },
+  "absoluteToleranceSeconds": 1e-9,
+  "variants": [
+    {
+      "id": "EKO-PARALLEL",
+      "name": "Eko — montaż równoległy drzwi (baza)",
+      "category": "baseline",
+      "completionSeconds": [
+        13550
+      ],
+      "totalRuns": 16
+    },
+    {
+      "id": "EKO-SEQUENTIAL",
+      "name": "Eko — montaż sekwencyjny",
+      "category": "changed-layout",
+      "completionSeconds": [
+        14150
+      ],
+      "totalRuns": 16
+    },
+    {
+      "id": "EKO-SHARED-WORKER",
+      "name": "Eko — współdzielony monter drzwi",
+      "category": "additional-worker",
+      "completionSeconds": [
+        14150
+      ],
+      "totalRuns": 16
+    }
+  ]
+}

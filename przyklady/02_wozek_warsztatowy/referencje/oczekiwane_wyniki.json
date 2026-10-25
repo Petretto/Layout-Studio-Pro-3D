@@ -1,0 +1,200 @@
+{
+  "referenceVersion": 1,
+  "dataOrigin": "synthetic",
+  "method": "Ręczny rachunek zdarzeń i stanów dla 4-stanowiskowej linii montażu wózka warsztatowego; autor: Antigravity Codex, 2026-10-24. Obliczenia analityczne wyznaczone niezależnie od silnika symulacji.",
+  "conditions": {
+    "batch": 3,
+    "arrivalIntervalSeconds": 1,
+    "transportMode": "just-in-time"
+  },
+  "units": {
+    "time": "s",
+    "capacity": "szt./h",
+    "cost": "PLN/szt."
+  },
+  "absoluteToleranceSeconds": 1e-9,
+  "bufferModel": "Jawne bufory: wejścia 2 szt., wyjścia 2 szt., końcowe wyjście null; polityka bbas-worker-released.",
+  "customerTaktSeconds": 180,
+  "targetCycleSeconds": 80,
+  "workContentSecondsBase": 230,
+  "workContentSecondsBalanced": 240,
+  "bomCostPerUnit": 328,
+  "variants": [
+    {
+      "id": "INTERMEDIATE-BASE",
+      "activeStations": 4,
+      "selectedWorkers": 4,
+      "bottleneckStationId": "ST-WW-2",
+      "bottleneckCycleSeconds": 80,
+      "staticCapacityPerHour": 45,
+      "batchMakespanSeconds": 390,
+      "completionSeconds": [
+        230,
+        310,
+        390
+      ],
+      "operationWindows": [
+        [
+          1,
+          "WW-OP10",
+          0,
+          60
+        ],
+        [
+          1,
+          "WW-OP20",
+          60,
+          140
+        ],
+        [
+          1,
+          "WW-OP30",
+          140,
+          190
+        ],
+        [
+          1,
+          "WW-OP40",
+          190,
+          230
+        ],
+        [
+          2,
+          "WW-OP10",
+          60,
+          120
+        ],
+        [
+          2,
+          "WW-OP20",
+          140,
+          220
+        ],
+        [
+          2,
+          "WW-OP30",
+          220,
+          270
+        ],
+        [
+          2,
+          "WW-OP40",
+          270,
+          310
+        ],
+        [
+          3,
+          "WW-OP10",
+          120,
+          180
+        ],
+        [
+          3,
+          "WW-OP20",
+          220,
+          300
+        ],
+        [
+          3,
+          "WW-OP30",
+          300,
+          350
+        ],
+        [
+          3,
+          "WW-OP40",
+          350,
+          390
+        ]
+      ]
+    },
+    {
+      "id": "INTERMEDIATE-BALANCED",
+      "activeStations": 4,
+      "selectedWorkers": 5,
+      "bottleneckStationId": "ST-WW-1",
+      "bottleneckCycleSeconds": 60,
+      "staticCapacityPerHour": 60,
+      "batchMakespanSeconds": 315,
+      "completionSeconds": [
+        195,
+        255,
+        315
+      ],
+      "operationWindows": [
+        [
+          1,
+          "WW-OP10",
+          0,
+          60
+        ],
+        [
+          1,
+          "WW-OP20",
+          60,
+          105
+        ],
+        [
+          1,
+          "WW-OP30",
+          105,
+          155
+        ],
+        [
+          1,
+          "WW-OP40",
+          155,
+          195
+        ],
+        [
+          2,
+          "WW-OP10",
+          60,
+          120
+        ],
+        [
+          2,
+          "WW-OP20",
+          120,
+          165
+        ],
+        [
+          2,
+          "WW-OP30",
+          165,
+          215
+        ],
+        [
+          2,
+          "WW-OP40",
+          215,
+          255
+        ],
+        [
+          3,
+          "WW-OP10",
+          120,
+          180
+        ],
+        [
+          3,
+          "WW-OP20",
+          180,
+          225
+        ],
+        [
+          3,
+          "WW-OP30",
+          225,
+          275
+        ],
+        [
+          3,
+          "WW-OP40",
+          275,
+          315
+        ]
+      ]
+    }
+  ]
+}

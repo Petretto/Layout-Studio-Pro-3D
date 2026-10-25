@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**
-Aktualizacja podręcznika: **24.10.2026 — UI1a oraz UI2a/UI2b/UI2c: kompaktowa nawigacja, narzędzia i skupienie hali 2D/3D. Dalsze widoki i zbiorczy odbiór UI2 pozostają w planie.**
+Aktualizacja podręcznika: **24.10.2026 — przegląd zewnętrznych przykładów i 7.13.2: pusty start, import z plików, jawne tryby eksperymentów.**
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -46,15 +46,18 @@ Menu obsługuje Tab, strzałki, Home/End i Escape; Escape przywraca focus do prz
 
 
 ### Krok 1: Pulpit projektu (Wybór szablonu lub własny proces)
-Na ekranie startowym możesz wybrać jeden z gotowych przykładów referencyjnych lub rozpocząć czysty projekt:
-- **Rozpocznij od zera**: Czysta baza do wprowadzenia własnego procesu klienta i BOM.
-- **Przykład — silniki EV**: 6 operacji w gnieździe U-Shape.
-- **Przykład — baterie EV**: 6 operacji w przepływie liniowym.
-- **Przykład — Eko, rybia ość**: Złożony proces montażowy (16 operacji, 60 pozycji BOM, równoległe podmontaże).
+Bez zapisu lokalnego aplikacja otwiera **Nowy projekt linii**: zero operacji i materiałów. Istniejący poprawny zapis jest nadal odczytywany. Początkowe parametry hali i popytu są ustawieniami domyślnymi; sprawdź je przed analizą.
 
-![Pulpit z kompaktowym nagłówkiem UI1a](../outputs/qa/ui1/after_1440.png)
+- **Rozpocznij od zera** — pusty proces i BOM; zastąpienie bieżącego projektu wymaga dotychczasowego potwierdzenia.
+- **Wczytaj pakiet projektu** — otwiera importer z kopią ratunkową i potwierdzeniem. Wskaż plik projekt-pokazowy.json z wybranego katalogu: 01_zestaw_montazowy, 02_wozek_warsztatowy, 03_modul_urzadzenia lub 04_eko.
+- **Importuj projekt JSON lub archiwum v4** — pojedynczy projekt główny.
+- **Kopia i odzyskiwanie** — pełne środowisko robocze.
 
-Na pasku górnym masz dostęp do ikon Cofnij/Ponów/Zapisz lokalnie, menu nazwy projektu oraz Eksport i Ustawienia i pomoc. Nazwę i jednostkę czasu zmienisz przez **Menu projektu → Dane projektu i jednostki**. Warianty i przykłady na Pulpicie nadal działają jak wcześniej; pusty start bez danych wbudowanych zostanie wdrożony w dalszej części 7.13.
+![Pusty start i jawny import plików](../outputs/qa/review_demos_20261024/empty_start.png)
+
+Przykłady nie są automatycznie wczytywane z kodu. Komplety plików wejściowych i instrukcje są w osobnych podkatalogach przyklady; katalog do pobierania z UI pozostaje kolejnym krokiem. Źródła projektu głównego i warsztatu nadal są oddzielne.
+
+C1/C2: wyniki procesowe przy jawnym JIT (C1 390/315 s, poprawione równoległe C2 320/270 s dla 3 sztuk, odstęp 1 s); nie potwierdzają transportu fizycznego ani zaopatrzenia. Eko: 1 sztuka, odstęp 1 s, JIT wyłączony — 13550/14150/14150 s. JIT jest innym eksperymentem. Pakowanie Eko ma dwie osoby przez 1320 s, a przypisania innych ról są testowe; nie odtwarzają znanych tylko łącznie 13 osób pomiaru.
 
 ---
 
