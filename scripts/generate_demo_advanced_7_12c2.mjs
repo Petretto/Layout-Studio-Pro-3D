@@ -16,7 +16,6 @@ const bundle = await build({
 export * from './src/core/validation';
 export * from './src/core/domainProject';
 export * from './src/core/domainMigrationPreview';
-export * from './src/core/workerSchedule';
 export * from './src/core/subassemblyFlow';
 export * from './src/core/stationBuffers';
 export * from './src/core/materialSupply';
@@ -37,7 +36,7 @@ export * from './src/core/export/excelImporter';
 const api = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64'));
 const out = resolve('przyklady/03_modul_urzadzenia');
 const check = process.argv.includes('--check');
-const at = '2026-10-24T00:00:00.000Z';
+const at = '2026-10-25T00:00:00.000Z';
 const projectId = 'DEMO-MODUL-URZADZENIA-1';
 
 // 5 stations: 2 subassembly prep benches + 3 main line stations
@@ -269,6 +268,19 @@ base.subassemblyFlow = {
   ]
 };
 
+// Physical acceptance A: separate products by 1000 s; verify branch join and explicit
+// transport without pretending that finite branched buffers have been integrated.
+base.bodyRunInput={bodies:[1,2,3].map(job=>({id:`MU-BODY-${job}`,productId:'MU-PRODUCT',location:{kind:'station',stationId:stations[2],copy:1}})),jobs:[1,2,3].map(job=>({job,bodyId:`MU-BODY-${job}`}))};
+const physicalLegs=[['PWR-INT',0,3,5000],['DRV-INT',1,3,4500],['M1-INT',2,3,2500],['INT-TEST',3,4,2500]];
+base.stationRouting.routes=physicalLegs.map(([id,from,to,distanceMm])=>({id:`MU-R-${id}`,from:{stationId:stations[from],copy:1},to:{stationId:stations[to],copy:1},distanceMm,basis:'confirmed',source:'Jawna syntetyczna długość, bez przebiegu geometrycznego trasy',transportTime:{durationSeconds:10,basis:'assumed',source:'Jawne założenie dydaktyczne przewozu: 10 s'}}));
+base.equipment.push(...physicalLegs.map(([id])=>({id:`MU-CART-${id}`,name:`Wózek montażowy ${id} — dane syntetyczne`})));
+base.assemblyTransport={scope:'assembly-only',carts:physicalLegs.map(([id,from])=>({equipmentId:`MU-CART-${id}`,initialLocation:{stationId:stations[from],copy:1},calendar:structuredClone(calendar),afterUnload:'return-to-initial',source:'Jawny powrót do źródła — przykład syntetyczny'})),conveyors:[],
+  emptyRoutes:physicalLegs.map(([id,from,to,distanceMm],index)=>({id:`MU-RETURN-${id}`,equipmentId:`MU-CART-${id}`,from:{stationId:stations[to],copy:1},to:{stationId:stations[from],copy:1},distanceMm,basis:'confirmed',source:'Jawna syntetyczna trasa powrotna',transportTime:{durationSeconds:10,basis:'assumed',source:'Osobne założenie dydaktyczne pustego powrotu: 10 s'},workerAssignment:{workerIds:[`MU-W${index+1}`],source:'Transport wewnątrz procesu wykonuje monter źródłowy; dostawy magazynowe są oddzielne'}})),
+  routes:physicalLegs.map(([id],index)=>({stationRouteId:`MU-R-${id}`,source:'Jawny przydział transportu podmontażu/korpusu do montera źródłowego',alternatives:[{workerIds:[`MU-W${index+1}`],equipmentIds:[`MU-CART-${id}`]}]}))};
+const supplyDeclarations=[['MU-ZASIL',0],['MU-STER',0],['MU-SILNIK',1],['MU-PRZEKL',1],['MU-KORPUS',2],['MU-WIAZKA',3],['MU-OBUD',4],['MU-SKRZY',4]];
+base.materialSupply={items:supplyDeclarations.map(([componentId,index])=>({id:`SUP-${componentId}`,componentId,targetStationId:stations[index],initialStock:10,unit:'szt.',schedule:{kind:'periodic',batchQuantity:10,intervalSeconds:900,firstDeliverySeconds:900},source:'Jawne dydaktyczne zapasy/dostawy magazynowe; wykonują je inne osoby, bez rezerwacji monterów'})),
+  consumptions:supplyDeclarations.map(([componentId,index])=>({operationId:ids[index],supplyId:`SUP-${componentId}`,quantity:1,source:'Jawna dydaktyczna deklaracja jednej sztuki zużycia przy starcie, oddzielnie od BOM'}))};
+
 base.competencyRequirements = {
   competencies: [
     {id: 'MU-C-ELEC', name: 'Elektronika i sterowanie PLC'},
@@ -335,6 +347,9 @@ json('dane/warunki_eksperymentu.json', {
   batch: 3,
   arrivalIntervalSeconds: 1,
   transportMode: 'just-in-time',
+  physicalConditions:{batch:3,arrivalIntervalSeconds:1000,transportMode:'configured'},
+  physicalScope:'Acceptance A only: body and subassembly transport, warehouse availability; finite branched buffers NOT supported or accepted',
+  physicalAssumptions:'Four assembly carts; upstream assemblers transport and return. Loaded travel 10s, empty return separately assumed 10s. Eight explicit material stocks: initial 10, delivery 10 at 900s and each 900s; consumption 1 declared unit per assigned operation.',
   initialArrivalsSeconds: [0, 1, 2],
   materialAvailability: 'explicit-subassemblies-rule-A',
   subassemblyFlowRule: 'Rule A: producer-finish lot availability, consumer-start atomic consumption',
@@ -662,7 +677,7 @@ Nie należy mylić sumy czasów operacji z osobosekundami zespołu: po dodaniu o
 const readmeMd = `# Projekt pokazowy zaawansowany — Montaż modułu urządzenia przemysłowego
 
 Pakiet demonstracyjny: \`03_modul_urzadzenia\`
-Wersja: **1.0.0**
+Wersja: **1.1.0 — częściowy odbiór fizyczny A, bufory rozgałęzione nadal otwarte**
 Pochodzenie danych: **jawnie syntetyczne** (dane demonstracyjno-dydaktyczne)
 Identyfikator: \`DEMO-MODUL-URZADZENIA-1\`
 Zgodność: **Layout Studio Pro 3D v0.4.0+**
@@ -692,18 +707,28 @@ Pakiet reprezentuje zaawansowany poziom złożoności (**advanced**) i demonstru
 
 1. W aplikacji kliknij **Pakiet projektu** i wczytaj plik \`projekt-pokazowy.json\`.
 2. Pobierz automatyczną kopię ratunkową i zatwierdź import.
-3. W module **Symulacja**:
+3. Dla procesowego wzorca w **Proces i stanowiska → Stanowiska i zasoby** włącz jawnie **JIT**:
    - Ustaw partię: **3 sztuki**.
    - Odstęp przybyć: **1 s**.
-4. Wybierz wariant **ADVANCED-BASE** i uruchom symulację. Zwróć uwagę na start operacji integracji (OP20-M) — czeka ona na gotowość obu podzespołów A i B. Czas ukończenia partii: **410 s**.
-5. Przełącz na wariant **ADVANCED-BALANCED** i ponów symulację. Czas partii spada do **340 s** dzięki odciążeniu węzła złączenia.
+4. Wybierz wariant **ADVANCED-BASE** i uruchom symulację. Graf JIT zachowuje poprzedniki obu gałęzi; rejestr ilości i transport partii sprawdza osobny eksperyment fizyczny poniżej. Czas ukończenia partii JIT: **320 s**.
+5. Przełącz na wariant **ADVANCED-BALANCED** i ponów symulację JIT. Czas partii spada do **270 s** dzięki odciążeniu węzła złączenia.
 6. Przejdź do modułu **Porównanie wariantów**, aby wyświetlić tabelę syntezy i pobrać raport.
 `;
 
-files.set('README.md', Buffer.from((readmeMd+'\n\n## Zakres odbioru\n\nPodane wyniki są procesowe: jawny tryb just-in-time z założoną dostępnością materiałów. Nie stanowią odbioru fizycznych przejazdów, rezerwacji wózków, rzeczywistych zapasów/dostaw ani blokowania fizycznego przepływu. Konfiguracja zasobów wymaga osobnego odbioru bez JIT przed użyciem jako wzorzec fizyczny. Główne widoki projektu 4 i warsztat 6 mają oddzielne źródła; wyniki wariantów odczytuj w warsztacie.\n').replace(/\r\n/g, '\n')));
+// Literal hand-derived timing, authored before running the scheduler. Products are
+// explicitly spaced to isolate branch joins; this is not a throughput/load test.
+oczekiwaneWynikiJson.physical={conditions:{batch:3,arrivalIntervalSeconds:1000,transportMode:'configured'},scope:'Transport/join/supply only; finite branched buffers remain unsupported',
+  variants:[{id:'ADVANCED-BASE',completionSeconds:[210,1210,2210],operationWindows:[0,1000,2000].flatMap((offset,index)=>[
+    [index+1,'MU-OP10-A',offset,offset+50],[index+1,'MU-OP10-B',offset,offset+60],[index+1,'MU-OP10-M',offset,offset+40],[index+1,'MU-OP20-M',offset+80,offset+150],[index+1,'MU-OP30-M',offset+160,offset+210]])},
+    {id:'ADVANCED-BALANCED',completionSeconds:[180,1180,2180],operationWindows:[0,1000,2000].flatMap((offset,index)=>[
+    [index+1,'MU-OP10-A',offset,offset+50],[index+1,'MU-OP10-B',offset,offset+60],[index+1,'MU-OP10-M',offset,offset+40],[index+1,'MU-OP20-M',offset+80,offset+120],[index+1,'MU-OP30-M',offset+130,offset+180]])}],
+  supplyCase:{change:'Only SUP-MU-ZASIL initialStock=0; first delivery remains 900 s. Other branches can prepare at 0 s.',completionBase:[1100,1210,2210],completionBalanced:[1070,1180,2180]}};
+const physicalReadme='\n\n## Częściowy odbiór fizyczny A (1.1.0)\n\nW Proces i stanowiska → Stanowiska i zasoby ustaw **3 sztuki, odstęp 1000 s, JIT WYŁĄCZONY**. Baza: 210/1210/2210 s; reorganizacja: 180/1180/2180 s. Odstęp izoluje łączenie gałęzi, nie jest próbą wydajności pod obciążeniem. Osobne 320/270 s pozostają wzorcami procesowymi JIT przy odstępie 1 s.\n\nMonterzy źródłowi MU-W1/W2 transportują podmontaże do integracji, MU-W3 przewozi korpus do integracji, MU-W4 do testu; cztery wózki wracają do źródeł. Czas załadowany 10 s i pusty powrót 10 s to dwa jawne założenia dydaktyczne. Dostawy ośmiu komponentów z magazynu wykonują inne osoby: zdarzenia dostępności nie zajmują monterów. Próba niedoboru: ustaw tylko SUP-MU-ZASIL na zapas 0 i pozostaw pierwszą dostawę 900 s; baza kończy w 1100/1210/2210 s, reorganizacja 1070/1180/2180 s. Pozostałe dwie gałęzie pierwszej sztuki nadal pracują od 0 s.\n\n**C2 nadal w trakcie:** ograniczone bufory dla gałęzi i partii podzespołów nie są jeszcze zintegrowane. Ten eksperyment nie narzuca ograniczeń pojemności i nie odbiera blokowania po obróbce. Próba dodania skończonego bufora jest jawnie odrzucana. Nie zastępuj tego włączeniem JIT jako rzekomym odbiorem fizycznym. Brak geometrii przebiegu tras pozostaje jawny; A2b2b pokazuje historię korpusów/wózków, rejestr podzespołów jest w inspekcji wyniku, bez ich osobnej animacji. Główne widoki 4 i model 6 pozostają osobne.\n';
+const physicalCalculation='\n\n## Niezależny wzorzec fizyczny A — 2026-10-25\n\nDla każdej odizolowanej sztuki przygotowania startują razem w t=0: zasilanie kończy w 50, napęd w 60, korpus w 40 s. W obecnej regule harmonogramowania gotowość technologiczna integracji w 60 s poprzedza zlecenie dostarczenia partii. Oba podmontaże jadą 60–70 niezależnymi wózkami i monterami, ich puste powroty zajmują 70–80. Korpus jedzie 70–80, gdy partie już dotarły, i jego wózek wraca 80–90. Integracja startuje w 80: koniec 150 (baza) lub 120 (zespół). Przewóz do testu 150–160 lub 120–130, osobny powrót 160–170 lub 130–140. Test trwa 50 s: końce 210/180 s. Kolejne sztuki przybywają w 1000 i 2000 s; zasoby poprzedniej są już zwolnione, więc wzorzec przesuwa się o te jawne czasy.\n\nDla zerowego zapasu zasilacza gałąź A czeka do dostawy w 900 s, pracuje 900–950; gałąź napędu i korpus pozostają 0–60 oraz 0–40. Złączenie czeka na A. Podmontaże jadą 950–960, korpus 960–970, integracja 970–1040 lub 970–1010, a test 1050–1100 lub 1020–1070. Następne sztuki z odstępem 1000 s nie są już opóźnione. Wszystkie ilości, zapasy, terminy, obsady i czasy są jawnymi założeniami syntetycznymi, bez danych magazynowych pracowników.\n\nOgraniczone bufory rozgałęzień wymagają osobnej integracji silnika. Nie wyznaczono dla nich pozornego wzorca przy JIT i nie oznaczono pełnego C2 jako odebrane.\n';
+files.set('README.md', Buffer.from((readmeMd+physicalReadme).replace(/\r\n/g, '\n')));
 files.set('dane/slownik_pol.md', Buffer.from(slownikPolMd.replace(/\r\n/g, '\n')));
 files.set('referencje/oczekiwane_wyniki.json', Buffer.from(JSON.stringify(oczekiwaneWynikiJson, null, 2) + '\n'));
-files.set('referencje/obliczenia.md', Buffer.from(obliczeniaMd.replace(/\r\n/g, '\n')));
+files.set('referencje/obliczenia.md', Buffer.from((obliczeniaMd+physicalCalculation).replace(/\r\n/g, '\n')));
 
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const roles = {
@@ -719,7 +744,7 @@ json('manifest.json', {
   format: 'layout-studio-demo-manifest',
   formatVersion: 1,
   packageId: projectId,
-  packageVersion: '1.0.0',
+  packageVersion: '1.1.0',
   title: source4.name,
   level: 'advanced',
   language: 'pl',

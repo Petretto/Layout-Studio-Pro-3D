@@ -1,0 +1,17 @@
+{
+  "date": "2026-10-25",
+  "url": "http://127.0.0.1:5310/",
+  "reopenedStockZero": true,
+  "shortageRows": [
+    "S5 — Test funkcjonalny, kalibracja i pakowanie końcowe · ST-MU-MAIN3MU-OP30-M501",
+    "Test funkcjonalny, kalibracja i pakowanie końcowe · MU-OP30-M50założenie1ST-MU-MAIN3#1",
+    "Test funkcjonalny, kalibracja i pakowanie końcowe · MU-OP30-MIstnieje obsada 1 osób pokrywająca kompetencje. Dostępność sprawdza harmonogram.",
+    "MU-EQ5Stół roboczy S5ST-MU-MAIN3MU-TABLE-M3MU-OP30-M",
+    "1MU-OP30-MST-MU-MAIN3 / 1MU-W5Korpus: MU-BODY-1 · cel zarezerwowany [s]: 1010–1070Osoby transportu: MU-W4 · urządzenia: MU-CART-INT-TESTTransport korpusu: MU-R-INT-TEST · 1010–1020 s · założonyWyposażenie: MU-EQ5101010201070500——Praca [s]: 1020–1070Pauzy [s]: brakRezerwacja osób [s]: 1020–1070",
+    "2MU-OP30-MST-MU-MAIN3 / 1MU-W5Korpus: MU-BODY-2 · cel zarezerwowany [s]: 1120–1180Osoby transportu: MU-W4 · urządzenia: MU-CART-INT-TESTTransport korpusu: MU-R-INT-TEST · 1120–1130 s · założonyWyposażenie: MU-EQ5112011301180500——Praca [s]: 1130–1180Pauzy [s]: brakRezerwacja osób [s]: 1130–1180",
+    "3MU-OP30-MST-MU-MAIN3 / 1MU-W5Korpus: MU-BODY-3 · cel zarezerwowany [s]: 2120–2180Osoby transportu: MU-W4 · urządzenia: MU-CART-INT-TESTTransport korpusu: MU-R-INT-TEST · 2120–2130 s · założonyWyposażenie: MU-EQ5212021302180500——Praca [s]: 2130–2180Pauzy [s]: brakRezerwacja osób [s]: 2130–2180"
+  ],
+  "restoredStatus": "Czas: 65 / 2180 s · ukończono 0/3 szt. · przybyło 1. Zielony: praca, niebieski: przerwa, pomarańczowy: zajęcie po obróbce, żółty: wybrana operacja.",
+  "physicalHistory": "Instancja\tStan i miejsce\tPrzejazd\tGeometria\nKorpus: MU-BODY-1\tDostępny · ST-MU-MAIN1#1\t—\tMU-TABLE-M1\nKorpus: MU-BODY-2\tDostępny · ST-MU-MAIN1#1\t—\tMU-TABLE-M1\nKorpus: MU-BODY-3\tDostępny · ST-MU-MAIN1#1\t—\tMU-TABLE-M1\nWózek: MU-CART-PWR-INT\tW przejeździe · brak pozycji stacjonarnej\tST-MU-PWR#1 → ST-MU-MAIN2#1 · 60–70 s · 50% czasu · załadowany\tBrak geometrycznego przebiegu trasy — pozycja w przejeździe nieznana.\nWózek: MU-CART-DRV-INT\tW przejeździe · brak pozycji stacjonarnej\tST-MU-DRV#1 → ST-MU-MAIN2#1 · 60–70 s · 50% czasu · załadowany\tBrak geometrycznego przebiegu trasy — pozycja w przejeździe nieznana.\nWózek: MU-CART-M1-INT\tDostępny · ST-MU-MAIN1#1\t—\tMU-TABLE-M1\nWózek: MU-CART-INT-TEST\tDostępny · ST-MU-MAIN2#1\t—\tMU-TABLE-M2",
+  "consoleErrors": []
+}

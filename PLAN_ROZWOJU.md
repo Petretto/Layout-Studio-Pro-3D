@@ -1,7 +1,7 @@
 # Plan rozwoju i rejestr postępu aplikacji
 
 Data utworzenia: 2026-09-29  
-Ostatnia aktualizacja: 2026-10-24
+Ostatnia aktualizacja: 2026-10-25
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
 Dane testowe: Eko jest historycznym przypadkiem regresyjnym; docelowe przykłady to trzy zewnętrzne, kompletne pakiety demonstracyjne (7.12).
 
@@ -136,6 +136,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+7.12.C2-A (2026-10-25): odebrany podpakiet transportu i zaopatrzenia podmontaży. Pakiet 1.1.0: 3 korpusy, 4 wózki, przewozy i jawne powroty wykonywane przez monterów, 8 zapasów; dostawy magazynowe bez rezerwacji monterów. Niezależne referencje dla 3 sztuk/odstępu 1000 s/JIT OFF: 2210/2180 s (pierwsza sztuka 210/180 s). Brak zasilacza do 900 s opóźnia pierwszą sztukę do 1100/1070 s. Nie jest to próba przepustowości przy spiętrzeniu. 6 celowanych C2, 28 regresyjnych, 3 katalogu/ZIP, generator --check, build i rzeczywisty UI z odświeżeniem PASS. Backup 632 SHA PASS. Raport `WERYFIKACJA_C2_FIZYCZNY_A_7_12.md`. **Całe C2/7.12 w trakcie: następny C2-B — ograniczone bufory gałęzi**, potem D. Pojemność w sztukach podzespołu (partia 5 szt. zajmuje 5), kontrakt `MODEL_BUFOROW_PODMONTOW_C2.md`; reszty partii wymagają jawnego rozwiązania. Postęp bez zmiany: 84,7% / 89,7%.
 
 Doprecyzowanie użytkownika 2026-10-25 (3.4/3.5, C1 i kolejne przykłady): **monterzy wykonują transport między operacjami wyłącznie w obrębie linii/procesu. Materiały z magazynu dostarczają inne osoby.** Obsadę i rezerwacje monterów rozliczać tylko dla transportu montażowego (`assemblyTransport`, scope assembly-only). Zaopatrzenie z magazynu (`materialSupply`) pozostaje osobną dostępnością: jawny zapas, ilości i terminy dostaw; bez zajmowania monterów i bez modelowania obciążenia osób magazynowych w bieżącym zakresie. Obecny C1 już zachowuje ten podział, więc wyniki 460/385 s pozostają bez zmian. Zmiana dokumentacyjna; bez nowych testów automatycznych i bez zmiany statusów głównych ID.
 

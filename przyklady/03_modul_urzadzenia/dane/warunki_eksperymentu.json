@@ -3,6 +3,13 @@
   "batch": 3,
   "arrivalIntervalSeconds": 1,
   "transportMode": "just-in-time",
+  "physicalConditions": {
+    "batch": 3,
+    "arrivalIntervalSeconds": 1000,
+    "transportMode": "configured"
+  },
+  "physicalScope": "Acceptance A only: body and subassembly transport, warehouse availability; finite branched buffers NOT supported or accepted",
+  "physicalAssumptions": "Four assembly carts; upstream assemblers transport and return. Loaded travel 10s, empty return separately assumed 10s. Eight explicit material stocks: initial 10, delivery 10 at 900s and each 900s; consumption 1 declared unit per assigned operation.",
   "initialArrivalsSeconds": [
     0,
     1,

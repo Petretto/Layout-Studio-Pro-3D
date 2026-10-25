@@ -1,7 +1,7 @@
 # Projekt pokazowy zaawansowany — Montaż modułu urządzenia przemysłowego
 
 Pakiet demonstracyjny: `03_modul_urzadzenia`
-Wersja: **1.0.0**
+Wersja: **1.1.0 — częściowy odbiór fizyczny A, bufory rozgałęzione nadal otwarte**
 Pochodzenie danych: **jawnie syntetyczne** (dane demonstracyjno-dydaktyczne)
 Identyfikator: `DEMO-MODUL-URZADZENIA-1`
 Zgodność: **Layout Studio Pro 3D v0.4.0+**
@@ -31,14 +31,18 @@ Pakiet reprezentuje zaawansowany poziom złożoności (**advanced**) i demonstru
 
 1. W aplikacji kliknij **Pakiet projektu** i wczytaj plik `projekt-pokazowy.json`.
 2. Pobierz automatyczną kopię ratunkową i zatwierdź import.
-3. W module **Symulacja**:
+3. Dla procesowego wzorca w **Proces i stanowiska → Stanowiska i zasoby** włącz jawnie **JIT**:
    - Ustaw partię: **3 sztuki**.
    - Odstęp przybyć: **1 s**.
-4. Wybierz wariant **ADVANCED-BASE** i uruchom symulację. Zwróć uwagę na start operacji integracji (OP20-M) — czeka ona na gotowość obu podzespołów A i B. Czas ukończenia partii: **410 s**.
-5. Przełącz na wariant **ADVANCED-BALANCED** i ponów symulację. Czas partii spada do **340 s** dzięki odciążeniu węzła złączenia.
+4. Wybierz wariant **ADVANCED-BASE** i uruchom symulację. Graf JIT zachowuje poprzedniki obu gałęzi; rejestr ilości i transport partii sprawdza osobny eksperyment fizyczny poniżej. Czas ukończenia partii JIT: **320 s**.
+5. Przełącz na wariant **ADVANCED-BALANCED** i ponów symulację JIT. Czas partii spada do **270 s** dzięki odciążeniu węzła złączenia.
 6. Przejdź do modułu **Porównanie wariantów**, aby wyświetlić tabelę syntezy i pobrać raport.
 
 
-## Zakres odbioru
+## Częściowy odbiór fizyczny A (1.1.0)
 
-Podane wyniki są procesowe: jawny tryb just-in-time z założoną dostępnością materiałów. Nie stanowią odbioru fizycznych przejazdów, rezerwacji wózków, rzeczywistych zapasów/dostaw ani blokowania fizycznego przepływu. Konfiguracja zasobów wymaga osobnego odbioru bez JIT przed użyciem jako wzorzec fizyczny. Główne widoki projektu 4 i warsztat 6 mają oddzielne źródła; wyniki wariantów odczytuj w warsztacie.
+W Proces i stanowiska → Stanowiska i zasoby ustaw **3 sztuki, odstęp 1000 s, JIT WYŁĄCZONY**. Baza: 210/1210/2210 s; reorganizacja: 180/1180/2180 s. Odstęp izoluje łączenie gałęzi, nie jest próbą wydajności pod obciążeniem. Osobne 320/270 s pozostają wzorcami procesowymi JIT przy odstępie 1 s.
+
+Monterzy źródłowi MU-W1/W2 transportują podmontaże do integracji, MU-W3 przewozi korpus do integracji, MU-W4 do testu; cztery wózki wracają do źródeł. Czas załadowany 10 s i pusty powrót 10 s to dwa jawne założenia dydaktyczne. Dostawy ośmiu komponentów z magazynu wykonują inne osoby: zdarzenia dostępności nie zajmują monterów. Próba niedoboru: ustaw tylko SUP-MU-ZASIL na zapas 0 i pozostaw pierwszą dostawę 900 s; baza kończy w 1100/1210/2210 s, reorganizacja 1070/1180/2180 s. Pozostałe dwie gałęzie pierwszej sztuki nadal pracują od 0 s.
+
+**C2 nadal w trakcie:** ograniczone bufory dla gałęzi i partii podzespołów nie są jeszcze zintegrowane. Ten eksperyment nie narzuca ograniczeń pojemności i nie odbiera blokowania po obróbce. Próba dodania skończonego bufora jest jawnie odrzucana. Nie zastępuj tego włączeniem JIT jako rzekomym odbiorem fizycznym. Brak geometrii przebiegu tras pozostaje jawny; A2b2b pokazuje historię korpusów/wózków, rejestr podzespołów jest w inspekcji wyniku, bez ich osobnej animacji. Główne widoki 4 i model 6 pozostają osobne.

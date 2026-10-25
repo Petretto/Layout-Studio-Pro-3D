@@ -1,6 +1,6 @@
 # Kontrakt pakietu demonstracyjnego — 7.12.A
 
-Wersja kontraktu: **1, odbiór 2026-10-21**, status przykładów zaktualizowany 2026-10-25. A1 dostarcza format/importer pojedynczej rodziny projektu; B ma wzorzec JIT z buforami, C1 1.1.0 odebrano także fizycznie (transport monterów, bufory, zaopatrzenie), C2 ma wzorzec procesowy JIT. Fizyczny odbiór C2, zbiorczy D i całe A2 pozostają otwarte; integracja historii A2b2b działa w opisanym zakresie bez geometrycznej drogi. Schematy istniejących projektów nie zmieniły się.
+Wersja kontraktu: **1, odbiór 2026-10-21**, status przykładów zaktualizowany 2026-10-25. A1 dostarcza format/importer pojedynczej rodziny projektu; B ma wzorzec JIT z buforami, C1 1.1.0 odebrano także fizycznie (transport monterów, bufory, zaopatrzenie), C2 1.1.0 ma wzorzec JIT i odebrany podpakiet fizyczny A: transport monterów i zaopatrzenie (3 szt./1000 s). Ograniczone bufory gałęzi pozostają nieobsługiwane; ich pojemność będzie liczona w sztukach podzespołu zgodnie z decyzją użytkownika. Pełny fizyczny odbiór C2, zbiorczy D i całe A2 pozostają otwarte; integracja historii A2b2b działa w opisanym zakresie bez geometrycznej drogi. Schematy istniejących projektów nie zmieniły się.
 
 ## Format pliku wejściowego A1
 

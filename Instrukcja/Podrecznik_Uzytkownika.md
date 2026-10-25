@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**
-Aktualizacja podręcznika: **25.10.2026 — fizyczny przykład C1: transport monterów, bufory i dostawy; odtwarzanie A2b2b oraz katalog 7.13.3.**
+Aktualizacja podręcznika: **25.10.2026 — C2-A: transport podmontaży i zapasy; fizyczny przykład C1: transport monterów, bufory i dostawy; odtwarzanie A2b2b oraz katalog 7.13.3.**
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -67,7 +67,13 @@ C1 w wersji pakietu **1.1.0** ma również fizyczny wzorzec: **3 sztuki, odstęp
 
 Próba dostawy C1: w edytorze zaopatrzenia zmień tylko zapas początkowy **SUP-RAMA** na 0, zapisz i ponownie oblicz. Baza kończy w **1360 s**, reorganizacja w **1285 s**; pierwsza dostawa nadal ma jawny termin 900 s. Przywrócenie zapisanego wariantu przywraca konfigurację. Próba blokady: baza, wyjście S1=1, wejście S2=0, początek zmiany S2=600 s. Drugi wyrób kończy obróbkę S1 w 120 s, ale zwalnia stanowisko w 590 s. Operator zostaje zwolniony zgodnie z polityką; korpus i stanowisko pozostają zajęte. Pełne referencje są w katalogu projektu. Wszystkie te parametry są syntetyczne.
 
-C1/C2 mają też osobne wyniki procesowe przy jawnym JIT: C1 390/315 s, C2 320/270 s dla 3 sztuk i odstępu 1 s. JIT nie sprawdza fizycznego transportu ani zapasów. Fizyczny odbiór C2 pozostaje otwarty. Eko: 1 sztuka, odstęp 1 s, JIT wyłączony — 13550/14150/14150 s. Pakowanie Eko ma dwie osoby przez 1320 s, a przypisania innych ról są testowe; nie odtwarzają znanych tylko łącznie 13 osób pomiaru.
+C2 w pakiecie **1.1.0** ma odebrany podpakiet fizyczny A. Wczytaj go z katalogu, przejdź do **Proces i stanowiska → Stanowiska i zasoby**, ustaw **3 sztuki**, **odstęp przybycia 1000 s**, pozostaw JIT wyłączony i oblicz harmonogram. Wynik bazy to **2210 s**, wariantu z dwiema osobami na integracji **2180 s**; pierwsza sztuka kończy się w 210/180 s. Ten odstęp rozdziela zlecenia i służy kontroli połączenia gałęzi, a nie ocenie przepustowości przy spiętrzeniu. Monterzy przewożą podzespoły i korpus czterema wózkami oraz wykonują jawne powroty; osiem materiałów ma osobne zapasy i dostawy magazynowe realizowane przez inne osoby. Wszystkie wartości są syntetyczne.
+
+Próba C2: zmień tylko zapas początkowy **SUP-MU-ZASIL** na 0, zapisz zaopatrzenie i oblicz ponownie przy tych samych warunkach. Gałąź A czeka do dostawy w 900 s; pierwsza sztuka kończy w 1100/1070 s. Końcowy wynik partii nadal wynosi 2210/2180 s, bo późniejsze sztuki pozostają bez opóźnienia. Rozwiń **Partie podzespołów (6)**, aby sprawdzić wytworzenie, przewóz, przybycie i zużycie przy starcie integracji. Przywrócenie zapisanego wariantu odtwarza pełne zapasy. Po odświeżeniu trzeba ponownie obliczyć harmonogram.
+
+**Ograniczenie C2:** ograniczone bufory gałęzi podmontaży nie są jeszcze obsługiwane; dodanie takiego bufora powoduje jawne odrzucenie, nie automatyczne uproszczenie wyniku. Ich planowana pojemność będzie liczona w sztukach podzespołu (partia 5 sztuk zajmie 5). Inspekcja partii nie oznacza oddzielnej animacji ich brył w 3D. Historia fizyczna pokazuje korpusy i wózki; bez geometrycznego przebiegu trasy pozycja w przejeździe pozostaje nieznana.
+
+C1/C2 mają też osobne wyniki procesowe przy jawnym JIT: C1 390/315 s, C2 320/270 s dla 3 sztuk i odstępu 1 s. JIT nie sprawdza fizycznego transportu ani zapasów. Pełny fizyczny odbiór C2 pozostaje otwarty do ograniczonych buforów gałęzi. Eko: 1 sztuka, odstęp 1 s, JIT wyłączony — 13550/14150/14150 s. Pakowanie Eko ma dwie osoby przez 1320 s, a przypisania innych ról są testowe; nie odtwarzają znanych tylko łącznie 13 osób pomiaru.
 
 ---
 

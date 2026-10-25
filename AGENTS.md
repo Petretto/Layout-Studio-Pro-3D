@@ -125,6 +125,8 @@ User clarification 2026-10-25: assemblers perform transport only between operati
 - Approved rule A: the whole explicitly declared subassembly lot becomes available at producer completion; the assigned quantity is consumed atomically at recipient start.
 - Quantities, units and producer/recipient execution assignments remain explicit; do not derive stock or quantities from BOM.
 
+User decision 2026-10-25 (C2 finite buffers): capacity counts pieces of subassembly, not lots. A lot of 5 pieces occupies 5 capacity units. Integration remains pending under `MODEL_BUFOROW_PODMONTOW_C2.md`; do not claim finite branch buffers are supported by C2-A.
+
 
 ## Buffers and material supply — user decisions 2026-10-14
 - Material consumption quantities must be explicit for each operation. Consume the whole assigned quantity at actual operation start; process deliveries before consumption at equal time.

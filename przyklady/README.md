@@ -1,6 +1,6 @@
 # Projekty pokazowe — kontrakt 7.12.A / odbiór 7.12.D
 
-Status 2026-10-25: **C1 1.1.0 odebrany również fizycznie: transport monterów, bufory i dostawy; C2/D oraz całe A2 nadal otwarte, 7.12 w trakcie**. C2: jawny JIT, nie odbiór transportu i zapasów. Eko: logiczny wzorzec korpusu bez JIT, nie odwzorowanie obsady 13 osób.
+Status 2026-10-25: **C1 1.1.0 odebrany również fizycznie: transport monterów, bufory i dostawy; C2/D oraz całe A2 nadal otwarte, 7.12 w trakcie**. C2 1.1.0: odebrany podpakiet fizyczny A (transport i zaopatrzenie), ograniczone bufory gałęzi nadal nieobsługiwane. Eko: logiczny wzorzec korpusu bez JIT, nie odwzorowanie obsady 13 osób.
 Importer i eksporter formatu `layout-studio-project-package` v1 działają przez przycisk **Pakiet projektu** (w menu projektu).
 
 Od 7.13.3 na Pulpicie dostępne są **Przykłady do pobrania**: osobny JSON projektu oraz ZIP zawierający wszystkie 12 plików katalogu. Pobieranie z kontrolą SHA-256 nie zastępuje aktywnego projektu. Wczytanie odbywa się osobno przez importer z kopią ratunkową i potwierdzeniem. `katalog.json` opisuje karty; `npm run dev` i `npm run build` przygotowują zewnętrzne pliki dystrybucji z weryfikacją manifestów. Dane nie są importowane do kodu JS. Lokalny serwer działa bez internetu; wersja hostowana wymaga połączenia do pobrania.
@@ -20,8 +20,9 @@ Od 7.13.3 na Pulpicie dostępne są **Przykłady do pobrania**: osobny JSON proj
 
 3. **`03_modul_urzadzenia/` — montaż modułu urządzenia (zaawansowany, 7.12.C2):**
    - Linia główna korpusu zasilana z dwóch równoległych zbiegających się gałęzi podzespołów (`SUB-PWR` moduł zasilania, `SUB-DRV` moduł napędowy) zbiegających się w węźle integracji `MU-OP20-M`.
-   - Reguła A przepływu podzespołów (`producer-finish` $\rightarrow$ `consumer-start`), transport i buforowanie, 12 plików z manifestem SHA-256.
-   - Wariant bazowy (wąskie gardło OP20-M 70 s, partia 3 szt. = 320 s) vs zbalansowany (zespół 2 monterów na OP20-M 40 s, wąskie gardło OP10-B 60 s, partia 3 szt. = 270 s).
+   - Reguła A przepływu podzespołów (`producer-finish` $\rightarrow$ `consumer-start`), transport; ograniczone bufory gałęzi nieobsługiwane, 12 plików z manifestem SHA-256.
+   - Fizyczny C2-A: 3 szt., odstęp 1000 s, JIT OFF → 2210/2180 s; pierwsza sztuka 210/180 s. Cztery wózki z obsadą monterów i powrotami, osiem jawnych zapasów. To izolowana próba łączenia gałęzi, nie przepustowości. Raport: [C2-A](../WERYFIKACJA_C2_FIZYCZNY_A_7_12.md).
+   - Osobny wzorzec JIT, 3 szt./1 s: wariant bazowy (wąskie gardło OP20-M 70 s, partia 3 szt. = 320 s) vs zbalansowany (zespół 2 monterów na OP20-M 40 s, wąskie gardło OP10-B 60 s, partia 3 szt. = 270 s).
    - Wejściowy plik pakietu: [`03_modul_urzadzenia/projekt-pokazowy.json`](03_modul_urzadzenia/projekt-pokazowy.json). Raport: [`../WERYFIKACJA_PROJEKTU_ZAAWANSOWANEGO_7_12_C2.md`](../WERYFIKACJA_PROJEKTU_ZAAWANSOWANEGO_7_12_C2.md).
 
 4. **`04_eko/` — montaż ramy Eko 1.4 (dane rzeczywiste / demonstracyjne, 7.13):**

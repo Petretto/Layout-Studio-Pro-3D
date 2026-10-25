@@ -3,7 +3,7 @@
   "projects": [
     {"directory":"01_zestaw_montazowy","summary":"Prosty proces liniowy: trzy operacje i porównanie konsolidacji stanowisk.","scope":"Wzorce procesowe JIT: 170/190 s dla trzech sztuk."},
     {"directory":"02_wozek_warsztatowy","summary":"Obsada zespołowa, transport wykonywany przez monterów, bufory i siedem zapasów materiałowych.","scope":"Trzy sztuki, odstęp 1 s, JIT wyłączony: 460/385 s. JIT: 390/315 s. Osobne jawne próby dostawy w 900 s i blokady w referencjach. Bez geometrycznego przebiegu tras."},
-    {"directory":"03_modul_urzadzenia","summary":"Dwie równoległe gałęzie podmontaży łączące się z głównym procesem.","scope":"Wzorce procesowe JIT: 320/270 s dla trzech sztuk. Odbiór fizycznego transportu i zaopatrzenia pozostaje otwarty."},
+    {"directory":"03_modul_urzadzenia","summary":"Dwie równoległe gałęzie podmontaży, transport monterów i osiem jawnych zapasów.","scope":"Częściowy odbiór fizyczny A: 3 szt., odstęp 1000 s, JIT OFF → 2210/2180 s. JIT 3 szt./1 s → 320/270 s. Ograniczone bufory rozgałęzień nadal nieobsługiwane; całe C2 pozostaje w trakcie."},
     {"directory":"04_eko","summary":"Rama 1.4: pomiary OP10–OP21 i cztery czasy przykładowe. Pakowanie przez dwie osoby.","scope":"Jedna sztuka, odstęp 1 s, JIT wyłączony: 13550/14150/14150 s. 17 ról testowych; bez rekonstrukcji rzeczywistej obsady 13 osób i pełnej logistyki."}
   ]
 }

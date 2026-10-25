@@ -576,6 +576,56 @@ test('7.12.C1-physical: dostawa w 900 s poprzedza zużycie, pełny bufor zatrzym
   assert.equal(body.status,'reserved');assert.deepEqual(body.location,{kind:'station',stationId:'ST-WW-1',copy:1});
 });
 
+test('7.12.C2-physical-A: niezależne okna, łączenie partii i zasoby monterów przy jawnym odstępie 1000 s',()=>{
+  const pkg=advancedDemoPackage(),variants=JSON.parse(pkg.data.variantsRaw!).variants;
+  const reference=JSON.parse(readFileSync('przyklady/03_modul_urzadzenia/referencje/oczekiwane_wyniki.json','utf8')).physical;
+  for(const variant of variants){
+    const project=parseDomainProjectV6(JSON.stringify(variant.project)),before=JSON.stringify(project),expected=reference.variants.find((v:any)=>v.id===variant.id);
+    const result=scheduleWorkerRun(project,1000,3,project.bodyRunInput);
+    assert.deepEqual(result.jobs.map(job=>job.finish),expected.completionSeconds);
+    const actual=result.runs.map(run=>[run.job,run.operationId,run.startSeconds,run.endSeconds]).sort((a,b)=>Number(a[0])-Number(b[0])||String(a[1]).localeCompare(String(b[1])));
+    assert.deepEqual(actual,expected.operationWindows);
+    assert.equal(result.subassemblyLots!.length,6);assert.ok(result.subassemblyLots!.every(lot=>lot.status==='consumed'&&lot.remainingQuantity===0));
+    for(const lot of result.subassemblyLots!){
+      const events=result.subassemblyEvents!.filter(event=>event.lotId===lot.declaration.id);
+      assert.deepEqual(events.map(event=>event.kind),['produced','start-transfer','arrived','consumed']);
+      const producer=result.runs.find(run=>run.job===lot.declaration.producer.job&&run.operationId===lot.declaration.producer.operationId)!;
+      const consumer=result.runs.find(run=>run.job===lot.declaration.consumer.job&&run.operationId===lot.declaration.consumer.operationId)!;
+      assert.equal(events[0].atSeconds,producer.endSeconds);assert.equal(events[3].atSeconds,consumer.startSeconds);
+      assert.ok(events[1].atSeconds>=producer.endSeconds&&events[2].atSeconds<=consumer.startSeconds);
+    }
+    assert.equal(result.transportMovements!.filter(move=>move.kind==='loaded').length,12);
+    assert.equal(result.transportMovements!.filter(move=>move.purpose==='return').length,12);
+    assert.equal(result.transportMovements!.filter(move=>!!move.lotId).length,6);
+    const reservations=result.reservations.reservations;
+    for(let i=0;i<reservations.length;i++)for(let j=i+1;j<reservations.length;j++){
+      const a=reservations[i],b=reservations[j],aEnd=a.releasedAtSeconds??a.endSeconds,bEnd=b.releasedAtSeconds??b.endSeconds;
+      if(a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(aEnd<=b.startSeconds||bEnd<=a.startSeconds);
+    }
+    assert.equal(result.materialStocks!.length,8);assert.ok(result.materialStocks!.every(stock=>stock.consumed===3&&stock.delivered===20&&stock.stock===27));
+    const history=prepareDomainPhysicalPlayback(project,result,reference.conditions);
+    assert.equal(domainPhysicalPlaybackFrame(history,history.endSeconds).bodies.length,3);
+    assert.equal(JSON.stringify(project),before);
+  }
+});
+
+test('7.12.C2-physical-A: brak zasilacza opóźnia właściwą gałąź; ograniczone bufory są jawnie nieobsługiwane',()=>{
+  const pkg=advancedDemoPackage(),variants=JSON.parse(pkg.data.variantsRaw!).variants;
+  const reference=JSON.parse(readFileSync('przyklady/03_modul_urzadzenia/referencje/oczekiwane_wyniki.json','utf8')).physical;
+  for(const variant of variants){
+    const project=structuredClone(variant.project);project.materialSupply.items.find((item:any)=>item.id==='SUP-MU-ZASIL').initialStock=0;
+    const result=scheduleWorkerRun(project,1000,3,project.bodyRunInput);
+    assert.deepEqual(result.jobs.map(job=>job.finish),variant.id==='ADVANCED-BASE'?reference.supplyCase.completionBase:reference.supplyCase.completionBalanced);
+    assert.equal(result.runs.find(run=>run.job===1&&run.operationId==='MU-OP10-A')!.startSeconds,900);
+    assert.equal(result.runs.find(run=>run.job===1&&run.operationId==='MU-OP10-B')!.startSeconds,0);
+    assert.equal(result.runs.find(run=>run.job===1&&run.operationId==='MU-OP10-M')!.startSeconds,0);
+  }
+  const bounded=structuredClone(variants[0].project);
+  bounded.stationBuffers={buffers:[{stationId:bounded.stations[0].id,copy:1,inputCapacity:1,outputCapacity:1,blockingPolicy:'bbas-worker-released'}]};
+  const before=JSON.stringify(bounded);assert.throws(()=>scheduleWorkerRun(bounded,1000,3,bounded.bodyRunInput),/3\.5b2c2/);
+  assert.equal(JSON.stringify(bounded),before);
+});
+
 test('7.12.C2: manifest obejmuje wszystkie pliki, poprawne SHA, źródła i brak powiązań z Eko/bateriami/silnikami',()=>{
   const root='przyklady/03_modul_urzadzenia/',pkg=advancedDemoPackage();
   const {createHash}=require('node:crypto'),{readdirSync}=require('node:fs');

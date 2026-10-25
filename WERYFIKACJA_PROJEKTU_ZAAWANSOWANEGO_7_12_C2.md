@@ -1,5 +1,7 @@
 # 7.12.C2 — zaawansowany zewnętrzny projekt pokazowy: Moduł urządzenia
 
+Aktualizacja 2026-10-25: [C2-A — transport i zaopatrzenie](WERYFIKACJA_C2_FIZYCZNY_A_7_12.md) odebrany. Całe C2 pozostaje w trakcie do ograniczonych buforów gałęzi. Poniższy zapis jest historyczny.
+
 
 **Korekta po niezależnym przeglądzie 2026-10-24:** aktualny zakres i wyniki są w [raporcie przeglądu](WERYFIKACJA_PRZEGLADU_DEMO_I_STARTU_7_13.md). Poniższy zapis zachowano jako historię wcześniejszego odbioru, nie dowód pełnego transportu fizycznego. 7.12 ponownie w trakcie. C2 ma teraz jawną równoległość i wzorzec 320/270 s; Eko ma dwie osoby na OP21 i jawnie testowy przydział pozostałych ról.
 

@@ -2,7 +2,7 @@
   "format": "layout-studio-demo-manifest",
   "formatVersion": 1,
   "packageId": "DEMO-MODUL-URZADZENIA-1",
-  "packageVersion": "1.0.0",
+  "packageVersion": "1.1.0",
   "title": "Moduł urządzenia przemysłowego — DEMO syntetyczne zaawansowane",
   "level": "advanced",
   "language": "pl",
@@ -31,57 +31,57 @@
       "path": "projekt-pokazowy.json",
       "role": "entry-project-package",
       "format": "json",
-      "bytes": 79345,
-      "sha256": "328c86cffa13c91bd0aa1dc7de92a317665ecff3344ef02852361ffcffda05b2"
+      "bytes": 112507,
+      "sha256": "a87abed8f92f1261a491908da299fad162746609d738d7e80567a614e5449a8a"
     },
     {
       "path": "dane/zrodlo4.json",
       "role": "data-projection",
       "format": "json",
       "bytes": 6826,
-      "sha256": "fd516a95a05cd432cfeedb4b1b1c9f7d60f878f8738190e818e7785722e1d034"
+      "sha256": "f5f944da4d903d402510c52e8e1f3a78373d7f650416ee5f840915a694faa202"
     },
     {
       "path": "dane/szkic6.json",
       "role": "data-projection",
       "format": "json",
-      "bytes": 34384,
-      "sha256": "32eafcfa23f9b0701337ba6145778fbf43de63f809894763d33e20da16f1b075"
+      "bytes": 50930,
+      "sha256": "16832cb8496f597e7cce060bed5c8e7923496d3768ffbd706e82f62cf01b2177"
     },
     {
       "path": "dane/warianty6.json",
       "role": "data-projection",
       "format": "json",
-      "bytes": 78477,
-      "sha256": "283cadbc911304306d2e002e103f29255a0660df7e7111551b4fecc7300a5be1"
+      "bytes": 115969,
+      "sha256": "0339928b6aa36879954c977673c47299e8834f6a29d49d676b493c7b86a48f6b"
     },
     {
       "path": "dane/warunki_eksperymentu.json",
       "role": "session-settings-reference",
       "format": "json",
-      "bytes": 852,
-      "sha256": "96c7e300733ef443bf9c77fcba648b48f49b45e78cb65a2d6859a9a8f1432fad"
+      "bytes": 1394,
+      "sha256": "04cf27ad858ae1c58b6b79818eec114773cce2593059b9ffc4cdf03b48188976"
     },
     {
       "path": "dane/proces.xlsx",
       "role": "spreadsheet-template",
       "format": "xlsx",
       "bytes": 12351,
-      "sha256": "72525c0739e2c7761600e6622196f807a357e0efb8dd959aca0c5b0be4b0d9f4"
+      "sha256": "8d55f00015bd158425cc9128658768523232d48095c17d5d0e14f86e27b401e2"
     },
     {
       "path": "dane/bom.xlsx",
       "role": "spreadsheet-template",
       "format": "xlsx",
       "bytes": 12783,
-      "sha256": "b826560ed4b825ecb6f17c1bd6add89fc27a63145dae786c2a8912cdbb002d7d"
+      "sha256": "47216fb02bd488538530fe96fe888512ad5214f66280774d1e3ecba1ee7f2940"
     },
     {
       "path": "README.md",
       "role": "instructions",
       "format": "md",
-      "bytes": 3142,
-      "sha256": "99c268c8109fe73edf7a89d8223a106cb95780e9be2e734c2a6fe84d46b2646b"
+      "bytes": 4334,
+      "sha256": "bd8b5432b94fa586745a1ed290e0250b816bb2b73e3656314b1b2174bd29b6dc"
     },
     {
       "path": "dane/slownik_pol.md",
@@ -94,15 +94,15 @@
       "path": "referencje/oczekiwane_wyniki.json",
       "role": "independent-reference",
       "format": "json",
-      "bytes": 4209,
-      "sha256": "670862d8ea6d84d8e6e5bf513cecd69cf77829114984754e209c27b6e6b17a9e"
+      "bytes": 8073,
+      "sha256": "663a87a86bb2330cd1e4ea6c3323bda84e2bd447f9242d0cd920f5d30ea2467e"
     },
     {
       "path": "referencje/obliczenia.md",
       "role": "independent-calculation",
       "format": "md",
-      "bytes": 1413,
-      "sha256": "97da954ea1b83c5857138508605f8867cfd90a6b98b5d51d1fac9004e6b7f869"
+      "bytes": 2842,
+      "sha256": "c6752ffa928cb225e34a710b9bcbcd8d27021779f03a04e508fcda57206bd488"
     }
   ]
 }

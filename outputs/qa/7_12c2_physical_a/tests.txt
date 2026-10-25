@@ -1,0 +1,36 @@
+✔ 7.12.C2-physical-A: niezależne okna, łączenie partii i zasoby monterów przy jawnym odstępie 1000 s (85.6656ms)
+✔ 7.12.C2-physical-A: brak zasilacza opóźnia właściwą gałąź; ograniczone bufory są jawnie nieobsługiwane (50.5787ms)
+✔ 7.12.C2: manifest obejmuje wszystkie pliki, poprawne SHA, źródła i brak powiązań z Eko/bateriami/silnikami (21.3735ms)
+✔ 7.12.C2: arkusze procesu i BOM przechodzą istniejące importery i odpowiadają pełnemu modelowi rozgałęzionemu (91.9419ms)
+✔ 7.12.C2: takt, BOM, podzespoły i bilans zgadzają się z niezależnymi obliczeniami (14.2203ms)
+✔ 7.12.C2: symulacja harmonogramu obu wariantów modułu urządzenia z gałęziami, czasy partii 320s i 270s, brak podwójnych rezerwacji (33.2362ms)
+✔ 7.12.D: wszystkie 3 pakiety (01, 02, 03) spełniają kontrakt formatu, unikalności ID, separacji danych i braku powiązań z Eko (36.7721ms)
+✔ 7.12.D: arkusze procesu i BOM we wszystkich 3 pakietach oraz szablony wzorcowe przechodzą bezbłędnie importery (39.289ms)
+✔ 7.12.D: walidacja formatu layout-studio-project-package, round-trip oraz odporność na uszkodzenia sum i źródeł (129.0495ms)
+✔ 7.12.D / 7.2: łączna weryfikacja analityczna taktu, bilansu i symulacji wszystkich 6 wariantów w 3 pakietach (35.3714ms)
+✔ 3.4m1: partie zapisują jawne ilości, wykonania i regułę A, bez mutacji projektu (6.8377ms)
+✔ 3.4m1: parser odrzuca błędne referencje, ilości i niejawne reguły (9.0987ms)
+✔ 3.4m1: odczyt, cofnięcie i odmowa zapisu chronią dokładne źródła 4/5 (19.514ms)
+✔ 3.4m2: przygotowanie, przewóz i pobranie partii mają rzeczywiste zdarzenia i wspólne osoby (4.1292ms)
+✔ 3.4m2: dwie partie czekają na wspólny wózek i powrót, odbiorca pobiera obie atomowo (2.9978ms)
+✔ 3.4m2: kalendarz przesuwa przewóz i pobranie, bez rezerwowania korpusu podczas dojazdu (4.081ms)
+✔ 3.4m2: brak ilości i drogi dają odmowę, nieosiągalna alternatywa nie psuje wykonalnej kopii (5.3695ms)
+✔ 3.4m2: lokalne pobranie nie tworzy ruchu, stare trasy bez zasobów nadal liczą czas (2.3021ms)
+✔ 3.4m2: wspólna osoba odbiorcy czeka na powrót, pobranie następuje przy rzeczywistym starcie (1.9221ms)
+✔ 3.4m2: odbiorca gotowy wcześniej czeka na producenta, bez cichego brakującego materiału (2.9844ms)
+✔ 3.4m2: dwie sztuki nie przejmują cudzej partii, wózka ani osoby (3.3892ms)
+✔ 3.4m2: transport między przygotowaniami działa bez instancji korpusu (1.38ms)
+✔ 3.4m2b: wcześniejszy start wybiera drugą kopię, przegrana trasa nie pozostawia rezerwacji (3.5869ms)
+✔ 3.4m2b: kalendarz odbiorcy wygrywa z krótszym przewozem, remis rozstrzyga droga (5.1474ms)
+✔ 3.4m2b: brak trasy lub zestawu jednej kopii pozwala wybrać drugą, wszystkie niewykonalne odmawiają (3.4652ms)
+✔ 3.4m2b: kilka partii trafia do jednej wybranej kopii, bez porzuconych przydziałów (1.7929ms)
+✔ 3.4m2b: limit kombinacji jest jawny i nie dotyczy JIT (1.8567ms)
+✔ 3.4m2b: przewóz korpusu wpływa na wybór kopii, różne sztuki mogą mieć różnych odbiorców (4.9172ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1808.7834
