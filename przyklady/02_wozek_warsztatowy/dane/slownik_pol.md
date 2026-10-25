@@ -30,4 +30,4 @@ Pochodzenie danych: **syntetyczne**. Projekt demonstracyjny poziomu średniego (
 ## Buforowanie i zaopatrzenie materiałowe
 
 - **Pojemności buforów**: wejście 2 szt., wyjście 2 szt. Polityka: `bbas-worker-released` (operator zwalniany po zakończeniu pracy nawet przy zablokowanym wyjściu).
-- **Zaopatrzenie**: 5 zdefiniowanych pozycji materiałowych z zapasem początkowym 10 szt. i harmonogramem dostaw co 900 s.
+- **Zaopatrzenie**: 7 jawnych pozycji materiałowych z zapasem początkowym 10 zadeklarowanych jednostek, pierwszą dostawą w 900 s i następnymi co 900 s; zużycie jednego kompletu przy rzeczywistym starcie przypisanej operacji. Ilości podano oddzielnie od BOM.

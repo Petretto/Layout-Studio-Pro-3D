@@ -526,6 +526,56 @@ test('7.12.C1: symulacja harmonogramu obu wariantów wózka warsztatowego, czasy
   assert.deepEqual(comparison.rows.map(r=>r.dynamic.status==='completed'?r.dynamic.makespanSeconds:null),[390,315]);
 });
 
+test('7.12.C1-physical: ręczne okna, transport monterów, powroty, zapasy oraz jedna lokalizacja korpusu',()=>{
+  const pkg=intermediateDemoPackage(),variants=JSON.parse(pkg.data.variantsRaw!).variants;
+  const reference=JSON.parse(readFileSync('przyklady/02_wozek_warsztatowy/referencje/oczekiwane_wyniki.json','utf8')).physical;
+  for(const variant of variants){
+    const project=parseDomainProjectV6(JSON.stringify(variant.project)),before=JSON.stringify(project),expected=reference.variants.find((v:any)=>v.id===variant.id);
+    const result=scheduleWorkerRun(project,1,3,project.bodyRunInput);
+    assert.deepEqual(result.jobs.map(j=>j.finish),expected.completionSeconds);
+    const actual=result.runs.map(r=>[r.job,r.operationId,r.startSeconds,r.endSeconds]).sort((a,b)=>Number(a[0])-Number(b[0])||String(a[1]).localeCompare(String(b[1])));
+    assert.deepEqual(actual,expected.operationWindows);
+    assert.equal(result.transportMovements!.filter(m=>m.kind==='loaded').length,9);
+    assert.equal(result.transportMovements!.filter(m=>m.purpose==='return').length,9);
+    for(const movement of result.transportMovements!){
+      const cartIndex=Number(movement.equipmentIds[0].split('-').at(-1));
+      assert.deepEqual(movement.workerIds,[`WW-W${cartIndex}`]);
+      assert.equal(movement.endSeconds-movement.startSeconds,10);
+    }
+    const reservations=result.reservations.reservations;
+    for(let i=0;i<reservations.length;i++)for(let j=i+1;j<reservations.length;j++){
+      const a=reservations[i],b=reservations[j],aEnd=a.releasedAtSeconds??a.endSeconds,bEnd=b.releasedAtSeconds??b.endSeconds;
+      if(a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(aEnd<=b.startSeconds||bEnd<=a.startSeconds);
+    }
+    assert.equal(result.materialEvents!.filter(e=>e.kind==='consumption').length,21);
+    assert.equal(result.materialEvents!.filter(e=>e.kind==='delivery').length,0);
+    assert.equal(result.materialStocks!.length,7);assert.ok(result.materialStocks!.every(item=>item.stock===7));
+    const history=prepareDomainPhysicalPlayback(project,result,reference.conditions),end=domainPhysicalPlaybackFrame(history,history.endSeconds);
+    assert.equal(end.bodies.length,3);assert.ok(end.bodies.every(b=>b.location.kind==='station'&&b.location.stationId==='ST-WW-4'));
+    assert.ok(end.carts.every(c=>c.movement===null));assert.equal(JSON.stringify(project),before);
+  }
+});
+
+test('7.12.C1-physical: dostawa w 900 s poprzedza zużycie, pełny bufor zatrzymuje stanowisko po obróbce',()=>{
+  const pkg=intermediateDemoPackage(),variants=JSON.parse(pkg.data.variantsRaw!).variants;
+  const reference=JSON.parse(readFileSync('przyklady/02_wozek_warsztatowy/referencje/oczekiwane_wyniki.json','utf8')).physical;
+  for(const variant of variants){
+    const project=structuredClone(variant.project);project.materialSupply.items.find((item:any)=>item.id==='SUP-RAMA').initialStock=0;
+    const result=scheduleWorkerRun(project,1,3,project.bodyRunInput);
+    assert.deepEqual(result.jobs.map(j=>j.finish),variant.id==='INTERMEDIATE-BASE'?reference.deliveryCase.completionSecondsBase:reference.deliveryCase.completionSecondsBalanced);
+    const events=result.materialEvents!.filter(e=>e.atSeconds===900);
+    assert.equal(events[0].kind,'delivery');assert.ok(events.some(e=>e.kind==='consumption'));
+  }
+  const project=structuredClone(variants[0].project);
+  project.stationBuffers.buffers[0].outputCapacity=1;project.stationBuffers.buffers[1].inputCapacity=0;
+  project.resourceCalendars.stations['ST-WW-2'].shifts[0].startSeconds=600;
+  const result=scheduleWorkerRun(project,1,3,project.bodyRunInput),blocked=result.runs.find(r=>r.job===2&&r.operationId==='WW-OP10')!;
+  assert.equal(blocked.endSeconds,120);assert.equal(blocked.stationReleaseSeconds,590);
+  assert.equal(blocked.reserveEndSeconds,120);
+  const history=prepareDomainPhysicalPlayback(project,result,reference.conditions),body=domainPhysicalPlaybackFrame(history,500).bodies.find(b=>b.id==='WW-BODY-2')!;
+  assert.equal(body.status,'reserved');assert.deepEqual(body.location,{kind:'station',stationId:'ST-WW-1',copy:1});
+});
+
 test('7.12.C2: manifest obejmuje wszystkie pliki, poprawne SHA, źródła i brak powiązań z Eko/bateriami/silnikami',()=>{
   const root='przyklady/03_modul_urzadzenia/',pkg=advancedDemoPackage();
   const {createHash}=require('node:crypto'),{readdirSync}=require('node:fs');

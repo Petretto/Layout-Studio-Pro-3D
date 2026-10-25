@@ -1,5 +1,7 @@
 # Layout Studio Pro 3D v0.4.0 — funkcje programu
 
+C1-fizyczny (2026-10-25): zewnętrzny wózek warsztatowy 1.1.0 obejmuje 3 korpusy, 3 wózki i transport wykonywany przez monterów. Siedem jawnych zapasów, zużycie przy starcie, dostawa w 900 s i próba pełnego bufora mają niezależne referencje. Fizyczne wyniki 460/385 s są odrębne od JIT 390/315 s. Pełna okresowa regresja 425/425 PASS, build i odbiór UI PASS. Bez zmian algorytmów i formatów; C2/D nadal otwarte. Raport `WERYFIKACJA_C1_FIZYCZNY_7_12.md`.
+
 A2b2b (2026-10-25): odtwarzanie historii korpusów i wózków tego samego wyniku, z tabelą przejazdów i symbolicznymi znacznikami przy jednoznacznych stanowiskach. Statyczny obiekt śledzonego wózka jest ukryty. W trakcie przejazdu brak pozycji geometrycznej jest jawny; długość/czas nie tworzą trasy 3D. Oś obejmuje powrót wózka po produkcji, JIT nie generuje fizycznych lokalizacji. 23 celowane testy, build i rzeczywisty UI PASS. Bez zmian obliczeń i schematów. Całe A2/7.12 nadal w trakcie; raport A2.
 
 ## Aktualizacja 7.13.3 (2026-10-25)

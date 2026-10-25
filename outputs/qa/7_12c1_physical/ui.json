@@ -1,0 +1,18 @@
+{
+  "date":"2026-10-25",
+  "url":"http://127.0.0.1:5309/",
+  "method":"cua_repl: downloaded catalog package, ordinary protected import, actual worker",
+  "baseMakespanSeconds":460,
+  "balancedMakespanSeconds":385,
+  "balancedNoInitialFrameStockMakespanSeconds":1285,
+  "movements":18,
+  "stockRows":7,
+  "eachStock":{"initial":10,"delivered":0,"consumed":3,"final":7},
+  "reloadPreservedZeroInitialStock":true,
+  "reloadRemovedOldResult":true,
+  "restoringVariantRestored385":true,
+  "physicalStateAt65":{"bodies":3,"carts":3,"moving":["WW-BODY-1","WW-CART-1"],"travelWindow":[60,70],"timeProgressPercent":50},
+  "consoleErrors":[],
+  "blockingCase":"automated acceptance only",
+  "vercelVerified":false
+}

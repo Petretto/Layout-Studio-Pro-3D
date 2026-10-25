@@ -1,7 +1,7 @@
 # Projekt pokazowy średni — Montaż wózka warsztatowego 3-półkowego
 
 Pakiet demonstracyjny: `02_wozek_warsztatowy`
-Wersja: **1.0.0**
+Wersja: **1.1.0**
 Pochodzenie danych: **jawnie syntetyczne** (dane demonstracyjno-dydaktyczne, brak pomiarów produkcyjnych)
 Identyfikator: `DEMO-WOZEK-WARSZTATOWY-1`
 Zgodność: **Layout Studio Pro 3D v0.4.0+**
@@ -29,7 +29,7 @@ Pakiet reprezentuje średni poziom złożoności (**intermediate**) i demonstruj
 
 1. W aplikacji kliknij **Pakiet projektu** i wczytaj plik `projekt-pokazowy.json`.
 2. Pobierz automatyczną kopię ratunkową i zatwierdź import.
-3. W module **Symulacja**:
+3. Dla historycznego eksperymentu procesowego w **Proces i stanowiska → Stanowiska i zasoby** włącz jawnie **JIT**:
    - Ustaw partię: **3 sztuki**.
    - Odstęp przybyć: **1 s**.
 4. Wybierz wariant **INTERMEDIATE-BASE** i uruchom symulację. Zwróć uwagę na czas zakończenia partii: **390 s** oraz obciążenie stanowiska S2.
@@ -37,6 +37,8 @@ Pakiet reprezentuje średni poziom złożoności (**intermediate**) i demonstruj
 6. Przejdź do modułu **Porównanie wariantów**, aby wyświetlić tabelę syntezy i pobrać raport.
 
 
-## Zakres odbioru
+## Fizyczny tryb i próby odbioru
 
-Podane wyniki są procesowe: jawny tryb just-in-time z założoną dostępnością materiałów. Nie stanowią odbioru fizycznych przejazdów, rezerwacji wózków, rzeczywistych zapasów/dostaw ani blokowania fizycznego przepływu. Konfiguracja zasobów wymaga osobnego odbioru bez JIT przed użyciem jako wzorzec fizyczny. Główne widoki projektu 4 i warsztat 6 mają oddzielne źródła; wyniki wariantów odczytuj w warsztacie.
+W Proces i stanowiska → Stanowiska i zasoby ustaw 3 sztuki, odstęp 1 s, JIT WYŁĄCZONY, następnie oblicz harmonogram. Baza: 460 s, reorganizacja: 385 s. Transport i puste powroty wykonują monterzy źródłowi; dodatkowy monter WW-W5 pomaga tylko przy OP20. Powroty mają osobny dydaktyczny czas 10 s. Są trzy jawne korpusy, trzy wózki i siedem pozycji zaopatrzenia. Wszystkie dane są syntetyczne. Dodatkowe próby dostawy i blokady opisano w referencje/obliczenia.md.
+
+Historyczne 390/315 s dotyczą jawnego JIT z założoną dostępnością materiałów. Nie porównuj ich jako tego samego eksperymentu z 460/385 s. Korpusy i wózki mają historię fizyczną w odtwarzaniu A2b2b; brak geometrycznego przebiegu tras pozostaje jawny. Główne widoki projektu 4 i warsztatu 6 pozostają osobnymi źródłami.

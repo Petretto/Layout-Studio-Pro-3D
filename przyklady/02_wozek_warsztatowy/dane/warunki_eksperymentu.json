@@ -2,7 +2,12 @@
   "dataOrigin": "synthetic",
   "batch": 3,
   "arrivalIntervalSeconds": 1,
-  "transportMode": "just-in-time",
+  "transportMode": "configured",
+  "processOnlyConditions": {
+    "batch": 3,
+    "arrivalIntervalSeconds": 1,
+    "transportMode": "just-in-time"
+  },
   "initialArrivalsSeconds": [
     0,
     1,
@@ -12,7 +17,8 @@
   "physicalBodyLocations": "linear buffered model with explicit capacities",
   "transportRoutesAndDurations": "inter-station routes 2600mm / 10s declared in routing",
   "bufferModel": "explicit linear buffers: input=2, output=2, final output=null; policy=bbas-worker-released",
-  "materialDeliveries": "periodic 10 pcs every 900s; initialStock=10 covers batch 3 without starving",
+  "materialDeliveries": "seven explicit stocks: 10 declared units initially, 10 at first delivery 900s and every 900s; consumption 1 declared set at actual operation start",
+  "assemblyTransport": "three carts return to source; upstream assemblers WW-W1/W2/W3 perform loaded travel and empty return; 10s each, explicit synthetic assumptions",
   "competencyCoverage": "3 competencies (WW-C-MECH, WW-C-FIT, WW-C-QC) fully satisfied by assigned workers",
   "costAssumptions": null,
   "stochasticConfig": null,

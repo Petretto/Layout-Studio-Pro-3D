@@ -1,6 +1,6 @@
 # Kontrakt pakietu demonstracyjnego — 7.12.A
 
-Wersja kontraktu: **1, odbiór 2026-10-21**. W 7.12.A1 dostarczono format i importer pojedynczej rodziny projektu (opis poniżej). W B przygotowano pierwszy katalog z manifestem i kompletem plików dla jawnego JIT z buforami. Projekty średni/zaawansowany, wspólny odbiór D i integracja widoków A2 pozostają do realizacji. Schematy istniejących projektów nie zmieniły się.
+Wersja kontraktu: **1, odbiór 2026-10-21**, status przykładów zaktualizowany 2026-10-25. A1 dostarcza format/importer pojedynczej rodziny projektu; B ma wzorzec JIT z buforami, C1 1.1.0 odebrano także fizycznie (transport monterów, bufory, zaopatrzenie), C2 ma wzorzec procesowy JIT. Fizyczny odbiór C2, zbiorczy D i całe A2 pozostają otwarte; integracja historii A2b2b działa w opisanym zakresie bez geometrycznej drogi. Schematy istniejących projektów nie zmieniły się.
 
 ## Format pliku wejściowego A1
 

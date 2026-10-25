@@ -196,5 +196,200 @@
         ]
       ]
     }
-  ]
+  ],
+  "physical": {
+    "conditions": {
+      "batch": 3,
+      "arrivalIntervalSeconds": 1,
+      "transportMode": "configured"
+    },
+    "assumptions": "Transport wykonują monterzy źródłowych stanowisk (decyzja użytkownika). 3 wózki, powrót 10 s jako osobne założenie dydaktyczne. 7 jawnych zasobów materiałowych, 3 jawne korpusy.",
+    "variants": [
+      {
+        "id": "INTERMEDIATE-BASE",
+        "completionSeconds": [
+          260,
+          360,
+          460
+        ],
+        "operationWindows": [
+          [
+            1,
+            "WW-OP10",
+            0,
+            60
+          ],
+          [
+            1,
+            "WW-OP20",
+            70,
+            150
+          ],
+          [
+            1,
+            "WW-OP30",
+            160,
+            210
+          ],
+          [
+            1,
+            "WW-OP40",
+            220,
+            260
+          ],
+          [
+            2,
+            "WW-OP10",
+            80,
+            140
+          ],
+          [
+            2,
+            "WW-OP20",
+            170,
+            250
+          ],
+          [
+            2,
+            "WW-OP30",
+            260,
+            310
+          ],
+          [
+            2,
+            "WW-OP40",
+            320,
+            360
+          ],
+          [
+            3,
+            "WW-OP10",
+            160,
+            220
+          ],
+          [
+            3,
+            "WW-OP20",
+            270,
+            350
+          ],
+          [
+            3,
+            "WW-OP30",
+            360,
+            410
+          ],
+          [
+            3,
+            "WW-OP40",
+            420,
+            460
+          ]
+        ]
+      },
+      {
+        "id": "INTERMEDIATE-BALANCED",
+        "completionSeconds": [
+          225,
+          305,
+          385
+        ],
+        "operationWindows": [
+          [
+            1,
+            "WW-OP10",
+            0,
+            60
+          ],
+          [
+            1,
+            "WW-OP20",
+            70,
+            115
+          ],
+          [
+            1,
+            "WW-OP30",
+            125,
+            175
+          ],
+          [
+            1,
+            "WW-OP40",
+            185,
+            225
+          ],
+          [
+            2,
+            "WW-OP10",
+            80,
+            140
+          ],
+          [
+            2,
+            "WW-OP20",
+            150,
+            195
+          ],
+          [
+            2,
+            "WW-OP30",
+            205,
+            255
+          ],
+          [
+            2,
+            "WW-OP40",
+            265,
+            305
+          ],
+          [
+            3,
+            "WW-OP10",
+            160,
+            220
+          ],
+          [
+            3,
+            "WW-OP20",
+            230,
+            275
+          ],
+          [
+            3,
+            "WW-OP30",
+            285,
+            335
+          ],
+          [
+            3,
+            "WW-OP40",
+            345,
+            385
+          ]
+        ]
+      }
+    ],
+    "deliveryCase": {
+      "change": "Only SUP-RAMA initialStock=0; first periodic delivery remains explicitly 900 s. All other settings unchanged.",
+      "completionSecondsBase": [
+        1160,
+        1260,
+        1360
+      ],
+      "completionSecondsBalanced": [
+        1125,
+        1205,
+        1285
+      ]
+    },
+    "blockingCase": {
+      "change": "Base: S1 outputCapacity=1, S2 inputCapacity=0, S2 calendar shift starts at 600 s. All other settings unchanged.",
+      "job": 2,
+      "operationId": "WW-OP10",
+      "processingEndSeconds": 120,
+      "stationReleaseSeconds": 590,
+      "blockingPolicy": "bbas-worker-released"
+    }
+  }
 }

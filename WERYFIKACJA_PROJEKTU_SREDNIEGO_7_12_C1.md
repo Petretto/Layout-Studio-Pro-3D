@@ -1,5 +1,7 @@
 # 7.12.C1 — średni zewnętrzny projekt pokazowy: Wózek warsztatowy
 
+**Bieżący odbiór 2026-10-25:** pakiet 1.1.0 ma jawny transport wykonywany przez monterów, korpusy, wózki, siedem zapasów i fizyczne wzorce 460/385 s. Aktualny zakres i dowody: [odbiór fizyczny C1](WERYFIKACJA_C1_FIZYCZNY_7_12.md). Poniższy zapis 1.0.0 pozostaje historyczny.
+
 
 **Korekta po niezależnym przeglądzie 2026-10-24:** aktualny zakres i wyniki są w [raporcie przeglądu](WERYFIKACJA_PRZEGLADU_DEMO_I_STARTU_7_13.md). Poniższy zapis zachowano jako historię wcześniejszego odbioru, nie dowód pełnego transportu fizycznego. 7.12 ponownie w trakcie. C2 ma teraz jawną równoległość i wzorzec 320/270 s; Eko ma dwie osoby na OP21 i jawnie testowy przydział pozostałych ról.
 

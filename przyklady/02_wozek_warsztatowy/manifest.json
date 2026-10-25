@@ -2,7 +2,7 @@
   "format": "layout-studio-demo-manifest",
   "formatVersion": 1,
   "packageId": "DEMO-WOZEK-WARSZTATOWY-1",
-  "packageVersion": "1.0.0",
+  "packageVersion": "1.1.0",
   "title": "Wózek warsztatowy 3-półkowy — DEMO syntetyczne",
   "level": "intermediate",
   "language": "pl",
@@ -31,78 +31,78 @@
       "path": "projekt-pokazowy.json",
       "role": "entry-project-package",
       "format": "json",
-      "bytes": 71561,
-      "sha256": "4355c30a4ed6541db8d5e0273de6332e15778290185b5fd591692f607bdd906d"
+      "bytes": 85940,
+      "sha256": "a91b7d21cb041fa6ae7a3abfde6a2fef3dfb948ca5d54113775b770f9447befb"
     },
     {
       "path": "dane/zrodlo4.json",
       "role": "data-projection",
       "format": "json",
       "bytes": 5749,
-      "sha256": "3bcbdc6031feefb4ba04efac0f7d0a8957f7d66114d57b431b96ccae2cf1761b"
+      "sha256": "70907860e962665995425479b032fd0ef849499fb7dd1e8ccae299c46e1837c5"
     },
     {
       "path": "dane/szkic6.json",
       "role": "data-projection",
       "format": "json",
-      "bytes": 31176,
-      "sha256": "3cc50ca7feb2a3621bf4f1ab7f0e33f81fbe5ad9d60bd40dae41ccd1b5c129b4"
+      "bytes": 38773,
+      "sha256": "1ddd70d70a3deecfb66518e0f69acfb6e007dd6424e50ddd636999f06d96f4d3"
     },
     {
       "path": "dane/warianty6.json",
       "role": "data-projection",
       "format": "json",
-      "bytes": 71217,
-      "sha256": "2464d1235264fc07436d07a7890c86ee2f24bf0aa9f928016dd7fdbe678ff4e5"
+      "bytes": 88587,
+      "sha256": "85189fac4487b8f338e45bc9e5bb2bb3ede5e8ae67887d9814507a7976ff4ca0"
     },
     {
       "path": "dane/warunki_eksperymentu.json",
       "role": "session-settings-reference",
       "format": "json",
-      "bytes": 1018,
-      "sha256": "b0f3e592264d54f1fe79e20a72f8edee1cbe014c004a41c2f3421cd416acd3fc"
+      "bytes": 1375,
+      "sha256": "fcf6075d8e98f880aac97f4e36f9152638111e7a7609f15ce656b72c4e02f0be"
     },
     {
       "path": "dane/proces.xlsx",
       "role": "spreadsheet-template",
       "format": "xlsx",
       "bytes": 12167,
-      "sha256": "43c4a979cfdfbabd11e3e382c932044356d091af1d8cd62b248134ae037ccebb"
+      "sha256": "a0407d7db042831e162f77e9798a36b808dead39077ce9737a069fcd6dcd6e99"
     },
     {
       "path": "dane/bom.xlsx",
       "role": "spreadsheet-template",
       "format": "xlsx",
       "bytes": 12650,
-      "sha256": "875ac864a55bf02dada7782d4c0f9c299593c33714c973e84fc1c5a21352b38f"
+      "sha256": "a99567f933790aac6fb7b5cba39a7ae53967e683b4ccafbc801922a22a20e0a0"
     },
     {
       "path": "README.md",
       "role": "instructions",
       "format": "md",
-      "bytes": 3004,
-      "sha256": "03f0f750779f6331d9fdd71380288e9b376ab237addcc4246638933f92d13635"
+      "bytes": 3497,
+      "sha256": "525e7eb015dc318a3bd98b86c77f14f79a405e73797b56d90f8e072cb8e7248c"
     },
     {
       "path": "dane/slownik_pol.md",
       "role": "field-dictionary",
       "format": "md",
-      "bytes": 1994,
-      "sha256": "7e4114a34295c91617f35df0de240d6d433dd74dee1f4000ee68e09fb6fff444"
+      "bytes": 2135,
+      "sha256": "c3524f6f756aaa097834458d7a697dcb425089be2dd267c433a03130ee1c320d"
     },
     {
       "path": "referencje/oczekiwane_wyniki.json",
       "role": "independent-reference",
       "format": "json",
-      "bytes": 3522,
-      "sha256": "1dbcde23bdd7324e86f4b6106d9f24f1cbf9c59ce831bdc09cc925d65cbf2158"
+      "bytes": 7198,
+      "sha256": "37a292f6b8e5ae951ad8e96a3f5c4c3bad2059e97c5eb0b502b8e938e8b7628f"
     },
     {
       "path": "referencje/obliczenia.md",
       "role": "independent-calculation",
       "format": "md",
-      "bytes": 2691,
-      "sha256": "1180ff9fbd74754792952fb14b43116da32a7441e9f7b2e3ae50547d15b73cfd"
+      "bytes": 4513,
+      "sha256": "25c0faa5127b669c675919b4d809bbe35fcbed43d34c768aceb675ca5232ce60"
     }
   ]
 }

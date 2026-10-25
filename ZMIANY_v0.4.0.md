@@ -1,5 +1,7 @@
 # Zmiany v0.4.0 — 29.09.2026
 
+C1-fizyczny (2026-10-25): uzupełniono zewnętrzny przykład wózka warsztatowego (1.1.0) o jawne instancje, wózki i powroty z obsadą monterów, zgodnie z decyzją użytkownika. Dodano dwa brakujące komponenty zaopatrzenia. Niezależne referencje 460/385 s, próby niedoboru i blokady PASS; pełne 425/425, build i UI PASS. Zaktualizowano katalog i instrukcję; schematy, obliczenia i zapis aplikacji bez zmian. Całe 7.12 nadal w trakcie do C2/D/A2.
+
 A2b2b (2026-10-25): podłączono historię fizyczną korpusów i wózków do odtwarzania oraz 3D. Dodano tabelę stanów/przejazdów, symboliczne punkty stanowisk, ochronę przed starym wynikiem i ukrycie statycznego wózka. Powroty po produkcji wydłużają odtwarzanie, bez zmiany wyniku produkcyjnego. Brak geometrycznego przebiegu trasy i brak geometrii kopii są jawne, bez pozornej interpolacji. 23/23 celowanych testów, build i UI PASS; instrukcja zaktualizowana. Bez migracji lub zmian symulacji; całe A2/7.12 nadal otwarte.
 
 ## 7.13.3 — katalog przykładów (2026-10-25)

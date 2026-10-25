@@ -54,3 +54,16 @@ Obliczenia wyprowadzono ręcznie na podstawie prawideł inżynierii przemysłowe
   - Sztuka 2: $195 + 60 = 255$ s
   - Sztuka 3: $255 + 60 = 315$ s
   - Makespan partii 3 sztuk: **315 s** (skrócenie o $75$ s, czyli $19,2\%$).
+
+
+## Odbiór fizyczny C1 (2026-10-25)
+
+Powyższe 390/315 s pozostają wzorcami JIT. W trybie configured, 3 sztuki / odstęp 1 s / JIT WYŁĄCZONY, monter źródłowy wykonuje transport i powrót. Założono oddzielnie 10 s przejazdu i 10 s pustego powrotu; nie wyprowadzono czasu powrotu z długości ani czasu załadunku. WW-W1 obsługuje S1–S2, WW-W2 S2–S3, WW-W3 S3–S4; WW-W5 wspiera montaż S2, nie transport.
+
+Rachunek przed uruchomieniem silnika: S1 pierwszej sztuki 0–60, przewóz 60–70, powrót 70–80, więc następna praca S1 80–140 i 160–220. Baza: S2 70–150, potem przewóz/powrót 150–170, następne prace S2 170–250 i 270–350. S3 zaczyna po dojeździe w 160/260/360, pracuje po 50 s i przekazuje do S4 po dalszych 10 s. S4 kończy w 260/360/460.
+
+Reorganizacja: S2 pracuje 70–115, 150–195 i 230–275 (zespół 2 osób), a S3 125–175, 205–255 i 285–335. Po 10 s przewozu i 40 s pracy S4 końce to 225/305/385. Pełne okna obu wariantów zapisano w JSON. Każdy z 7 zapasów zużywa 3 jawne jednostki: końcowo 7, brak dostaw przed 900 s.
+
+Próba dostawy: ustaw tylko zapas początkowy SUP-RAMA na 0. Pierwsza dostawa nadal 900 s, więc cała sekwencja przesuwa się o 900 s: baza 1160/1260/1360, reorganizacja 1125/1205/1285. Dostawa w 900 s poprzedza zużycie w tej samej chwili.
+
+Próba blokady (baza): wyjście S1=1, wejście S2=0, zmiana kalendarza S2 zaczyna się w 600 s. Pierwszy wyrób czeka po S1; drugi kończy S1 w 120 s i pozostaje na stanowisku. Bezpośredni przewóz pierwszego wyrobu może ruszyć najwcześniej 590 s, aby przyjechać na gotowe S2 w 600 s. Zwolnienie miejsca wyjściowego zwalnia blokadę drugiego wyrobu w 590 s. Operator jest zwolniony zgodnie z bbas-worker-released; fizyczny korpus/stanowisko nie znikają przy zakończeniu pracy w 120 s.

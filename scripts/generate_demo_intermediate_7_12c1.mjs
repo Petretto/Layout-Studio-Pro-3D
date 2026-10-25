@@ -32,7 +32,7 @@ export * from './src/core/export/excelImporter';
 const api = await import('data:text/javascript;base64,' + Buffer.from(bundle.outputFiles[0].text).toString('base64'));
 const out = resolve('przyklady/02_wozek_warsztatowy');
 const check = process.argv.includes('--check');
-const at = '2026-10-24T00:00:00.000Z';
+const at = '2026-10-25T00:00:00.000Z';
 const projectId = 'DEMO-WOZEK-WARSZTATOWY-1';
 const stations = ['ST-WW-1', 'ST-WW-2', 'ST-WW-3', 'ST-WW-4'];
 const ids = ['WW-OP10', 'WW-OP20', 'WW-OP30', 'WW-OP40'];
@@ -325,6 +325,16 @@ base.materialSupply = {
   ]
 };
 
+// Explicit synthetic authoring, user decision 2026-10-25: upstream assemblers also transport.
+// Return time is a separate teaching assumption, never derived from loaded travel time.
+base.bodyRunInput={bodies:[1,2,3].map(job=>({id:`WW-BODY-${job}`,productId:'WW-PRODUCT',location:{kind:'station',stationId:stations[0],copy:1}})),jobs:[1,2,3].map(job=>({job,bodyId:`WW-BODY-${job}`}))};
+base.assemblyTransport={scope:'assembly-only',carts:[0,1,2].map(i=>({equipmentId:`WW-CART-${i+1}`,initialLocation:{stationId:stations[i],copy:1},calendar:structuredClone(calendar),afterUnload:'return-to-initial',source:'Jawny scenariusz dydaktyczny: wózek wraca do stanowiska źródłowego'})),conveyors:[],
+  emptyRoutes:[0,1,2].map(i=>({id:`WW-RETURN-${i+1}`,equipmentId:`WW-CART-${i+1}`,from:{stationId:stations[i+1],copy:1},to:{stationId:stations[i],copy:1},distanceMm:2600,basis:'confirmed',source:'Jawna syntetyczna długość powrotu; bez przebiegu geometrycznego',transportTime:{durationSeconds:10,basis:'assumed',source:'Osobne założenie dydaktyczne pustego powrotu: 10 s'},workerAssignment:{workerIds:[`WW-W${i+1}`],source:'Decyzja użytkownika: transport wykonują monterzy źródłowego stanowiska'}})),
+  routes:[0,1,2].map(i=>({stationRouteId:`WW-R${i+1}-${i+2}`,source:'Jawny przydział montera i wózka do transportu montażowego',alternatives:[{workerIds:[`WW-W${i+1}`],equipmentIds:[`WW-CART-${i+1}`]}]}))};
+for(const [id,componentId,stationIndex,operationId] of [['SUP-SRUBY','WW-SRUBY',1,ids[1]],['SUP-WIESZ','WW-WIESZ',2,ids[2]]]){
+  base.materialSupply.items.push({id,componentId,targetStationId:stations[stationIndex],initialStock:10,unit:'kpl.',schedule:{kind:'periodic',batchQuantity:10,intervalSeconds:900,firstDeliverySeconds:900},source:'Jawne założenie dydaktyczne zapasu i dostaw brakującego komponentu'});
+  base.materialSupply.consumptions.push({operationId,supplyId:id,quantity:1,source:'Jawne dydaktyczne zużycie jednego kompletu na sztukę, oddzielna deklaracja od BOM'});
+}
 api.parseDomainProjectV6(JSON.stringify(base));
 
 // Balanced variant: 2 workers on bottleneck OP20 (W2 and W5)
@@ -366,13 +376,15 @@ json('dane/warunki_eksperymentu.json', {
   dataOrigin: 'synthetic',
   batch: 3,
   arrivalIntervalSeconds: 1,
-  transportMode: 'just-in-time',
+  transportMode: 'configured',
+  processOnlyConditions: {batch:3,arrivalIntervalSeconds:1,transportMode:'just-in-time'},
   initialArrivalsSeconds: [0, 1, 2],
   materialAvailability: 'explicit-material-supply-configured-with-initial-stock',
   physicalBodyLocations: 'linear buffered model with explicit capacities',
   transportRoutesAndDurations: 'inter-station routes 2600mm / 10s declared in routing',
   bufferModel: 'explicit linear buffers: input=2, output=2, final output=null; policy=bbas-worker-released',
-  materialDeliveries: 'periodic 10 pcs every 900s; initialStock=10 covers batch 3 without starving',
+  materialDeliveries: 'seven explicit stocks: 10 declared units initially, 10 at first delivery 900s and every 900s; consumption 1 declared set at actual operation start',
+  assemblyTransport: 'three carts return to source; upstream assemblers WW-W1/W2/W3 perform loaded travel and empty return; 10s each, explicit synthetic assumptions',
   competencyCoverage: '3 competencies (WW-C-MECH, WW-C-FIT, WW-C-QC) fully satisfied by assigned workers',
   costAssumptions: null,
   stochasticConfig: null,
@@ -434,7 +446,7 @@ Pochodzenie danych: **syntetyczne**. Projekt demonstracyjny poziomu średniego (
 ## Buforowanie i zaopatrzenie materiałowe
 
 - **Pojemności buforów**: wejście 2 szt., wyjście 2 szt. Polityka: \`bbas-worker-released\` (operator zwalniany po zakończeniu pracy nawet przy zablokowanym wyjściu).
-- **Zaopatrzenie**: 5 zdefiniowanych pozycji materiałowych z zapasem początkowym 10 szt. i harmonogramem dostaw co 900 s.
+- **Zaopatrzenie**: 7 jawnych pozycji materiałowych z zapasem początkowym 10 zadeklarowanych jednostek, pierwszą dostawą w 900 s i następnymi co 900 s; zużycie jednego kompletu przy rzeczywistym starcie przypisanej operacji. Ilości podano oddzielnie od BOM.
 `;
 
 const oczekiwaneWynikiJson = {
@@ -545,7 +557,7 @@ Obliczenia wyprowadzono ręcznie na podstawie prawideł inżynierii przemysłowe
 const readmeMd = `# Projekt pokazowy średni — Montaż wózka warsztatowego 3-półkowego
 
 Pakiet demonstracyjny: \`02_wozek_warsztatowy\`
-Wersja: **1.0.0**
+Wersja: **1.1.0**
 Pochodzenie danych: **jawnie syntetyczne** (dane demonstracyjno-dydaktyczne, brak pomiarów produkcyjnych)
 Identyfikator: \`DEMO-WOZEK-WARSZTATOWY-1\`
 Zgodność: **Layout Studio Pro 3D v0.4.0+**
@@ -573,7 +585,7 @@ Pakiet reprezentuje średni poziom złożoności (**intermediate**) i demonstruj
 
 1. W aplikacji kliknij **Pakiet projektu** i wczytaj plik \`projekt-pokazowy.json\`.
 2. Pobierz automatyczną kopię ratunkową i zatwierdź import.
-3. W module **Symulacja**:
+3. Dla historycznego eksperymentu procesowego w **Proces i stanowiska → Stanowiska i zasoby** włącz jawnie **JIT**:
    - Ustaw partię: **3 sztuki**.
    - Odstęp przybyć: **1 s**.
 4. Wybierz wariant **INTERMEDIATE-BASE** i uruchom symulację. Zwróć uwagę na czas zakończenia partii: **390 s** oraz obciążenie stanowiska S2.
@@ -581,10 +593,25 @@ Pakiet reprezentuje średni poziom złożoności (**intermediate**) i demonstruj
 6. Przejdź do modułu **Porównanie wariantów**, aby wyświetlić tabelę syntezy i pobrać raport.
 `;
 
-files.set('README.md', Buffer.from((readmeMd+'\n\n## Zakres odbioru\n\nPodane wyniki są procesowe: jawny tryb just-in-time z założoną dostępnością materiałów. Nie stanowią odbioru fizycznych przejazdów, rezerwacji wózków, rzeczywistych zapasów/dostaw ani blokowania fizycznego przepływu. Konfiguracja zasobów wymaga osobnego odbioru bez JIT przed użyciem jako wzorzec fizyczny. Główne widoki projektu 4 i warsztat 6 mają oddzielne źródła; wyniki wariantów odczytuj w warsztacie.\n').replace(/\r\n/g, '\n')));
+// Written independently before invoking any scheduler in verification.
+oczekiwaneWynikiJson.physical={conditions:{batch:3,arrivalIntervalSeconds:1,transportMode:'configured'},
+  assumptions:'Transport wykonują monterzy źródłowych stanowisk (decyzja użytkownika). 3 wózki, powrót 10 s jako osobne założenie dydaktyczne. 7 jawnych zasobów materiałowych, 3 jawne korpusy.',
+  variants:[{id:'INTERMEDIATE-BASE',completionSeconds:[260,360,460],operationWindows:[
+    [1,'WW-OP10',0,60],[1,'WW-OP20',70,150],[1,'WW-OP30',160,210],[1,'WW-OP40',220,260],
+    [2,'WW-OP10',80,140],[2,'WW-OP20',170,250],[2,'WW-OP30',260,310],[2,'WW-OP40',320,360],
+    [3,'WW-OP10',160,220],[3,'WW-OP20',270,350],[3,'WW-OP30',360,410],[3,'WW-OP40',420,460]]},
+    {id:'INTERMEDIATE-BALANCED',completionSeconds:[225,305,385],operationWindows:[
+    [1,'WW-OP10',0,60],[1,'WW-OP20',70,115],[1,'WW-OP30',125,175],[1,'WW-OP40',185,225],
+    [2,'WW-OP10',80,140],[2,'WW-OP20',150,195],[2,'WW-OP30',205,255],[2,'WW-OP40',265,305],
+    [3,'WW-OP10',160,220],[3,'WW-OP20',230,275],[3,'WW-OP30',285,335],[3,'WW-OP40',345,385]]}],
+  deliveryCase:{change:'Only SUP-RAMA initialStock=0; first periodic delivery remains explicitly 900 s. All other settings unchanged.',completionSecondsBase:[1160,1260,1360],completionSecondsBalanced:[1125,1205,1285]},
+  blockingCase:{change:'Base: S1 outputCapacity=1, S2 inputCapacity=0, S2 calendar shift starts at 600 s. All other settings unchanged.',job:2,operationId:'WW-OP10',processingEndSeconds:120,stationReleaseSeconds:590,blockingPolicy:'bbas-worker-released'}};
+const physicalMd='\n\n## Odbiór fizyczny C1 (2026-10-25)\n\nPowyższe 390/315 s pozostają wzorcami JIT. W trybie configured, 3 sztuki / odstęp 1 s / JIT WYŁĄCZONY, monter źródłowy wykonuje transport i powrót. Założono oddzielnie 10 s przejazdu i 10 s pustego powrotu; nie wyprowadzono czasu powrotu z długości ani czasu załadunku. WW-W1 obsługuje S1–S2, WW-W2 S2–S3, WW-W3 S3–S4; WW-W5 wspiera montaż S2, nie transport.\n\nRachunek przed uruchomieniem silnika: S1 pierwszej sztuki 0–60, przewóz 60–70, powrót 70–80, więc następna praca S1 80–140 i 160–220. Baza: S2 70–150, potem przewóz/powrót 150–170, następne prace S2 170–250 i 270–350. S3 zaczyna po dojeździe w 160/260/360, pracuje po 50 s i przekazuje do S4 po dalszych 10 s. S4 kończy w 260/360/460.\n\nReorganizacja: S2 pracuje 70–115, 150–195 i 230–275 (zespół 2 osób), a S3 125–175, 205–255 i 285–335. Po 10 s przewozu i 40 s pracy S4 końce to 225/305/385. Pełne okna obu wariantów zapisano w JSON. Każdy z 7 zapasów zużywa 3 jawne jednostki: końcowo 7, brak dostaw przed 900 s.\n\nPróba dostawy: ustaw tylko zapas początkowy SUP-RAMA na 0. Pierwsza dostawa nadal 900 s, więc cała sekwencja przesuwa się o 900 s: baza 1160/1260/1360, reorganizacja 1125/1205/1285. Dostawa w 900 s poprzedza zużycie w tej samej chwili.\n\nPróba blokady (baza): wyjście S1=1, wejście S2=0, zmiana kalendarza S2 zaczyna się w 600 s. Pierwszy wyrób czeka po S1; drugi kończy S1 w 120 s i pozostaje na stanowisku. Bezpośredni przewóz pierwszego wyrobu może ruszyć najwcześniej 590 s, aby przyjechać na gotowe S2 w 600 s. Zwolnienie miejsca wyjściowego zwalnia blokadę drugiego wyrobu w 590 s. Operator jest zwolniony zgodnie z bbas-worker-released; fizyczny korpus/stanowisko nie znikają przy zakończeniu pracy w 120 s.\n';
+const scopeMd='\n\n## Fizyczny tryb i próby odbioru\n\nW Proces i stanowiska → Stanowiska i zasoby ustaw 3 sztuki, odstęp 1 s, JIT WYŁĄCZONY, następnie oblicz harmonogram. Baza: 460 s, reorganizacja: 385 s. Transport i puste powroty wykonują monterzy źródłowi; dodatkowy monter WW-W5 pomaga tylko przy OP20. Powroty mają osobny dydaktyczny czas 10 s. Są trzy jawne korpusy, trzy wózki i siedem pozycji zaopatrzenia. Wszystkie dane są syntetyczne. Dodatkowe próby dostawy i blokady opisano w referencje/obliczenia.md.\n\nHistoryczne 390/315 s dotyczą jawnego JIT z założoną dostępnością materiałów. Nie porównuj ich jako tego samego eksperymentu z 460/385 s. Korpusy i wózki mają historię fizyczną w odtwarzaniu A2b2b; brak geometrycznego przebiegu tras pozostaje jawny. Główne widoki projektu 4 i warsztatu 6 pozostają osobnymi źródłami.\n';
+files.set('README.md', Buffer.from((readmeMd+scopeMd).replace(/\r\n/g, '\n')));
 files.set('dane/slownik_pol.md', Buffer.from(slownikPolMd.replace(/\r\n/g, '\n')));
 files.set('referencje/oczekiwane_wyniki.json', Buffer.from(JSON.stringify(oczekiwaneWynikiJson, null, 2) + '\n'));
-files.set('referencje/obliczenia.md', Buffer.from(obliczeniaMd.replace(/\r\n/g, '\n')));
+files.set('referencje/obliczenia.md', Buffer.from((obliczeniaMd+physicalMd).replace(/\r\n/g, '\n')));
 
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const roles = {
@@ -600,7 +627,7 @@ json('manifest.json', {
   format: 'layout-studio-demo-manifest',
   formatVersion: 1,
   packageId: projectId,
-  packageVersion: '1.0.0',
+  packageVersion: '1.1.0',
   title: source4.name,
   level: 'intermediate',
   language: 'pl',

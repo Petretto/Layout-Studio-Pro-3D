@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**
-Aktualizacja podręcznika: **25.10.2026 — A2b2b: historia fizyczna korpusów i wózków w odtwarzaniu; katalog przykładów 7.13.3.**
+Aktualizacja podręcznika: **25.10.2026 — fizyczny przykład C1: transport monterów, bufory i dostawy; odtwarzanie A2b2b oraz katalog 7.13.3.**
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -63,7 +63,11 @@ Na Pulpicie rozwiń **Przykłady do pobrania**. Katalog zawiera trzy projekty o 
 
 Katalog i pliki są częścią dystrybucji: lokalny serwer aplikacji udostępnia je bez internetu. Wersja hostowana wymaga połączenia do pobrania — nie zapewnia automatycznej pamięci offline. Zachowaj ZIP oraz kopie projektów lokalnie. Przy błędzie katalogu wybierz **Ponów odczyt katalogu**; przy błędzie lub niezgodnej sumie pliku ponów pobieranie po sprawdzeniu połączenia. Błąd nie zastępuje bieżącej pracy.
 
-C1/C2: wyniki procesowe przy jawnym JIT (C1 390/315 s, poprawione równoległe C2 320/270 s dla 3 sztuk, odstęp 1 s); nie potwierdzają transportu fizycznego ani zaopatrzenia. Eko: 1 sztuka, odstęp 1 s, JIT wyłączony — 13550/14150/14150 s. JIT jest innym eksperymentem. Pakowanie Eko ma dwie osoby przez 1320 s, a przypisania innych ról są testowe; nie odtwarzają znanych tylko łącznie 13 osób pomiaru.
+C1 w wersji pakietu **1.1.0** ma również fizyczny wzorzec: **3 sztuki, odstęp 1 s, JIT wyłączony → 460/385 s** (baza/reorganizacja). Wczytaj świeży pakiet z katalogu, a w **Proces i stanowiska → Stanowiska i zasoby** oblicz harmonogram. Monterzy stanowisk źródłowych wykonują przewozy i puste powroty trzech wózków; powrót 10 s to osobne założenie dydaktyczne. Siedem pozycji materiałowych ma po 10 jawnych jednostek początkowych, zużycie 1 na sztukę i pierwszą dostawę w 900 s. Partia ma 3 zadeklarowane korpusy; inna liczba sztuk wymaga dostosowania jawnych przypisań.
+
+Próba dostawy C1: w edytorze zaopatrzenia zmień tylko zapas początkowy **SUP-RAMA** na 0, zapisz i ponownie oblicz. Baza kończy w **1360 s**, reorganizacja w **1285 s**; pierwsza dostawa nadal ma jawny termin 900 s. Przywrócenie zapisanego wariantu przywraca konfigurację. Próba blokady: baza, wyjście S1=1, wejście S2=0, początek zmiany S2=600 s. Drugi wyrób kończy obróbkę S1 w 120 s, ale zwalnia stanowisko w 590 s. Operator zostaje zwolniony zgodnie z polityką; korpus i stanowisko pozostają zajęte. Pełne referencje są w katalogu projektu. Wszystkie te parametry są syntetyczne.
+
+C1/C2 mają też osobne wyniki procesowe przy jawnym JIT: C1 390/315 s, C2 320/270 s dla 3 sztuk i odstępu 1 s. JIT nie sprawdza fizycznego transportu ani zapasów. Fizyczny odbiór C2 pozostaje otwarty. Eko: 1 sztuka, odstęp 1 s, JIT wyłączony — 13550/14150/14150 s. Pakowanie Eko ma dwie osoby przez 1320 s, a przypisania innych ról są testowe; nie odtwarzają znanych tylko łącznie 13 osób pomiaru.
 
 ---
 
