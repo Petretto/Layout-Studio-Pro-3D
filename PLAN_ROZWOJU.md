@@ -5,6 +5,10 @@ Ostatnia aktualizacja: 2026-10-26
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
 Dane testowe: Eko jest historycznym przypadkiem regresyjnym; docelowe przykłady to trzy zewnętrzne, kompletne pakiety demonstracyjne (7.12).
 
+## Bieżące przekazanie modelu — 2026-10-26
+
+7.12.C2-B3-UI: **przygotowano zakres, implementacja oczekuje na Terra**. Formularz istniejących buforów podmontaży wydzielono przed dalszą integracją harmonogramu. Kontrakt UI, punkty podłączenia i kryteria odbioru: [przekazanie dla Terra](docs/plany/PRZEKAZANIE_C2_B3_UI_TERRA.md). Ocena granic B3: Sol; implementacja i odbiór formularza: Terra. Wspólny odbiór gałęzi/korpusu i poprawność rezerwacji pozostają osobnym zakresem Sol. Bez zmiany kodu, schematu i statusu całego C2/7.12. Postęp: 61/72 = 84,7%; pierwsze wydanie: 61/68 = 89,7%.
+
 ## Cel i zakres
 
 Dopracować obecną aplikację React/TypeScript/Three.js do projektowania, balansowania i porównywania wariantów linii produkcyjnych. Najpierw zapewnić poprawność modelu, bezpieczeństwo danych i wygodę pracy, następnie rozbudować symulację, CAD i 3D oraz przygotować wydanie komercyjne o jasno określonym zakresie.
