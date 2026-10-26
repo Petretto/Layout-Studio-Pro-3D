@@ -35,7 +35,13 @@ Use the cheapest model that can reliably perform the task.
 
 Do not escalate merely because a stronger model is available. Sol/Astra should not do routine mechanical work that Terra/Luna can reliably perform.
 
-Routing is advisory. If automatic switching is unavailable and the current model is materially mismatched, state the recommended model once before substantial work. Do not interrupt adequate work solely to request a switch.
+### Manual model selection — user instruction 2026-10-26
+- Before substantial work, briefly state the workflow and recommend models separately for initial task assessment/routing, implementation, and verification. Include a short reason based on complexity and risk.
+- Keep routing inexpensive: recommend Luna for an obvious, bounded classification; Terra for ordinary assessment; use Sol when deciding the scope itself requires architecture, persistence or simulation reasoning. Do not use a stronger model merely to decide that a routine task needs a cheaper one.
+- Choose the verification model independently of the implementation model. Mechanical checks can use Luna/Terra; correctness review of migrations, identity, simulation and resource reservations requires at least Sol-level reasoning.
+- The user switches the active chat model manually. A recommendation or declared reasoning level is not an actual model switch; never claim otherwise.
+- If recommending a manual switch, present that recommendation and pause before the substantial work that requires the change, allowing the user to switch. Minimal routing reads and small instruction updates do not require a separate switch. Do not repeatedly request an unchanged recommendation within one coherent package.
+- At delivery, recommend the model for assessment of the next known package as well as its implementation and verification when the scope is known. Flag uncertainty instead of inventing scope or escalating automatically.
 
 ## Execution and checkpoint policy
 For complex work divide the task into a small number of coherent implementation packages.
@@ -108,6 +114,7 @@ Do not invoke every skill for every task.
 
 ## Delivery and progress — user instruction 2026-10-09
 - Current hosted application: https://layout-studio-pro-3d.vercel.app/ (Vercel).
+- User instruction 2026-10-26: routine Vercel verification is not required. Check deployment only when explicitly requested or necessary for a reported hosting issue; omit repetitive reminders that Vercel was not verified.
 - GitHub repository: https://github.com/Petretto/Layout-Studio-Pro-3D.
 - After each completed task/package report plan progress using `node scripts/plan_progress.mjs` (whole plan and first release).
 - Commit and push completed, verified scoped work to GitHub. Preserve unrelated local changes. Do not equate a Git push with verified Vercel deployment; record deployment evidence separately when available.
