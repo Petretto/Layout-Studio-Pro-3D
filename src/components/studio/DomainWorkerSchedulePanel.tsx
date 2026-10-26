@@ -332,13 +332,13 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
         {(result.subassemblyEvents?.length??0)>500&&<p>Pokazano pierwsze 500 zdarzeń.</p>}
       </details>}
       {result.subassemblyBufferBooks&&<details aria-label="Osobne bufory podmontaży"><summary>Bufory podmontaży — pojemność i zapas</summary>
-        <p>Osobna pojemność dla każdego podzespołu i każdej kopii stanowiska, liczona w sztukach. Bufory korpusów mają odrębne limity. Rezerwacja celu zajmuje miejsce przed odjazdem; przyjazd zamienia ją w zajętość.</p>
-        <div className="table-wrap"><table><thead><tr><th>Podzespół / jednostka</th><th>Stanowisko / kopia</th><th>Strona</th><th>Pojemność</th><th>Zajęte</th><th>Zarezerwowane</th></tr></thead><tbody>
+        <p>Osobna pojemność dla każdego podzespołu i każdej kopii stanowiska, liczona w sztukach. Bufory korpusów mają odrębne limity. Dla dodatniej pojemności rezerwacja celu zajmuje miejsce przed odjazdem, a przyjazd zamienia ją w zajętość. Wejście 0 oznacza przyjazd dokładnie przy starcie przygotowanego odbiorcy, bez magazynowania; wyjście 0 zatrzymuje partię na producencie do odjazdu.</p>
+        <div className="table-wrap"><table><thead><tr><th>Podzespół / jednostka</th><th>Stanowisko / kopia</th><th>Strona</th><th>Pojemność</th><th>Zajęte</th><th>Zarezerwowane</th><th>Operator przy blokadzie</th></tr></thead><tbody>
           {result.subassemblyBufferBooks.flatMap(book=>book.places.map(place=>{
             const {occupied,reserved}=subassemblyBufferLoad(book,place);
             return place.capacity!==null||occupied||reserved?{place,occupied,reserved}:null;
           }).filter(row=>row!==null)).slice(0,300).map(({place,occupied,reserved})=><tr key={JSON.stringify([place.subassemblyId,place.stationId,place.copy,place.side])}>
-            <td>{place.subassemblyId} / {place.unit}</td><td>{place.stationId} / {place.copy}</td><td>{place.side==='input'?'Wejście':'Wyjście'}</td><td>{place.capacity??'Bez limitu'}</td><td>{occupied}</td><td>{reserved}</td>
+            <td>{place.subassemblyId} / {place.unit}</td><td>{place.stationId} / {place.copy}</td><td>{place.side==='input'?'Wejście':'Wyjście'}</td><td>{place.capacity??'Bez limitu'}</td><td>{occupied}</td><td>{reserved}</td><td>{place.blockingPolicy==='bbas'?'Zatrzymany':place.blockingPolicy==='bbas-worker-released'?'Zwolniony':'—'}</td>
           </tr>)}
         </tbody></table></div>
         <p>Pokazano do 300 miejsc z limitem lub zapasem. Reszty bez dalszego przypisania:</p>

@@ -6,16 +6,15 @@ import {createSubassemblyBufferBook, applySubassemblyBufferEvent, subassemblyBuf
   type SubassemblyBufferBook, type SubassemblyBufferPlace} from './subassemblyBufferState';
 import type {BufferRef} from './bufferState';
 
-/** Run-local adapter for positive, component-specific buffers. Body buffers remain independent. */
+/** Run-local adapter for component-specific buffers. Body buffers remain independent. */
 export class SubassemblyBufferRun {
   private books = new Map<string,SubassemblyBufferBook>();
+  private readonly policies = new Map<string,'bbas'|'bbas-worker-released'>();
   constructor(project: DomainProjectV6, candidates: ReadonlyMap<string, readonly StationCandidate[]>) {
     const configs = validateSubassemblyBuffers(project, project.subassemblyBuffers).buffers;
-    if (configs.some(config => config.inputCapacity === 0 || config.outputCapacity === 0)) {
-      throw new Error('C2-B2a: bufor podmontaży 0 wymaga integracji bezpośredniego przekazania; konfiguracja nie jest pomijana.');
-    }
-    if (configs.some(config => config.outputCapacity !== null && config.blockingPolicy !== 'bbas-worker-released')) {
-      throw new Error('C2-B2a: zatrzymanie operatora bbas przy pełnym buforze podmontaży wymaga kolejnej integracji; jawnie wybierz bbas-worker-released.');
+    for(const config of configs)if(config.outputCapacity!==null){
+      const copies=config.copy===null?Array.from({length:project.stationSettings[config.stationId].parallelStations},(_,i)=>i+1):[config.copy];
+      for(const copy of copies)this.policies.set(JSON.stringify([config.subassemblyId,config.stationId,copy]),config.blockingPolicy!);
     }
     for (const definition of project.subassemblies) {
       const lots = project.subassemblyFlow?.lots.filter(lot => lot.subassemblyId === definition.id) ?? [];
@@ -29,7 +28,8 @@ export class SubassemblyBufferRun {
         const copies=config.copy===null?Array.from({length:project.stationSettings[config.stationId].parallelStations},(_,i)=>i+1):[config.copy];
         for(const copy of copies)for(const side of ['input','output'] as const){
           const ref={stationId:config.stationId,copy,side};
-          places.set(JSON.stringify(ref),{...ref,subassemblyId:definition.id,unit,capacity:config[side==='input'?'inputCapacity':'outputCapacity']});
+          places.set(JSON.stringify(ref),{...ref,subassemblyId:definition.id,unit,capacity:config[side==='input'?'inputCapacity':'outputCapacity'],
+            ...(side==='output'&&config.outputCapacity!==null?{blockingPolicy:config.blockingPolicy}:{})});
         }
       }
       for (const id of [definition.producerOperationId,...definition.consumerOperationIds].filter((id): id is string => id !== undefined)) for (const candidate of candidates.get(id) ?? []) {
@@ -43,17 +43,27 @@ export class SubassemblyBufferRun {
     }
   }
   snapshot() { return [...this.books.values()]; }
+  holdsWorkers(subassemblyId: string, location: StationCopyRef) {return this.policies.get(JSON.stringify([subassemblyId,location.stationId,location.copy]))==='bbas';}
+  mayHoldAt(operationId: string, location: StationCopyRef, project: DomainProjectV6) {
+    return (project.subassemblyFlow?.lots??[]).some(lot=>lot.producer.operationId===operationId&&this.holdsWorkers(lot.subassemblyId,location));
+  }
   private ref(location: StationCopyRef, side: 'input'|'output'): BufferRef {return {stationId:location.stationId,copy:location.copy,side};}
   private book(lot: SubassemblyLotState) {return this.books.get(lot.declaration.subassemblyId)!;}
   private lot(lot: SubassemblyLotState) {return {id:lot.declaration.id,subassemblyId:lot.declaration.subassemblyId,unit:lot.declaration.unit,quantity:lot.declaration.quantity};}
+  private place(book: SubassemblyBufferBook, ref: BufferRef) {return book.places.find(place=>place.stationId===ref.stationId&&place.copy===ref.copy&&place.side===ref.side)!;}
+  inputIsDirect(lot: SubassemblyLotState, to: StationCopyRef) {return this.place(this.book(lot),this.ref(to,'input')).capacity===0;}
+  outputIsDirect(lot: SubassemblyLotState, from: StationCopyRef) {return this.place(this.book(lot),this.ref(from,'output')).capacity===0;}
+  isOnProducer(lot: SubassemblyLotState) {return !this.book(lot).tokens.some(token=>token.id===lot.declaration.id);}
   private hasSpace(book: SubassemblyBufferBook, ref: BufferRef, quantity: number) {
-    const place = book.places.find(place => place.stationId === ref.stationId && place.copy === ref.copy && place.side === ref.side)!;
+    const place = this.place(book,ref);
     const total = subassemblyBufferLoad(book,ref).total + quantity;
     if (!Number.isSafeInteger(total)) throw new Error('Bufory podmontaży: przekroczony bezpieczny zakres ilości.');
     return place.capacity === null || total <= place.capacity;
   }
   /** Each whole lot enters output separately. Producer stays held until every lot has left its work position. */
   deposit(lots: readonly SubassemblyLotState[], location: StationCopyRef, at: number) {
+    const policies=new Set(lots.map(lot=>this.policies.get(JSON.stringify([lot.declaration.subassemblyId,location.stationId,location.copy]))).filter(policy=>policy!==undefined));
+    if(policies.size>1)throw new Error('C2-B2b: różne polityki operatora dla partii jednego producenta wymagają integracji B3.');
     const trial = new Map(this.books), to = this.ref(location,'output');
     let complete=true;
     for (const lot of lots) {
@@ -70,15 +80,23 @@ export class SubassemblyBufferRun {
   }
   canDepart(lot: SubassemblyLotState, to: StationCopyRef) {
     const book = this.book(lot), token = book.tokens.find(token => token.id === lot.declaration.id);
-    return !!token?.location && token.location.side === 'output' && this.hasSpace(book,this.ref(to,'input'),lot.declaration.quantity);
+    const onSource=!!token?.location&&token.location.side==='output'||!token&&lot.status==='available'&&!!lot.location&&this.place(book,this.ref(lot.location,'output')).capacity===0;
+    return onSource && (this.inputIsDirect(lot,to)||this.hasSpace(book,this.ref(to,'input'),lot.declaration.quantity));
   }
-  depart(lot: SubassemblyLotState, to: StationCopyRef, at: number) {
+  depart(lot: SubassemblyLotState, to: StationCopyRef, at: number, directArrival?: number) {
     if (!this.canDepart(lot,to)) throw new Error('Bufor podmontaży: brak partii na wyjściu lub miejsca w celu.');
+    if(this.inputIsDirect(lot,to)){
+      if(directArrival===undefined||lot.declaration.consumptionQuantity!==lot.declaration.quantity)throw new Error('Wejście 0 wymaga zabezpieczonego terminu odbioru i pełnego zużycia bez reszty.');
+      this.books.set(lot.declaration.subassemblyId,applySubassemblyBufferEvent(this.book(lot),{kind:'depart-direct',lot:this.lot(lot),to:this.ref(to,'input'),arrivalSeconds:directArrival,atSeconds:at}));
+      return;
+    }
     let book = applySubassemblyBufferEvent(this.book(lot),{kind:'reserve',lot:this.lot(lot),to:this.ref(to,'input'),atSeconds:at});
     book = applySubassemblyBufferEvent(book,{kind:'depart',id:lot.declaration.id,atSeconds:at});
     this.books.set(lot.declaration.subassemblyId,book);
   }
   arrive(lot: SubassemblyLotState, at: number) {
+    const token=this.book(lot).tokens.find(token=>token.id===lot.declaration.id);
+    if(token?.handoff){if(token.handoff.atSeconds!==at)throw new Error('Wejście 0: niezgodny termin przyjazdu.');return;}
     this.books.set(lot.declaration.subassemblyId,applySubassemblyBufferEvent(this.book(lot),{kind:'arrive',id:lot.declaration.id,atSeconds:at}));
   }
   /** Local handoff reserves input first; no physical transport event or duration is fabricated. */
@@ -88,6 +106,10 @@ export class SubassemblyBufferRun {
       for (const lot of lots) {
         const token = this.book(lot).tokens.find(token => token.id === lot.declaration.id);
         if (token?.location?.side === 'input') continue;
+        if(this.inputIsDirect(lot,location)){
+          if(!this.canDepart(lot,location)){this.books=original;return false;}
+          continue; // Consumed locally at actual recipient start; never deposited in input 0.
+        }
         if (!this.canDepart(lot,location)) {this.books=original;return false;}
         this.depart(lot,location,at);this.arrive(lot,at);
       }
@@ -98,7 +120,13 @@ export class SubassemblyBufferRun {
     const trial = new Map(this.books);
     for (const lot of lots) {
       const book = trial.get(lot.declaration.subassemblyId)!;
-      trial.set(lot.declaration.subassemblyId,applySubassemblyBufferEvent(book,{kind:'consume',id:lot.declaration.id,quantity:lot.declaration.consumptionQuantity,at:this.ref(location,'input'),atSeconds:at}));
+      const token=book.tokens.find(token=>token.id===lot.declaration.id);
+      if(this.inputIsDirect(lot,location)&&!token?.handoff){
+        if(lot.status!=='available'||lot.location?.stationId!==location.stationId||lot.location.copy!==location.copy)throw new Error('Lokalne wejście 0 wymaga partii u odbiorcy.');
+        trial.set(lot.declaration.subassemblyId,applySubassemblyBufferEvent(book,{kind:'consume-local-direct',lot:this.lot(lot),quantity:lot.declaration.consumptionQuantity,at:this.ref(location,'input'),atSeconds:at}));
+        continue;
+      }
+      trial.set(lot.declaration.subassemblyId,applySubassemblyBufferEvent(book,{kind:token?.handoff?'consume-direct':'consume',id:lot.declaration.id,quantity:lot.declaration.consumptionQuantity,at:this.ref(location,'input'),atSeconds:at}));
     }
     this.books = trial;
   }

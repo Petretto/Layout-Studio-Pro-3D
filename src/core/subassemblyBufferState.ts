@@ -1,10 +1,12 @@
 import type {BufferRef} from './bufferState';
+import type {BlockingPolicy} from './stationBuffers';
 
 /** Run-local capacity contract only; not a saved-project schema or scheduler. */
 export interface SubassemblyBufferPlace extends BufferRef {
   capacity: number | null;
   subassemblyId: string;
   unit: string;
+  blockingPolicy?: BlockingPolicy;
 }
 export interface BufferedSubassemblyLot {
   id: string;
@@ -19,6 +21,7 @@ export interface SubassemblyBufferToken extends BufferedSubassemblyLot {
   moving?: true;
   consumed?: true;
   residual?: true;
+  handoff?: {to: BufferRef; atSeconds: number};
 }
 export interface SubassemblyBufferBook {
   places: readonly SubassemblyBufferPlace[];
@@ -27,6 +30,9 @@ export interface SubassemblyBufferBook {
 }
 export type SubassemblyBufferEvent =
   | {kind: 'reserve'; lot: BufferedSubassemblyLot; to: BufferRef; atSeconds: number}
+  | {kind: 'depart-direct'; lot: BufferedSubassemblyLot; to: BufferRef; arrivalSeconds: number; atSeconds: number}
+  | {kind: 'consume-direct'; id: string; quantity: number; at: BufferRef; atSeconds: number}
+  | {kind: 'consume-local-direct'; lot: BufferedSubassemblyLot; quantity: number; at: BufferRef; atSeconds: number}
   | {kind: 'depart' | 'arrive' | 'cancel'; id: string; atSeconds: number}
   | {kind: 'consume'; id: string; quantity: number; at: BufferRef; atSeconds: number};
 
@@ -81,11 +87,27 @@ export function applySubassemblyBufferEvent(book: SubassemblyBufferBook, event: 
   if (!Number.isFinite(event.atSeconds) || event.atSeconds < 0 || event.atSeconds < book.atSeconds) {
     throw new Error('Bufor podmontaży: niepoprawny czas lub cofnięcie czasu.');
   }
-  const id = event.kind === 'reserve' ? event.lot.id : event.id;
+  const id = event.kind === 'reserve' || event.kind === 'depart-direct' || event.kind === 'consume-local-direct' ? event.lot.id : event.id;
   text(id);
   const previous = book.tokens.find(token => token.id === id);
   let next: SubassemblyBufferToken | undefined;
-  if (event.kind === 'reserve') {
+  if(event.kind==='consume-local-direct'){
+    const {lot}=event,place=placeAt(book,event.at);pieces(lot.quantity);pieces(event.quantity);
+    if(place.side!=='input'||place.capacity!==0||place.unit!==lot.unit||place.subassemblyId!==lot.subassemblyId||event.quantity!==lot.quantity)throw new Error('Lokalne wejście 0 wymaga pełnego zgodnego pobrania bez reszty.');
+    if(previous&&(previous.consumed||previous.residual||previous.moving||previous.destination||previous.handoff||previous.quantity!==lot.quantity||previous.unit!==lot.unit||previous.subassemblyId!==lot.subassemblyId||previous.location?.side!=='output'||previous.location.stationId!==event.at.stationId||previous.location.copy!==event.at.copy))throw new Error('Lokalne przekazanie wymaga partii na wyjściu tej samej kopii.');
+    next={id,subassemblyId:lot.subassemblyId,unit:lot.unit,quantity:lot.quantity,remainingQuantity:0,consumed:true};
+  }else if(event.kind==='depart-direct'){
+    const {lot}=event,place=placeAt(book,event.to);
+    pieces(lot.quantity);text(lot.subassemblyId);text(lot.unit);
+    if(place.side!=='input'||place.capacity!==0||place.unit!==lot.unit||place.subassemblyId!==lot.subassemblyId)throw new Error('Bezpośrednie przekazanie wymaga zgodnego wejścia 0.');
+    if(!Number.isFinite(event.arrivalSeconds)||event.arrivalSeconds<=event.atSeconds)throw new Error('Bezpośrednie przekazanie wymaga jawnego przyszłego terminu odbioru.');
+    if(previous&&(previous.consumed||previous.residual||previous.destination||previous.handoff||previous.moving||!previous.location||previous.quantity!==lot.quantity||previous.unit!==lot.unit||previous.subassemblyId!==lot.subassemblyId))throw new Error('Niepoprawna partia do bezpośredniego przekazania.');
+    next={id,subassemblyId:lot.subassemblyId,unit:lot.unit,quantity:lot.quantity,remainingQuantity:lot.quantity,moving:true,handoff:{to:cloneRef(event.to),atSeconds:event.arrivalSeconds}};
+  }else if(event.kind==='consume-direct'){
+    pieces(event.quantity);placeAt(book,event.at);
+    if(!previous?.moving||!previous.handoff||previous.handoff.atSeconds!==event.atSeconds||key(previous.handoff.to)!==key(event.at)||previous.remainingQuantity!==event.quantity)throw new Error('Wejście 0: pełne pobranie musi nastąpić dokładnie przy przyjeździe do zadeklarowanej kopii.');
+    next={id:previous.id,subassemblyId:previous.subassemblyId,unit:previous.unit,quantity:previous.quantity,remainingQuantity:0,consumed:true};
+  }else if (event.kind === 'reserve') {
     const {lot} = event, place = placeAt(book, event.to);
     pieces(lot.quantity); text(lot.subassemblyId); text(lot.unit);
     if (lot.subassemblyId !== place.subassemblyId || lot.unit !== place.unit) throw new Error('Bufor podmontaży: niezgodny podzespół lub jednostka.');

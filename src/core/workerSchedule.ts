@@ -1,4 +1,5 @@
 import {projectWork} from './workProjection';
+import {planDirectOperation, type BufferedOperationChoice} from './directHandoffPlan';
 import {scheduleBufferedProcess} from './bufferedProcessSchedule';
 import {MaterialStockRun, type MaterialStock, type MaterialStockEvent} from './materialStock';
 import {SubassemblyRun, type SubassemblyLotState, type SubassemblyEvent} from './subassemblyState';
@@ -261,9 +262,25 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   let book = createWorkerReservationBook(checked.assemblyTransport ? checked.workers.map(w => w.id) : plan.teamWorkerIds);
   const runs: WorkerScheduleRun[] = [];
   const blockedProducers = new Map<WorkerScheduleRun, readonly SubassemblyLotState[]>();
+  const heldProducers = new Set<WorkerScheduleRun>();
+  const mayHoldExecution=(job:number,operationId:string,location:StationCopyRef)=>!!lotBuffers&&!!lotRun?.lots.some(lot=>lot.declaration.producer.job===job&&lot.declaration.producer.operationId===operationId&&lotBuffers.holdsWorkers(lot.declaration.subassemblyId,location));
+  const holdingOperations=new Set<string>();
+  if(lotBuffers)for(const step of steps)for(const target of candidatesByOperation.get(step.id)!)if(lotBuffers.mayHoldAt(step.id,target,checked))holdingOperations.add(step.id);
+  for(const id of holdingOperations){const operation=byOperation.get(id)!;
+    if(operation.reserveFromSeconds!==0||operation.reserveUntilSeconds!==operation.durationSeconds)throw new Error('C2-B2b: zatrzymanie operatora wymaga jawnej obecności od początku do końca operacji producenta; częściowa obecność wymaga dalszej integracji, a wcześniejsze wyjście wymaga reguły powrotu.');
+  }
+  const unsafeWorkers=(now:number,except?:WorkerScheduleRun)=>new Set(runs.filter(run=>run!==except&&mayHoldExecution(run.job,run.operationId,run)&&(run.endSeconds>now||heldProducers.has(run))).flatMap(run=>[...run.workerIds]));
   const copyBusy = (run: WorkerScheduleRun, now: number) => run.endSeconds > now || blockedProducers.has(run);
   const releaseProducer = (run: WorkerScheduleRun, now: number) => {
     blockedProducers.delete(run);
+    if(heldProducers.has(run)){
+      const id=`${run.job}:${run.operationId}`,reservation=book.reservations.find(item=>item.reservationId===id)!;
+      if(reservation.releasedAtSeconds===undefined)book=releaseWorkerTeam(book,id,now);
+      run.reserveEndSeconds=now;heldProducers.delete(run);
+    }else if(holdingOperations.has(run.operationId)){
+      const id=`${run.job}:${run.operationId}`,reservation=book.reservations.find(item=>item.reservationId===id)!;
+      if(reservation.releasedAtSeconds===undefined)book=releaseWorkerTeam(book,id,now);
+    }
     run.stationReleaseSeconds=now;run.blockedSeconds=now-run.endSeconds;
     copies.get(run.stationId)![run.copy-1]=!runs.some(other=>sameCopy(other,run)&&copyBusy(other,now));
   };
@@ -278,6 +295,18 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   let completed = 0;
   jobs.forEach((job, i) => events.push({kind: 'arrival', at: job.arrival, job: i}));
   let currentSimulationTime = 0;
+  const pendingReturns=new Map<string,string>();
+  const startReturn=(equipmentId:string,routeId:string,now:number)=>{
+    const route=checked.assemblyTransport!.emptyRoutes.find(route=>route.id===routeId)!;
+    if(route.workerAssignment?.workerIds.some(id=>unsafeWorkers(now).has(id)))return false;
+    const dispatch=previewEmptyDispatch(checked,route.id,cartBook,book,transportDevices,now,`return:${equipmentId}:${now}`);
+    book=dispatch.workers;transportDevices=dispatch.devices;cartLocks.set(equipmentId,dispatch.endSeconds);
+    if(dispatch.startSeconds===now)cartBook=dispatch.carts;else events.push({kind:'cart-start',at:dispatch.startSeconds,route});
+    events.push({kind:'cart-end',at:dispatch.endSeconds,equipmentId});
+    if(dispatch.workerIds.length)events.push({kind:'release',at:dispatch.endSeconds,reservationId:dispatch.reservationId});
+    transportMovements.push({kind:'empty',purpose:'return',routeId:route.id,workerIds:dispatch.workerIds,equipmentIds:dispatch.equipmentIds,startSeconds:dispatch.startSeconds,endSeconds:dispatch.endSeconds});
+    return true;
+  };
 
   while (events.length) {
     const now = events.peek().at;
@@ -297,7 +326,8 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
         steps.forEach((step, i) => { if (!step.predecessorIds.length) waiting.push({job: event.job, step: i,
           ready: now, causes: new Set()}); });
       } else if (event.kind === 'release') {
-        book = releaseWorkerTeam(book, event.reservationId, now);
+        const producer=runs.find(run=>holdingOperations.has(run.operationId)&&`${run.job}:${run.operationId}`===event.reservationId);
+        if(!producer)book = releaseWorkerTeam(book, event.reservationId, now);
       } else if (event.kind === 'cart-start') {
         cartBook = startCartMovement(checked,cartBook,event.route,'empty',now);
       } else if (event.kind === 'cart-end') {
@@ -310,14 +340,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
             const route = checked.assemblyTransport!.emptyRoutes.find(r => r.equipmentId === event.equipmentId &&
               sameCopy(r.from,current) && sameCopy(r.to,declaration.initialLocation));
             if(!route) throw new Error('3.4.3: zadeklarowany powrót wózka wymaga skierowanej trasy do lokalizacji początkowej.');
-            const dispatch = previewEmptyDispatch(checked,route.id,cartBook,book,transportDevices,now,`return:${event.equipmentId}:${now}`);
-            book = dispatch.workers;transportDevices = dispatch.devices;cartLocks.set(event.equipmentId,dispatch.endSeconds);
-            if(dispatch.startSeconds === now) cartBook = dispatch.carts;
-            else events.push({kind:'cart-start',at:dispatch.startSeconds,route});
-            events.push({kind:'cart-end',at:dispatch.endSeconds,equipmentId:event.equipmentId});
-            if(dispatch.workerIds.length) events.push({kind:'release',at:dispatch.endSeconds,reservationId:dispatch.reservationId});
-            transportMovements.push({kind:'empty',purpose:'return',routeId:route.id,workerIds:dispatch.workerIds,
-              equipmentIds:dispatch.equipmentIds,startSeconds:dispatch.startSeconds,endSeconds:dispatch.endSeconds});
+            if(!startReturn(event.equipmentId,route.id,now)){pendingReturns.set(event.equipmentId,route.id);cartLocks.set(event.equipmentId,Infinity);}
           }
         }
       } else if (event.kind === 'transport-end') {
@@ -337,7 +360,17 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
           if(produced.length){
             const run=runs.find(run=>run.job===event.job+1&&run.operationId===completedStep.id)!;
             if(lotBuffers.deposit(produced,run,now))releaseProducer(run,now);
-            else blockedProducers.set(run,produced);
+            else {
+              blockedProducers.set(run,produced);
+              if(produced.some(lot=>lotBuffers.isOnProducer(lot)&&lotBuffers.holdsWorkers(lot.declaration.subassemblyId,run))){
+                heldProducers.add(run);
+                book={...book,reservations:book.reservations.map(item=>item.reservationId===`${run.job}:${run.operationId}`?{...item,endSeconds:Number.MAX_VALUE}:item)};
+              }else if(holdingOperations.has(run.operationId)){
+                book=releaseWorkerTeam(book,`${run.job}:${run.operationId}`,now);
+              }
+            }
+          }else if(holdingOperations.has(completedStep.id)){
+            book=releaseWorkerTeam(book,`${event.job+1}:${completedStep.id}`,now);
           }
         }
         inFlight[event.job].delete(event.step);
@@ -357,6 +390,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
       for(const [run,lots] of blockedProducers)if(lotBuffers!.deposit(lots,run,now)){
         releaseProducer(run,now);started=true;
       }
+      for(const [equipmentId,routeId] of pendingReturns)if(startReturn(equipmentId,routeId,now)){pendingReturns.delete(equipmentId);started=true;}
       for (let i = 0; i < waiting.length; i++) {
         const task = waiting[i];
         bufferWaiting.delete(task);
@@ -368,18 +402,44 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
         const incoming = lotRun?.incoming(task.job + 1, step.id) ?? [];
         if (incoming.length) {
           const target = recipientCopies.get(JSON.stringify([task.job+1,step.id])) ?? candidatesByOperation.get(step.id)![0];
+          const directIncoming=incoming.filter(lot=>lotBuffers?.inputIsDirect(lot,target));
+          if(directIncoming.length){
+            if(incoming.length!==1)throw new Error('C2-B2b: bezpośrednie przekazanie wymaga jednej partii; wspólny odbiór kilku partii pozostaje do B3.');
+            if(mayHoldExecution(task.job+1,step.id,target))throw new Error('C2-B2b: bezpośredni odbiorca z zatrzymaniem własnej obsady na wyjściu wymaga integracji B3.');
+            if(incoming[0].declaration.quantity!==incoming[0].declaration.consumptionQuantity)throw new Error('C2-B2b: wejście 0 wymaga pełnego pobrania bez reszty.');
+            if(checked.changeoverMatrix||checked.physicalConcurrency?.groups.some(group=>group.operationIds.includes(step.id)))throw new Error('C2-B2b: wejście 0 z przezbrojeniem lub równoległą operacją odbiorcy wymaga dalszej integracji.');
+            if(incoming[0].location&&sameCopy(incoming[0].location,target)&&lotBuffers!.outputIsDirect(incoming[0],target))throw new Error('C2-B2b: lokalne wejście i wyjście 0 na tej samej kopii wymagają wspólnego przekazania stanowiska w B3.');
+          }
           const missing = incoming.filter(lot => lot.status === 'available' && !sameCopy(lot.location!, target));
           // Validate all required legs before publishing any movement for this recipient.
           for (const lot of missing) bodyRoute(lot.location!, target);
           if (missing.length) {
             const lot = missing[0], route = bodyRoute(lot.location!, target)!;
             if(lotBuffers&&!lotBuffers.canDepart(lot,target)){task.causes.add('buffer');bufferWaiting.add(task);continue;}
+            const direct=!!lotBuffers?.inputIsDirect(lot,target);
+            const owner=[...blockedProducers].find(([run,lots])=>heldProducers.has(run)&&lots.includes(lot)&&lots.every(other=>other===lot||!lotBuffers!.isOnProducer(other)))?.[0];
+            const previewBook=owner?releaseWorkerTeam(book,`${owner.job}:${owner.operationId}`,now):book;
+            const unsafe=unsafeWorkers(now,owner);
             let dispatch: AssemblyDispatch | undefined;
             if (checked.assemblyTransport) {
               try {
-                dispatch = previewAssemblyDispatch(checked,route.id,cartBook,book,transportDevices,now,`lot:${lot.declaration.id}`,now,new Set(cartLocks.keys()));
+                if(!holdingOperations.size)dispatch = previewAssemblyDispatch(checked,route.id,cartBook,book,transportDevices,now,`lot:${lot.declaration.id}`,now,new Set(cartLocks.keys()));
+                else{
+                  const rule=checked.assemblyTransport.routes.find(rule=>rule.stationRouteId===route.id)!;
+                  if(!rule)throw new Error(`3.4.3: trasa ${route.id} wymaga jawnego zestawu transportu montażu.`);
+                  for(const alternative of rule.alternatives){
+                    if(alternative.workerIds.some(id=>unsafe.has(id)))continue;
+                    const view={...checked,assemblyTransport:{...checked.assemblyTransport,routes:checked.assemblyTransport.routes.map(item=>item===rule?{...item,alternatives:[alternative]}:item)}};
+                    try{
+                      const candidate=previewAssemblyDispatch(view,route.id,cartBook,previewBook,transportDevices,now,`lot:${lot.declaration.id}`,now,new Set(cartLocks.keys()));
+                      if(candidate.prefix?.workerIds.some(id=>unsafeWorkers(now).has(id)))continue;
+                      if(!dispatch||candidate.startSeconds<dispatch.startSeconds)dispatch=candidate;
+                    }catch{/* Another explicit alternative may remain feasible. */}
+                  }
+                  if(!dispatch)throw new Error('Transport podmontażu: brak zestawu bez zatrzymanych lub potencjalnie blokowanych monterów.');
+                }
               } catch (failure) {
-                if (!cartLocks.size && !cartBook.carts.some(cart => cart.movement)) throw failure;
+                if (!cartLocks.size && !cartBook.carts.some(cart => cart.movement)&&!unsafeWorkers(now).size) throw failure;
                 cartLocks.forEach(end => wakeAt(end,now));
                 cartBook.carts.forEach(cart => {if(cart.movement)wakeAt(cart.movement.endSeconds,now);});
                 task.causes.add('transport');continue;
@@ -387,27 +447,73 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
               const movement = dispatch.prefix ?? dispatch;
               movement.waitCauses.forEach(cause => task.causes.add(cause));
               if (movement.startSeconds > now) {task.causes.add('transport');wakeAt(movement.startSeconds,now);continue;}
-              if(!dispatch.prefix)lotBuffers?.depart(lot,target,now);
+              if(dispatch.prefix&&owner){
+                const ownId=`${owner.job}:${owner.operationId}`;
+                movement.workers={...movement.workers,reservations:movement.workers.reservations.map(item=>item.reservationId===ownId?book.reservations.find(original=>original.reservationId===ownId)!:item)};
+              }
+            }
+            const end = dispatch?.endSeconds ?? now + route.transportTime!.durationSeconds;
+            let directChoice:BufferedOperationChoice|undefined,directBodyId:string|undefined;
+            if(direct&&!dispatch?.prefix){
+              const duration=end-now,operation=byOperation.get(step.id)!;
+              const occupants=runs.filter(run=>sameCopy(run,target)&&copyBusy(run,now)||copyBusy(run,now)&&run.equipmentIds?.some(id=>target.requiredEquipmentIds.includes(id)));
+              const uncertain=occupants.filter(run=>blockedProducers.has(run)||mayHoldExecution(run.job,run.operationId,run)||run.endSeconds>end);
+              if(uncertain.length){task.causes.add('station');uncertain.filter(run=>!blockedProducers.has(run)).forEach(run=>wakeAt(run.endSeconds-duration,now));continue;}
+              if(bodyRun&&step.physicalRole?.kind==='body-work'){
+                directBodyId=bodyRun.bodyByJob.get(task.job+1)!;
+                const body=bodyBook!.bodies.find(body=>body.id===directBodyId)!;
+                if(body.location.kind!=='station'||!sameCopy(body.location,target))throw new Error('C2-B2b: wejście 0 z równoczesnym przewozem korpusu pozostaje do B3.');
+                if(body.status!=='available'){task.causes.add('body');continue;}
+              }
+              if(stockRun){
+                if(!stockRun.permits(step.id,target.stationId)){task.causes.add('material');continue;}
+                try{const materialAt=stockRun.earliest(step.id,end);if(materialAt>end){task.causes.add('material');wakeAt(materialAt-duration,now);continue;}}
+                catch{task.causes.add('material');continue;}
+              }
+              const admission=planDirectOperation(checked,operation,target,end,dispatch?.workers??previewBook,unsafe,mayHoldExecution(task.job+1,step.id,target));
+              if(!admission.choice){if(admission.cause)task.causes.add(admission.cause);if(admission.retryAt!==undefined)wakeAt(admission.retryAt-duration,now);continue;}
+              directChoice=admission.choice;
+            }
+            if(!dispatch?.prefix)lotBuffers?.depart(lot,target,now,directChoice?end:undefined);
+            if(dispatch){
+              const movement=dispatch.prefix??dispatch;
               book = movement.workers;cartBook = movement.carts;transportDevices = movement.devices;
               if(movement.workerIds.length)events.push({kind:'release',at:movement.endSeconds,reservationId:movement.reservationId});
               for(const id of movement.equipmentIds)if(cartBook.carts.some(cart=>cart.equipmentId===id)){
                 if(dispatch.prefix)cartLocks.set(id,movement.endSeconds);
                 events.push({kind:'cart-end',at:movement.endSeconds,equipmentId:id,
-                  returnToInitial:!dispatch.prefix && checked.assemblyTransport.carts.find(cart=>cart.equipmentId===id)!.afterUnload==='return-to-initial'});
+                  returnToInitial:!dispatch.prefix && checked.assemblyTransport!.carts.find(cart=>cart.equipmentId===id)!.afterUnload==='return-to-initial'});
               }
               transportMovements.push({kind:dispatch.prefix?'empty':'loaded',purpose:dispatch.prefix?'approach':'transfer',
                 routeId:movement.routeId,workerIds:movement.workerIds,equipmentIds:movement.equipmentIds,
                 startSeconds:now,endSeconds:movement.endSeconds,lotId:lot.declaration.id});
               if(dispatch.prefix){task.causes.add('transport');started=true;break;}
             }
-            const end = dispatch?.endSeconds ?? now + route.transportTime!.durationSeconds;
-            if(!dispatch)lotBuffers?.depart(lot,target,now);
             lotRun!.start(lot,target,now,end);events.push({kind:'lot-end',at:end,lotId:lot.declaration.id});
             if(!dispatch)transportMovements.push({kind:'loaded',purpose:'transfer',routeId:route.id,workerIds:[],equipmentIds:[],startSeconds:now,endSeconds:end,lotId:lot.declaration.id});
+            if(directChoice){
+              const operation=byOperation.get(step.id)!,reservationId=`${task.job+1}:${step.id}`,finish=directChoice.projection.end;
+              book=reserveWorkerTeam(book,{reservationId,workerIds:directChoice.workers,startSeconds:directChoice.from,endSeconds:directChoice.until});
+              if(directBodyId){
+                const profile=step.staffing!.timeVariants.find(variant=>variant.workerCount===operation.workerCount)!.timeProfile;
+                events.push({kind:'body-start',at:end,bodyId:directBodyId,operationId:step.id,end:finish,basis:profile.durationBasis==='measured'?'confirmed':'assumed'});
+              }
+              if(stockRun?.applies(step.id)){stockRun.reserve(task.job+1,step.id,end);events.push({kind:'material-consume',at:end,job:task.job+1,operationId:step.id});}
+              events.push({kind:'lot-consume',at:end,job:task.job+1,operationId:step.id,location:target});
+              runs.push({job:task.job+1,operationId:step.id,stationId:target.stationId,copy:target.copy,workerIds:directChoice.workers,equipmentIds:target.requiredEquipmentIds,
+                readySeconds:task.ready,startSeconds:end,endSeconds:finish,reserveStartSeconds:directChoice.from,reserveEndSeconds:directChoice.until,
+                stationReserveStartSeconds:end,workWindows:directChoice.projection.workWindows,pauses:directChoice.projection.pauses,
+                waitSeconds:end-task.ready-(end-now),waitCauses:[...task.causes,'subassembly'],...(directBodyId?{bodyId:directBodyId}:{})});
+              copies.get(target.stationId)![target.copy-1]=false;copyReady.get(target.stationId)![target.copy-1]=finish;
+              jobs[task.job].starts[task.step]=end;jobs[task.job].ends[task.step]=finish;inFlight[task.job].add(task.step);
+              events.push({kind:'release',at:directChoice.until,reservationId});events.push({kind:'completion',at:finish,job:task.job,step:task.step,stationId:target.stationId,copy:target.copy-1});
+              waiting.splice(i,1);
+            }
             task.causes.add('subassembly');started=true;break;
           }
           if(incoming.some(lot=>lot.status==='pending'||lot.status==='moving')){task.causes.add('subassembly');continue;}
           if(lotBuffers&&!lotBuffers.local(incoming,target,now)){task.causes.add('buffer');bufferWaiting.add(task);continue;}
+          for(const [run,lots] of blockedProducers)if(lotBuffers!.deposit(lots,run,now)){releaseProducer(run,now);started=true;}
         }
         const bodyId = bodyRun && step.physicalRole?.kind === 'body-work' ? bodyRun.bodyByJob.get(task.job + 1)! : undefined;
         const operation = byOperation.get(step.id)!;
@@ -476,6 +582,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
             }
             combinations++;
             if (!teamCoversCompetencies(checked, step.id, workerIds)) return;
+            if(workerIds.some(id=>unsafeWorkers(now).has(id))){workerWait=true;return;}
             if (bodyId) {
               let probe = arrival;
               const futureWaitCauses = new Set<'workers' | 'calendar' | 'material'>();
@@ -492,7 +599,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
                 const reserveEnd = projected.atOffset(operation.reserveUntilSeconds, true);
                 if (![reserveStart, reserveEnd, projected.end].every(Number.isFinite)) throw new Error('Harmonogram przekroczył poprawny zakres czasu.');
                 const conflicts = (dispatch?.workers ?? book).reservations.filter(reservation => reserveStart < reservation.endSeconds &&
-                  reservation.startSeconds < reserveEnd && reservation.workerIds.some(id => workerIds.includes(id)));
+                  (mayHoldExecution(task.job+1,step.id,candidate)||reservation.startSeconds < reserveEnd) && reservation.workerIds.some(id => workerIds.includes(id)));
                 if (conflicts.length) {
                   workerWait = true;
                   futureWaitCauses.add('workers');
@@ -544,7 +651,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
               throw new Error('Harmonogram przekroczył poprawny zakres czasu.');
             }
             const conflicts = book.reservations.filter(reservation =>
-              reserveStart < reservation.endSeconds && reservation.startSeconds < reserveEnd &&
+              reserveStart < reservation.endSeconds && (mayHoldExecution(task.job+1,step.id,candidate)||reservation.startSeconds < reserveEnd) &&
               reservation.workerIds.some(id => workerIds.includes(id)));
             if (conflicts.length) {
               workerWait = true;
@@ -705,10 +812,10 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
         stationId:candidatesByOperation.get(steps[task.step].id)![0].stationId,copy:candidatesByOperation.get(steps[task.step].id)![0].copy,
         status:'waiting',waitCauses:[...task.causes],missingResourceExplanation:'Sprawdź zajętość i reszty partii w buforach podmontaży.'})),
       blockedStations:[...blockedProducers.keys()].map(run=>({stationId:run.stationId,stationName:checked.stations.find(station=>station.id===run.stationId)!.name,
-        copy:run.copy,blockedByJob:run.job,blockedByOperationId:run.operationId,holdingWorkerIds:[],blockingPolicy:'bbas-worker-released'})),
+        copy:run.copy,blockedByJob:run.job,blockedByOperationId:run.operationId,holdingWorkerIds:heldProducers.has(run)?[...run.workerIds]:[],blockingPolicy:heldProducers.has(run)?'bbas':'bbas-worker-released'})),
       recommendation:'Sprawdź jawne pojemności w sztukach, ilości partii i pobrań oraz przypisania odbiorców; reszty pozostają w buforze.'});
   }
-  if (completed !== steps.length * batch || waiting.length ||
+  if (completed !== steps.length * batch || waiting.length ||pendingReturns.size||
       book.reservations.some(item => item.releasedAtSeconds !== item.endSeconds)) {
     throw new ProcessStallError(diagnoseUnbufferedProcessStall({
       now: currentSimulationTime,

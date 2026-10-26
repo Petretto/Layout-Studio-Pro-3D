@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**
-Aktualizacja podręcznika: **26.10.2026 — C2-B2a: osobne dodatnie bufory podmontaży i zapas reszt; C2-A: transport i zaopatrzenie; fizyczny C1 oraz odtwarzanie A2b2b.**
+Aktualizacja podręcznika: **26.10.2026 — C2-B2b: zatrzymanie montera i bezpośredni odbiór jednej partii; C2-B2a: osobne bufory i zapas reszt; transport C1/C2 oraz odtwarzanie A2b2b.**
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -71,7 +71,7 @@ C2 w pakiecie **1.1.0** ma odebrany podpakiet fizyczny A. Wczytaj go z katalogu,
 
 Próba C2: zmień tylko zapas początkowy **SUP-MU-ZASIL** na 0, zapisz zaopatrzenie i oblicz ponownie przy tych samych warunkach. Gałąź A czeka do dostawy w 900 s; pierwsza sztuka kończy w 1100/1070 s. Końcowy wynik partii nadal wynosi 2210/2180 s, bo późniejsze sztuki pozostają bez opóźnienia. Rozwiń **Partie podzespołów (6)**, aby sprawdzić wytworzenie, przewóz, przybycie i zużycie przy starcie integracji. Przywrócenie zapisanego wariantu odtwarza pełne zapasy. Po odświeżeniu trzeba ponownie obliczyć harmonogram.
 
-**Ograniczenie C2:** pobrany przykład C2-A nadal ma nieograniczone bufory gałęzi. Etap B2a obsługuje osobno skonfigurowane dodatnie bufory każdego podzespołu, z polityką zwolnienia operatora przy blokadzie wyjścia. Konfigurację wczytuje się z pakietu projektu; osobny formularz i pełny fizyczny odbiór C2 pozostają otwarte. Pojemność 0, zatrzymanie operatora na ograniczonym wyjściu podmontażu oraz wspólna symulacja gałęzi ze skończonymi buforami korpusów są jawnie odrzucane. Inspekcja partii nie oznacza oddzielnej animacji ich brył w 3D. Historia fizyczna pokazuje korpusy i wózki; bez geometrycznego przebiegu trasy pozycja w przejeździe pozostaje nieznana.
+**Ograniczenie C2:** pobrany przykład C2-A nadal ma nieograniczone bufory gałęzi. Dostępne są osobne pojemności każdego podzespołu, obie polityki operatora w odebranym zakresie i bezpośredni odbiór jednej partii przy wejściu 0. Konfigurację wczytuje się z pakietu projektu. Osobny formularz, wspólny odbiór kilku partii/korpusu i symulacja gałęzi ze skończonymi buforami korpusów pozostają otwarte. Zatrzymanie operatora wymaga pełnej jawnej obecności podczas producenta. Nieobsługiwane kombinacje są odrzucane, nie upraszczane. Inspekcja partii nie oznacza oddzielnej animacji ich brył w 3D. Historia fizyczna pokazuje korpusy i wózki; bez geometrycznego przebiegu trasy pozycja w przejeździe pozostaje nieznana.
 
 C1/C2 mają też osobne wyniki procesowe przy jawnym JIT: C1 390/315 s, C2 320/270 s dla 3 sztuk i odstępu 1 s. JIT nie sprawdza fizycznego transportu ani zapasów. Pełny fizyczny odbiór C2 pozostaje otwarty do ograniczonych buforów gałęzi. Eko: 1 sztuka, odstęp 1 s, JIT wyłączony — 13550/14150/14150 s. Pakowanie Eko ma dwie osoby przez 1320 s, a przypisania innych ról są testowe; nie odtwarzają znanych tylko łącznie 13 osób pomiaru.
 
@@ -316,6 +316,18 @@ Po obliczeniu rozwiń **Bufory podmontaży — pojemność i zapas**. Sprawdź p
 ![Osobne bufory SUB-PWR i SUB-DRV z zapasem reszt — syntetyczna próba B2a](../outputs/qa/7_12c2_b2a/buffers_stock.png)
 
 Na ilustracji dla każdej z trzech sztuk wyrobu producent wytwarza partię po 5 sztuk danego podzespołu, a odbiorca pobiera po 3. Końcowy zapas wynosi po 6 sztuk dla SUB-PWR i SUB-DRV. Każdy ma własny limit wejścia 9; nie jest to wspólna pula 9. To jawnie zmodyfikowany scenariusz testowy, a nie dane produkcyjne ani domyślna konfiguracja pobieranego C2-A. Po odświeżeniu oblicz wynik ponownie; zapis i eksport pakietu zachowują konfigurację.
+
+**Zatrzymanie operatora i odbiór bez składowania (C2-B2b).** Przy polityce zatrzymania operatora pełne wyjście utrzymuje także przypisany zespół po obróbce. Nie można obiecać tych osób innej operacji ani powrotowi wózka do czasu rzeczywistego zwolnienia. Producent musi mieć zadeklarowaną obecność od początku do końca operacji; częściowa obecność w tym wariancie wymaga dalszej integracji. Polityka zwolnienia operatora zachowuje profil bez przedłużania rezerwacji osób.
+
+Wyjście 0 pozostawia partię na producencie do wyjazdu. Wejście 0 wymaga gotowego odbiorcy dokładnie przy przyjeździe i pełnego pobrania jednej partii, bez reszty. Jeśli odbiorca wymaga korpusu, korpus musi już być w jego kopii. Miejsce, wyposażenie, osoby, kalendarz i wymagane materiały są zabezpieczane przed wyjazdem. Monter zwalnianego źródła może przewieźć ostatnią oczekującą partię; nie może wcześniej wykonać pustego dojazdu, zostawiając partię mimo reguły zatrzymania.
+
+W sekcji **Bufory podmontaży — pojemność i zapas** odczytaj kolumnę **Operator przy blokadzie**. Dla pojemności 0 zajętość bufora pozostaje 0 — partia jest na producencie, w przewozie lub w operacji. W inspekcji wykonania sprawdź **Zwolnienie stanowiska**, **blokadę po pracy** i **Rezerwację osób**; inspekcja ruchów pokazuje odrębny przewóz i powrót.
+
+![Bezpośredni odbiór jednej partii i zatrzymany monter — syntetyczna próba B2b](../outputs/qa/7_12c2_b2b/direct_zero.png)
+
+Ta ilustracja dotyczy odrębnej, zredukowanej próby syntetycznej: jedna partia 5/5 sztuk, jawna podwójna kwalifikacja jednego montera, korpus już na odbiorcy i bez modułu zaopatrzenia. Obróbka trwa 0–50 s, źródło i monter czekają do 90 s, przewóz trwa 90–100 s, montaż 100–170 s, powrót 170–180 s. Koniec wyrobu wynosi 170 s. Nie jest to wynik całego pobieranego C2-A ani pomiar produkcji.
+
+Nadal odrzucane są: kilka partii przy wejściu 0, reszta po pobraniu na wejściu 0, jednoczesny przewóz korpusu do tego odbiorcy, lokalne wejście i wyjście oba 0, bezpośredni odbiorca z przezbrojeniem/równoległością lub zatrzymujący własną obsadę przy dalszej produkcji, mieszane polityki skończonych wyjść jednego producenta i skończone bufory korpusów z gałęziami. Przeczytaj komunikat zamiast traktować odmowę jako poprawną symulację.
 
 W **Zaopatrzeniu materiałowym** zadeklaruj pozycję materiałową przy stanowisku, zapas początkowy, jednostkę, dostawy i zużycie przypisane do operacji. Ilości nie powstają z BOM. Dostawa cykliczna wymaga jawnego pierwszego terminu do wykonania; nie zakładaj terminu 0. Całe zużycie następuje przy rzeczywistym starcie operacji, a dostawy są przetwarzane przed pobraniem przy równym czasie.
 
