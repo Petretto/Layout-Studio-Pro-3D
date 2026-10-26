@@ -23,7 +23,7 @@ ok(manualConfirmation.packaging?.operationId==='OP21'&&manualConfirmation.packag
 const aggregationConfirmation=evidence.confirmations.find(c=>c.id==='EKO-U6');
 ok(aggregationConfirmation?.timeAggregation==='mean-of-multiple-measurements'&&aggregationConfirmation.sampleCount===null,'Recheck mean-time confirmation; sample count remains unknown');
 deepStrictEqual([...aggregationConfirmation.operationIds].sort(),Object.keys(staffingConfirmation.operationWorkerCounts).sort(),'Mean-time confirmation must cover OP10–OP21 only');
-const sourcePaths=[processPath,bomPath,'src/core/models/ekoProject.ts','tests/qa/Eko_D5_actual_export_v5.json','tests/fixtures/ekoDomainScenarios.ts','WERYFIKACJA_EKO_2_9.md',confirmationPath];
+const sourcePaths=[processPath,bomPath,'src/core/models/ekoProject.ts','tests/qa/Eko_D5_actual_export_v5.json','tests/fixtures/ekoDomainScenarios.ts','docs/weryfikacja/WERYFIKACJA_EKO_2_9.md',confirmationPath];
 const sources=sourcePaths.map((path,index)=>{
   const bytes=readFileSync(resolve(root,path));
   const confirmed=confirmation.sourcePaths.includes(path);

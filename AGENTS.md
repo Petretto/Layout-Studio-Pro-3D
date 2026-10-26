@@ -7,6 +7,14 @@ Develop Layout Studio Pro as a reliable React/TypeScript/Three.js application fo
 Optimize for correctness, small coherent packages, and efficient context/tool use. Do not maximize activity.
 
 ## Core rules
+
+### Repository organization — user instruction 2026-10-26
+- Keep the repository root clean. Only the main `PLAN_ROZWOJU.md`, `AGENTS.md`, `README.md`, build/configuration files and required launchers belong there.
+- Put new domain contracts/models/standards in `docs/modele/`, verification and acceptance reports in `docs/weryfikacja/`, detailed plans/notes in `docs/plany/`, product descriptions in `docs/produkt/`, data/scenario descriptions in `docs/dane/`, release history in `docs/historia/`, and UI design documents in `docs/projekty/`.
+- Put `.pen` designs in `design/`, user manual sources/derivatives in `Instrukcja/`, and test evidence in `outputs/qa/`. Never create new `MODEL_*`, `WERYFIKACJA_*` or `RAPORT_*` files at the repository root.
+- Use `docs/README.md` as the documentation index. Update links and script paths when moving documents. Keep historical backup paths and saved example data unchanged. Run `node scripts/verify_documentation.mjs` after documentation moves/additions.
+
+### Implementation rules
 1. Before substantial implementation identify the relevant `PLAN_ROZWOJU.md` ID.
 2. Read only plan sections, reports and source files relevant to the current package.
 3. Prefer small coherent changes over broad rewrites.
@@ -125,7 +133,7 @@ User clarification 2026-10-25: assemblers perform transport only between operati
 - Approved rule A: the whole explicitly declared subassembly lot becomes available at producer completion; the assigned quantity is consumed atomically at recipient start.
 - Quantities, units and producer/recipient execution assignments remain explicit; do not derive stock or quantities from BOM.
 
-User decision 2026-10-25 (C2 finite buffers): capacity counts pieces of subassembly, not lots. A lot of 5 pieces occupies 5 capacity units. Integration remains pending under `MODEL_BUFOROW_PODMONTOW_C2.md`; do not claim finite branch buffers are supported by C2-A.
+User decision 2026-10-25 (C2 finite buffers): capacity counts pieces of subassembly, not lots. A lot of 5 pieces occupies 5 capacity units. Integration remains pending under `docs/modele/MODEL_BUFOROW_PODMONTOW_C2.md`; do not claim finite branch buffers are supported by C2-A.
 
 User decision 2026-10-25 (C2 remainder): when 3 of 5 pieces are consumed, the remaining 2 stay in the recipient buffer, continue to occupy capacity and remain visible as stock. Without an explicit new assignment, do not consume or transport the remainder again. B1 implements this only in the internal quantity ledger; scheduler and UI integration remain pending.
 

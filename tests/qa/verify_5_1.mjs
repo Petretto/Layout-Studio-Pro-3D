@@ -19,7 +19,7 @@ try{
   const send=(method,params={})=>new Promise((resolve,reject)=>{const next=++id;const timer=setTimeout(()=>{pending.delete(next);reject(new Error('Timeout '+method));},10000);pending.set(next,{resolve:r=>{clearTimeout(timer);resolve(r);},reject:e=>{clearTimeout(timer);reject(e);}});ws.send(JSON.stringify({id:next,method,params}));});
   const evaluate=async expression=>{const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw new Error(r.exceptionDetails.exception?.description??r.exceptionDetails.text);return r.result.value;};
   await send('Page.enable');await send('Runtime.enable');
-  await send('Page.navigate',{url:pathToFileURL(resolve('PROPOZYCJE_UI_5_1.html')).href});await sleep(500);
+  await send('Page.navigate',{url:pathToFileURL(resolve('docs/projekty/PROPOZYCJE_UI_5_1.html')).href});await sleep(500);
   const viewport=async width=>{await send('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:false});await sleep(100);};
   const screenshot=async name=>{mkdirSync('outputs/qa',{recursive:true});writeFileSync(`outputs/qa/${name}.png`,Buffer.from((await send('Page.captureScreenshot',{format:'png'})).data,'base64'));};
   const noOverflow=()=>evaluate('document.documentElement.scrollWidth<=innerWidth');
