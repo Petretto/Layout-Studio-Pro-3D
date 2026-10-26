@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**
-Aktualizacja podręcznika: **25.10.2026 — C2-A: transport podmontaży i zapasy; fizyczny przykład C1: transport monterów, bufory i dostawy; odtwarzanie A2b2b oraz katalog 7.13.3.**
+Aktualizacja podręcznika: **26.10.2026 — C2-B2a: osobne dodatnie bufory podmontaży i zapas reszt; C2-A: transport i zaopatrzenie; fizyczny C1 oraz odtwarzanie A2b2b.**
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -71,7 +71,7 @@ C2 w pakiecie **1.1.0** ma odebrany podpakiet fizyczny A. Wczytaj go z katalogu,
 
 Próba C2: zmień tylko zapas początkowy **SUP-MU-ZASIL** na 0, zapisz zaopatrzenie i oblicz ponownie przy tych samych warunkach. Gałąź A czeka do dostawy w 900 s; pierwsza sztuka kończy w 1100/1070 s. Końcowy wynik partii nadal wynosi 2210/2180 s, bo późniejsze sztuki pozostają bez opóźnienia. Rozwiń **Partie podzespołów (6)**, aby sprawdzić wytworzenie, przewóz, przybycie i zużycie przy starcie integracji. Przywrócenie zapisanego wariantu odtwarza pełne zapasy. Po odświeżeniu trzeba ponownie obliczyć harmonogram.
 
-**Ograniczenie C2:** ograniczone bufory gałęzi podmontaży nie są jeszcze obsługiwane; dodanie takiego bufora powoduje jawne odrzucenie, nie automatyczne uproszczenie wyniku. Ich planowana pojemność będzie liczona w sztukach podzespołu (partia 5 sztuk zajmie 5). Inspekcja partii nie oznacza oddzielnej animacji ich brył w 3D. Historia fizyczna pokazuje korpusy i wózki; bez geometrycznego przebiegu trasy pozycja w przejeździe pozostaje nieznana.
+**Ograniczenie C2:** pobrany przykład C2-A nadal ma nieograniczone bufory gałęzi. Etap B2a obsługuje osobno skonfigurowane dodatnie bufory każdego podzespołu, z polityką zwolnienia operatora przy blokadzie wyjścia. Konfigurację wczytuje się z pakietu projektu; osobny formularz i pełny fizyczny odbiór C2 pozostają otwarte. Pojemność 0, zatrzymanie operatora na ograniczonym wyjściu podmontażu oraz wspólna symulacja gałęzi ze skończonymi buforami korpusów są jawnie odrzucane. Inspekcja partii nie oznacza oddzielnej animacji ich brył w 3D. Historia fizyczna pokazuje korpusy i wózki; bez geometrycznego przebiegu trasy pozycja w przejeździe pozostaje nieznana.
 
 C1/C2 mają też osobne wyniki procesowe przy jawnym JIT: C1 390/315 s, C2 320/270 s dla 3 sztuk i odstępu 1 s. JIT nie sprawdza fizycznego transportu ani zapasów. Pełny fizyczny odbiór C2 pozostaje otwarty do ograniczonych buforów gałęzi. Eko: 1 sztuka, odstęp 1 s, JIT wyłączony — 13550/14150/14150 s. Pakowanie Eko ma dwie osoby przez 1320 s, a przypisania innych ról są testowe; nie odtwarzają znanych tylko łącznie 13 osób pomiaru.
 
@@ -308,6 +308,14 @@ W **Buforach stanowisk** wybierz stanowisko, zakres kopii, pojemności wejścia/
 - Wyjście 0 utrzymuje korpus na stanowisku do rzeczywistego wyjazdu. Kolejne operacje na tej samej kopii pozostawiają korpus na miejscu; oczekiwanie lokalne jest odrębne od blokady wyjścia.
 
 ![Formularz pojemności i polityk buforów — syntetyczny odbiór 3.5c1](../outputs/qa/verify_3_5c1.png)
+
+**Osobne bufory podmontaży (C2-B2a).** Każdy podzespół i każda kopia stanowiska mają odrębną pojemność w sztukach; bufory korpusów pozostają osobne. Nie używaj formularza **Bufory stanowisk** do nadawania limitów podzespołom. Ten etap odczytuje osobną konfigurację z pakietu projektu; nie zmienia istniejących przykładów ani zapisów bez tej konfiguracji. Obsługuje dodatnie pojemności i jawny brak limitu, a przy pełnym wyjściu zatrzymuje stanowisko oraz wyposażenie po obróbce i zwalnia operatora według profilu.
+
+Po obliczeniu rozwiń **Bufory podmontaży — pojemność i zapas**. Sprawdź podzespół, jednostkę, stanowisko/kopię, wejście/wyjście, pojemność, zajętość i rezerwacje. Partia 5 sztuk rezerwuje 5 przed wyjazdem. Po pobraniu 3 pozostają 2 w buforze odbiorcy; nadal zajmują pojemność i są pokazane jako zapas bez dalszego przypisania. Nie są samoczynnie przenoszone ani ponownie zużywane. Brak miejsca może zatrzymać proces zamiast zwrócić poprawny wynik.
+
+![Osobne bufory SUB-PWR i SUB-DRV z zapasem reszt — syntetyczna próba B2a](../outputs/qa/7_12c2_b2a/buffers_stock.png)
+
+Na ilustracji dla każdej z trzech sztuk wyrobu producent wytwarza partię po 5 sztuk danego podzespołu, a odbiorca pobiera po 3. Końcowy zapas wynosi po 6 sztuk dla SUB-PWR i SUB-DRV. Każdy ma własny limit wejścia 9; nie jest to wspólna pula 9. To jawnie zmodyfikowany scenariusz testowy, a nie dane produkcyjne ani domyślna konfiguracja pobieranego C2-A. Po odświeżeniu oblicz wynik ponownie; zapis i eksport pakietu zachowują konfigurację.
 
 W **Zaopatrzeniu materiałowym** zadeklaruj pozycję materiałową przy stanowisku, zapas początkowy, jednostkę, dostawy i zużycie przypisane do operacji. Ilości nie powstają z BOM. Dostawa cykliczna wymaga jawnego pierwszego terminu do wykonania; nie zakładaj terminu 0. Całe zużycie następuje przy rzeczywistym starcie operacji, a dostawy są przetwarzane przed pobraniem przy równym czasie.
 

@@ -1,7 +1,7 @@
 # Plan rozwoju i rejestr postępu aplikacji
 
 Data utworzenia: 2026-09-29  
-Ostatnia aktualizacja: 2026-10-25
+Ostatnia aktualizacja: 2026-10-26
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
 Dane testowe: Eko jest historycznym przypadkiem regresyjnym; docelowe przykłady to trzy zewnętrzne, kompletne pakiety demonstracyjne (7.12).
 
@@ -136,6 +136,8 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
+
+7.12.C2-B2a (2026-10-26): **wdrożone w zakresie dodatnich buforów podmontaży**, całe B/7.12 w trakcie. Decyzja użytkownika: osobny limit każdego podzespołu i osobny dla korpusów. Opcjonalne `subassemblyBuffers` modelu 6, rezerwacja celu w sztukach, atomowe odkładanie całych partii, blokowanie stanowiska/wyposażenia po obróbce z operatorem zwolnionym, reszty na wejściu odbiorcy i inspekcja UI. Pełny checkpoint 441/441 PASS; po końcowych korektach 77/77 regresji, w tym 11/11 nowych PASS. Build/typecheck i rzeczywisty Edge: chroniony import, 2210 s, odrębne zapasy 6+6, odświeżenie i eksport PASS. Backup 13 niezależnych SHA PASS: `backup/v0.4.0_przed_7_12c2_b2_20261026`. Instrukcja MD/HTML/PDF: 64 strony, 52 obrazy, kontrola automatyczna i oględziny zmienionych stron PASS. Raport `WERYFIKACJA_BUFOROW_PODMONTOW_C2_B2A.md`. **Następny B2b: zatrzymanie operatora i przekazanie przy pojemności 0**, potem B3: skończone bufory korpusów z gałęziami, spiętrzenie C2 i formularz. Nieobsługiwane kombinacje nadal odrzucane; konfiguracja B2a przez pakiet projektu. Postęp 84,7% / 89,7% bez zmiany.
 
 7.12.C2-B1 (2026-10-25): **odebrany wewnętrzny rejestr**, całe B/7.12 w trakcie. Ilości w sztukach, rezerwacja przed odjazdem, przyjazd bez podwójnego liczenia i atomowe pobranie. Decyzja użytkownika: z 5 po pobraniu 3 pozostają 2 w buforze odbiorcy, zajmują pojemność; bez nowego jawnego przypisania nie są ponownie zużywane/przewożone. 6/6 nowych i 66/66 końcowego podzbioru regresji PASS; build/typecheck PASS. Backup: `backup/v0.4.0_przed_7_12c2_b1_20261025`, 7 plików, niezależne SHA-256 PASS. Brak aktywacji schedulera, zmiany zapisów lub UI; raport `WERYFIKACJA_BUFOROW_PODMONTOW_C2_B1.md`. **Następny B2: integracja harmonogramu gałęzi**, w tym bezpośrednie przekazanie przy pojemności 0; potem B3: spiętrzenie, inspekcja zapasów i rzeczywisty UI/zapis. Postęp 84,7% / 89,7% bez zmiany.
 

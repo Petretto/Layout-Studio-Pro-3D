@@ -2,6 +2,7 @@ import {projectWork} from './workProjection';
 import {scheduleBufferedProcess} from './bufferedProcessSchedule';
 import {MaterialStockRun, type MaterialStock, type MaterialStockEvent} from './materialStock';
 import {SubassemblyRun, type SubassemblyLotState, type SubassemblyEvent} from './subassemblyState';
+import {SubassemblyBufferRun} from './subassemblyBufferRun';
 import {previewAssemblyDispatch,previewEmptyDispatch,type AssemblyDispatch,type TransportDeviceReservation} from './assemblyDispatch';
 import {createCartBook,finishCartMovement,startCartMovement,type CartBook,type CartMotionRoute} from './transportState';
 import {parseDomainProjectV6, domainOperationOrder, type DomainProjectV6} from './domainProject';
@@ -61,6 +62,7 @@ export interface WorkerScheduleResult {
   materialEvents?: readonly MaterialStockEvent[];
   subassemblyLots?: readonly SubassemblyLotState[];
   subassemblyEvents?: readonly SubassemblyEvent[];
+  subassemblyBufferBooks?: readonly import('./subassemblyBufferState').SubassemblyBufferBook[];
   transportMode?: 'just-in-time';
   mode: 'logical' | 'calendar';
   jobs: readonly Job[];
@@ -215,6 +217,8 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   }
   const successors = steps.map(step => steps.flatMap((other, i) =>
     other.predecessorIds.includes(step.id) ? [i] : []));
+  if (!justInTime && checked.subassemblyBuffers?.buffers.length && !lotRun) throw new Error('Bufory podmontaży wymagają jawnych partii podzespołów.');
+  const lotBuffers = !justInTime && checked.subassemblyBuffers?.buffers.length ? new SubassemblyBufferRun(checked,candidatesByOperation) : undefined;
   const sameCopy = (from: StationCopyRef, to: StationCopyRef) => from.stationId === to.stationId && from.copy === to.copy;
   const bodyRoute = (from: StationCopyRef, to: StationCopyRef) => {
     if (sameCopy(from, to)) return undefined;
@@ -245,6 +249,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   const inFlight = jobs.map(() => new Set<number>());
   const waiting: {job: number; step: number; ready: number;
     causes: Set<'workers' | 'station' | 'same-job' | 'calendar' | 'equipment' | 'body' | 'transport' | 'subassembly' | 'material' | 'buffer'>}[] = [];
+  const bufferWaiting = new Set<(typeof waiting)[number]>();
   const events = new EventQueue();
   const wakeTimes = new Set<number>();
   const wakeAt = (at: number, now: number) => {
@@ -255,6 +260,18 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   };
   let book = createWorkerReservationBook(checked.assemblyTransport ? checked.workers.map(w => w.id) : plan.teamWorkerIds);
   const runs: WorkerScheduleRun[] = [];
+  const blockedProducers = new Map<WorkerScheduleRun, readonly SubassemblyLotState[]>();
+  const copyBusy = (run: WorkerScheduleRun, now: number) => run.endSeconds > now || blockedProducers.has(run);
+  const releaseProducer = (run: WorkerScheduleRun, now: number) => {
+    blockedProducers.delete(run);
+    run.stationReleaseSeconds=now;run.blockedSeconds=now-run.endSeconds;
+    copies.get(run.stationId)![run.copy-1]=!runs.some(other=>sameCopy(other,run)&&copyBusy(other,now));
+  };
+  const consumeLots = (job: number, operationId: string, location: StationCopyRef, now: number) => {
+    const incoming=lotRun!.incoming(job,operationId);
+    lotBuffers?.consume(incoming,location,now);
+    lotRun!.consume(job,operationId,location,now);
+  };
   const changeovers: ChangeoverRun[] = [];
   const jobVariantMap = buildJobVariantMap(checked, batch);
   const lastProcessedOnCopy = new Map<string, {variantId: string; job: number; endSeconds: number}>();
@@ -270,8 +287,11 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
     while (events.length && events.peek().at === now) {
       const event = events.pop();
       if (event.kind === 'material-consume') stockRun!.consume(event.job,event.operationId,now);
-      else if (event.kind === 'lot-end') lotRun!.arrive(event.lotId, now);
-      else if (event.kind === 'lot-consume') lotRun!.consume(event.job,event.operationId,event.location,now);
+      else if (event.kind === 'lot-end') {
+        lotBuffers?.arrive(lotRun!.lots.find(lot=>lot.declaration.id===event.lotId)!,now);
+        lotRun!.arrive(event.lotId, now);
+      }
+      else if (event.kind === 'lot-consume') consumeLots(event.job,event.operationId,event.location,now);
       else if (event.kind === 'wake') wakeTimes.delete(now);
       else if (event.kind === 'arrival') {
         steps.forEach((step, i) => { if (!step.predecessorIds.length) waiting.push({job: event.job, step: i,
@@ -312,9 +332,17 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
             atSeconds: now, operationId: completedStep.id});
         }
         lotRun?.produce(event.job + 1, completedStep.id, {stationId:event.stationId,copy:event.copy+1}, now);
+        if (lotBuffers) {
+          const produced=lotRun!.lots.filter(lot=>lot.declaration.producer.job===event.job+1&&lot.declaration.producer.operationId===completedStep.id);
+          if(produced.length){
+            const run=runs.find(run=>run.job===event.job+1&&run.operationId===completedStep.id)!;
+            if(lotBuffers.deposit(produced,run,now))releaseProducer(run,now);
+            else blockedProducers.set(run,produced);
+          }
+        }
         inFlight[event.job].delete(event.step);
         copies.get(event.stationId)![event.copy] = !runs.some(run => run.stationId === event.stationId &&
-          run.copy === event.copy + 1 && run.endSeconds > now);
+          run.copy === event.copy + 1 && copyBusy(run,now));
         completed++;
         onProgress?.(completed, steps.length * batch);
         for (const next of successors[event.step]) if (--remaining[event.job][next] === 0) {
@@ -326,8 +354,12 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
     let started = true;
     while (started) {
       started = false;
+      for(const [run,lots] of blockedProducers)if(lotBuffers!.deposit(lots,run,now)){
+        releaseProducer(run,now);started=true;
+      }
       for (let i = 0; i < waiting.length; i++) {
         const task = waiting[i];
+        bufferWaiting.delete(task);
         const step = steps[task.step];
         if (inFlight[task.job].size && !matchingConcurrencyGroup(checked.physicalConcurrency,
           [...inFlight[task.job]].map(index => steps[index].id).concat(step.id))) {
@@ -341,6 +373,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
           for (const lot of missing) bodyRoute(lot.location!, target);
           if (missing.length) {
             const lot = missing[0], route = bodyRoute(lot.location!, target)!;
+            if(lotBuffers&&!lotBuffers.canDepart(lot,target)){task.causes.add('buffer');bufferWaiting.add(task);continue;}
             let dispatch: AssemblyDispatch | undefined;
             if (checked.assemblyTransport) {
               try {
@@ -354,6 +387,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
               const movement = dispatch.prefix ?? dispatch;
               movement.waitCauses.forEach(cause => task.causes.add(cause));
               if (movement.startSeconds > now) {task.causes.add('transport');wakeAt(movement.startSeconds,now);continue;}
+              if(!dispatch.prefix)lotBuffers?.depart(lot,target,now);
               book = movement.workers;cartBook = movement.carts;transportDevices = movement.devices;
               if(movement.workerIds.length)events.push({kind:'release',at:movement.endSeconds,reservationId:movement.reservationId});
               for(const id of movement.equipmentIds)if(cartBook.carts.some(cart=>cart.equipmentId===id)){
@@ -367,11 +401,13 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
               if(dispatch.prefix){task.causes.add('transport');started=true;break;}
             }
             const end = dispatch?.endSeconds ?? now + route.transportTime!.durationSeconds;
+            if(!dispatch)lotBuffers?.depart(lot,target,now);
             lotRun!.start(lot,target,now,end);events.push({kind:'lot-end',at:end,lotId:lot.declaration.id});
             if(!dispatch)transportMovements.push({kind:'loaded',purpose:'transfer',routeId:route.id,workerIds:[],equipmentIds:[],startSeconds:now,endSeconds:end,lotId:lot.declaration.id});
             task.causes.add('subassembly');started=true;break;
           }
           if(incoming.some(lot=>lot.status==='pending'||lot.status==='moving')){task.causes.add('subassembly');continue;}
+          if(lotBuffers&&!lotBuffers.local(incoming,target,now)){task.causes.add('buffer');bufferWaiting.add(task);continue;}
         }
         const bodyId = bodyRun && step.physicalRole?.kind === 'body-work' ? bodyRun.bodyByJob.get(task.job + 1)! : undefined;
         const operation = byOperation.get(step.id)!;
@@ -400,15 +436,16 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
           }
           if (bodyId && !routing && !bodyAllowsOperation(bodyBook!, bodyId, step.id, candidate)) continue;
           const stationId = candidate.stationId;
-          const occupants = runs.filter(run => run.stationId === stationId && run.copy === candidate.copy && run.endSeconds > now);
+          const occupants = runs.filter(run => run.stationId === stationId && run.copy === candidate.copy && copyBusy(run,now));
           const sharing = !!bodyId && !!checked.physicalConcurrency && body?.location.kind === 'station' && sameCopy(body.location, candidate) &&
             occupants.length > 0 && occupants.every(run => run.bodyId === bodyId) &&
             !!matchingConcurrencyGroup(checked.physicalConcurrency, occupants.map(run => run.operationId).concat(step.id));
           const copyFree = copies.get(stationId)![candidate.copy - 1] || sharing;
-          if (candidate.requiredEquipmentIds.some(id => runs.some(run => run.endSeconds > now && run.equipmentIds?.includes(id)))) {
+          if (candidate.requiredEquipmentIds.some(id => runs.some(run => copyBusy(run,now) && run.equipmentIds?.includes(id)))) {
             equipmentWait = true; continue;
           }
           if (!copyFree && !bodyId) {stationWait = true; continue;}
+          if (bodyId && occupants.some(run=>blockedProducers.has(run))) {stationWait = true;continue;}
           hasFreeCopy ||= copyFree;
           let departure = copyFree ? now : copyReady.get(stationId)![candidate.copy - 1];
           const transportRoute = body?.location.kind === 'station' ? bodyRoute(body.location, candidate) : undefined;
@@ -616,7 +653,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
           else events.push({kind:'material-consume',at:start,job:task.job+1,operationId:step.id});
         }
         if(incoming.length) {
-          if(start===now)lotRun!.consume(task.job+1,step.id,chosen.candidate,now);
+          if(start===now)consumeLots(task.job+1,step.id,chosen.candidate,now);
           else events.push({kind:'lot-consume',at:start,job:task.job+1,operationId:step.id,location:chosen.candidate});
         }
         const reservationId = `${task.job + 1}:${step.id}`;
@@ -661,6 +698,16 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
       }
     }
   }
+  if(lotBuffers&&(blockedProducers.size||bufferWaiting.size)){
+    throw new ProcessStallError({type:'buffer-deadlock',atSeconds:currentSimulationTime,title:'Brak miejsca w buforach podmontaży',
+      summary:'Proces nie może kontynuować: całe partie, rezerwacje celu lub pozostawione reszty zajmują osobne pojemności podzespołów.',
+      stalledOperations:waiting.map(task=>({job:task.job+1,operationId:steps[task.step].id,operationName:steps[task.step].name,
+        stationId:candidatesByOperation.get(steps[task.step].id)![0].stationId,copy:candidatesByOperation.get(steps[task.step].id)![0].copy,
+        status:'waiting',waitCauses:[...task.causes],missingResourceExplanation:'Sprawdź zajętość i reszty partii w buforach podmontaży.'})),
+      blockedStations:[...blockedProducers.keys()].map(run=>({stationId:run.stationId,stationName:checked.stations.find(station=>station.id===run.stationId)!.name,
+        copy:run.copy,blockedByJob:run.job,blockedByOperationId:run.operationId,holdingWorkerIds:[],blockingPolicy:'bbas-worker-released'})),
+      recommendation:'Sprawdź jawne pojemności w sztukach, ilości partii i pobrań oraz przypisania odbiorców; reszty pozostają w buforze.'});
+  }
   if (completed !== steps.length * batch || waiting.length ||
       book.reservations.some(item => item.releasedAtSeconds !== item.endSeconds)) {
     throw new ProcessStallError(diagnoseUnbufferedProcessStall({
@@ -682,6 +729,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   return {mode: calendars ? 'calendar' : 'logical', ...(justInTime?{transportMode:'just-in-time' as const}:{}), jobs, runs, reservations: book,
     ...(stockRun?{materialStocks:stockRun.stocks,materialEvents:[...stockRun.events].sort((a,b)=>a.atSeconds-b.atSeconds||(a.kind===b.kind?0:a.kind==='delivery'?-1:1))}:{}),
     ...(lotRun?{subassemblyLots:lotRun.lots,subassemblyEvents:lotRun.events,...(!checked.assemblyTransport?{transportMovements}:{} )}:{}),
+    ...(lotBuffers?{subassemblyBufferBooks:lotBuffers.snapshot()}:{}),
     operationIds: steps.map(step => step.id), ...(bodyBook ? {bodyBook, bodyEvents} : {}), ...(checked.assemblyTransport ? {transportReservations:transportDevices,cartBook,transportMovements} : {})};
 }
 

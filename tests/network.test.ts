@@ -33,7 +33,9 @@ import {createBufferBook,applyBufferEvent,bufferLoad,bufferHasSpace,bufferCanAcc
 import {MaterialStockRun} from '../src/core/materialStock';
 import {editDomainSubassemblyFlow} from '../src/core/domainSubassemblyEditing';
 import type {SubassemblyFlow} from '../src/core/subassemblyFlow';
-import {editDomainStationBuffers, editDomainMaterialSupply} from '../src/core/domainBuffersEditing';
+import {editDomainStationBuffers, editDomainMaterialSupply, editDomainSubassemblyBuffers} from '../src/core/domainBuffersEditing';
+import {validateSubassemblyBuffers} from '../src/core/subassemblyBuffers';
+import {SubassemblyBufferRun} from '../src/core/subassemblyBufferRun';
 import {validateStationBuffers, type StationBuffersV6} from '../src/core/stationBuffers';
 import {validateMaterialSupply, type MaterialSupplyV6} from '../src/core/materialSupply';
 import {reserveAssemblyMovement,finishAssemblyMovement} from '../src/core/assemblyMovement';
@@ -4725,6 +4727,200 @@ function subassemblyScheduleFixture(){
   const input=assemblyScheduleInput();input.bodies[0].location={kind:'station',stationId:'ST-C',copy:1};
   project.bodyRunInput=input;return project;
 }
+
+function subassemblyBufferedFixture(){
+  const project=subassemblyScheduleFixture();
+  project.subassemblyBuffers={buffers:[
+    {subassemblyId:'SUB-FLOW',unit:'szt.',stationId:'ST-A',copy:null,inputCapacity:null,outputCapacity:2,blockingPolicy:'bbas-worker-released'},
+    {subassemblyId:'SUB-FLOW',unit:'szt.',stationId:'ST-C',copy:null,inputCapacity:2,outputCapacity:null,blockingPolicy:'bbas-worker-released'}
+  ]};
+  return project;
+}
+
+test('7.12.C2-B2a: oddzielna konfiguracja przechodzi zapis/odczyt, nie zmienia źródła ani buforów korpusów',()=>{
+  const project=subassemblyScheduleFixture(),configured=subassemblyBufferedFixture(),before=JSON.stringify(project);
+  const edited=editDomainSubassemblyBuffers(project,configured.subassemblyBuffers);
+  assert.equal(JSON.stringify(project),before);
+  assert.deepEqual(parseDomainProjectV6(JSON.stringify(edited)).subassemblyBuffers,configured.subassemblyBuffers);
+  assert.deepEqual(editDomainSubassemblyBuffers(edited,undefined),project);
+  const originalJson=JSON.stringify(derive(parseProject(JSON.stringify(base))).project);
+  const storage=new DraftStorage(),initial=saveDomainDraft(storage,{project,originalJson},null);
+  const saved=saveDomainDraft(storage,{project:edited,originalJson},initial.raw),reopened=readDomainDraft(storage);
+  assert.equal(reopened.status,'valid');if(reopened.status==='valid'){
+    assert.equal(reopened.saved.originalJson,originalJson);assert.deepEqual(reopened.saved.project.subassemblyBuffers,edited.subassemblyBuffers);
+  }
+  const broken=structuredClone(edited);broken.subassemblyBuffers!.buffers[0].unit='kg';
+  assert.throws(()=>saveDomainDraft(storage,{project:broken,originalJson},saved.raw));
+  assert.equal(storage.getItem(DOMAIN_DRAFT_STORAGE_KEY),saved.raw);
+  assert.equal(edited.stationBuffers,project.stationBuffers);
+  const factors=inspectVariantFactors(project,edited,'additional-station',false);
+  assert.ok(factors.changedDimensions.includes('stations'));assert.ok(factors.summary.some(line=>line.includes('buforów podmontaży')));
+});
+
+test('7.12.C2-B2a: walidacja odrzuca konflikty kopii, brak jawnych danych i niezgodne jednostki/ilości',()=>{
+  const project=subassemblyBufferedFixture();
+  const bad=(mutate:(p:typeof project)=>void)=>{const copy=structuredClone(project);mutate(copy);assert.throws(()=>parseDomainProjectV6(JSON.stringify(copy)));};
+  bad(p=>p.subassemblyBuffers!.buffers.push({...p.subassemblyBuffers!.buffers[0],copy:1}));
+  bad(p=>p.subassemblyBuffers!.buffers[0].subassemblyId='UNKNOWN');
+  bad(p=>p.subassemblyBuffers!.buffers[0].copy=2);
+  bad(p=>p.subassemblyBuffers!.buffers[0].unit='kg');
+  bad(p=>p.subassemblyBuffers!.buffers[0].outputCapacity=-1);
+  bad(p=>p.subassemblyFlow!.lots[0].quantity=1.5);
+  bad(p=>delete (p.subassemblyBuffers!.buffers[0] as any).blockingPolicy);
+  bad(p=>(p.subassemblyBuffers!.buffers[0] as any).extra=true);
+  const zero=structuredClone(project);zero.subassemblyBuffers!.buffers[0].outputCapacity=0;
+  assert.doesNotThrow(()=>validateSubassemblyBuffers(zero,zero.subassemblyBuffers));
+  assert.throws(()=>scheduleWorkerRun(zero,1,1,zero.bodyRunInput),/bezpośredniego przekazania/);
+  const held=structuredClone(project);held.subassemblyBuffers!.buffers[0].blockingPolicy='bbas';
+  assert.throws(()=>scheduleWorkerRun(held,1,1,held.bodyRunInput),/zatrzymanie operatora/);
+});
+
+test('7.12.C2-B2a: rezerwacja, przewóz i zużycie są wspólne z zasobami; 2 minus 1 zostaje w wejściu',()=>{
+  const project=subassemblyBufferedFixture(),before=JSON.stringify(project);
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+  assert.equal(result.jobs[0].finish,22);
+  assert.deepEqual(result.subassemblyEvents!.map(event=>[event.kind,event.atSeconds]),[['produced',10],['start-transfer',10],['arrived',12],['consumed',12]]);
+  const book=result.subassemblyBufferBooks![0],token=book.tokens[0];
+  assert.deepEqual(token.location,{stationId:'ST-C',copy:1,side:'input'});assert.equal(token.residual,true);assert.equal(token.remainingQuantity,1);
+  assert.equal(subassemblyBufferLoad(book,{stationId:'ST-C',copy:1,side:'input'}).total,1);
+  assert.equal(subassemblyBufferLoad(book,{stationId:'ST-A',copy:1,side:'output'}).total,0);
+  assert.equal(result.runs[0].stationReleaseSeconds,10);assert.equal(result.runs[0].blockedSeconds,0);
+  const replies:ScheduleReply[]=[];executeScheduleRequest({project,batch:1,arrivalIntervalSeconds:1},reply=>replies.push(reply));
+  assert.deepEqual((replies.find(reply=>reply.kind==='result') as {result:unknown}).result,result);
+  assert.equal(JSON.stringify(project),before);
+  const jit=scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'});
+  assert.equal(jit.subassemblyBufferBooks,undefined);assert.equal(jit.jobs[0].finish,20);assert.equal(JSON.stringify(project),before);
+});
+
+test('7.12.C2-B2a: za małe wyjście lub wejście odmawia jako brak pojemności, bez mutacji i fikcyjnego transportu',()=>{
+  for(const side of ['input','output'] as const){
+    const project=subassemblyBufferedFixture();project.subassemblyBuffers!.buffers[side==='output'?0:1][side==='output'?'outputCapacity':'inputCapacity']=1;
+    const before=JSON.stringify(project);
+    assert.throws(()=>scheduleWorkerRun(project,1,1,project.bodyRunInput),(error:unknown)=>parseProcessStallDiagnostic(error)?.type==='buffer-deadlock');
+    assert.equal(JSON.stringify(project),before);
+  }
+});
+
+test('7.12.C2-B2a: pełne wyjście blokuje producenta po pracy do odjazdu wcześniejszej partii, nie trzyma operatora',()=>{
+  const project=subassemblyBufferedFixture();delete project.assemblyTransport;
+  const producer=project.operations[0].id,consumer=project.operations[1].id;
+  project.workerRunSelection!.operations[0].eligibleWorkerIds=[project.workers[0].id];
+  project.workerRunSelection!.operations[1].eligibleWorkerIds=[project.workers[1].id];
+  for(const worker of project.workers)project.resourceCalendars!.workers[worker.id]={shifts:[{startSeconds:0,endSeconds:200,basis:'assumed'}],breaks:[]};
+  project.resourceCalendars!.stations['ST-A']={shifts:[{startSeconds:0,endSeconds:200,basis:'assumed'}],breaks:[]};
+  project.resourceCalendars!.stations['ST-C']={shifts:[{startSeconds:50,endSeconds:200,basis:'assumed'}],breaks:[]};
+  const lot=structuredClone(project.subassemblyFlow!.lots[0]),body=structuredClone(project.bodyRunInput!.bodies[0]);
+  project.subassemblyFlow!.lots=Array.from({length:4},(_,index)=>({...structuredClone(lot),id:`L${index+1}`,producer:{job:index+1,operationId:producer},consumer:{job:index+1,operationId:consumer},consumptionQuantity:2}));
+  project.bodyRunInput={bodies:Array.from({length:4},(_,index)=>({...structuredClone(body),id:`B${index+1}`})),jobs:Array.from({length:4},(_,index)=>({job:index+1,bodyId:`B${index+1}`}))};
+  // Independent reference: 2 pieces fill input. First recipient starts at 50; subsequent starts 60,70,80.
+  // Producer 3 ends at 30, but output holds lot 2 until its departure at 50, releasing producer 3.
+  const result=scheduleWorkerRun(project,1,4,project.bodyRunInput);
+  const produced=result.runs.filter(run=>run.operationId===producer);
+  assert.deepEqual(produced.map(run=>run.startSeconds),[0,10,20,50]);
+  assert.deepEqual(produced.map(run=>run.endSeconds),[10,20,30,60]);
+  assert.deepEqual(produced.map(run=>run.stationReleaseSeconds),[10,20,50,60]);
+  assert.equal(produced[2].blockedSeconds,20);assert.equal(produced[2].reserveEndSeconds,30);
+  assert.equal(result.reservations.reservations.find(reservation=>reservation.reservationId===`3:${producer}`)!.releasedAtSeconds,30);
+  assert.deepEqual(result.runs.filter(run=>run.operationId===consumer).map(run=>run.startSeconds),[50,60,70,80]);
+  assert.deepEqual(result.jobs.map(job=>job.finish),[60,70,80,90]);
+});
+
+test('7.12.C2-B2a: reszty zajmują pojemność kolejnej dostawy i powodują jawny martwy punkt',()=>{
+  const project=subassemblyBufferedFixture();delete project.assemblyTransport;delete project.resourceCalendars;
+  const lot=structuredClone(project.subassemblyFlow!.lots[0]);
+  project.subassemblyFlow!.lots.push({...lot,id:'L2',producer:{...lot.producer,job:2},consumer:{...lot.consumer,job:2}});
+  project.bodyRunInput!.bodies.push({...structuredClone(project.bodyRunInput!.bodies[0]),id:'B2'});project.bodyRunInput!.jobs.push({job:2,bodyId:'B2'});
+  assert.throws(()=>scheduleWorkerRun(project,1,2,project.bodyRunInput),(error:unknown)=>parseProcessStallDiagnostic(error)?.type==='buffer-deadlock');
+  project.subassemblyBuffers!.buffers[1].inputCapacity=3;
+  const result=scheduleWorkerRun(project,1,2,project.bodyRunInput),book=result.subassemblyBufferBooks![0];
+  assert.equal(subassemblyBufferLoad(book,{stationId:'ST-C',copy:1,side:'input'}).total,2);
+  assert.ok(book.tokens.every(token=>token.residual&&token.remainingQuantity===1));
+});
+
+test('7.12.C2-B2a: historyczne oczekiwanie buforowe nie jest zgłaszane jako aktualny brak pojemności',()=>{
+  const project=subassemblyBufferedFixture();delete project.assemblyTransport;
+  const lot=structuredClone(project.subassemblyFlow!.lots[0]);lot.consumptionQuantity=2;
+  project.subassemblyFlow!.lots=[lot,{...structuredClone(lot),id:'L2',producer:{...lot.producer,job:2},consumer:{...lot.consumer,job:2}}];
+  project.bodyRunInput!.bodies.push({...structuredClone(project.bodyRunInput!.bodies[0]),id:'B2'});project.bodyRunInput!.jobs.push({job:2,bodyId:'B2'});
+  for(const worker of project.workers)project.resourceCalendars!.workers[worker.id]={shifts:[{startSeconds:0,endSeconds:200,basis:'assumed'}],breaks:[]};
+  project.resourceCalendars!.stations['ST-C']={shifts:[{startSeconds:50,endSeconds:60,basis:'assumed'}],breaks:[]};
+  assert.throws(()=>scheduleWorkerRun(project,1,2,project.bodyRunInput),(error:unknown)=>{
+    const diagnostic=parseProcessStallDiagnostic(error);
+    assert.ok(diagnostic);assert.notEqual(diagnostic.type,'buffer-deadlock');
+    return true;
+  });
+});
+
+test('7.12.C2-B2a: C2 ma osobne pojemności SUB-PWR/SUB-DRV i zapasy reszt; fizyczne referencje pozostają 2210/2180 s',()=>{
+  const variants=JSON.parse(advancedDemoPackage().data.variantsRaw!).variants;
+  for(const variant of variants){
+    const project=parseDomainProjectV6(JSON.stringify(variant.project));
+    project.subassemblyBuffers={buffers:project.subassemblies.flatMap(definition=>[
+      {subassemblyId:definition.id,unit:'szt.',stationId:project.stations.find(station=>station.operationIds.includes(definition.producerOperationId!))!.id,copy:null,inputCapacity:null,outputCapacity:5,blockingPolicy:'bbas-worker-released' as const},
+      {subassemblyId:definition.id,unit:'szt.',stationId:'ST-MU-MAIN2',copy:null,inputCapacity:9,outputCapacity:null,blockingPolicy:'bbas-worker-released' as const}
+    ])};
+    for(const lot of project.subassemblyFlow!.lots){lot.quantity=5;lot.consumptionQuantity=3;}
+    const before=JSON.stringify(project),result=scheduleWorkerRun(project,1000,3,project.bodyRunInput);
+    assert.equal(result.jobs[2].finish,variant.id==='ADVANCED-BASE'?2210:2180);
+    assert.equal(result.subassemblyBufferBooks!.length,2);
+    for(const book of result.subassemblyBufferBooks!){
+      assert.equal(subassemblyBufferLoad(book,{stationId:'ST-MU-MAIN2',copy:1,side:'input'}).total,6);
+      assert.ok(book.tokens.every(token=>token.residual&&token.remainingQuantity===2));
+    }
+    const reservations=result.reservations.reservations;
+    for(let i=0;i<reservations.length;i++)for(let j=i+1;j<reservations.length;j++){
+      const a=reservations[i],b=reservations[j];if(a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
+    }
+    assert.equal(JSON.stringify(project),before);
+  }
+});
+
+test('7.12.C2-B2a: copy=null rozwija osobne limity, rezerwacja celu obciąża pojemność w trakcie ruchu',()=>{
+  const project=subassemblyBufferedFixture();project.stationSettings['ST-C'].parallelStations=2;
+  project.stationRouting!.operations[1].candidates.push({stationId:'ST-C',copy:2,requiredEquipmentIds:[]});
+  const candidates=new Map(project.stationRouting!.operations.map(operation=>[operation.operationId,operation.candidates]));
+  const runtime=new SubassemblyBufferRun(project,candidates),declaration=project.subassemblyFlow!.lots[0];
+  const first={declaration,status:'available' as const,location:{stationId:'ST-A',copy:1},remainingQuantity:2};
+  assert.equal(runtime.deposit([first],first.location,0),true);
+  runtime.depart(first,{stationId:'ST-C',copy:1},0);
+  const second={...first,declaration:{...declaration,id:'L2'}};
+  assert.equal(runtime.deposit([second],second.location,0),true);
+  assert.equal(runtime.canDepart(second,{stationId:'ST-C',copy:1}),false);
+  assert.equal(runtime.canDepart(second,{stationId:'ST-C',copy:2}),true);
+  assert.deepEqual(subassemblyBufferLoad(runtime.snapshot()[0],{stationId:'ST-C',copy:1,side:'input'}),{occupied:0,reserved:2,total:2});
+  runtime.depart(second,{stationId:'ST-C',copy:2},0);runtime.arrive(first,1);runtime.arrive(second,1);
+  assert.equal(subassemblyBufferLoad(runtime.snapshot()[0],{stationId:'ST-C',copy:2,side:'input'}).occupied,2);
+});
+
+test('7.12.C2-B2a: dwie sztuki ze wspólnym monterem/wózkiem i powrotami nie tworzą podwójnych rezerwacji',()=>{
+  const project=subassemblyBufferedFixture();addReturnRoute(project);project.assemblyTransport!.carts[0].afterUnload='return-to-initial';
+  project.subassemblyBuffers!.buffers[1].inputCapacity=3;
+  const lot=structuredClone(project.subassemblyFlow!.lots[0]);
+  project.subassemblyFlow!.lots.push({...lot,id:'L2',producer:{...lot.producer,job:2},consumer:{...lot.consumer,job:2}});
+  project.bodyRunInput!.bodies.push({...structuredClone(project.bodyRunInput!.bodies[0]),id:'B2'});project.bodyRunInput!.jobs.push({job:2,bodyId:'B2'});
+  const result=scheduleWorkerRun(project,1,2,project.bodyRunInput),reservations=result.reservations.reservations;
+  for(let i=0;i<reservations.length;i++)for(let j=i+1;j<reservations.length;j++){
+    const a=reservations[i],b=reservations[j];if(a.workerIds.some(id=>b.workerIds.includes(id)))assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
+  }
+  const moves=result.transportMovements!;
+  assert.equal(moves.filter(move=>move.purpose==='transfer').length,2);assert.equal(moves.filter(move=>move.purpose==='return').length,2);
+  for(let i=0;i<moves.length;i++)for(let j=i+1;j<moves.length;j++){
+    const a=moves[i],b=moves[j];if(a.equipmentIds.some(id=>b.equipmentIds.includes(id)))assert.ok(a.endSeconds<=b.startSeconds||b.endSeconds<=a.startSeconds);
+  }
+  assert.equal(subassemblyBufferLoad(result.subassemblyBufferBooks![0],{stationId:'ST-C',copy:1,side:'input'}).total,2);
+});
+
+test('7.12.C2-B2a: kilka partii producenta przechodzi kolejno przez bufor mieszczący jedną całą partię',()=>{
+  const project=subassemblyBufferedFixture();addReturnRoute(project);project.assemblyTransport!.carts[0].afterUnload='return-to-initial';
+  project.subassemblyBuffers!.buffers[1].inputCapacity=4;
+  project.subassemblyFlow!.lots.push({...structuredClone(project.subassemblyFlow!.lots[0]),id:'L2'});
+  // Two lots of 2 pieces share output capacity 2. Departures 10 and 17, recipient starts 19, ends 29.
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+  assert.equal(result.jobs[0].finish,29);
+  assert.deepEqual(result.transportMovements!.filter(move=>move.purpose==='transfer').map(move=>[move.startSeconds,move.endSeconds]),[[10,12],[17,19]]);
+  assert.deepEqual(result.subassemblyEvents!.filter(event=>event.kind==='consumed').map(event=>event.atSeconds),[19,19]);
+  assert.equal(subassemblyBufferLoad(result.subassemblyBufferBooks![0],{stationId:'ST-C',copy:1,side:'input'}).total,2);
+});
 test('3.4m2: przygotowanie, przewóz i pobranie partii mają rzeczywiste zdarzenia i wspólne osoby',()=>{
   const project=subassemblyScheduleFixture(),before=JSON.stringify(project);
   const result=scheduleWorkerRun(project,1,1,project.bodyRunInput);

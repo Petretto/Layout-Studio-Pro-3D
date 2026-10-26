@@ -129,6 +129,8 @@ User decision 2026-10-25 (C2 finite buffers): capacity counts pieces of subassem
 
 User decision 2026-10-25 (C2 remainder): when 3 of 5 pieces are consumed, the remaining 2 stay in the recipient buffer, continue to occupy capacity and remain visible as stock. Without an explicit new assignment, do not consume or transport the remainder again. B1 implements this only in the internal quantity ledger; scheduler and UI integration remain pending.
 
+User decision 2026-10-26 (C2 capacity scopes): each subassembly has its own explicit capacity, separate from other subassemblies and body capacities. `subassemblyBuffers` is an optional model-6 configuration; existing `stationBuffers` retain their body-buffer meaning. B2a supports positive subassembly capacities with output policy `bbas-worker-released`, including residual stock in the recipient buffer and UI inspection. Zero capacity, held-worker output policy and simultaneous finite body buffers with branches remain pending; reject unsupported combinations rather than ignore limits. Do not infer a shared pool from the unit `szt.`.
+
 
 ## Buffers and material supply — user decisions 2026-10-14
 - Material consumption quantities must be explicit for each operation. Consume the whole assigned quantity at actual operation start; process deliveries before consumption at equal time.

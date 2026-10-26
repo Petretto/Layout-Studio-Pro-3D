@@ -1,0 +1,50 @@
+{
+  "result": "PASS",
+  "makespanSeconds": 2210,
+  "rows": [
+    [
+      "SUB-PWR / szt.",
+      "ST-MU-PWR / 1",
+      "Wyjście",
+      "5",
+      "0",
+      "0"
+    ],
+    [
+      "SUB-PWR / szt.",
+      "ST-MU-MAIN2 / 1",
+      "Wejście",
+      "9",
+      "6",
+      "0"
+    ],
+    [
+      "SUB-DRV / szt.",
+      "ST-MU-DRV / 1",
+      "Wyjście",
+      "5",
+      "0",
+      "0"
+    ],
+    [
+      "SUB-DRV / szt.",
+      "ST-MU-MAIN2 / 1",
+      "Wejście",
+      "9",
+      "6",
+      "0"
+    ]
+  ],
+  "residualStock": [
+    "LOT-PWR-1 · SUB-PWR · zapas 2 szt. · ST-MU-MAIN2 / 1 · wejście odbiorcy",
+    "LOT-PWR-2 · SUB-PWR · zapas 2 szt. · ST-MU-MAIN2 / 1 · wejście odbiorcy",
+    "LOT-PWR-3 · SUB-PWR · zapas 2 szt. · ST-MU-MAIN2 / 1 · wejście odbiorcy",
+    "LOT-DRV-1 · SUB-DRV · zapas 2 szt. · ST-MU-MAIN2 / 1 · wejście odbiorcy",
+    "LOT-DRV-2 · SUB-DRV · zapas 2 szt. · ST-MU-MAIN2 / 1 · wejście odbiorcy",
+    "LOT-DRV-3 · SUB-DRV · zapas 2 szt. · ST-MU-MAIN2 / 1 · wejście odbiorcy"
+  ],
+  "reload": true,
+  "exportRoundTrip": true,
+  "sourceUnchanged": true,
+  "runtimeErrors": []
+}

@@ -617,6 +617,7 @@ export function inspectVariantFactors(
     equipment: p.equipment,
     equipmentPlacements: p.stationRouting?.equipmentPlacements,
     stationBuffers: p.stationBuffers,
+    subassemblyBuffers: p.subassemblyBuffers,
     stationCalendars: p.resourceCalendars?.stations,
   });
   if (stationsSignature(baseline) !== stationsSignature(candidate)) {
@@ -640,6 +641,9 @@ export function inspectVariantFactors(
     }
     if (JSON.stringify(baseline.stationBuffers) !== JSON.stringify(candidate.stationBuffers)) {
       summary.push('Zmieniono pojemności lub polityki buforów stanowisk');
+    }
+    if (JSON.stringify(baseline.subassemblyBuffers) !== JSON.stringify(candidate.subassemblyBuffers)) {
+      summary.push('Zmieniono osobne pojemności lub polityki buforów podmontaży');
     }
     if (JSON.stringify(baseline.resourceCalendars?.stations) !== JSON.stringify(candidate.resourceCalendars?.stations)) {
       summary.push('Zmieniono kalendarze stanowisk');

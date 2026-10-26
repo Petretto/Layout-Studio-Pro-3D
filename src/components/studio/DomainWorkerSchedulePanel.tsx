@@ -1,4 +1,5 @@
 import {useState, useRef, useEffect, useMemo} from 'react';
+import {subassemblyBufferLoad} from '../../core/subassemblyBufferState';
 import type {DomainProjectV6} from '../../core/domainProject';
 import type {WorkerScheduleResult, WorkerScheduleRun} from '../../core/workerSchedule';
 import {startScheduleTask, type ScheduleProgress} from '../../core/scheduleTask';
@@ -324,11 +325,26 @@ export function DomainWorkerSchedulePanel({project}: {project: DomainProjectV6})
         {(result.materialEvents?.length??0)>500&&<p>Pokazano pierwsze 500 zdarzeń lub grup dostaw. Dostawy cykliczne między zdarzeniami procesu są grupowane; ilości obejmują wszystkie terminy według zapisanego harmonogramu.</p>}
       </details>}
       {result.subassemblyLots&&<details aria-label="Inspekcja partii podzespołów"><summary>Partie podzespołów ({result.subassemblyLots.length})</summary>
-        <p>Cała partia jest dostępna po zakończeniu przygotowania. Przypisana ilość jest pobierana przy starcie odbiorcy. Pojemność buforów i wykorzystanie pozostałej ilości nie są modelowane.</p>
+        <p>Cała partia jest dostępna po zakończeniu przygotowania. Przypisana ilość jest pobierana przy starcie odbiorcy. {result.subassemblyBufferBooks?'Pozostała ilość zostaje w buforze odbiorcy i zajmuje pojemność; bez nowego jawnego przypisania nie jest ponownie pobierana ani przewożona.':'Pojemność buforów i wykorzystanie pozostałej ilości nie są modelowane.'}</p>
         <ul>{result.subassemblyLots.slice(0,100).map(lot=><li key={lot.declaration.id}>{lot.declaration.id} · {lot.declaration.subassemblyId} · {lot.declaration.producer.job}:{lot.declaration.producer.operationId} → {lot.declaration.consumer.job}:{lot.declaration.consumer.operationId} · pobrano {lot.declaration.consumptionQuantity} / {lot.declaration.quantity} {lot.declaration.unit} · pozostało bez dalszego przypisania: {lot.remainingQuantity} {lot.declaration.unit}</li>)}</ul>
         {result.subassemblyLots.length>100&&<p>Pokazano pierwsze 100 partii.</p>}
         <ol>{result.subassemblyEvents?.slice(0,500).map((event,index)=><li key={index}>{event.atSeconds} s · {event.lotId} · {event.kind==='produced'?'Wytworzenie':event.kind==='start-transfer'?'Wyjazd':event.kind==='arrived'?'Przyjazd':'Pobranie'} · {event.location.stationId} / {event.location.copy} · {event.quantity} {result.subassemblyLots!.find(lot=>lot.declaration.id===event.lotId)!.declaration.unit}</li>)}</ol>
         {(result.subassemblyEvents?.length??0)>500&&<p>Pokazano pierwsze 500 zdarzeń.</p>}
+      </details>}
+      {result.subassemblyBufferBooks&&<details aria-label="Osobne bufory podmontaży"><summary>Bufory podmontaży — pojemność i zapas</summary>
+        <p>Osobna pojemność dla każdego podzespołu i każdej kopii stanowiska, liczona w sztukach. Bufory korpusów mają odrębne limity. Rezerwacja celu zajmuje miejsce przed odjazdem; przyjazd zamienia ją w zajętość.</p>
+        <div className="table-wrap"><table><thead><tr><th>Podzespół / jednostka</th><th>Stanowisko / kopia</th><th>Strona</th><th>Pojemność</th><th>Zajęte</th><th>Zarezerwowane</th></tr></thead><tbody>
+          {result.subassemblyBufferBooks.flatMap(book=>book.places.map(place=>{
+            const {occupied,reserved}=subassemblyBufferLoad(book,place);
+            return place.capacity!==null||occupied||reserved?{place,occupied,reserved}:null;
+          }).filter(row=>row!==null)).slice(0,300).map(({place,occupied,reserved})=><tr key={JSON.stringify([place.subassemblyId,place.stationId,place.copy,place.side])}>
+            <td>{place.subassemblyId} / {place.unit}</td><td>{place.stationId} / {place.copy}</td><td>{place.side==='input'?'Wejście':'Wyjście'}</td><td>{place.capacity??'Bez limitu'}</td><td>{occupied}</td><td>{reserved}</td>
+          </tr>)}
+        </tbody></table></div>
+        <p>Pokazano do 300 miejsc z limitem lub zapasem. Reszty bez dalszego przypisania:</p>
+        <ul>{result.subassemblyBufferBooks.flatMap(book=>book.tokens.filter(token=>token.residual)).slice(0,100).map(token=><li key={token.id}>
+          {token.id} · {token.subassemblyId} · zapas {token.remainingQuantity} {token.unit} · {token.location?.stationId} / {token.location?.copy} · wejście odbiorcy
+        </li>)}</ul>
       </details>}
       {result.bodyBook && <div aria-label="Inspekcja korpusów przebiegu">
         <h4>Końcowe położenie korpusów</h4>
