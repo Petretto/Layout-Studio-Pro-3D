@@ -3,7 +3,8 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, dirname, basename } from 'node:path';
 
-const CDP_PORT = 9488;
+const CDP_PORT = Number(process.env.LAYOUT_MANUAL_CDP ?? 9488);
+if (!Number.isSafeInteger(CDP_PORT) || CDP_PORT < 1 || CDP_PORT > 65535) throw new Error('Niepoprawny port LAYOUT_MANUAL_CDP.');
 const EDGE_PATH = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe";
 const htmlPath = resolve("Instrukcja", "Podrecznik_Uzytkownika.html");
 const pdfPath = resolve("Instrukcja", "Podrecznik_Uzytkownika.pdf");

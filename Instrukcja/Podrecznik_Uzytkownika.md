@@ -313,7 +313,7 @@ W **Buforach stanowisk** wybierz stanowisko, zakres kopii, pojemności wejścia/
 
 Wybierz podzespół, wpisz jednostkę zgodną z jego partiami, wybierz stanowisko oraz kopię albo wszystkie kopie osobno. Dla wejścia i wyjścia wybierz konkretną nieujemną całkowitą pojemność albo **Bez limitu**; wybierz też politykę operatora. Wartości wymagają jawnego podania. **Zapisz bufory podmontaży** zatwierdza zmiany, **Odrzuć zmiany podmontaży** przywraca zapisane dane, a przyciski cofania i ponawiania działają na historii szkicu. Formularz odrzuci m.in. nakładające się zakresy kopii i niezgodne jednostki. Samo otwarcie formularza nie dopisuje konfiguracji.
 
-Pojemność 0 na wejściu wymaga gotowego odbiorcy oraz pełnego pobrania partii bez reszty; wyjście 0 zatrzymuje partię u producenta do wyjazdu. Zapisywanie konfiguracji nie rozszerza obsługi kilku partii przy wejściu 0 ani skończonych buforów korpusów z gałęziami. Szczegółowe ograniczenia zatrzymania operatora podano poniżej.
+Pojemność 0 na wejściu wymaga gotowego odbiorcy oraz pełnego pobrania partii bez reszty; wyjście 0 zatrzymuje partię u producenta do wyjazdu. Jedna partia bezpośrednia może być pobrana razem z partiami z osobnych dodatnich buforów; więcej niż jedna partia bezpośrednia oraz skończone bufory korpusów z gałęziami wymagają dalszej integracji. Szczegółowe ograniczenia zatrzymania operatora podano poniżej.
 
 Po obliczeniu rozwiń **Bufory podmontaży — pojemność i zapas**. Sprawdź podzespół, jednostkę, stanowisko/kopię, wejście/wyjście, pojemność, zajętość i rezerwacje. Partia 5 sztuk rezerwuje 5 przed wyjazdem. Po pobraniu 3 pozostają 2 w buforze odbiorcy; nadal zajmują pojemność i są pokazane jako zapas bez dalszego przypisania. Nie są samoczynnie przenoszone ani ponownie zużywane. Brak miejsca może zatrzymać proces zamiast zwrócić poprawny wynik.
 
@@ -331,7 +331,11 @@ W sekcji **Bufory podmontaży — pojemność i zapas** odczytaj kolumnę **Oper
 
 Ta ilustracja dotyczy odrębnej, zredukowanej próby syntetycznej: jedna partia 5/5 sztuk, jawna podwójna kwalifikacja jednego montera, korpus już na odbiorcy i bez modułu zaopatrzenia. Obróbka trwa 0–50 s, źródło i monter czekają do 90 s, przewóz trwa 90–100 s, montaż 100–170 s, powrót 170–180 s. Koniec wyrobu wynosi 170 s. Nie jest to wynik całego pobieranego C2-A ani pomiar produkcji.
 
-Nadal odrzucane są: kilka partii przy wejściu 0, reszta po pobraniu na wejściu 0, jednoczesny przewóz korpusu do tego odbiorcy, lokalne wejście i wyjście oba 0, bezpośredni odbiorca z przezbrojeniem/równoległością lub zatrzymujący własną obsadę przy dalszej produkcji, mieszane polityki skończonych wyjść jednego producenta i skończone bufory korpusów z gałęziami. Przeczytaj komunikat zamiast traktować odmowę jako poprawną symulację.
+**Wspólny odbiór mieszany (C2-B3a).** Operacja może pobrać jedną partię z wejścia 0 razem z partiami już dostarczonymi do osobnych dodatnich buforów. Najpierw docierają partie możliwe do składowania. Przewóz bezpośredni rusza po zabezpieczeniu wspólnego startu; wtedy następuje pobranie wszystkich przypisanych ilości oraz ewentualnych materiałów. Buforowana partia 5 szt., z której operacja pobiera 3, zachowuje zapas 2. Korpus musi już znajdować się w kopii odbiorcy.
+
+Jeżeli jeden producent wytwarza partie z różnymi politykami operatora i choć jedno skończone wyjście wymaga zatrzymania obsady, wspólny zespół pozostaje zajęty do odłożenia lub wyjazdu wszystkich oczekujących partii. Odłożenie samej partii z polityką zatrzymania nie zwalnia osób, gdy pozostała partia nadal czeka na producencie.
+
+Nadal odrzucane są: więcej niż jedna partia bezpośrednia przy wejściu 0, reszta po pobraniu na wejściu 0, jednoczesny przewóz korpusu do tego odbiorcy, lokalne wejście i wyjście oba 0, bezpośredni odbiorca z przezbrojeniem/równoległością lub zatrzymujący własną obsadę przy dalszej produkcji i skończone bufory korpusów z gałęziami. Przeczytaj komunikat zamiast traktować odmowę jako poprawną symulację.
 
 W **Zaopatrzeniu materiałowym** zadeklaruj pozycję materiałową przy stanowisku, zapas początkowy, jednostkę, dostawy i zużycie przypisane do operacji. Ilości nie powstają z BOM. Dostawa cykliczna wymaga jawnego pierwszego terminu do wykonania; nie zakładaj terminu 0. Całe zużycie następuje przy rzeczywistym starcie operacji, a dostawy są przetwarzane przed pobraniem przy równym czasie.
 

@@ -62,8 +62,6 @@ export class SubassemblyBufferRun {
   }
   /** Each whole lot enters output separately. Producer stays held until every lot has left its work position. */
   deposit(lots: readonly SubassemblyLotState[], location: StationCopyRef, at: number) {
-    const policies=new Set(lots.map(lot=>this.policies.get(JSON.stringify([lot.declaration.subassemblyId,location.stationId,location.copy]))).filter(policy=>policy!==undefined));
-    if(policies.size>1)throw new Error('C2-B2b: różne polityki operatora dla partii jednego producenta wymagają integracji B3.');
     const trial = new Map(this.books), to = this.ref(location,'output');
     let complete=true;
     for (const lot of lots) {

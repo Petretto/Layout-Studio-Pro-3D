@@ -1,11 +1,13 @@
 # Plan rozwoju i rejestr postępu aplikacji
 
 Data utworzenia: 2026-09-29  
-Ostatnia aktualizacja: 2026-10-26
+Ostatnia aktualizacja: 2026-10-27
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
 Dane testowe: Eko jest historycznym przypadkiem regresyjnym; docelowe przykłady to trzy zewnętrzne, kompletne pakiety demonstracyjne (7.12).
 
-## Bieżące przekazanie modelu — 2026-10-26
+## Bieżący pakiet — 2026-10-27
+
+7.12.C2-B3a: **wdrożony odbiór mieszany** — jedna partia przy wejściu 0 oraz pozostałe w osobnych dodatnich buforach. Wspólny start/pobranie, zachowanie reszt i zabezpieczeń zasobów. Decyzja użytkownika 2026-10-27: przy mieszanych politykach jednego producenta wspólna obsada czeka do odłożenia/wyjazdu wszystkich oczekujących partii; wdrożono. 8 testów B3a (7 nowych, 1 zmieniony), 99/99 celowanych regresji, build/typecheck oraz rzeczywisty UI z odświeżeniem/eksportem PASS. Dwie gałęzie C2: przewozy 60–70 i 90–100, pobranie 100, koniec 170, zapas 2; to zredukowana próba, nie obciążony pełny C2. Backup 4 niezależne SHA PASS. Raport: [B3a](docs/weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3A.md). Następne: skończone bufory korpusów w grafie, wspólna gotowość kilku bezpośrednich partii/korpusu, pozostałe ograniczenia B2b i obciążony C2. Sol do oceny/implementacji/weryfikacji; całe C2/7.12 w trakcie. Postęp: 61/72 = 84,7%; pierwsze wydanie: 61/68 = 89,7%.
 
 7.12.C2-B3-UI (2026-10-27): **formularz wdrożony w zakresie B2a/B2b**. Osobna edycja pojemności podzespołów, walidacja, historia i chroniony zapis; bez zmiany schematu i schedulera. Testy B2a 11/11, build i rzeczywisty UI z odtworzeniem i eksportem/importem PASS. Raport: [weryfikacja](docs/weryfikacja/WERYFIKACJA_C2_B3_UI.md), poprzedni kontrakt: [przekazanie dla Terra](docs/plany/PRZEKAZANIE_C2_B3_UI_TERRA.md). Wspólny odbiór gałęzi/korpusu i poprawność rezerwacji pozostają osobnym zakresem Sol; całe C2/7.12 w trakcie. Postęp: 61/72 = 84,7%; pierwsze wydanie: 61/68 = 89,7%.
 

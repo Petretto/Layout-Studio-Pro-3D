@@ -1,5 +1,6 @@
 import {planDirectOperation} from '../src/core/directHandoffPlan';
 import {prepareC2B2bUiProject} from './fixtures/c2B2bUi';
+import {prepareC2B3aUiProject} from './fixtures/c2B3aUi';
 import {createSubassemblyBufferBook, applySubassemblyBufferEvent, subassemblyBufferLoad,
   type SubassemblyBufferPlace, type SubassemblyBufferBook} from '../src/core/subassemblyBufferState';
 import {explainThroughput} from '../src/core/throughputExplanation';
@@ -4750,6 +4751,93 @@ function subassemblyDirectFixture(policy:'bbas'|'bbas-worker-released'='bbas'){
   project.resourceCalendars!.stations['ST-C']={shifts:[{startSeconds:50,endSeconds:200,basis:'assumed'}],breaks:[]};
   return project;
 }
+function mixedSubassemblyReceiptFixture(){
+  const project=subassemblyDirectFixture();
+  project.subassemblies.push({id:'STOCKED',name:'Jawny podzespół składowany — test',producerOperationId:project.operations[0].id,consumerOperationIds:[project.operations[1].id]});
+  project.operations[0].physicalRole={kind:'subassembly-preparation',subassemblyIds:['SUB-FLOW','STOCKED']};
+  project.subassemblyFlow!.lots.push({...structuredClone(project.subassemblyFlow!.lots[0]),id:'STOCKED-LOT',subassemblyId:'STOCKED',quantity:3,consumptionQuantity:1,source:'Jawna syntetyczna partia towarzysząca'});
+  project.subassemblyBuffers!.buffers.push(
+    {subassemblyId:'STOCKED',unit:'szt.',stationId:'ST-A',copy:1,inputCapacity:null,outputCapacity:3,blockingPolicy:'bbas'},
+    {subassemblyId:'STOCKED',unit:'szt.',stationId:'ST-C',copy:1,inputCapacity:3,outputCapacity:null,blockingPolicy:'bbas-worker-released'});
+  project.workers.push({id:'W-MIX-TR',name:'Jawny monter transportujący partie — test'});
+  project.resourceCalendars!.workers['W-MIX-TR']={shifts:[{startSeconds:0,endSeconds:200,basis:'assumed'}],breaks:[]};
+  project.assemblyTransport!.routes[0].alternatives[0].workerIds=['W-MIX-TR'];
+  addReturnRoute(project);project.assemblyTransport!.emptyRoutes[0].workerAssignment!.workerIds=['W-MIX-TR'];
+  project.assemblyTransport!.carts[0].afterUnload='return-to-initial';
+  return project;
+}
+
+test('7.12.C2-B3a: wspólny odbiór partii bezpośredniej i buforowanej, korpus już w kopii, pobranie obu przy 50',()=>{
+  for(const reverse of [false,true]){
+    const project=mixedSubassemblyReceiptFixture();if(reverse)project.subassemblyFlow!.lots.reverse();
+    const before=JSON.stringify(project),result=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+    assert.equal(result.jobs[0].finish,60);assertNoWorkerOverlap(result);
+    assert.deepEqual(result.transportMovements!.map(move=>[move.purpose,move.startSeconds,move.endSeconds]),[['transfer',10,12],['return',12,17],['transfer',48,50],['return',50,55]]);
+    const consumed=result.subassemblyEvents!.filter(event=>event.kind==='consumed');assert.equal(consumed.length,2);assert.ok(consumed.every(event=>event.atSeconds===50));
+    const producer=result.runs.find(run=>run.operationId===project.operations[0].id)!;assert.equal(producer.reserveEndSeconds,48);assert.equal(producer.stationReleaseSeconds,48);
+    const stock=result.subassemblyBufferBooks!.find(book=>book.places[0].subassemblyId==='STOCKED')!;
+    assert.equal(stock.tokens[0].remainingQuantity,2);assert.equal(stock.tokens[0].residual,true);
+    assert.deepEqual(subassemblyBufferLoad(stock,{stationId:'ST-C',copy:1,side:'input'}),{occupied:2,reserved:0,total:2});
+    const direct=result.subassemblyBufferBooks!.find(book=>book.places[0].subassemblyId==='SUB-FLOW')!;
+    assert.equal(subassemblyBufferLoad(direct,{stationId:'ST-C',copy:1,side:'input'}).total,0);
+    assert.ok(direct.tokens.every(token=>token.consumed&&!token.handoff&&!token.location));assert.equal(JSON.stringify(project),before);
+    const starts=result.bodyEvents!.filter(event=>event.kind==='reserve');assert.equal(starts.length,1);assert.equal(starts[0].atSeconds,50);
+  }
+});
+
+test('7.12.C2-B3a: opóźniona partia buforowana zabezpiecza wspólny odbiór dopiero po przyjeździe',()=>{
+  const project=mixedSubassemblyReceiptFixture();project.resourceCalendars!.workers['W-MIX-TR'].shifts=[{startSeconds:60,endSeconds:200,basis:'assumed'}];
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput);assertNoWorkerOverlap(result);
+  assert.deepEqual(result.transportMovements!.map(move=>[move.purpose,move.startSeconds,move.endSeconds]),[['transfer',60,62],['return',62,67],['transfer',67,69],['return',69,74]]);
+  assert.equal(result.jobs[0].finish,79);assert.ok(result.subassemblyEvents!.filter(event=>event.kind==='consumed').every(event=>event.atSeconds===69));
+});
+
+test('7.12.C2-B3a: dostawa materiału przesuwa wspólne pobranie do 80 bez ponownego przewozu partii buforowanej',()=>{
+  const project=mixedSubassemblyReceiptFixture();
+  project.materialSupply={items:[{id:'MIX-SUP',componentId:'EXPLICIT-PART',targetStationId:'ST-C',initialStock:0,unit:'szt.',schedule:{kind:'explicit-deliveries',deliveries:[{deliveryTimeSeconds:80,quantity:1}]},source:'Jawna syntetyczna dostawa'}],consumptions:[{operationId:project.operations[1].id,supplyId:'MIX-SUP',quantity:1,source:'Jawne pobranie'}]};
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput);assertNoWorkerOverlap(result);assert.equal(result.jobs[0].finish,90);
+  assert.deepEqual(result.transportMovements!.filter(move=>move.purpose==='transfer').map(move=>[move.startSeconds,move.endSeconds]),[[10,12],[78,80]]);
+  assert.ok(result.subassemblyEvents!.filter(event=>event.kind==='consumed').every(event=>event.atSeconds===80));
+  assert.deepEqual(result.materialEvents!.map(event=>[event.kind,event.atSeconds]),[['delivery',80],['consumption',80]]);
+});
+
+test('7.12.C2-B3a: za mały bufor towarzyszący nie pozwala ominąć partii przez wejście 0',()=>{
+  const project=mixedSubassemblyReceiptFixture();project.subassemblyBuffers!.buffers.find(buffer=>buffer.subassemblyId==='STOCKED'&&buffer.stationId==='ST-C')!.inputCapacity=2;
+  const before=JSON.stringify(project);assert.throws(()=>scheduleWorkerRun(project,1,1,project.bodyRunInput),(error:unknown)=>parseProcessStallDiagnostic(error)?.type==='buffer-deadlock');assert.equal(JSON.stringify(project),before);
+});
+
+test('7.12.C2-B3a: przy mieszanych politykach obsada czeka na wszystkie partie, także gdy zatrzymująca jest już odłożona',()=>{
+  for(const [directPolicy,stockPolicy,release] of [['bbas-worker-released','bbas',48],['bbas','bbas-worker-released',48],['bbas-worker-released','bbas-worker-released',10]] as const){
+    const project=mixedSubassemblyReceiptFixture();project.subassemblyBuffers!.buffers[0].blockingPolicy=directPolicy;
+    project.subassemblyBuffers!.buffers.find(buffer=>buffer.subassemblyId==='STOCKED'&&buffer.stationId==='ST-A')!.blockingPolicy=stockPolicy;
+    const result=scheduleWorkerRun(project,1,1,project.bodyRunInput),producer=result.runs[0];
+    assert.equal(result.jobs[0].finish,60);assert.equal(producer.stationReleaseSeconds,48);assert.equal(producer.reserveEndSeconds,release);
+    assert.equal(result.reservations.reservations.find(item=>item.reservationId===`1:${producer.operationId}`)!.endSeconds,release);
+    assert.deepEqual(result.transportMovements!.filter(move=>move.purpose==='transfer').map(move=>[move.startSeconds,move.endSeconds]),[[10,12],[48,50]]);assertNoWorkerOverlap(result);
+  }
+});
+
+test('7.12.C2-B3a: wspólna obsada mieszanych wyjść wykonuje loaded dopiero po wyjeździe ostatniej oczekującej partii',()=>{
+  const project=mixedSubassemblyReceiptFixture();project.subassemblyBuffers!.buffers[0].blockingPolicy='bbas-worker-released';
+  const rule=project.assemblyTransport!.routes[0],alternative=structuredClone(rule.alternatives[0]);
+  rule.alternatives.unshift({...alternative,workerIds:[project.workers[0].id]});
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput),moves=result.transportMovements!.filter(move=>move.purpose==='transfer');
+  assert.deepEqual(moves.map(move=>[move.workerIds,move.startSeconds,move.endSeconds]),[[['W-MIX-TR'],10,12],[[project.workers[0].id],48,50]]);
+  assert.equal(result.runs[0].reserveEndSeconds,48);assert.equal(result.jobs[0].finish,60);assertNoWorkerOverlap(result);
+});
+
+test('7.12.C2-B3a: dwaj producenci z C2, jawna równoległość, bezpośredni odbiór 100 i reszta buforowana 2',()=>{
+  const project=prepareC2B3aUiProject(parseDomainProjectV6(JSON.stringify(JSON.parse(advancedDemoPackage().data.draftRaw!).project)));
+  const before=JSON.stringify(project),result=scheduleWorkerRun(project,1000,1,project.bodyRunInput);
+  assertNoWorkerOverlap(result);assert.equal(JSON.stringify(project),before);assert.equal(result.jobs[0].finish,170);
+  assert.deepEqual(result.runs.map(run=>[run.operationId,run.startSeconds,run.endSeconds]),[['MU-OP10-A',0,50],['MU-OP10-B',0,60],['MU-OP20-M',100,170]]);
+  assert.deepEqual(result.transportMovements!.filter(move=>move.purpose==='transfer').map(move=>[move.lotId,move.startSeconds,move.endSeconds]),[['LOT-DRV-1',60,70],['LOT-PWR-1',90,100]]);
+  assert.deepEqual(result.transportMovements!.filter(move=>move.purpose==='return').map(move=>[move.startSeconds,move.endSeconds]),[[70,80],[170,180]]);
+  assert.ok(result.subassemblyEvents!.filter(event=>event.kind==='consumed').every(event=>event.atSeconds===100));
+  assert.equal(result.runs[0].reserveEndSeconds,90);assert.equal(result.runs[0].blockedSeconds,40);
+  const stock=result.subassemblyBufferBooks!.find(book=>book.places[0].subassemblyId==='SUB-DRV')!;assert.equal(stock.tokens[0].remainingQuantity,2);
+});
+
 test('7.12.C2-B2b: rejestr wejścia 0 nie magazynuje partii i wymaga pełnego odbioru dokładnie przy przyjeździe',()=>{
   const output={...branchPlace,side:'output' as const},input={...branchPlace,stationId:'JOIN2',capacity:0};
   const placed=deliverBranchLot(createSubassemblyBufferBook([output,input]),output);
@@ -4912,13 +5000,16 @@ test('7.12.C2-B2b: C2 z dodatnimi buforami i bbas zachowuje referencje 2210/2180
   }
 });
 
-test('7.12.C2-B2b: mieszane polityki różnych partii jednego producenta wymagają jawnej dalszej integracji',()=>{
+test('7.12.C2-B3a: mieszane polityki bez blokady pozwalają zwolnić wspólną obsadę po odłożeniu wszystkich partii',()=>{
   const project=subassemblyDirectFixture();project.subassemblyBuffers!.buffers[0].outputCapacity=2;project.subassemblyBuffers!.buffers[1].inputCapacity=2;
+  delete project.assemblyTransport; // This reference isolates output policies; transport has an explicit route time without a cart set.
   const definition=project.subassemblies[0];project.subassemblies.push({...definition,id:'SUB-OTHER',name:'Drugi podzespół testowy'});
   (project.operations[0].physicalRole as {kind:'subassembly-preparation';subassemblyIds:string[]}).subassemblyIds.push('SUB-OTHER');
   project.subassemblyFlow!.lots.push({...structuredClone(project.subassemblyFlow!.lots[0]),id:'OTHER-LOT',subassemblyId:'SUB-OTHER'});
   project.subassemblyBuffers!.buffers.push({...project.subassemblyBuffers!.buffers[0],subassemblyId:'SUB-OTHER',blockingPolicy:'bbas-worker-released'});
-  assert.throws(()=>scheduleWorkerRun(project,1,1,project.bodyRunInput),/różne polityki operatora/);
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+  assert.equal(result.runs[0].stationReleaseSeconds,10);assert.equal(result.runs[0].reserveEndSeconds,10);
+  assert.equal(result.jobs[0].finish,60);assertNoWorkerOverlap(result);
 });
 
 test('7.12.C2-B2b: niezależny wzorzec UI — 50 obróbki, blokada do 90, transport 90–100, montaż 100–170, powrót 170–180',()=>{

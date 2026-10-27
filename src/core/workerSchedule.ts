@@ -362,7 +362,8 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
             if(lotBuffers.deposit(produced,run,now))releaseProducer(run,now);
             else {
               blockedProducers.set(run,produced);
-              if(produced.some(lot=>lotBuffers.isOnProducer(lot)&&lotBuffers.holdsWorkers(lot.declaration.subassemblyId,run))){
+              // Mixed output policies hold the common crew until all pending lots leave the producer.
+              if(mayHoldExecution(run.job,run.operationId,run)){
                 heldProducers.add(run);
                 book={...book,reservations:book.reservations.map(item=>item.reservationId===`${run.job}:${run.operationId}`?{...item,endSeconds:Number.MAX_VALUE}:item)};
               }else if(holdingOperations.has(run.operationId)){
@@ -404,19 +405,26 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
           const target = recipientCopies.get(JSON.stringify([task.job+1,step.id])) ?? candidatesByOperation.get(step.id)![0];
           const directIncoming=incoming.filter(lot=>lotBuffers?.inputIsDirect(lot,target));
           if(directIncoming.length){
-            if(incoming.length!==1)throw new Error('C2-B2b: bezpośrednie przekazanie wymaga jednej partii; wspólny odbiór kilku partii pozostaje do B3.');
+            if(directIncoming.length!==1)throw new Error('C2-B3a: wspólny odbiór kilku partii na wejściu 0 wymaga dalszej integracji; obsługiwana jest jedna partia bezpośrednia i osobne dodatnie bufory pozostałych partii.');
             if(mayHoldExecution(task.job+1,step.id,target))throw new Error('C2-B2b: bezpośredni odbiorca z zatrzymaniem własnej obsady na wyjściu wymaga integracji B3.');
-            if(incoming[0].declaration.quantity!==incoming[0].declaration.consumptionQuantity)throw new Error('C2-B2b: wejście 0 wymaga pełnego pobrania bez reszty.');
+            if(directIncoming[0].declaration.quantity!==directIncoming[0].declaration.consumptionQuantity)throw new Error('C2-B2b: wejście 0 wymaga pełnego pobrania bez reszty.');
             if(checked.changeoverMatrix||checked.physicalConcurrency?.groups.some(group=>group.operationIds.includes(step.id)))throw new Error('C2-B2b: wejście 0 z przezbrojeniem lub równoległą operacją odbiorcy wymaga dalszej integracji.');
-            if(incoming[0].location&&sameCopy(incoming[0].location,target)&&lotBuffers!.outputIsDirect(incoming[0],target))throw new Error('C2-B2b: lokalne wejście i wyjście 0 na tej samej kopii wymagają wspólnego przekazania stanowiska w B3.');
+            if(directIncoming[0].location&&sameCopy(directIncoming[0].location,target)&&lotBuffers!.outputIsDirect(directIncoming[0],target))throw new Error('C2-B2b: lokalne wejście i wyjście 0 na tej samej kopii wymagają wspólnego przekazania stanowiska w B3.');
           }
-          const missing = incoming.filter(lot => lot.status === 'available' && !sameCopy(lot.location!, target));
+          const missing = incoming.filter(lot => lot.status === 'available' && !sameCopy(lot.location!, target))
+            // Stockable companions must arrive before the direct delivery can promise the recipient start.
+            .sort((a,b)=>Number(!!lotBuffers?.inputIsDirect(a,target))-Number(!!lotBuffers?.inputIsDirect(b,target)));
           // Validate all required legs before publishing any movement for this recipient.
           for (const lot of missing) bodyRoute(lot.location!, target);
           if (missing.length) {
             const lot = missing[0], route = bodyRoute(lot.location!, target)!;
             if(lotBuffers&&!lotBuffers.canDepart(lot,target)){task.causes.add('buffer');bufferWaiting.add(task);continue;}
             const direct=!!lotBuffers?.inputIsDirect(lot,target);
+            if(direct){
+              const companions=incoming.filter(other=>other!==lot);
+              if(companions.some(other=>other.status!=='available'||!other.location||!sameCopy(other.location,target))){task.causes.add('subassembly');continue;}
+              if(!lotBuffers!.local(companions,target,now)){task.causes.add('buffer');bufferWaiting.add(task);continue;}
+            }
             const owner=[...blockedProducers].find(([run,lots])=>heldProducers.has(run)&&lots.includes(lot)&&lots.every(other=>other===lot||!lotBuffers!.isOnProducer(other)))?.[0];
             const previewBook=owner?releaseWorkerTeam(book,`${owner.job}:${owner.operationId}`,now):book;
             const unsafe=unsafeWorkers(now,owner);

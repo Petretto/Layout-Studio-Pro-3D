@@ -16,6 +16,7 @@ Pozostałe materiały:
 
 - [Przekazanie C2-B3-UI dla Terra](plany/PRZEKAZANIE_C2_B3_UI_TERRA.md) — formularz istniejących buforów podmontaży i kryteria odbioru; integracja harmonogramu pozostaje osobnym pakietem Sol.
 - [Weryfikacja C2-B3-UI](weryfikacja/WERYFIKACJA_C2_B3_UI.md) — wyniki testów formularza, zapisu i historii.
+- [Weryfikacja C2-B3a](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3A.md) — wspólny odbiór jednej partii bezpośredniej i partii buforowanych.
 
 - [Instrukcja użytkownika](../Instrukcja/Podrecznik_Uzytkownika.md) — źródło MD oraz wersje HTML/PDF w `Instrukcja/`.
 - [Projekty graficzne](../design/) — pliki `.pen`.
