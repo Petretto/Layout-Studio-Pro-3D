@@ -33,10 +33,11 @@ import {editDomainAssemblyTransport} from '../../core/domainTransportEditing';
 import {DomainSubassemblyEditor} from './DomainSubassemblyEditor';
 import {editDomainSubassemblyFlow} from '../../core/domainSubassemblyEditing';
 import {DomainBuffersEditor} from './DomainBuffersEditor';
+import {DomainSubassemblyBuffersEditor} from './DomainSubassemblyBuffersEditor';
 import {DomainSupplyEditor} from './DomainSupplyEditor';
 import {DomainChangeoverEditor} from './DomainChangeoverEditor';
 import {DomainStochasticSimulationPanel} from './DomainStochasticSimulationPanel';
-import {editDomainStationBuffers, editDomainMaterialSupply} from '../../core/domainBuffersEditing';
+import {editDomainStationBuffers, editDomainMaterialSupply, editDomainSubassemblyBuffers} from '../../core/domainBuffersEditing';
 import {editDomainMaterialNetwork} from '../../core/domainMaterialEditing';
 import {editDomainPhysicalRole} from '../../core/domainPhysicalRoleEditing';
 
@@ -234,6 +235,10 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
       canUndo={past.length > 0} canRedo={future.length > 0} />}
     {draft.status === 'valid' && <DomainBuffersEditor key={`buffers-${draft.raw}`} project={draft.saved.project}
       onApply={buffers => applyDraftChange(project => editDomainStationBuffers(project, buffers), 'Zapisano konfigurację buforów stanowisk w szkicu 6.')}
+      onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
+      canUndo={past.length > 0} canRedo={future.length > 0} />}
+    {draft.status === 'valid' && <DomainSubassemblyBuffersEditor key={`subassembly-buffers-${draft.raw}`} project={draft.saved.project}
+      onApply={buffers => applyDraftChange(project => editDomainSubassemblyBuffers(project, buffers), 'Zapisano konfigurację buforów podmontaży w szkicu 6.')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
       canUndo={past.length > 0} canRedo={future.length > 0} />}
     {draft.status === 'valid' && <DomainSupplyEditor key={`supply-${draft.raw}`} project={draft.saved.project}

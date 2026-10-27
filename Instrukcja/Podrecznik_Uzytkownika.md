@@ -309,7 +309,11 @@ W **Buforach stanowisk** wybierz stanowisko, zakres kopii, pojemności wejścia/
 
 ![Formularz pojemności i polityk buforów — syntetyczny odbiór 3.5c1](../outputs/qa/verify_3_5c1.png)
 
-**Osobne bufory podmontaży (C2-B2a).** Każdy podzespół i każda kopia stanowiska mają odrębną pojemność w sztukach; bufory korpusów pozostają osobne. Nie używaj formularza **Bufory stanowisk** do nadawania limitów podzespołom. Ten etap odczytuje osobną konfigurację z pakietu projektu; nie zmienia istniejących przykładów ani zapisów bez tej konfiguracji. Obsługuje dodatnie pojemności i jawny brak limitu, a przy pełnym wyjściu zatrzymuje stanowisko oraz wyposażenie po obróbce i zwalnia operatora według profilu.
+**Osobne bufory podmontaży.** Każdy podzespół i każda kopia stanowiska mają odrębną pojemność w sztukach; bufory korpusów pozostają osobne. Nie używaj formularza **Bufory stanowisk** do nadawania limitów podzespołom. W obszarze **Proces i stanowiska → Stanowiska i zasoby** sekcja **Bufory podmontaży — pojemności i reguły blokowania** pozwala dodać, edytować i usunąć konfigurację szkicu 6.
+
+Wybierz podzespół, wpisz jednostkę zgodną z jego partiami, wybierz stanowisko oraz kopię albo wszystkie kopie osobno. Dla wejścia i wyjścia wybierz konkretną nieujemną całkowitą pojemność albo **Bez limitu**; wybierz też politykę operatora. Wartości wymagają jawnego podania. **Zapisz bufory podmontaży** zatwierdza zmiany, **Odrzuć zmiany podmontaży** przywraca zapisane dane, a przyciski cofania i ponawiania działają na historii szkicu. Formularz odrzuci m.in. nakładające się zakresy kopii i niezgodne jednostki. Samo otwarcie formularza nie dopisuje konfiguracji.
+
+Pojemność 0 na wejściu wymaga gotowego odbiorcy oraz pełnego pobrania partii bez reszty; wyjście 0 zatrzymuje partię u producenta do wyjazdu. Zapisywanie konfiguracji nie rozszerza obsługi kilku partii przy wejściu 0 ani skończonych buforów korpusów z gałęziami. Szczegółowe ograniczenia zatrzymania operatora podano poniżej.
 
 Po obliczeniu rozwiń **Bufory podmontaży — pojemność i zapas**. Sprawdź podzespół, jednostkę, stanowisko/kopię, wejście/wyjście, pojemność, zajętość i rezerwacje. Partia 5 sztuk rezerwuje 5 przed wyjazdem. Po pobraniu 3 pozostają 2 w buforze odbiorcy; nadal zajmują pojemność i są pokazane jako zapas bez dalszego przypisania. Nie są samoczynnie przenoszone ani ponownie zużywane. Brak miejsca może zatrzymać proces zamiast zwrócić poprawny wynik.
 

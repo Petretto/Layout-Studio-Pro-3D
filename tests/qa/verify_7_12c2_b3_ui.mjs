@@ -1,0 +1,56 @@
+import {spawn} from 'node:child_process';
+import {existsSync,mkdirSync,mkdtempSync,readFileSync,writeFileSync,readdirSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {resolve,join} from 'node:path';
+import {strict as assert} from 'node:assert';
+
+const out=resolve('outputs/qa/7_12c2_b3_ui'),port=5320,cdp=9420;
+mkdirSync(out,{recursive:true});
+const fixture=resolve('przyklady/03_modul_urzadzenia/projekt-pokazowy.json');
+const original=JSON.parse(readFileSync(fixture,'utf8'));
+const originalDraft=JSON.parse(original.data.draftRaw);
+const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const edge=['C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe','C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe'].find(existsSync);
+if(!edge)throw new Error('Edge not found');
+const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(port)},stdio:'ignore',windowsHide:true});
+const browser=spawn(edge,[`--remote-debugging-port=${cdp}`,`--user-data-dir=${mkdtempSync(join(tmpdir(),'edge-c2-b3-ui-'))}`,'--headless=new','--no-first-run','--disable-gpu','--window-size=1440,1100','about:blank'],{stdio:'ignore',windowsHide:true});
+let ws;
+try{
+  let target;
+  for(let i=0;i<60;i++){try{target=(await(await fetch(`http://127.0.0.1:${cdp}/json/list`,{signal:AbortSignal.timeout(1000)})).json()).find(tab=>tab.type==='page');if(target)break;}catch{}await sleep(200);}
+  if(!target)throw new Error('Missing CDP target');
+  ws=new WebSocket(target.webSocketDebuggerUrl);await new Promise((resolve,reject)=>{ws.onopen=resolve;ws.onerror=reject;});
+  let id=0;const pending=new Map(),errors=[];
+  ws.onmessage=event=>{const message=JSON.parse(event.data);if(message.method==='Runtime.exceptionThrown')errors.push(message.params.exceptionDetails.text);const waiter=pending.get(message.id);if(waiter){pending.delete(message.id);message.error?waiter.reject(new Error(message.error.message)):waiter.resolve(message.result);}};
+  const send=(method,params={})=>new Promise((resolve,reject)=>{const next=++id,timer=setTimeout(()=>{pending.delete(next);reject(new Error('CDP timeout: '+method));},20000);pending.set(next,{resolve:value=>{clearTimeout(timer);resolve(value);},reject:error=>{clearTimeout(timer);reject(error);}});ws.send(JSON.stringify({id:next,method,params}));});
+  const evaluate=async expression=>{const response=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(response.exceptionDetails)throw new Error(response.exceptionDetails.exception?.description??response.exceptionDetails.text);return response.result.value;};
+  const until=async expression=>{for(let i=0;i<120;i++){if(await evaluate(expression))return;await sleep(100);}throw new Error('UI timeout: '+expression);};
+  const click=async(text,scope='document')=>{await evaluate(`(()=>{const b=[...${scope}.querySelectorAll('button')].find(b=>b.textContent.trim()===${JSON.stringify(text)});if(!b||b.disabled)throw new Error('Missing button '+${JSON.stringify(text)});b.click()})()`);await sleep(100);};
+  const field=async(label,value)=>{await evaluate(`(()=>{const e=document.querySelector('[aria-label='+${JSON.stringify(JSON.stringify(label))}+']');if(!e)throw new Error('Missing field '+${JSON.stringify(label)});const proto=e.tagName==='SELECT'?HTMLSelectElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(proto,'value').set.call(e,${JSON.stringify(value)});e.dispatchEvent(new Event(e.tagName==='SELECT'?'change':'input',{bubbles:true}));})()`);await sleep(70);};
+  const menu=async()=>{await evaluate(`document.querySelector('button[aria-label="Menu projektu"]').click()`);await click('Pakiet projektu');await until(`!!document.querySelector('[aria-label="Pakiet projektu"]')`);};
+  const downloaded=async action=>{const dir=mkdtempSync(join(out,'download_'));await send('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:dir});await action();for(let i=0;i<100;i++){const name=readdirSync(dir).find(name=>name.endsWith('.json'));if(name)return join(dir,name);await sleep(100);}throw new Error('Missing download');};
+  const upload=async file=>{const {root}=await send('DOM.getDocument'),{nodeId}=await send('DOM.querySelector',{nodeId:root.nodeId,selector:'[aria-label="Plik pakietu projektu"]'});await send('DOM.setFileInputFiles',{nodeId,files:[file]});await until(`document.body.textContent.includes('Pakiet poprawny.')`);await downloaded(()=>click('Pobierz kopię ratunkową przed importem'));await evaluate(`document.querySelector('[aria-label="Pakiet projektu"] input[type=checkbox]').click()`);await click('Wczytaj pakiet i przeładuj');await sleep(1000);await until(`!!document.querySelector('.studio')&&!document.querySelector('[aria-label="Pakiet projektu"]')`);};
+  const nav=async()=>{await evaluate(`([...document.querySelectorAll('.studio-nav button,.shell-nav button,.shell-subnav button')].find(b=>b.textContent.includes('Proces i stanowiska'))).click()`);await sleep(150);await evaluate(`(document.querySelector('button[data-view="stations"]')||[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Stanowiska i zasoby'))).click()`);await until(`!!document.querySelector('[aria-label="Bufory podmontaży szkicu 6"]')`);};
+  const raw=()=>evaluate(`localStorage.getItem('layout-studio-domain-v6-draft-v1')`);
+  const form=`document.querySelector('[aria-label="Bufory podmontaży szkicu 6"]')`;
+  const fill=async(n,sub,capacity,copy='all')=>{const label=`Bufor podmontażu ${n}`;await field(`${label} podzespół`,sub);await field(`${label} jednostka`,'szt.');await field(`${label} stanowisko`,'ST-MU-MAIN2');await field(`${label} kopia`,copy);await field(`${label} pojemność wejściowa rodzaj`,'limited');await field(`${label} pojemność wejściowa`,String(capacity));await field(`${label} pojemność wyjściowa rodzaj`,'unlimited');await field(`${label} polityka operatora`,'bbas-worker-released');};
+  await send('Page.enable');await send('Runtime.enable');await send('Page.navigate',{url:`http://127.0.0.1:${port}/`});await until(`!!document.querySelector('.studio')`);await menu();await upload(fixture);await nav();
+  const before=await raw();assert.equal(JSON.parse(before).project.subassemblyBuffers,undefined);
+  await click('Dodaj bufor podmontażu',form);await click('Zapisz bufory podmontaży',form);assert.equal(await raw(),before);assert.ok(await evaluate(`${form}.querySelector('[role="alert"]')!==null`));
+  await fill(1,'SUB-PWR',5);await click('Dodaj bufor podmontażu',form);await fill(2,'SUB-DRV',7);await click('Zapisz bufory podmontaży',form);
+  const saved=await raw(),parsed=JSON.parse(saved);assert.deepEqual(parsed.project.subassemblyBuffers.buffers.map(b=>[b.subassemblyId,b.inputCapacity,b.copy]),[['SUB-PWR',5,null],['SUB-DRV',7,null]]);
+  assert.deepEqual(parsed.project.stationBuffers,originalDraft.project.stationBuffers);assert.deepEqual(parsed.project.subassemblyFlow,originalDraft.project.subassemblyFlow);assert.equal(parsed.originalJson,originalDraft.originalJson);
+  await field('Bufor podmontażu 1 pojemność wejściowa','-1');await click('Zapisz bufory podmontaży',form);assert.equal(await raw(),saved);assert.ok(await evaluate(`${form}.querySelector('[role="alert"]')!==null`));await click('Odrzuć zmiany podmontaży',form);
+  await click('Dodaj bufor podmontażu',form);await fill(3,'SUB-PWR',3,'1');await click('Zapisz bufory podmontaży',form);assert.equal(await raw(),saved);assert.ok((await evaluate(`${form}.querySelector('[role="alert"]').textContent`)).includes('nakładające'));await click('Odrzuć zmiany podmontaży',form);
+  await click('Usuń bufor podmontażu 2',form);await click('Odrzuć zmiany podmontaży',form);assert.equal(await evaluate(`${form}.querySelectorAll('fieldset').length`),2);
+  await field('Bufor podmontażu 1 pojemność wejściowa','6');await click('Zapisz bufory podmontaży',form);assert.equal(JSON.parse(await raw()).project.subassemblyBuffers.buffers[0].inputCapacity,6);
+  await click('Cofnij dane szkicu',form);assert.deepEqual(JSON.parse(await raw()).project,parsed.project);await click('Ponów dane szkicu',form);const redone=JSON.parse(await raw());assert.equal(redone.project.subassemblyBuffers.buffers[0].inputCapacity,6);
+  await click('Usuń bufor podmontażu 2',form);await click('Zapisz bufory podmontaży',form);assert.equal(JSON.parse(await raw()).project.subassemblyBuffers.buffers.length,1);await click('Cofnij dane szkicu',form);assert.deepEqual(JSON.parse(await raw()).project,redone.project);
+  await click('Usuń konfigurację buforów podmontaży',form);assert.equal(JSON.parse(await raw()).project.subassemblyBuffers,undefined);await click('Cofnij dane szkicu',form);const final=await raw();assert.deepEqual(JSON.parse(final).project,redone.project);assert.equal(JSON.parse(final).originalJson,parsed.originalJson);
+  await evaluate(`${form}.scrollIntoView({block:'start'})`);await sleep(200);writeFileSync(join(out,'formularz.png'),Buffer.from((await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false})).data,'base64'));
+  await send('Page.reload');await sleep(1000);await until(`!!document.querySelector('.studio')`);assert.equal(await raw(),final);
+  await menu();const exportedPath=await downloaded(()=>click('Pobierz pakiet projektu'));const exported=JSON.parse(readFileSync(exportedPath,'utf8'));assert.equal(exported.data.draftRaw,final);assert.equal(exported.data.source4Json,original.data.source4Json);
+  await upload(exportedPath);assert.equal(await raw(),final);assert.deepEqual(errors,[]);
+  writeFileSync(join(out,'ui.json'),JSON.stringify({result:'PASS',twoComponents:true,invalidAndOverlap:true,editDiscardDelete:true,undoRedo:true,reload:true,exportImport:true,originalAndOtherFieldsUnchanged:true,runtimeErrors:errors},null,2));
+  console.log('PASS C2-B3-UI: two components, invalid/overlap, edit/delete/discard, undo/redo, reload, export/import, original preserved.');
+}finally{ws?.close();browser.kill();server.kill();}

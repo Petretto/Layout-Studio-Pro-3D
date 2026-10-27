@@ -1,6 +1,6 @@
 # 7.12.C2-B3-UI — przekazanie formularza dla Terra
 
-Data: 2026-10-26. Status: **zakres przygotowany; implementacja oczekuje na Terra**. To nie jest odbiór B3 ani rozszerzenie obsługi symulacji.
+Data przekazania: 2026-10-26. Status 2026-10-27: **formularz wykonany i zweryfikowany**; zob. `docs/weryfikacja/WERYFIKACJA_C2_B3_UI.md`. To nie jest odbiór B3 ani rozszerzenie obsługi symulacji.
 
 ## Routing
 
@@ -38,4 +38,4 @@ Bez zmiany schematu/modelu 6 lub migracji. Przed zmianą podłączenia wykonać 
 
 ## Stan przekazania
 
-Punkt wyjścia kodu: `6a60c70` (B2b). Niezależna zmiana `outputs/data_audit/eko_7_1.json` pozostaje poza pakietem. B3-UI nie został jeszcze zaimplementowany ani przetestowany. Cały plan: **61/72 = 84,7%**; pierwsze wydanie: **61/68 = 89,7%**.
+Punkt wyjścia kodu przy przekazaniu: `6a60c70` (B2b). Niezależna zmiana `outputs/data_audit/eko_7_1.json` pozostaje poza pakietem. Wynik realizacji opisuje raport weryfikacji. Cały plan: **61/72 = 84,7%**; pierwsze wydanie: **61/68 = 89,7%**.

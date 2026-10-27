@@ -7,7 +7,7 @@ Dane testowe: Eko jest historycznym przypadkiem regresyjnym; docelowe przykłady
 
 ## Bieżące przekazanie modelu — 2026-10-26
 
-7.12.C2-B3-UI: **przygotowano zakres, implementacja oczekuje na Terra**. Formularz istniejących buforów podmontaży wydzielono przed dalszą integracją harmonogramu. Kontrakt UI, punkty podłączenia i kryteria odbioru: [przekazanie dla Terra](docs/plany/PRZEKAZANIE_C2_B3_UI_TERRA.md). Ocena granic B3: Sol; implementacja i odbiór formularza: Terra. Wspólny odbiór gałęzi/korpusu i poprawność rezerwacji pozostają osobnym zakresem Sol. Bez zmiany kodu, schematu i statusu całego C2/7.12. Postęp: 61/72 = 84,7%; pierwsze wydanie: 61/68 = 89,7%.
+7.12.C2-B3-UI (2026-10-27): **formularz wdrożony w zakresie B2a/B2b**. Osobna edycja pojemności podzespołów, walidacja, historia i chroniony zapis; bez zmiany schematu i schedulera. Testy B2a 11/11, build i rzeczywisty UI z odtworzeniem i eksportem/importem PASS. Raport: [weryfikacja](docs/weryfikacja/WERYFIKACJA_C2_B3_UI.md), poprzedni kontrakt: [przekazanie dla Terra](docs/plany/PRZEKAZANIE_C2_B3_UI_TERRA.md). Wspólny odbiór gałęzi/korpusu i poprawność rezerwacji pozostają osobnym zakresem Sol; całe C2/7.12 w trakcie. Postęp: 61/72 = 84,7%; pierwsze wydanie: 61/68 = 89,7%.
 
 ## Cel i zakres
 

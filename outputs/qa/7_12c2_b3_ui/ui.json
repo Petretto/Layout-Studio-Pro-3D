@@ -1,0 +1,11 @@
+{
+  "result": "PASS",
+  "twoComponents": true,
+  "invalidAndOverlap": true,
+  "editDiscardDelete": true,
+  "undoRedo": true,
+  "reload": true,
+  "exportImport": true,
+  "originalAndOtherFieldsUnchanged": true,
+  "runtimeErrors": []
+}
