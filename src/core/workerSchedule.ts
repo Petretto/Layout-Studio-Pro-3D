@@ -4,6 +4,7 @@ import {scheduleBufferedProcess} from './bufferedProcessSchedule';
 import {MaterialStockRun, type MaterialStock, type MaterialStockEvent} from './materialStock';
 import {SubassemblyRun, type SubassemblyLotState, type SubassemblyEvent} from './subassemblyState';
 import {SubassemblyBufferRun} from './subassemblyBufferRun';
+import {GraphBodyBuffers} from './graphBodyBuffers';
 import {previewAssemblyDispatch,previewEmptyDispatch,type AssemblyDispatch,type TransportDeviceReservation} from './assemblyDispatch';
 import {createCartBook,finishCartMovement,startCartMovement,type CartBook,type CartMotionRoute} from './transportState';
 import {parseDomainProjectV6, domainOperationOrder, type DomainProjectV6} from './domainProject';
@@ -140,8 +141,8 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   if(options.transportMode!==undefined&&options.transportMode!=='configured'&&options.transportMode!=='just-in-time')throw new Error('Nieznany tryb transportu symulacji.');
   const justInTime=options.transportMode==='just-in-time';
   const parsed = parseDomainProjectV6(JSON.stringify(project));
-  if (parsed.stationBuffers?.buffers.some(buffer => buffer.inputCapacity !== null && buffer.inputCapacity !== undefined ||
-      buffer.outputCapacity !== null && buffer.outputCapacity !== undefined)) {
+  const finiteBodyBuffers=parsed.stationBuffers?.buffers.some(buffer=>buffer.inputCapacity!=null||buffer.outputCapacity!=null);
+  if (finiteBodyBuffers && (!parsed.subassemblyFlow || justInTime)) {
     throw new Error('3.5b: ograniczona pojemność buforów z fizycznym transportem oczekuje na integrację. Można jawnie wybrać JIT dla pojedynczego ciągu operacji.');
   }
   const stockRun = !justInTime && parsed.materialSupply?.items.length ? new MaterialStockRun(parsed) : undefined;
@@ -156,10 +157,14 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   const bodyRun = justInTime ? undefined : prepareBodyRun(checked, batch, bodyInput);
   if(checked.assemblyTransport && !bodyRun && !lotRun) throw new Error('3.4.3: transport zasobowy wymaga fizycznego przebiegu korpusu; transport podzespołów oczekuje na integrację.');
   let bodyBook = bodyRun?.book;
+  let bodyBuffers:GraphBodyBuffers|undefined;
   const bodyEvents: BodyEvent[] = [];
   const recordBody = (event: BodyEvent) => {
-    bodyBook = applyBodyEvent(bodyBook!, event);
+    const next=bodyBuffers?bodyBuffers.event(bodyBook!,event):applyBodyEvent(bodyBook!,event);
+    if(!next)return false;
+    bodyBook = next;
     bodyEvents.push(event);
+    return true;
   };
   if (!checked.workerRunSelection) throw new Error('Brak zapisanego wyboru składu przebiegu.');
   const domainOperations = new Map(checked.operations.map(operation => [operation.id, operation]));
@@ -218,6 +223,12 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   }
   const successors = steps.map(step => steps.flatMap((other, i) =>
     other.predecessorIds.includes(step.id) ? [i] : []));
+  if(finiteBodyBuffers&&!justInTime){
+    if(!bodyRun)throw new Error('C2-B3b: bufory korpusów z gałęziami wymagają jawnych instancji korpusu.');
+    bodyBuffers=new GraphBodyBuffers(checked,steps.map(step=>step.id),candidatesByOperation);
+    const first=bodyBuffers.target(bodyBuffers.firstOperationId);
+    for(const body of bodyBook!.bodies)if(body.location.kind!=='station'||body.location.stationId!==first.stationId||body.location.copy!==first.copy)throw new Error('C2-B3b: początkowy korpus musi być w pierwszej jawnej kopii ścieżki.');
+  }
   if (!justInTime && checked.subassemblyBuffers?.buffers.length && !lotRun) throw new Error('Bufory podmontaży wymagają jawnych partii podzespołów.');
   const lotBuffers = !justInTime && checked.subassemblyBuffers?.buffers.length ? new SubassemblyBufferRun(checked,candidatesByOperation) : undefined;
   const sameCopy = (from: StationCopyRef, to: StationCopyRef) => from.stationId === to.stationId && from.copy === to.copy;
@@ -261,6 +272,9 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   };
   let book = createWorkerReservationBook(checked.assemblyTransport ? checked.workers.map(w => w.id) : plan.teamWorkerIds);
   const runs: WorkerScheduleRun[] = [];
+  const blockedBodies=new Map<WorkerScheduleRun,Extract<BodyEvent,{kind:'release'}>>();
+  const bodyDeliveries=new Map<string,NonNullable<WorkerScheduleRun['transport']>>();
+  const bodyBufferEvents:NonNullable<WorkerScheduleResult['bufferEvents']>[number][]=[];
   const blockedProducers = new Map<WorkerScheduleRun, readonly SubassemblyLotState[]>();
   const heldProducers = new Set<WorkerScheduleRun>();
   const mayHoldExecution=(job:number,operationId:string,location:StationCopyRef)=>!!lotBuffers&&!!lotRun?.lots.some(lot=>lot.declaration.producer.job===job&&lot.declaration.producer.operationId===operationId&&lotBuffers.holdsWorkers(lot.declaration.subassemblyId,location));
@@ -270,7 +284,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
     if(operation.reserveFromSeconds!==0||operation.reserveUntilSeconds!==operation.durationSeconds)throw new Error('C2-B2b: zatrzymanie operatora wymaga jawnej obecności od początku do końca operacji producenta; częściowa obecność wymaga dalszej integracji, a wcześniejsze wyjście wymaga reguły powrotu.');
   }
   const unsafeWorkers=(now:number,except?:WorkerScheduleRun)=>new Set(runs.filter(run=>run!==except&&mayHoldExecution(run.job,run.operationId,run)&&(run.endSeconds>now||heldProducers.has(run))).flatMap(run=>[...run.workerIds]));
-  const copyBusy = (run: WorkerScheduleRun, now: number) => run.endSeconds > now || blockedProducers.has(run);
+  const copyBusy = (run: WorkerScheduleRun, now: number) => run.endSeconds > now || blockedProducers.has(run) || blockedBodies.has(run);
   const releaseProducer = (run: WorkerScheduleRun, now: number) => {
     blockedProducers.delete(run);
     if(heldProducers.has(run)){
@@ -345,14 +359,20 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
         }
       } else if (event.kind === 'transport-end') {
         recordBody({kind: 'finish-transfer', bodyId: event.bodyId, atSeconds: now});
+        if(bodyBuffers){const body=bodyBook!.bodies.find(body=>body.id===event.bodyId)!;if(body.location.kind==='station')bodyBufferEvents.push({job:[...bodyRun!.bodyByJob].find(([,id])=>id===event.bodyId)![0],atSeconds:now,kind:'input',stationId:body.location.stationId,copy:body.location.copy});}
       } else if (event.kind === 'body-start') {
         recordBody({kind: 'reserve', bodyId: event.bodyId, atSeconds: now, operationId: event.operationId,
           endSeconds: event.end, basis: event.basis});
       } else {
         const completedStep = steps[event.step];
         if (bodyRun && completedStep.physicalRole?.kind === 'body-work') {
-          recordBody({kind: 'release', bodyId: bodyRun!.bodyByJob.get(event.job + 1)!,
-            atSeconds: now, operationId: completedStep.id});
+          const release:Extract<BodyEvent,{kind:'release'}>={kind:'release',bodyId:bodyRun!.bodyByJob.get(event.job+1)!,atSeconds:now,operationId:completedStep.id};
+          const released=recordBody(release);
+          if(bodyBuffers){
+            const run=runs.find(run=>run.job===event.job+1&&run.operationId===completedStep.id)!;
+            if(!released)blockedBodies.set(run,release);else{run.stationReleaseSeconds=now;run.blockedSeconds=0;}
+            bodyBufferEvents.push({job:run.job,atSeconds:now,kind:released?(bodyBuffers.hasToken(release.bodyId)?'output':'released'):'blocked',stationId:run.stationId,copy:run.copy});
+          }
         }
         lotRun?.produce(event.job + 1, completedStep.id, {stationId:event.stationId,copy:event.copy+1}, now);
         if (lotBuffers) {
@@ -388,6 +408,11 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
     let started = true;
     while (started) {
       started = false;
+      for(const [run,release] of blockedBodies)if(recordBody({...release,atSeconds:now})){
+        blockedBodies.delete(run);run.stationReleaseSeconds=now;run.blockedSeconds=now-run.endSeconds;
+        copies.get(run.stationId)![run.copy-1]=!runs.some(other=>sameCopy(other,run)&&copyBusy(other,now));
+        bodyBufferEvents.push({job:run.job,atSeconds:now,kind:'released',stationId:run.stationId,copy:run.copy});started=true;
+      }
       for(const [run,lots] of blockedProducers)if(lotBuffers!.deposit(lots,run,now)){
         releaseProducer(run,now);started=true;
       }
@@ -399,6 +424,51 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
         if (inFlight[task.job].size && !matchingConcurrencyGroup(checked.physicalConcurrency,
           [...inFlight[task.job]].map(index => steps[index].id).concat(step.id))) {
           task.causes.add('same-job'); continue;
+        }
+        if(bodyBuffers&&step.physicalRole?.kind==='body-work'){
+          const bodyId=bodyRun!.bodyByJob.get(task.job+1)!,target=bodyBuffers.target(step.id);
+          const body=bodyBook!.bodies.find(body=>body.id===bodyId)!;
+          if(body.status!=='available'||body.location.kind!=='station'){task.causes.add('body');continue;}
+          if(!bodyBuffers.hasToken(bodyId)){
+            if(step.id!==bodyBuffers.firstOperationId)throw new Error('C2-B3b: korpus poza oczekiwanym buforem ścieżki.');
+            if(!bodyBuffers.hasInputSpace(step.id)){task.causes.add('buffer');bufferWaiting.add(task);continue;}
+            bodyBuffers.input(bodyId,step.id,now);
+            bodyBufferEvents.push({job:task.job+1,atSeconds:now,kind:'input',stationId:target.stationId,copy:target.copy});
+          }
+          if(!sameCopy(body.location,target)){
+            if(!bodyBuffers.hasInputSpace(step.id)){task.causes.add('buffer');bufferWaiting.add(task);continue;}
+            const route=bodyRoute(body.location,target)!;
+            if(!checked.assemblyTransport)throw new Error('C2-B3b: bufory korpusów z gałęziami wymagają jawnych zasobów transportu montażu.');
+            const rule=checked.assemblyTransport.routes.find(item=>item.stationRouteId===route.id);
+            if(!rule)throw new Error(`C2-B3b: brak jawnego zestawu dla trasy ${route.id}.`);
+            const unsafe=unsafeWorkers(now),alternatives=rule.alternatives.filter(alternative=>!alternative.workerIds.some(id=>unsafe.has(id)));
+            if(!alternatives.length){task.causes.add('workers');continue;}
+            let dispatch:AssemblyDispatch;
+            try{
+              const view={...checked,assemblyTransport:{...checked.assemblyTransport,routes:checked.assemblyTransport.routes.map(item=>item===rule?{...item,alternatives}:item)}};
+              dispatch=previewAssemblyDispatch(view,route.id,cartBook,book,transportDevices,now,`body-buffer:${task.job+1}:${step.id}`,now,new Set(cartLocks.keys()));
+            }catch(failure){
+              if(!cartLocks.size&&!cartBook.carts.some(cart=>cart.movement)&&!unsafe.size)throw failure;
+              cartLocks.forEach(end=>wakeAt(end,now));cartBook.carts.forEach(cart=>{if(cart.movement)wakeAt(cart.movement.endSeconds,now);});task.causes.add('transport');continue;
+            }
+            const movement=dispatch.prefix??dispatch;
+            if(movement.workerIds.some(id=>unsafe.has(id))){task.causes.add('workers');continue;}
+            if(movement.startSeconds>now){wakeAt(movement.startSeconds,now);task.causes.add('transport');continue;}
+            if(!dispatch.prefix){
+              recordBody({kind:'start-transfer',bodyId,atSeconds:now,to:target,endSeconds:movement.endSeconds,basis:route.transportTime!.basis==='measured'?'confirmed':'assumed'});
+              const breakdown=timingByRoute.get(route.id)?.breakdown;
+              bodyDeliveries.set(`${task.job+1}:${step.id}`,{routeId:route.id,startSeconds:now,endSeconds:movement.endSeconds,basis:route.transportTime!.basis,workerIds:movement.workerIds,equipmentIds:movement.equipmentIds,...(breakdown?{breakdown:{...breakdown}}:{})});
+              events.push({kind:'transport-end',bodyId,at:movement.endSeconds});
+            }
+            book=movement.workers;cartBook=movement.carts;transportDevices=movement.devices;
+            if(movement.workerIds.length)events.push({kind:'release',at:movement.endSeconds,reservationId:movement.reservationId});
+            for(const id of movement.equipmentIds)if(cartBook.carts.some(cart=>cart.equipmentId===id)){
+              if(dispatch.prefix)cartLocks.set(id,movement.endSeconds);
+              events.push({kind:'cart-end',at:movement.endSeconds,equipmentId:id,returnToInitial:!dispatch.prefix&&checked.assemblyTransport.carts.find(cart=>cart.equipmentId===id)!.afterUnload==='return-to-initial'});
+            }
+            transportMovements.push({kind:dispatch.prefix?'empty':'loaded',purpose:dispatch.prefix?'approach':'transfer',routeId:movement.routeId,workerIds:movement.workerIds,equipmentIds:movement.equipmentIds,startSeconds:now,endSeconds:movement.endSeconds});
+            task.causes.add('transport');started=true;break;
+          }
         }
         const incoming = lotRun?.incoming(task.job + 1, step.id) ?? [];
         if (incoming.length) {
@@ -559,7 +629,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
             equipmentWait = true; continue;
           }
           if (!copyFree && !bodyId) {stationWait = true; continue;}
-          if (bodyId && occupants.some(run=>blockedProducers.has(run))) {stationWait = true;continue;}
+          if (bodyId && occupants.some(run=>blockedProducers.has(run)||blockedBodies.has(run))) {stationWait = true;continue;}
           hasFreeCopy ||= copyFree;
           let departure = copyFree ? now : copyReady.get(stationId)![candidate.copy - 1];
           const transportRoute = body?.location.kind === 'station' ? bodyRoute(body.location, candidate) : undefined;
@@ -737,6 +807,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
         const copy = copyNumber - 1;
         const end = projected.end;
         const start = projected.workWindows[0].startSeconds;
+        if(bodyBuffers&&bodyId&&start>now){chosen.futureWaitCauses?.forEach(cause=>task.causes.add(cause));wakeAt(start,now);continue;}
         chosen.futureWaitCauses?.forEach(cause => task.causes.add(cause));
         if(chosen.dispatch) {
           book = chosen.dispatch.workers;cartBook = chosen.dispatch.carts;transportDevices = chosen.dispatch.devices;
@@ -792,6 +863,8 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
             endSeconds: now + chosen.transportRoute.transportTime!.durationSeconds, basis: chosen.transportRoute.transportTime!.basis};
           if(run.transport && chosen.dispatch) {run.transport.workerIds = chosen.dispatch.workerIds;run.transport.equipmentIds = chosen.dispatch.equipmentIds;}
           if(run.transport){const breakdown=timingByRoute.get(run.transport.routeId)?.breakdown;if(breakdown)run.transport.breakdown={...breakdown};}
+          const bufferedDelivery=bodyDeliveries.get(`${task.job+1}:${step.id}`);
+          if(bufferedDelivery){run.transport=bufferedDelivery;run.waitSeconds-=bufferedDelivery.endSeconds-bufferedDelivery.startSeconds;}
         }
         if (routing) {
           const run = runs[runs.length - 1];
@@ -813,13 +886,13 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
       }
     }
   }
-  if(lotBuffers&&(blockedProducers.size||bufferWaiting.size)){
-    throw new ProcessStallError({type:'buffer-deadlock',atSeconds:currentSimulationTime,title:'Brak miejsca w buforach podmontaży',
-      summary:'Proces nie może kontynuować: całe partie, rezerwacje celu lub pozostawione reszty zajmują osobne pojemności podzespołów.',
+  if((lotBuffers||bodyBuffers)&&(blockedProducers.size||blockedBodies.size||bufferWaiting.size)){
+    throw new ProcessStallError({type:'buffer-deadlock',atSeconds:currentSimulationTime,title:bodyBuffers?'Brak miejsca w osobnych buforach korpusów lub podmontaży':'Brak miejsca w buforach podmontaży',
+      summary:bodyBuffers?'Proces nie może kontynuować: korpusy, partie, rezerwacje celu lub reszty zajmują swoje osobne pojemności.':'Proces nie może kontynuować: całe partie, rezerwacje celu lub pozostawione reszty zajmują osobne pojemności podzespołów.',
       stalledOperations:waiting.map(task=>({job:task.job+1,operationId:steps[task.step].id,operationName:steps[task.step].name,
         stationId:candidatesByOperation.get(steps[task.step].id)![0].stationId,copy:candidatesByOperation.get(steps[task.step].id)![0].copy,
         status:'waiting',waitCauses:[...task.causes],missingResourceExplanation:'Sprawdź zajętość i reszty partii w buforach podmontaży.'})),
-      blockedStations:[...blockedProducers.keys()].map(run=>({stationId:run.stationId,stationName:checked.stations.find(station=>station.id===run.stationId)!.name,
+      blockedStations:[...blockedProducers.keys(),...blockedBodies.keys()].map(run=>({stationId:run.stationId,stationName:checked.stations.find(station=>station.id===run.stationId)!.name,
         copy:run.copy,blockedByJob:run.job,blockedByOperationId:run.operationId,holdingWorkerIds:heldProducers.has(run)?[...run.workerIds]:[],blockingPolicy:heldProducers.has(run)?'bbas':'bbas-worker-released'})),
       recommendation:'Sprawdź jawne pojemności w sztukach, ilości partii i pobrań oraz przypisania odbiorców; reszty pozostają w buforze.'});
   }
@@ -845,6 +918,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
     ...(stockRun?{materialStocks:stockRun.stocks,materialEvents:[...stockRun.events].sort((a,b)=>a.atSeconds-b.atSeconds||(a.kind===b.kind?0:a.kind==='delivery'?-1:1))}:{}),
     ...(lotRun?{subassemblyLots:lotRun.lots,subassemblyEvents:lotRun.events,...(!checked.assemblyTransport?{transportMovements}:{} )}:{}),
     ...(lotBuffers?{subassemblyBufferBooks:lotBuffers.snapshot()}:{}),
+    ...(bodyBuffers?{bufferBook:bodyBuffers.buffers,bufferEvents:bodyBufferEvents}:{}),
     operationIds: steps.map(step => step.id), ...(bodyBook ? {bodyBook, bodyEvents} : {}), ...(checked.assemblyTransport ? {transportReservations:transportDevices,cartBook,transportMovements} : {})};
 }
 
@@ -857,7 +931,7 @@ export function scheduleWorkerRun(project: DomainProjectV6, arrivalIntervalSecon
     throw new Error('Partia: 1–10000; jawny odstęp przybycia musi być dodatni.');
   }
   if(options.transportMode!==undefined&&options.transportMode!=='configured'&&options.transportMode!=='just-in-time')throw new Error('Nieznany tryb transportu symulacji.');
-  if(project.stationBuffers?.buffers.some(buffer=>buffer.inputCapacity!=null||buffer.outputCapacity!=null) ||
+  if(project.stationBuffers?.buffers.some(buffer=>buffer.inputCapacity!=null||buffer.outputCapacity!=null)&&(!project.subassemblyFlow||options.transportMode==='just-in-time') ||
      (project.changeoverMatrix && project.operations.every((op, idx) => op.predecessorIds.length === (idx ? 1 : 0)))) {
     return scheduleBufferedProcess(project,arrivalIntervalSeconds,batch,onProgress,options.transportMode==='just-in-time'?undefined:{bodyInput});
   }

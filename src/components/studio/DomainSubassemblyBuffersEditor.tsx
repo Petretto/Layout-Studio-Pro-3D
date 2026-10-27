@@ -43,7 +43,7 @@ export function DomainSubassemblyBuffersEditor({project,onApply,onUndo,onRedo,ca
   return <div className="panel" aria-label="Bufory podmontaży szkicu 6">
     <h3>Bufory podmontaży — pojemności i reguły blokowania</h3>
     <p className="muted">Każdy podzespół i korpus mają osobne pojemności. Liczy się sztuki, nie partie: reszta nadal zajmuje miejsce. Wszystkie kopie oznaczają osobny limit na każdej kopii.</p>
-    <p className="muted">Wejście 0 wymaga gotowego odbiorcy i pełnego pobrania bez reszty. Jedna partia bezpośrednia może być pobrana razem z partiami z osobnych dodatnich buforów. Więcej niż jedna partia bezpośrednia oraz skończone bufory korpusów z gałęziami wymagają dalszej integracji.</p>
+    <p className="muted">Wejście 0 wymaga gotowego odbiorcy i pełnego pobrania bez reszty. Jedna partia bezpośrednia może być pobrana razem z partiami z osobnych dodatnich buforów, gdy korpus jest już w kopii. Dodatnie bufory korpusów w procesie z gałęziami obsługują osobną jawną ścieżkę i zwolnienie operatora po obróbce. Więcej niż jedna partia bezpośrednia i połączenie wejścia 0 podmontażu ze skończonymi buforami korpusu wymagają dalszej integracji.</p>
     <div className="toolbar"><button disabled={!canUndo} onClick={onUndo}>Cofnij dane szkicu</button><button disabled={!canRedo} onClick={onRedo}>Ponów dane szkicu</button></div>
     {(!project.subassemblies.length || !project.stations.length) && <p className="notice">Najpierw dodaj podzespoły i stanowiska.</p>}
     {rows.map((row,index)=>{
