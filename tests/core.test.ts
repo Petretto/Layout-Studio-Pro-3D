@@ -2947,3 +2947,70 @@ test('7.6a: awaria wycofania jest jawna i nadal udostępnia kopię ratunkową',(
     assert.ok(error instanceof api.WorkspaceRestoreError);assert.ok(error.rollbackErrors.length>0);assert.equal(JSON.parse(error.rollbackSnapshot).storage.v4ProjectRaw,'previous raw');assert.match(error.message,/nie jest potwierdzone/);return true;
   });
 });
+
+
+import { TUTORIAL_STEPS, TUTORIAL_STORAGE_KEY, loadTutorialProgress, saveTutorialProgress, clearTutorialProgress } from '../src/core/tutorial';
+
+test('7.14: silnik tutorialu, definicja scenariusza, zapis/odczyt i odporność na uszkodzenia',()=>{
+  // 1. Weryfikacja definicji scenariusza (8 logicznych kroków Lean)
+  assert.equal(TUTORIAL_STEPS.length,8);
+  const expectedTabs=['dashboard','demand','process','balance','layout','stations','stations','report'];
+  TUTORIAL_STEPS.forEach((step,i)=>{
+    assert.ok(step.id.startsWith('step-'),`Krok ${i} ma poprawny id: ${step.id}`);
+    assert.ok(step.title && step.title.length > 3);
+    assert.equal(step.tab,expectedTabs[i]);
+    assert.ok(step.instruction && step.instruction.length > 10);
+    assert.ok(step.conceptTitle && step.conceptDescription);
+  });
+
+  // 2. Mock storage dla testów persystencji
+  const store:Record<string,string>={};
+  const mockStorage:any={
+    getItem:(key:string)=>store[key]??null,
+    setItem:(key:string,val:string)=>{store[key]=val;},
+    removeItem:(key:string)=>{delete store[key];}
+  };
+
+  // 3. Odczyt początkowy (pusty storage)
+  const initial=loadTutorialProgress(mockStorage);
+  assert.equal(initial.active,false);
+  assert.equal(initial.currentStepIndex,0);
+  assert.deepEqual(initial.completedStepIds,[]);
+  assert.equal(initial.previousWorkspaceSnapshot,null);
+
+  // 4. Zapis postępu i weryfikacja
+  saveTutorialProgress({
+    version:1,
+    active:true,
+    currentStepIndex:3,
+    completedStepIds:['step-01-welcome','step-02-demand','step-03-process'],
+    savedAt:new Date().toISOString(),
+    previousWorkspaceSnapshot:'{"test":true}'
+  },mockStorage);
+
+  assert.ok(store[TUTORIAL_STORAGE_KEY]);
+  const loaded=loadTutorialProgress(mockStorage);
+  assert.equal(loaded.active,true);
+  assert.equal(loaded.currentStepIndex,3);
+  assert.equal(loaded.completedStepIds.length,3);
+  assert.equal(loaded.previousWorkspaceSnapshot,'{"test":true}');
+
+  // 5. Ograniczenie indeksu poza zakresem (indeks > max lub < 0)
+  store[TUTORIAL_STORAGE_KEY]=JSON.stringify({version:1,active:true,currentStepIndex:999,completedStepIds:[]});
+  const clampedMax=loadTutorialProgress(mockStorage);
+  assert.equal(clampedMax.currentStepIndex,TUTORIAL_STEPS.length-1);
+
+  store[TUTORIAL_STORAGE_KEY]=JSON.stringify({version:1,active:true,currentStepIndex:-50,completedStepIds:[]});
+  const clampedMin=loadTutorialProgress(mockStorage);
+  assert.equal(clampedMin.currentStepIndex,0);
+
+  // 6. Odporność na uszkodzony JSON lub nieprawidłowe typy
+  store[TUTORIAL_STORAGE_KEY]='nie-json-tylko-smieci';
+  const resilient=loadTutorialProgress(mockStorage);
+  assert.equal(resilient.active,false);
+  assert.equal(resilient.currentStepIndex,0);
+
+  // 7. Czyszczenie postępu
+  clearTutorialProgress(mockStorage);
+  assert.equal(store[TUTORIAL_STORAGE_KEY],undefined);
+});

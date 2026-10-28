@@ -29,6 +29,10 @@ import { WorkspaceBackupModal } from './components/studio/WorkspaceBackupModal';
 import { ProjectPackageModal } from './components/studio/ProjectPackageModal';
 import { DemoCatalog } from './components/studio/DemoCatalog';
 import { EngineeringReportView } from './components/report/EngineeringReportView';
+import { TutorialOverlay } from './components/tutorial/TutorialOverlay';
+import { loadTutorialProgress, saveTutorialProgress, type TutorialProgress } from './core/tutorial';
+import { createWorkspaceBackup, restoreWorkspaceBackup, type WorkspaceBackupPayload } from './core/workspaceBackup';
+import { importProjectPackage, parseProjectPackage } from './core/projectPackage';
 const Scene=lazy(()=>import('./components/studio/Scene').then(m=>({default:m.Scene})));
 const KEY='layout-studio-v3',LIBRARY='layout-studio-scenarios-v3';
 type Saved={id:string;name:string;at:string;project:ProjectData};
@@ -59,6 +63,7 @@ export function App(){
   const [popoutView,setPopoutView]=useState<'flow'|'layout'|'simulation'|null>(null);
   const [isBackupModalOpen,setIsBackupModalOpen]=useState(false);
   const [isPackageModalOpen,setIsPackageModalOpen]=useState(false);
+  const [tutorialProgress,setTutorialProgress]=useState<TutorialProgress>(()=>loadTutorialProgress());
   const workspaceDialogOpen=isBackupModalOpen||isPackageModalOpen;
   const file=useRef<HTMLInputElement>(null),dialog=useRef<HTMLDialogElement>(null),autosaveTimer=useRef<number|undefined>(undefined),workspaceRestored=useRef(false);
   const {project:p,issues}=useMemo(()=>derive(raw),[raw]);const t=calculateTaktTime(p.demand),b=p.balancing;const unit=p.timeUnit??'s';
@@ -88,6 +93,53 @@ export function App(){
   const exportScenario=(s:Saved)=>{download(JSON.stringify(s.project,null,2),`${s.name.replace(/[^\p{L}\p{N}_-]/gu,'_')}.json`,'application/json');setScenarioExportIds(ids=>ids.includes(s.id)?ids:[...ids,s.id]);notify(`Przekazano JSON wariantu „${s.name}” do pobrania. Sprawdź folder pobierania.`);};
   const undo=()=>{if(!past.length)return;setFuture([{project:raw,importSourceBase64},...future]);setRaw(past[past.length-1].project);setImportSourceBase64(past[past.length-1].importSourceBase64);setPast(past.slice(0,-1));};
   const redo=()=>{if(!future.length)return;setPast([...past,{project:raw,importSourceBase64}]);setRaw(future[0].project);setImportSourceBase64(future[0].importSourceBase64);setFuture(future.slice(1));};
+  const startTutorial=()=>{
+    const launch=async()=>{
+      try{
+        const snap=JSON.stringify(createWorkspaceBackup(localStorage));
+        if(!p.processSteps.some(s=>s.id.startsWith('ZM-'))){
+          try{
+            const res=await fetch(`${import.meta.env.BASE_URL}demo-projects/01_zestaw_montazowy.project.json`);
+            if(res.ok){
+              const pkg=parseProjectPackage(await res.text());
+              importProjectPackage(localStorage,pkg,snap);
+              const next:TutorialProgress={version:1,active:true,currentStepIndex:0,completedStepIds:[],savedAt:new Date().toISOString(),previousWorkspaceSnapshot:snap};
+              saveTutorialProgress(next);
+              window.location.reload();
+              return;
+            }
+          }catch{}
+        }
+        const next:TutorialProgress={...tutorialProgress,active:true,currentStepIndex:0,savedAt:new Date().toISOString(),previousWorkspaceSnapshot:snap};
+        setTutorialProgress(next);
+        saveTutorialProgress(next);
+        setTab('dashboard');
+        notify('Uruchomiono interaktywny tutorial. Postępuj zgodnie ze wskazówkami na dolnym pasku.');
+      }catch(e){notify(`Nie udało się uruchomić tutorialu: ${(e as Error).message}`);}
+    };
+    if(p.processSteps.length>0&&!p.processSteps.some(s=>s.id.startsWith('ZM-'))){
+      confirm('Rozpocząć interaktywny tutorial? Bieżący stan projektu zostanie zabezpieczony w kopii ratunkowej i wczytany zostanie wzorcowy projekt zestawu montażowego.',()=>void launch());
+    }else{void launch();}
+  };
+  const exitTutorial=()=>{
+    const close=()=>{
+      const next:TutorialProgress={...tutorialProgress,active:false};
+      setTutorialProgress(next);
+      saveTutorialProgress(next);
+      notify('Zakończono interaktywny tutorial.');
+    };
+    if(tutorialProgress.previousWorkspaceSnapshot){
+      confirm('Czy chcesz przywrócić stan projektu sprzed rozpoczęcia tutorialu?',()=>{
+        try{
+          const payload:WorkspaceBackupPayload=JSON.parse(tutorialProgress.previousWorkspaceSnapshot!);
+          restoreWorkspaceBackup(localStorage,payload);
+          const next:TutorialProgress={...tutorialProgress,active:false,previousWorkspaceSnapshot:null};
+          saveTutorialProgress(next);
+          window.location.reload();
+        }catch{close();}
+      });
+    }else{close();}
+  };
   const handleGlobalShortcuts=(e:KeyboardEvent|React.KeyboardEvent<HTMLDivElement>)=>{
       if(e.defaultPrevented)return;
       if(workspaceDialogOpen){if((e.ctrlKey||e.metaKey)&&['s','z','y'].includes(e.key.toLowerCase()))e.preventDefault();return;}
@@ -142,6 +194,7 @@ export function App(){
     ]}
     settingsActions={[
       {label:'Dane projektu i jednostki',onSelect:()=>setSettingsOpen(true)},
+      {label:'Interaktywny tutorial',onSelect:startTutorial},
       {label:'Słownik i założenia',onSelect:()=>{setTab('dashboard');requestAnimationFrame(()=>document.getElementById('project-glossary')?.scrollIntoView({block:'start'}));}},
       {label:'Raport projektu głównego',onSelect:()=>setTab('report')},
     ]}/>
@@ -151,7 +204,7 @@ export function App(){
   <AppNavigation view={tab} onChange={setTab} ready={ready}/>
   {message&&<div className="message" role="status"><span>{message}</span><button aria-label="Zamknij komunikat" onClick={()=>setMessage('')}>×</button></div>}
   <main>
-  {tab==='dashboard'&&<section className="page"><p className="eyebrow">PROJEKTOWANIE LINII PRODUKCYJNYCH</p><h1>{p.name}</h1><p className="muted">Od popytu do bilansu operacji, planu hali i symulacji partii.</p>{!p.processSteps.length&&<p className="notice" role="note">Projekt jest pusty. Wczytaj pakiet pokazowy lub własne pliki procesu i BOM. Początkowe parametry hali i popytu są ustawieniami domyślnymi — sprawdź je przed analizą.</p>}<div className="cards"><button className="action-card" onClick={()=>replace(newProject())}><strong>Rozpocznij od zera</strong><span>Pusty proces i BOM, własne założenia.</span></button><button className="action-card" onClick={()=>{if(allowSave)writeSave(raw,importSourceBase64);setIsPackageModalOpen(true);}}><strong>Wczytaj pakiet projektu</strong><span>Własny projekt lub zewnętrzny przykład z wariantami.</span></button><button className="action-card" onClick={()=>file.current?.click()}><strong>Importuj projekt JSON lub archiwum v4</strong><span>Wczytaj kopię przenośną z walidacją.</span></button><button className="action-card" onClick={()=>setIsBackupModalOpen(true)}><strong>Kopia i odzyskiwanie (.lsbackup)</strong><span>Utwórz pełny backup środowiska lub odzyskaj stan po awarii.</span></button></div>
+  {tab==='dashboard'&&<section className="page"><p className="eyebrow">PROJEKTOWANIE LINII PRODUKCYJNYCH</p><h1>{p.name}</h1><p className="muted">Od popytu do bilansu operacji, planu hali i symulacji partii.</p>{!p.processSteps.length&&<p className="notice" role="note">Projekt jest pusty. Wczytaj pakiet pokazowy lub własne pliki procesu i BOM. Początkowe parametry hali i popytu są ustawieniami domyślnymi — sprawdź je przed analizą.</p>}<div className="cards"><button className="action-card tutorial-action-card" onClick={startTutorial} style={{borderLeft: '4px solid #3b82f6'}}><strong>Rozpocznij interaktywny tutorial</strong><span>Krok po kroku: od popytu i bilansu do symulacji i raportu.</span></button><button className="action-card" onClick={()=>replace(newProject())}><strong>Rozpocznij od zera</strong><span>Pusty proces i BOM, własne założenia.</span></button><button className="action-card" onClick={()=>{if(allowSave)writeSave(raw,importSourceBase64);setIsPackageModalOpen(true);}}><strong>Wczytaj pakiet projektu</strong><span>Własny projekt lub zewnętrzny przykład z wariantami.</span></button><button className="action-card" onClick={()=>file.current?.click()}><strong>Importuj projekt JSON lub archiwum v4</strong><span>Wczytaj kopię przenośną z walidacją.</span></button><button className="action-card" onClick={()=>setIsBackupModalOpen(true)}><strong>Kopia i odzyskiwanie (.lsbackup)</strong><span>Utwórz pełny backup środowiska lub odzyskaj stan po awarii.</span></button></div>
   <div className="metrics"><Metric label="Operacje" value={String(p.processSteps.length)}/><Metric label="Pracochłonność" value={`${formatTimeWithUnit(b?.totalWorkContentSeconds, unit)}/szt.`}/><Metric label="Stanowiska" value={String(b?.actualWorkstationsCount??0)}/><Metric label="Materiały" value={String(p.bom.length)}/></div>
   <DemoCatalog onImport={()=>{if(allowSave)writeSave(raw,importSourceBase64);setIsPackageModalOpen(true);}}/><h2>Warianty projektu</h2><p className="muted">Zapisuj wariant przed zmianą popytu lub organizacji linii. Warianty pozostają w tej przeglądarce; JSON służy do archiwizacji. Zapisany wariant jest osobną migawką — późniejsze zmiany bieżącego projektu nie zmieniają jego JSON.</p><div className="toolbar"><input aria-label="Nazwa wariantu" value={scenarioName} onChange={e=>setScenarioName(e.target.value)}/><button onClick={saveScenario}>Zapisz wariant</button></div><div className="table-wrap"><table><thead><tr><th>Wariant</th><th>Cel cyklu [{unit}]</th><th>Stacje</th><th>Sprawność</th><th>Układ</th><th>Akcje</th></tr></thead><tbody>{library.map(s=>{let q:ProjectData|undefined;try{q=derive(s.project).project;}catch{}return <tr key={s.id}><td>{s.name}<small>{new Date(s.at).toLocaleString('pl-PL')}</small></td><td>{formatTimeValue(q?.balancing?.taktTimeSeconds, unit)}</td><td>{q?.balancing?.actualWorkstationsCount??'—'}</td><td>{fmt(q?.balancing?.lineEfficiencyPercent)}%</td><td>{q?.targetLayoutType}</td><td><button onClick={()=>{try{replace(parseProject(JSON.stringify(s.project)));}catch(e){notify((e as Error).message);}}}>Wczytaj</button><button onClick={()=>exportScenario(s)}>JSON</button><button className="danger" onClick={()=>confirm(`Usunąć wariant ${s.name}?`,()=>{try{const next=library.filter(x=>x.id!==s.id);localStorage.setItem(LIBRARY,JSON.stringify(next));setLibrary(next);}catch{notify('Błąd pamięci lokalnej.');}})}>Usuń</button>{scenarioExportIds.includes(s.id)&&<small role="status">JSON przekazany do pobrania w tej sesji · migawka wariantu</small>}</td></tr>;})}</tbody></table></div>
   <h2 id="project-glossary">Słownik i założenia</h2><div className="help-grid">{help.map(([term,desc])=><details key={term}><summary>{term}</summary><p>{desc}</p></details>)}</div></section>}
@@ -205,6 +258,13 @@ export function App(){
   </dialog>
   <ProjectPackageModal unsavedChanges={(dirty||!!saveError)&&!isExportCurrent('json')} isOpen={isPackageModalOpen} onClose={()=>setIsPackageModalOpen(false)} onImported={()=>{workspaceRestored.current=true;}} />
   <WorkspaceBackupModal unsavedChanges={(dirty||!!saveError)&&!isExportCurrent('json')} isOpen={isBackupModalOpen} onClose={()=>setIsBackupModalOpen(false)} onRestored={()=>{workspaceRestored.current=true;}} />
+  <TutorialOverlay
+    progress={tutorialProgress}
+    onChangeProgress={setTutorialProgress}
+    currentTab={tab}
+    onNavigateTab={setTab}
+    onExitTutorial={exitTutorial}
+  />
   </div>;
 }
 export default App;
