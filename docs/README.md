@@ -22,6 +22,7 @@ Pozostałe materiały:
 - [Weryfikacja C2-B3d](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3D.md) — zatrzymanie obsady korpusu przy pełnym dodatnim wyjściu.
 - [Weryfikacja C2-B3e](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3E.md) — pojemności zerowe wejścia i wyjścia korpusów w grafie gałęzi.
 - [Weryfikacja C2-B3f](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3F.md) — bezpośrednie wejście 0 podmontażu z buforami korpusów, odbiorca bezpośredni z zatrzymaniem obsady i lokalne przekazanie 0/0.
+- [Weryfikacja C2-final](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_FINAL.md) — pełne zamknięcie podpakietu C2, reguła zakazu wiszenia detali w powietrzu, pakiet demonstracyjny v1.2.0.
 
 - [Instrukcja użytkownika](../Instrukcja/Podrecznik_Uzytkownika.md) — źródło MD oraz wersje HTML/PDF w `Instrukcja/`.
 - [Projekty graficzne](../design/) — pliki `.pen`.

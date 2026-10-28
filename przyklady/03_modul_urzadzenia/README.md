@@ -1,7 +1,7 @@
 # Projekt pokazowy zaawansowany — Montaż modułu urządzenia przemysłowego
 
 Pakiet demonstracyjny: `03_modul_urzadzenia`
-Wersja: **1.1.0 — częściowy odbiór fizyczny A, bufory rozgałęzione nadal otwarte**
+Wersja: **1.2.0 — pełny odbiór fizyczny transportu, zaopatrzenia i buforów (C2 zakończone)**
 Pochodzenie danych: **jawnie syntetyczne** (dane demonstracyjno-dydaktyczne)
 Identyfikator: `DEMO-MODUL-URZADZENIA-1`
 Zgodność: **Layout Studio Pro 3D v0.4.0+**
@@ -39,10 +39,10 @@ Pakiet reprezentuje zaawansowany poziom złożoności (**advanced**) i demonstru
 6. Przejdź do modułu **Porównanie wariantów**, aby wyświetlić tabelę syntezy i pobrać raport.
 
 
-## Częściowy odbiór fizyczny A (1.1.0)
+## Odbiór fizyczny transportu, zaopatrzenia i buforów (1.2.0)
 
 W Proces i stanowiska → Stanowiska i zasoby ustaw **3 sztuki, odstęp 1000 s, JIT WYŁĄCZONY**. Baza: 210/1210/2210 s; reorganizacja: 180/1180/2180 s. Odstęp izoluje łączenie gałęzi, nie jest próbą wydajności pod obciążeniem. Osobne 320/270 s pozostają wzorcami procesowymi JIT przy odstępie 1 s.
 
 Monterzy źródłowi MU-W1/W2 transportują podmontaże do integracji, MU-W3 przewozi korpus do integracji, MU-W4 do testu; cztery wózki wracają do źródeł. Czas załadowany 10 s i pusty powrót 10 s to dwa jawne założenia dydaktyczne. Dostawy ośmiu komponentów z magazynu wykonują inne osoby: zdarzenia dostępności nie zajmują monterów. Próba niedoboru: ustaw tylko SUP-MU-ZASIL na zapas 0 i pozostaw pierwszą dostawę 900 s; baza kończy w 1100/1210/2210 s, reorganizacja 1070/1180/2180 s. Pozostałe dwie gałęzie pierwszej sztuki nadal pracują od 0 s.
 
-**C2 nadal w trakcie:** ograniczone bufory dla gałęzi i partii podzespołów nie są jeszcze zintegrowane. Ten eksperyment nie narzuca ograniczeń pojemności i nie odbiera blokowania po obróbce. Próba dodania skończonego bufora jest jawnie odrzucana. Nie zastępuj tego włączeniem JIT jako rzekomym odbiorem fizycznym. Brak geometrii przebiegu tras pozostaje jawny; A2b2b pokazuje historię korpusów/wózków, rejestr podzespołów jest w inspekcji wyniku, bez ich osobnej animacji. Główne widoki 4 i model 6 pozostają osobne.
+**Zakończenie podpakietu C2 (2026-10-28):** ograniczone bufory dla gałęzi i partii podzespołów (`subassemblyBuffers`, C2-B) oraz skończone i zerowe bufory korpusów (`stationBuffers`) są w pełni zintegrowane w schedulerze. Zgodnie z decyzją domenową użytkownika z 2026-10-28 detale zbiegające się na węźle integracji nie mogą „wisieć w powietrzu” ani być odkładane poza wyznaczonym buforem — bufor wejściowy (`inputCapacity >= 1`) jest wymagany po co najmniej jednej stronie zbiegu strumieni. Silnik poprawnie odrzuca jednoczesne wejście bezpośrednie 0 korpusu i podmontażu, chroniąc poprawność organizacji procesu. Brak geometrii przebiegu tras pozostaje jawny; A2b2b pokazuje historię korpusów/wózków, rejestr podzespołów jest w inspekcji wyniku, bez ich osobnej animacji. Główne widoki 4 i model 6 pozostają osobne.

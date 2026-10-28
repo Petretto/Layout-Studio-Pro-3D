@@ -240,7 +240,7 @@
       "arrivalIntervalSeconds": 1000,
       "transportMode": "configured"
     },
-    "scope": "Transport/join/supply only; finite branched buffers remain unsupported",
+    "scope": "Odbiór fizyczny C2: transport, zaopatrzenie, zbieganie gałęzi oraz zintegrowane ograniczone bufory podmontaży (C2-B) i korpusów (reguła domenowa 2026-10-28: zakaz detali wiszących w powietrzu, bufor wejściowy wymagany po co najmniej jednej stronie)",
     "variants": [
       {
         "id": "ADVANCED-BASE",

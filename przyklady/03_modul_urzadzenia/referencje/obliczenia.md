@@ -20,10 +20,10 @@ Pułap determinuje gałąź B: 3600/60 = 60 szt./h. Koszt BOM z jawnych ilości 
 Nie należy mylić sumy czasów operacji z osobosekundami zespołu: po dodaniu osoby zawartość pracy może rosnąć mimo krótszego wykonania.
 
 
-## Niezależny wzorzec fizyczny A — 2026-10-25
+## Niezależny wzorzec fizyczny C2 — 2026-10-28
 
 Dla każdej odizolowanej sztuki przygotowania startują razem w t=0: zasilanie kończy w 50, napęd w 60, korpus w 40 s. W obecnej regule harmonogramowania gotowość technologiczna integracji w 60 s poprzedza zlecenie dostarczenia partii. Oba podmontaże jadą 60–70 niezależnymi wózkami i monterami, ich puste powroty zajmują 70–80. Korpus jedzie 70–80, gdy partie już dotarły, i jego wózek wraca 80–90. Integracja startuje w 80: koniec 150 (baza) lub 120 (zespół). Przewóz do testu 150–160 lub 120–130, osobny powrót 160–170 lub 130–140. Test trwa 50 s: końce 210/180 s. Kolejne sztuki przybywają w 1000 i 2000 s; zasoby poprzedniej są już zwolnione, więc wzorzec przesuwa się o te jawne czasy.
 
 Dla zerowego zapasu zasilacza gałąź A czeka do dostawy w 900 s, pracuje 900–950; gałąź napędu i korpus pozostają 0–60 oraz 0–40. Złączenie czeka na A. Podmontaże jadą 950–960, korpus 960–970, integracja 970–1040 lub 970–1010, a test 1050–1100 lub 1020–1070. Następne sztuki z odstępem 1000 s nie są już opóźnione. Wszystkie ilości, zapasy, terminy, obsady i czasy są jawnymi założeniami syntetycznymi, bez danych magazynowych pracowników.
 
-Ograniczone bufory rozgałęzień wymagają osobnej integracji silnika. Nie wyznaczono dla nich pozornego wzorca przy JIT i nie oznaczono pełnego C2 jako odebrane.
+Ograniczone bufory rozgałęzień (C2-B) oraz skończone i zerowe bufory korpusów zostały wdrożone w schedulerze. Reguła domenowa z 2026-10-28 wyklucza odkładanie detali poza buforem („wiszenie w powietrzu”) przy zbiegu strumieni; silnik poprawnie wymusza bufor wejściowy co najmniej po jednej stronie.

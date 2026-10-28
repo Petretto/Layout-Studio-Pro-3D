@@ -2,7 +2,7 @@
   "format": "layout-studio-demo-manifest",
   "formatVersion": 1,
   "packageId": "DEMO-MODUL-URZADZENIA-1",
-  "packageVersion": "1.1.0",
+  "packageVersion": "1.2.0",
   "title": "Moduł urządzenia przemysłowego — DEMO syntetyczne zaawansowane",
   "level": "advanced",
   "language": "pl",
@@ -59,8 +59,8 @@
       "path": "dane/warunki_eksperymentu.json",
       "role": "session-settings-reference",
       "format": "json",
-      "bytes": 1394,
-      "sha256": "04cf27ad858ae1c58b6b79818eec114773cce2593059b9ffc4cdf03b48188976"
+      "bytes": 1529,
+      "sha256": "8e92e47af0ad86c22a5a3f6261ef97c2905c95b682bfdd3ff60a704e1493931b"
     },
     {
       "path": "dane/proces.xlsx",
@@ -80,8 +80,8 @@
       "path": "README.md",
       "role": "instructions",
       "format": "md",
-      "bytes": 4334,
-      "sha256": "bd8b5432b94fa586745a1ed290e0250b816bb2b73e3656314b1b2174bd29b6dc"
+      "bytes": 4686,
+      "sha256": "560bdcfe2fb2ba3eeed3518ca2647570bb954ae3dc3317d17413322fbb7c475f"
     },
     {
       "path": "dane/slownik_pol.md",
@@ -94,15 +94,15 @@
       "path": "referencje/oczekiwane_wyniki.json",
       "role": "independent-reference",
       "format": "json",
-      "bytes": 8073,
-      "sha256": "663a87a86bb2330cd1e4ea6c3323bda84e2bd447f9242d0cd920f5d30ea2467e"
+      "bytes": 8259,
+      "sha256": "82d08fd2f8b8ad705fe595d34a6eea57f6ac2a4a08f0f8e424e26ec115987f62"
     },
     {
       "path": "referencje/obliczenia.md",
       "role": "independent-calculation",
       "format": "md",
-      "bytes": 2842,
-      "sha256": "c6752ffa928cb225e34a710b9bcbcd8d27021779f03a04e508fcda57206bd488"
+      "bytes": 2991,
+      "sha256": "9afad25d4d5c21c2732d126405d8a289a31425df516bbaf8134892df3b1f02fc"
     }
   ]
 }

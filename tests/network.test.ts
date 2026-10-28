@@ -5228,6 +5228,46 @@ test('7.12.C2-B3f: syntetyczny wzorzec C2 łączy bezpośrednie wejście podmont
   assert.equal(domainPhysicalPlaybackFrame(history,history.totalDurationSeconds).bodies.length,3);
 });
 
+test('7.12.C2-final: zbieg gałęzi wyklucza wiszenie detali w powietrzu bez bufora, C2-B i pakiet demonstracyjny 03 w pełni domknięte',()=>{
+  // 1) Domain invariant 2026-10-28: multiple simultaneous direct 0 inputs converging on an operation are prohibited.
+  // The line must provide an input buffer (capacity >= 1) on at least one side.
+  const convergingDirect=graphBodyBufferedFixture();
+  // Remote body input 0 + subassembly input 0 on ST-C:
+  convergingDirect.stationBuffers!.buffers[1].inputCapacity=0;
+  convergingDirect.subassemblyBuffers!.buffers[1].inputCapacity=0;
+  convergingDirect.subassemblyFlow!.lots[0].consumptionQuantity=2;
+  assert.throws(
+    ()=>scheduleWorkerRun(convergingDirect,1,1,convergingDirect.bodyRunInput),
+    /C2-B3f: jednoczesne bezpośrednie wejście 0 korpusu i podmontażu na tej samej operacji wymaga bufora wejściowego po jednej ze stron/
+  );
+
+  // Multiple direct subassembly lots converging on direct input without buffer:
+  const multiple=subassemblyDirectFixture();
+  multiple.subassemblyFlow!.lots.push({...structuredClone(multiple.subassemblyFlow!.lots[0]),id:'L2'});
+  assert.throws(
+    ()=>scheduleWorkerRun(multiple,1,1,multiple.bodyRunInput),
+    /wspólny odbiór kilku partii/
+  );
+
+  // 2) With a buffer provided on at least one side, scheduleWorkerRun succeeds cleanly:
+  convergingDirect.stationBuffers!.buffers[1].inputCapacity=2; // buffer provided for body!
+  const successResult=scheduleWorkerRun(convergingDirect,1,1,convergingDirect.bodyRunInput);
+  assert.ok(successResult.jobs.length>0);
+  assertNoWorkerOverlap(successResult);
+
+  // 3) Verify package 03_modul_urzadzenia version 1.2.0 manifest and integrity:
+  const root='przyklady/03_modul_urzadzenia/';
+  const manifest=JSON.parse(readFileSync(root+'manifest.json','utf8'));
+  assert.equal(manifest.packageVersion,'1.2.0');
+  assert.equal(manifest.files.length,11);
+  const {createHash}=require('node:crypto');
+  for(const file of manifest.files){
+    const bytes=readFileSync(root+file.path);
+    assert.equal(file.bytes,bytes.length);
+    assert.equal(file.sha256,createHash('sha256').update(bytes).digest('hex'));
+  }
+});
+
 test('7.12.C2-B3d: dodatnie wyjście zatrzymuje obsadę 60–100, niezależny odbiorca zwalnia pojemność',()=>{
   const project=graphBodyBufferedFixture(),lot=structuredClone(project.subassemblyFlow!.lots[0]),body=structuredClone(project.bodyRunInput!.bodies[0]);
   project.stationBuffers!.buffers[0].blockingPolicy='bbas';
