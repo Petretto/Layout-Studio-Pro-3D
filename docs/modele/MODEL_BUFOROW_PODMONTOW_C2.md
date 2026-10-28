@@ -1,6 +1,8 @@
 # 7.12.C2-B — kontrakt ograniczonych buforów podmontaży
 
-Status: **integracja w trakcie**, aktualizacja 2026-10-27. Pakiet C2-A nie wdraża ograniczonych buforów. B2a/B2b/B3a dodają zakresy opisane poniżej; B3b łączy dodatnie bufory korpusów i gałęzie na wspólnym harmonogramie. Zabezpieczenia nieobsługiwanych kombinacji pozostają aktywne.
+Status: **integracja w trakcie**, aktualizacja 2026-10-28. Pakiet C2-A nie wdraża ograniczonych buforów. B2a/B2b/B3a dodają zakresy opisane poniżej; B3b łączy dodatnie bufory korpusów i gałęzie na wspólnym harmonogramie, a B3c dodaje lokalną kontynuację. Zabezpieczenia nieobsługiwanych kombinacji pozostają aktywne.
+
+**B3c (2026-10-28): lokalna kontynuacja w grafie** — korpus, kopia i poprzednie wyposażenie pozostają przy zakończonej operacji do rzeczywistego startu następnej na tej samej kopii. Brak pośredniego depozytu lub ruchu; profile osób pozostają jawne. Raport `docs/weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3C.md`. Zera i zatrzymanie obsady korpusu w grafie pozostają do dalszej integracji.
 
 **B3b (2026-10-27): dodatnie bufory korpusów z gałęziami** — jedna jawna kopia na operację uporządkowanej ścieżki korpusu; dodatnie pojemności z wyjściem `bbas-worker-released`, wspólne osoby/wózki i niezależne pojemności podmontaży. Raport `docs/weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3B.md`. Zera, lokalna kontynuacja oraz zatrzymanie obsady korpusu w tym grafie nadal wymagają dalszej integracji.
 
@@ -88,3 +90,11 @@ Konfigurację B2a wczytuje się z pakietu projektu; osobny formularz pozostaje d
 - Wspólna kolejka zachowuje istniejący priorytet gotowych zadań, jawne grupy równoległości i rezerwacje. Przewóz korpusu rozpoczyna się w gotowym zadaniu odbiorcy, przed dostarczeniem brakujących partii. Nie jest to optymalizacja wyprzedzającego transportu przed gotowością zależności. Zatrzymane osoby podmontaży nie wykonują równocześnie przewozu korpusu, pustego dojazdu ani powrotu.
 - Zera korpusów, `bbas` na ich skończonych wyjściach, lokalna kontynuacja, alternatywne kopie ścieżki, przezbrojenia oraz bezpośrednie wejście 0 podmontażu przy skończonych buforach korpusu są odrzucane. Skończona deklaracja poza wybraną ścieżką korpusu również wymaga korekty. Dotychczasowy liniowy scheduler zachowuje swój odebrany zakres, także jego lokalną kontynuację i przekazania 0.
 - Wynik zawiera osobne księgi pojemności korpusów i podmontaży, zdarzenia blokad/zwolnień, ruchy transportu i historię korpusów. Odtworzenie zdarzeń musi zgadzać się z końcową księgą; animacja nadal nie zmienia wyniku.
+
+## Kontrakt B3c — lokalna kontynuacja korpusu
+
+- Na jednej uporządkowanej ścieżce korpusu kolejne operacje mogą mieć tę samą jawną kopię. Korpus pozostaje zajęty po obróbce; nie otrzymuje tokenu wyjścia, wejścia ani fikcyjnego przewozu na tej lokalnej granicy. Dotychczasowe dodatnie bufory obowiązują przy wejściu początkowym i rzeczywistych zmianach kopii.
+- Kopia i wyposażenie poprzedniej operacji pozostają zajęte do rzeczywistego startu następnej. Następna operacja przejmuje kopię i wymagane wyposażenie atomowo; inne operacje nie mogą skorzystać z zatrzymanych zasobów. Przekazanie ma jawne `stationReleaseSeconds` oraz `continuationWaitSeconds`; `blockedSeconds` pozostaje 0, bo nie jest to blokada pełnego wyjścia.
+- Obecność osób nadal wynika z profili operacji. Nie przedłużamy obsady po zakończeniu obróbki z powodu lokalnego oczekiwania. Wymagane podmontaże i materiały są pobierane przy rzeczywistym lokalnym starcie, po dostawie przy równym czasie.
+- Atomowe przejście korzysta z istniejącego `continue-operation` w `bufferedBodyState`. Historia publikuje zwolnienie poprzedniej i rezerwację następnej przy tym samym czasie i bez zmiany lokalizacji. Próby przed końcem poprzedniego zajęcia, ze złym poprzednikiem lub sprzeczną lokalizacją odmawiają bez mutacji ksiąg.
+- Schemat modelu 6 i zapisane przykłady pozostają bez zmian. Pełny lokalny ciąg nie wymaga trasy ani zestawu transportowego. Zera, `bbas` korpusów, zmienne kopie, przezbrojenia i wejście 0 podmontażu ze skończonymi buforami korpusu pozostają poza bieżącym zakresem grafu.

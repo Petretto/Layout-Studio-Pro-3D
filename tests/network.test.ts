@@ -2,6 +2,7 @@ import {planDirectOperation} from '../src/core/directHandoffPlan';
 import {prepareC2B2bUiProject} from './fixtures/c2B2bUi';
 import {prepareC2B3aUiProject} from './fixtures/c2B3aUi';
 import {prepareC2B3bUiProject} from './fixtures/c2B3bUi';
+import {prepareC2B3cUiProject} from './fixtures/c2B3cUi';
 import {GraphBodyBuffers} from '../src/core/graphBodyBuffers';
 import {createSubassemblyBufferBook, applySubassemblyBufferEvent, subassemblyBufferLoad,
   type SubassemblyBufferPlace, type SubassemblyBufferBook} from '../src/core/subassemblyBufferState';
@@ -4787,6 +4788,108 @@ function graphBodyBufferedFixture(){
   addReturnRoute(project);project.assemblyTransport!.carts[0].afterUnload='return-to-initial';
   return project;
 }
+
+function graphLocalContinuationFixture(){
+  const project=graphBodyBufferedFixture(),initial=project.operations.find(operation=>operation.id==='BODY-FIRST')!,last=project.operations[2];
+  const local={...structuredClone(initial),id:'BODY-LOCAL',name:'Jawna lokalna integracja — test',predecessorIds:[initial.id]};
+  project.operations.splice(2,0,local);last.predecessorIds=[local.id];
+  project.stations.find(station=>station.id==='ST-A')!.operationIds.push(local.id);
+  project.stationRouting!.operations.push({operationId:local.id,candidates:[{stationId:'ST-A',copy:1,requiredEquipmentIds:[]}]});
+  project.workerRunSelection!.operations.push({operationId:local.id,workerCount:1,eligibleWorkerIds:[project.workers[1].id]});
+  project.subassemblies[0].consumerOperationIds=[local.id];project.subassemblyFlow!.lots[0].consumer.operationId=local.id;
+  project.subassemblyBuffers!.buffers.splice(1,1);
+  project.subassemblyBuffers!.buffers[0].inputCapacity=2;
+  project.materialSupply={items:[{id:'LOCAL-GRAPH-SUP',componentId:'EXPLICIT-PART',targetStationId:'ST-A',initialStock:0,unit:'szt.',schedule:{kind:'explicit-deliveries',deliveries:[{deliveryTimeSeconds:50,quantity:1}]},source:'Jawna syntetyczna dostawa dla lokalnej integracji'}],consumptions:[{operationId:local.id,supplyId:'LOCAL-GRAPH-SUP',quantity:1,source:'Jawne pobranie lokalne'}]};
+  return project;
+}
+
+test('7.12.C2-B3c: lokalny korpus czeka 20–50 bez depozytu, wspólny start pobiera partię i materiał',()=>{
+  const project=graphLocalContinuationFixture(),before=JSON.stringify(project),result=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+  const first=result.runs.find(run=>run.operationId==='BODY-FIRST')!,local=result.runs.find(run=>run.operationId==='BODY-LOCAL')!;
+  assert.deepEqual([first.startSeconds,first.endSeconds,first.stationReleaseSeconds,first.continuationWaitSeconds,first.blockedSeconds],[10,20,50,30,0]);
+  assert.equal(first.reserveEndSeconds,20);assert.deepEqual([local.startSeconds,local.endSeconds],[50,60]);assert.equal(result.jobs[0].finish,72);
+  assertNoWorkerOverlap(result);assert.equal(JSON.stringify(project),before);
+  assert.deepEqual(result.transportMovements!.map(move=>[move.purpose,move.startSeconds,move.endSeconds]),[['transfer',60,62],['return',62,67]]);
+  assert.ok(!result.bufferEvents!.some(event=>event.stationId==='ST-A'&&(event.kind==='output'&&event.atSeconds<60||event.kind==='input'&&event.atSeconds>10)));
+  assert.deepEqual(result.bodyEvents!.map(event=>[event.kind,event.atSeconds]),[['reserve',10],['release',50],['reserve',50],['release',60],['start-transfer',60],['finish-transfer',62],['reserve',62],['release',72]]);
+  assert.equal(result.subassemblyEvents!.find(event=>event.kind==='consumed')!.atSeconds,50);
+  assert.deepEqual(result.materialEvents!.map(event=>[event.kind,event.atSeconds]),[['delivery',50],['consumption',50]]);
+  const history=prepareDomainPhysicalPlayback(project,result,{batch:1,arrivalIntervalSeconds:1,transportMode:'configured'}),waiting=domainPhysicalPlaybackFrame(history,30).bodies[0];
+  assert.equal(waiting.status,'reserved');assert.deepEqual(waiting.location,{kind:'station',stationId:'ST-A',copy:1});
+});
+
+test('7.12.C2-B3c: lokalne oczekiwanie zatrzymuje poprzednie wyposażenie, osoby kończą według profili',()=>{
+  const project=graphLocalContinuationFixture(),first=project.operations.find(operation=>operation.id==='BODY-FIRST')!,local=project.operations.find(operation=>operation.id==='BODY-LOCAL')!;
+  const firstProfile=first.staffing!.timeVariants[0].timeProfile;firstProfile.manualWork=[{startSeconds:0,endSeconds:5,basis:'assumed'}];firstProfile.operatorPresence=[{startSeconds:0,endSeconds:5,basis:'assumed'}];firstProfile.machineRun=[{startSeconds:5,endSeconds:10,basis:'assumed'}];
+  const localProfile=local.staffing!.timeVariants[0].timeProfile;localProfile.manualWork=[{startSeconds:3,endSeconds:10,basis:'assumed'}];localProfile.operatorPresence=[{startSeconds:3,endSeconds:10,basis:'assumed'}];localProfile.machineRun=[{startSeconds:0,endSeconds:3,basis:'assumed'}];
+  project.equipment.push({id:'LOCAL-EQ',name:'Jawny przyrząd lokalnej kontynuacji — test',stationId:'ST-A',capableOperationIds:[first.id,local.id]});
+  project.stationRouting!.equipmentPlacements.push({equipmentId:'LOCAL-EQ',stationId:'ST-A',copy:1});
+  for(const id of [first.id,local.id])project.stationRouting!.operations.find(operation=>operation.operationId===id)!.candidates[0].requiredEquipmentIds=['LOCAL-EQ'];
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput),initialRun=result.runs.find(run=>run.operationId===first.id)!,localRun=result.runs.find(run=>run.operationId===local.id)!;
+  assert.equal(initialRun.reserveEndSeconds,15);assert.equal(initialRun.stationReleaseSeconds,50);assert.equal(initialRun.continuationWaitSeconds,30);
+  assert.deepEqual([localRun.startSeconds,localRun.reserveStartSeconds,localRun.reserveEndSeconds],[50,53,60]);
+  assert.deepEqual(initialRun.equipmentIds,['LOCAL-EQ']);assert.deepEqual(localRun.equipmentIds,['LOCAL-EQ']);assert.equal(result.jobs[0].finish,72);assertNoWorkerOverlap(result);
+});
+
+test('7.12.C2-B3c: dwa zlecenia nie przejmują kopii pozostającej przy lokalnym korpusie',()=>{
+  const project=graphLocalContinuationFixture(),lot=structuredClone(project.subassemblyFlow!.lots[0]),body=structuredClone(project.bodyRunInput!.bodies[0]);
+  project.subassemblyFlow!.lots.push({...lot,id:'LOCAL-LOT-2',producer:{...lot.producer,job:2},consumer:{...lot.consumer,job:2}});
+  project.bodyRunInput!.bodies.push({...body,id:'LOCAL-BODY-2'});project.bodyRunInput!.jobs.push({job:2,bodyId:'LOCAL-BODY-2'});
+  project.materialSupply!.items[0].schedule={kind:'explicit-deliveries',deliveries:[{deliveryTimeSeconds:50,quantity:2}]};
+  project.subassemblyBuffers!.buffers[0].outputCapacity=4;
+  project.subassemblyBuffers!.buffers[0].inputCapacity=3; // Explicit room for the first residual piece plus the next whole lot of two.
+  project.resourceCalendars!.workers[project.workers[0].id].shifts[0].endSeconds=200;
+  const result=scheduleWorkerRun(project,1,2,project.bodyRunInput),nextInitial=result.runs.find(run=>run.job===2&&run.operationId==='BODY-FIRST')!;
+  assert.equal(nextInitial.startSeconds,60);assert.deepEqual(result.jobs.map(job=>job.finish),[80,102]);assertNoWorkerOverlap(result);
+  assert.ok(!result.bufferEvents!.some(event=>event.job===1&&event.stationId==='ST-A'&&event.kind==='output'&&event.atSeconds<60));
+});
+
+test('7.12.C2-B3c: cały lokalny ciąg działa bez trasy i zestawu transportu, brak fikcyjnego depozytu',()=>{
+  const project=graphLocalContinuationFixture(),last=project.operations.pop()!;
+  for(const station of project.stations)station.operationIds=station.operationIds.filter(id=>id!==last.id);
+  project.workerRunSelection!.operations=project.workerRunSelection!.operations.filter(operation=>operation.operationId!==last.id);
+  project.stationRouting!.operations=project.stationRouting!.operations.filter(operation=>operation.operationId!==last.id);project.stationRouting!.routes=[];
+  project.stationBuffers!.buffers=project.stationBuffers!.buffers.filter(buffer=>buffer.stationId==='ST-A');project.stationBuffers!.buffers[0].outputCapacity=null;
+  delete project.assemblyTransport;
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+  assert.equal(result.jobs[0].finish,60);assert.equal(result.transportMovements!.length,0);assert.equal(result.bufferBook!.tokens.length,0);
+  assert.ok(!result.bodyEvents!.some(event=>event.kind==='start-transfer'||event.kind==='finish-transfer'));assertNoWorkerOverlap(result);
+});
+
+test('7.12.C2-B3c: atomowy adapter odrzuca przedwczesne zwolnienie i zły poprzednik bez mutacji',()=>{
+  const project=graphLocalContinuationFixture(),id=project.bodyRunInput!.bodies[0].id;
+  const overlay=new GraphBodyBuffers(project,project.operations.map(operation=>operation.id),new Map(project.stationRouting!.operations.map(operation=>[operation.operationId,operation.candidates])));
+  let bodies=createBodyBook(project,project.bodyRunInput!.bodies,0);overlay.input(id,'BODY-FIRST',10);
+  bodies=overlay.event(bodies,{kind:'reserve',bodyId:id,operationId:'BODY-FIRST',atSeconds:10,endSeconds:20,basis:'assumed'})!;
+  const before=JSON.stringify({bodies,buffers:overlay.buffers});
+  assert.throws(()=>overlay.event(bodies,{kind:'release',bodyId:id,operationId:'BODY-FIRST',atSeconds:20}),/Lokalna kontynuacja/);
+  assert.throws(()=>overlay.event(bodies,{kind:'reserve',bodyId:id,operationId:'BODY-LOCAL',atSeconds:19,endSeconds:29,basis:'assumed'}),/przed końcem/);
+  assert.throws(()=>overlay.event(bodies,{kind:'reserve',bodyId:id,operationId:project.operations[3].id,atSeconds:20,endSeconds:30,basis:'assumed'}));
+  assert.equal(JSON.stringify({bodies,buffers:overlay.buffers}),before);
+  const continued=overlay.event(bodies,{kind:'reserve',bodyId:id,operationId:'BODY-LOCAL',atSeconds:50,endSeconds:60,basis:'assumed'})!;
+  assert.equal(continued.bodies[0].status,'reserved');assert.equal(overlay.buffers.tokens.length,0);
+});
+
+test('7.12.C2-B3c: brak materiału w lokalnej kontynuacji nie jest pozorną blokadą pojemności wyjścia',()=>{
+  const project=graphLocalContinuationFixture();project.materialSupply!.items[0].schedule={kind:'explicit-deliveries',deliveries:[]};
+  assert.throws(()=>scheduleWorkerRun(project,1,1,project.bodyRunInput),(error:unknown)=>{
+    const diagnostic=parseProcessStallDiagnostic(error)!;assert.ok(diagnostic);assert.notEqual(diagnostic.type,'buffer-deadlock');
+    assert.ok(diagnostic.stalledOperations.some(operation=>operation.operationId==='BODY-LOCAL'&&operation.waitCauses.includes('material')));return true;
+  });
+});
+
+test('7.12.C2-B3c: syntetyczny wzorzec UI zachowuje kopię 40–100 i wyposażenie do lokalnego startu',()=>{
+  const input=JSON.parse(advancedDemoPackage().data.draftRaw).project,before=JSON.stringify(input),project=prepareC2B3cUiProject(input);
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput),initial=result.runs.find(run=>run.operationId==='MU-OP10-M')!,local=result.runs.find(run=>run.operationId==='MU-LOCAL-B3C')!;
+  assert.equal(JSON.stringify(input),before);assertNoWorkerOverlap(result);
+  assert.deepEqual([initial.startSeconds,initial.endSeconds,initial.stationReleaseSeconds,initial.continuationWaitSeconds,initial.reserveEndSeconds],[0,40,100,60,40]);
+  assert.deepEqual([local.startSeconds,local.endSeconds],[100,140]);assert.equal(result.jobs[0].finish,630);
+  assert.deepEqual(result.transportMovements!.filter(move=>move.purpose==='transfer'&&!move.lotId).map(move=>[move.startSeconds,move.endSeconds]),[[140,150],[570,580]]);
+  assert.equal(result.materialEvents!.find(event=>event.kind==='consumption'&&event.operationId==='MU-LOCAL-B3C')!.atSeconds,100);
+  const history=prepareDomainPhysicalPlayback(project,result,{batch:1,arrivalIntervalSeconds:1,transportMode:'configured'});
+  assert.equal(domainPhysicalPlaybackFrame(history,80).bodies[0].status,'reserved');
+  assert.deepEqual(initial.equipmentIds,local.equipmentIds);
+});
 
 test('7.12.C2-B3b: niezależna referencja — korpus 20–22, podmontaż 27–29, wspólny start 50',()=>{
   const project=graphBodyBufferedFixture(),before=JSON.stringify(project),result=scheduleWorkerRun(project,1,1,project.bodyRunInput);

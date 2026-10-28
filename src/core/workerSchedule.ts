@@ -160,9 +160,16 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   let bodyBuffers:GraphBodyBuffers|undefined;
   const bodyEvents: BodyEvent[] = [];
   const recordBody = (event: BodyEvent) => {
+    const localOwner=event.kind==='reserve'?localBodies.get(event.bodyId):undefined;
     const next=bodyBuffers?bodyBuffers.event(bodyBook!,event):applyBodyEvent(bodyBook!,event);
     if(!next)return false;
     bodyBook = next;
+    if(localOwner&&event.kind==='reserve'){
+      localBodies.delete(event.bodyId);localOwner.stationReleaseSeconds=event.atSeconds;
+      localOwner.continuationWaitSeconds=event.atSeconds-localOwner.endSeconds;localOwner.blockedSeconds=0;
+      bodyEvents.push({kind:'release',bodyId:event.bodyId,atSeconds:event.atSeconds,operationId:localOwner.operationId});
+      bodyBufferEvents.push({job:localOwner.job,atSeconds:event.atSeconds,kind:'local-start',stationId:localOwner.stationId,copy:localOwner.copy});
+    }
     bodyEvents.push(event);
     return true;
   };
@@ -273,6 +280,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
   let book = createWorkerReservationBook(checked.assemblyTransport ? checked.workers.map(w => w.id) : plan.teamWorkerIds);
   const runs: WorkerScheduleRun[] = [];
   const blockedBodies=new Map<WorkerScheduleRun,Extract<BodyEvent,{kind:'release'}>>();
+  const localBodies=new Map<string,WorkerScheduleRun>();
   const bodyDeliveries=new Map<string,NonNullable<WorkerScheduleRun['transport']>>();
   const bodyBufferEvents:NonNullable<WorkerScheduleResult['bufferEvents']>[number][]=[];
   const blockedProducers = new Map<WorkerScheduleRun, readonly SubassemblyLotState[]>();
@@ -284,7 +292,7 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
     if(operation.reserveFromSeconds!==0||operation.reserveUntilSeconds!==operation.durationSeconds)throw new Error('C2-B2b: zatrzymanie operatora wymaga jawnej obecności od początku do końca operacji producenta; częściowa obecność wymaga dalszej integracji, a wcześniejsze wyjście wymaga reguły powrotu.');
   }
   const unsafeWorkers=(now:number,except?:WorkerScheduleRun)=>new Set(runs.filter(run=>run!==except&&mayHoldExecution(run.job,run.operationId,run)&&(run.endSeconds>now||heldProducers.has(run))).flatMap(run=>[...run.workerIds]));
-  const copyBusy = (run: WorkerScheduleRun, now: number) => run.endSeconds > now || blockedProducers.has(run) || blockedBodies.has(run);
+  const copyBusy = (run: WorkerScheduleRun, now: number) => run.endSeconds > now || blockedProducers.has(run) || blockedBodies.has(run) || !!run.bodyId&&localBodies.get(run.bodyId)===run;
   const releaseProducer = (run: WorkerScheduleRun, now: number) => {
     blockedProducers.delete(run);
     if(heldProducers.has(run)){
@@ -367,11 +375,13 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
         const completedStep = steps[event.step];
         if (bodyRun && completedStep.physicalRole?.kind === 'body-work') {
           const release:Extract<BodyEvent,{kind:'release'}>={kind:'release',bodyId:bodyRun!.bodyByJob.get(event.job+1)!,atSeconds:now,operationId:completedStep.id};
-          const released=recordBody(release);
+          const local=bodyBuffers?.hasLocalNext(completedStep.id);
+          const released=local?false:recordBody(release);
           if(bodyBuffers){
             const run=runs.find(run=>run.job===event.job+1&&run.operationId===completedStep.id)!;
-            if(!released)blockedBodies.set(run,release);else{run.stationReleaseSeconds=now;run.blockedSeconds=0;}
-            bodyBufferEvents.push({job:run.job,atSeconds:now,kind:released?(bodyBuffers.hasToken(release.bodyId)?'output':'released'):'blocked',stationId:run.stationId,copy:run.copy});
+            if(local)localBodies.set(release.bodyId,run);
+            else if(!released)blockedBodies.set(run,release);else{run.stationReleaseSeconds=now;run.blockedSeconds=0;}
+            bodyBufferEvents.push({job:run.job,atSeconds:now,kind:local?'local-wait':released?(bodyBuffers.hasToken(release.bodyId)?'output':'released'):'blocked',stationId:run.stationId,copy:run.copy});
           }
         }
         lotRun?.produce(event.job + 1, completedStep.id, {stationId:event.stationId,copy:event.copy+1}, now);
@@ -421,6 +431,8 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
         const task = waiting[i];
         bufferWaiting.delete(task);
         const step = steps[task.step];
+        const localOwner=bodyBuffers&&step.physicalRole?.kind==='body-work'?localBodies.get(bodyRun!.bodyByJob.get(task.job+1)!):undefined;
+        const continuation=localOwner&&bodyBuffers!.localPredecessor(step.id)===localOwner.operationId?localOwner:undefined;
         if (inFlight[task.job].size && !matchingConcurrencyGroup(checked.physicalConcurrency,
           [...inFlight[task.job]].map(index => steps[index].id).concat(step.id))) {
           task.causes.add('same-job'); continue;
@@ -428,8 +440,8 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
         if(bodyBuffers&&step.physicalRole?.kind==='body-work'){
           const bodyId=bodyRun!.bodyByJob.get(task.job+1)!,target=bodyBuffers.target(step.id);
           const body=bodyBook!.bodies.find(body=>body.id===bodyId)!;
-          if(body.status!=='available'||body.location.kind!=='station'){task.causes.add('body');continue;}
-          if(!bodyBuffers.hasToken(bodyId)){
+          if(body.status!=='available'&&!continuation||body.location.kind!=='station'){task.causes.add('body');continue;}
+          if(!continuation&&!bodyBuffers.hasToken(bodyId)){
             if(step.id!==bodyBuffers.firstOperationId)throw new Error('C2-B3b: korpus poza oczekiwanym buforem ścieżki.');
             if(!bodyBuffers.hasInputSpace(step.id)){task.causes.add('buffer');bufferWaiting.add(task);continue;}
             bodyBuffers.input(bodyId,step.id,now);
@@ -615,20 +627,20 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
           if (body && (body.status !== 'available' && body.status !== 'reserved' || body.location.kind !== 'station')) {
             bodyWait = true; continue;
           }
-          if (body?.status === 'reserved' && !bodyAllowsOperation(bodyBook!, bodyId!, step.id, candidate)) {
+          if (body?.status === 'reserved' && !continuation && !bodyAllowsOperation(bodyBook!, bodyId!, step.id, candidate)) {
             bodyWait = true; continue;
           }
-          if (bodyId && !routing && !bodyAllowsOperation(bodyBook!, bodyId, step.id, candidate)) continue;
+          if (bodyId && !routing && !continuation && !bodyAllowsOperation(bodyBook!, bodyId, step.id, candidate)) continue;
           const stationId = candidate.stationId;
           const occupants = runs.filter(run => run.stationId === stationId && run.copy === candidate.copy && copyBusy(run,now));
           const sharing = !!bodyId && !!checked.physicalConcurrency && body?.location.kind === 'station' && sameCopy(body.location, candidate) &&
             occupants.length > 0 && occupants.every(run => run.bodyId === bodyId) &&
             !!matchingConcurrencyGroup(checked.physicalConcurrency, occupants.map(run => run.operationId).concat(step.id));
-          const copyFree = copies.get(stationId)![candidate.copy - 1] || sharing;
-          if (candidate.requiredEquipmentIds.some(id => runs.some(run => copyBusy(run,now) && run.equipmentIds?.includes(id)))) {
+          const copyFree = copies.get(stationId)![candidate.copy - 1] || sharing || !!continuation&&occupants.every(run=>run===continuation);
+          if (candidate.requiredEquipmentIds.some(id => runs.some(run => run!==continuation && copyBusy(run,now) && run.equipmentIds?.includes(id)))) {
             equipmentWait = true; continue;
           }
-          if (!copyFree && !bodyId) {stationWait = true; continue;}
+          if (!copyFree && (!bodyId||bodyBuffers)) {stationWait = true; continue;}
           if (bodyId && occupants.some(run=>blockedProducers.has(run)||blockedBodies.has(run))) {stationWait = true;continue;}
           hasFreeCopy ||= copyFree;
           let departure = copyFree ? now : copyReady.get(stationId)![candidate.copy - 1];
@@ -892,11 +904,11 @@ function scheduleWorkerRunFixed(project: DomainProjectV6, arrivalIntervalSeconds
       stalledOperations:waiting.map(task=>({job:task.job+1,operationId:steps[task.step].id,operationName:steps[task.step].name,
         stationId:candidatesByOperation.get(steps[task.step].id)![0].stationId,copy:candidatesByOperation.get(steps[task.step].id)![0].copy,
         status:'waiting',waitCauses:[...task.causes],missingResourceExplanation:'Sprawdź zajętość i reszty partii w buforach podmontaży.'})),
-      blockedStations:[...blockedProducers.keys(),...blockedBodies.keys()].map(run=>({stationId:run.stationId,stationName:checked.stations.find(station=>station.id===run.stationId)!.name,
+      blockedStations:[...blockedProducers.keys(),...blockedBodies.keys(),...localBodies.values()].map(run=>({stationId:run.stationId,stationName:checked.stations.find(station=>station.id===run.stationId)!.name,
         copy:run.copy,blockedByJob:run.job,blockedByOperationId:run.operationId,holdingWorkerIds:heldProducers.has(run)?[...run.workerIds]:[],blockingPolicy:heldProducers.has(run)?'bbas':'bbas-worker-released'})),
       recommendation:'Sprawdź jawne pojemności w sztukach, ilości partii i pobrań oraz przypisania odbiorców; reszty pozostają w buforze.'});
   }
-  if (completed !== steps.length * batch || waiting.length ||pendingReturns.size||
+  if (completed !== steps.length * batch || waiting.length ||pendingReturns.size||localBodies.size||
       book.reservations.some(item => item.releasedAtSeconds !== item.endSeconds)) {
     throw new ProcessStallError(diagnoseUnbufferedProcessStall({
       now: currentSimulationTime,

@@ -18,6 +18,7 @@ Pozostałe materiały:
 - [Weryfikacja C2-B3-UI](weryfikacja/WERYFIKACJA_C2_B3_UI.md) — wyniki testów formularza, zapisu i historii.
 - [Weryfikacja C2-B3a](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3A.md) — wspólny odbiór jednej partii bezpośredniej i partii buforowanych.
 - [Weryfikacja C2-B3b](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3B.md) — dodatnie bufory korpusów z gałęziami i próba spiętrzenia.
+- [Weryfikacja C2-B3c](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3C.md) — lokalna kontynuacja korpusu w grafie gałęzi.
 
 - [Instrukcja użytkownika](../Instrukcja/Podrecznik_Uzytkownika.md) — źródło MD oraz wersje HTML/PDF w `Instrukcja/`.
 - [Projekty graficzne](../design/) — pliki `.pen`.

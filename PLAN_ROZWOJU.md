@@ -1,11 +1,13 @@
 # Plan rozwoju i rejestr postępu aplikacji
 
 Data utworzenia: 2026-09-29  
-Ostatnia aktualizacja: 2026-10-27
+Ostatnia aktualizacja: 2026-10-28
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
 Dane testowe: Eko jest historycznym przypadkiem regresyjnym; docelowe przykłady to trzy zewnętrzne, kompletne pakiety demonstracyjne (7.12).
 
-## Bieżący pakiet — 2026-10-27
+## Bieżący pakiet — 2026-10-28
+
+7.12.C2-B3c: **wdrożona lokalna kontynuacja korpusu w grafie** — korpus, kopia i poprzednie wyposażenie pozostają zajęte do rzeczywistego startu następnej operacji na tej samej kopii; brak fikcyjnego depozytu/ruchu, osoby według profili. 7 nowych wzorców i 146/146 związanych regresji, build/typecheck i rzeczywisty UI z odświeżeniem/eksportem PASS. Referencja 20–50 s lokalnego oczekiwania, pobranie partii/materiału przy 50, koniec 72. Syntetyczny C2: oczekiwanie 40–100, lokalna obróbka 100–140, koniec 630. Instrukcja MD/HTML/PDF: 66 stron/53 ilustracje, kontrola i oględziny PASS. Backup 4 niezależne SHA PASS. Raport: [B3c](docs/weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3C.md). Zera i zatrzymanie obsady korpusów, wiele bezpośrednich partii i pełny odbiór C2 pozostają w trakcie; Sol do oceny/implementacji/weryfikacji. Postęp: 61/72 = 84,7%; pierwsze wydanie: 61/68 = 89,7%.
 
 7.12.C2-B3b: **wdrożone dodatnie bufory korpusów z gałęziami**, jedna jawna kopia każdej operacji uporządkowanej ścieżki i polityka `bbas-worker-released`. Atomowe rezerwacje przed odjazdem, niezależne limity podmontaży, blokada stanowiska/wyposażenia po obróbce, rzeczywiste pobrania i historia korpusu. 5 nowych testów, checkpoint 471/471 (109 core +362 network), 139/139 celowanych, build i rzeczywisty UI z odświeżeniem/eksportem PASS. Próba spiętrzenia 3 szt./1 s: 700/790/840 s, blokada trzeciego korpusu 140–500, osoba do 140, zapasy reszt 6+6. Backup 5 niezależnych SHA PASS. Raport: [B3b](docs/weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3B.md). Całe C2/7.12 nadal w trakcie; następne zera/zatrzymanie obsady i lokalna kontynuacja w grafie, wspólny odbiór kilku bezpośrednich partii/korpusu i końcowy odbiór C2. Sol do oceny/implementacji/weryfikacji. Postęp bez zmiany: 61/72 = 84,7%; pierwsze wydanie 61/68 = 89,7%.
 

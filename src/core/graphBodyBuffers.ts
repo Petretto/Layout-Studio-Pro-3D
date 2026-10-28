@@ -11,6 +11,7 @@ export class GraphBodyBuffers {
   readonly firstOperationId:string;
   private readonly terminal:string;
   private readonly targets=new Map<string,StationCandidate>();
+  private readonly localPrevious=new Map<string,string>();
   constructor(project:DomainProjectV6,orderedIds:readonly string[],candidates:ReadonlyMap<string,readonly StationCandidate[]>) {
     const spine=orderedIds.filter(id=>project.operations.find(operation=>operation.id===id)!.physicalRole?.kind==='body-work');
     if(!spine.length)throw new Error('C2-B3b: bufory korpusów wymagają jawnej ścieżki operacji na korpusie.');
@@ -29,7 +30,7 @@ export class GraphBodyBuffers {
     for(let i=1;i<spine.length;i++){
       if(!ancestors(spine[i]).has(spine[i-1]))throw new Error('C2-B3b: operacje korpusu muszą tworzyć jeden uporządkowany ciąg.');
       const a=this.targets.get(spine[i-1])!,b=this.targets.get(spine[i])!;
-      if(a.stationId===b.stationId&&a.copy===b.copy)throw new Error('C2-B3b: lokalna kontynuacja korpusu z gałęziami wymaga dalszej integracji.');
+      if(a.stationId===b.stationId&&a.copy===b.copy)this.localPrevious.set(spine[i],spine[i-1]);
     }
     this.firstOperationId=spine[0];this.terminal=spine[spine.length-1];
     let buffers=createBufferBook(project);
@@ -47,6 +48,8 @@ export class GraphBodyBuffers {
     if(project.subassemblyBuffers?.buffers.some(buffer=>buffer.inputCapacity===0))throw new Error('C2-B3b: skończone bufory korpusów z bezpośrednim wejściem podmontażu wymagają dalszej integracji.');
   }
   target(operationId:string){return this.targets.get(operationId)!;}
+  localPredecessor(operationId:string){return this.localPrevious.get(operationId);}
+  hasLocalNext(operationId:string){return [...this.localPrevious.values()].includes(operationId);}
   private place(operationId:string,side:'input'|'output'){const target=this.target(operationId);return this.buffers.places.find(place=>place.stationId===target.stationId&&place.copy===target.copy&&place.side===side)!;}
   hasToken(bodyId:string){return this.buffers.tokens.some(token=>token.id===bodyId);}
   hasInputSpace(operationId:string){return bufferHasSpace(this.buffers,this.place(operationId,'input'));}
@@ -56,6 +59,15 @@ export class GraphBodyBuffers {
   }
   /** Undefined means full output: keep both the body reservation and station/equipment ownership. */
   event(bodies:BodyBook,event:BodyEvent):BodyBook|undefined{
+    if(event.kind==='release'&&this.hasLocalNext(event.operationId))throw new Error('Lokalna kontynuacja wymaga przekazania korpusu dopiero przy starcie następnej operacji.');
+    if(event.kind==='reserve'){
+      const previousOperationId=this.localPredecessor(event.operationId);
+      const body=bodies.bodies.find(body=>body.id===event.bodyId);
+      if(previousOperationId&&body?.status==='reserved'&&body.reservation.operationId===previousOperationId){
+        const next=applyBufferedBodyEvent({bodies,buffers:this.buffers},{...event,kind:'continue-operation',previousOperationId,location:this.target(event.operationId)});
+        this.buffers=next.buffers;return next.bodies;
+      }
+    }
     if(event.kind==='release'&&event.operationId===this.terminal)return applyBodyEvent(bodies,event);
     if(event.kind==='release'&&!bufferHasSpace(this.buffers,this.place(event.operationId,'output')))return undefined;
     const atSeconds=event.atSeconds,bodyId=event.bodyId;
