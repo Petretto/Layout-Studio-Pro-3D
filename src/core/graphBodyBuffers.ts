@@ -43,7 +43,6 @@ export class GraphBodyBuffers {
     }
     buffers={...buffers,places};this.buffers=buffers;
     if(this.place(this.terminal,'output').capacity!==null)throw new Error('C2-B3b: ograniczony bufor końcowy wymaga jawnego odbioru gotowych wyrobów.');
-    if(project.subassemblyBuffers?.buffers.some(buffer=>buffer.inputCapacity===0))throw new Error('C2-B3b: skończone bufory korpusów z bezpośrednim wejściem podmontażu wymagają dalszej integracji.');
   }
   target(operationId:string){return this.targets.get(operationId)!;}
   localPredecessor(operationId:string){return this.localPrevious.get(operationId);}
