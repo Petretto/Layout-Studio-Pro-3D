@@ -1,7 +1,7 @@
 {
   "kind": "eko-source-audit-not-an-application-project",
   "auditVersion": 2,
-  "auditedAt": "2026-10-19T21:01:11.082Z",
+  "auditedAt": "2026-10-28T21:33:23.783Z",
   "productionDataAccepted": false,
   "notice": "User confirms real source, July 2026, frame variant 1.4. Four synthetic times remain examples per explicit clarification. Complete production model not accepted.",
   "sources": [
@@ -47,7 +47,7 @@
     },
     {
       "id": "EKO-S6",
-      "path": "WERYFIKACJA_EKO_2_9.md",
+      "path": "docs/weryfikacja/WERYFIKACJA_EKO_2_9.md",
       "bytes": 4345,
       "sha256": "6d8186e8d1d505f56860a6a044d29824b0f2b06c46efc4dbd7096d3e201c19c6",
       "measurementPeriod": null,
