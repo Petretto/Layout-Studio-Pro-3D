@@ -14,7 +14,7 @@
       "triangleBudget": 5000,
       "meshObjects": 48,
       "glbBytes": 74972,
-      "blendBytes": 113230
+      "blendBytes": 113254
     },
     {
       "id": "concept-shelf-cart",
@@ -29,7 +29,7 @@
       "triangleBudget": 5000,
       "meshObjects": 21,
       "glbBytes": 46408,
-      "blendBytes": 103372
+      "blendBytes": 103413
     },
     {
       "id": "concept-parts-rack",
@@ -44,7 +44,112 @@
       "triangleBudget": 5000,
       "meshObjects": 89,
       "glbBytes": 138076,
-      "blendBytes": 126399
+      "blendBytes": 126455
+    },
+    {
+      "id": "concept-shelving-rack",
+      "basis": "assumed",
+      "dimensionsMm": [
+        1000.0,
+        300.00001192092896,
+        2500.0
+      ],
+      "floorZMm": 0.0,
+      "triangles": 216,
+      "triangleBudget": 5000,
+      "meshObjects": 18,
+      "glbBytes": 27920,
+      "blendBytes": 98796
+    },
+    {
+      "id": "concept-pallet-rack-single",
+      "basis": "assumed",
+      "dimensionsMm": [
+        2870.000123977661,
+        1100.000023841858,
+        4500.0
+      ],
+      "floorZMm": 0.0,
+      "triangles": 504,
+      "triangleBudget": 5000,
+      "meshObjects": 42,
+      "glbBytes": 64920,
+      "blendBytes": 108468
+    },
+    {
+      "id": "concept-pallet-rack-double",
+      "basis": "assumed",
+      "dimensionsMm": [
+        5655.00020980835,
+        1100.000023841858,
+        4500.0
+      ],
+      "floorZMm": 0.0,
+      "triangles": 540,
+      "triangleBudget": 5000,
+      "meshObjects": 45,
+      "glbBytes": 69236,
+      "blendBytes": 109420
+    },
+    {
+      "id": "concept-industrial-module",
+      "basis": "assumed",
+      "dimensionsMm": [
+        1199.9999284744263,
+        800.000011920929,
+        1399.999976158142
+      ],
+      "floorZMm": 0.0,
+      "triangles": 276,
+      "triangleBudget": 5000,
+      "meshObjects": 23,
+      "glbBytes": 36184,
+      "blendBytes": 102005
+    },
+    {
+      "id": "concept-power-subassembly",
+      "basis": "assumed",
+      "dimensionsMm": [
+        500.0,
+        349.9999940395355,
+        250.0
+      ],
+      "floorZMm": 0.0,
+      "triangles": 396,
+      "triangleBudget": 5000,
+      "meshObjects": 17,
+      "glbBytes": 37412,
+      "blendBytes": 102693
+    },
+    {
+      "id": "concept-drive-subassembly",
+      "basis": "assumed",
+      "dimensionsMm": [
+        449.99998807907104,
+        300.00001192092896,
+        280.0000011920929
+      ],
+      "floorZMm": 0.0,
+      "triangles": 216,
+      "triangleBudget": 5000,
+      "meshObjects": 6,
+      "glbBytes": 18348,
+      "blendBytes": 97836
+    },
+    {
+      "id": "concept-assembly-fixture",
+      "basis": "assumed",
+      "dimensionsMm": [
+        600.0000238418579,
+        400.0000059604645,
+        300.00001192092896
+      ],
+      "floorZMm": 0.0,
+      "triangles": 444,
+      "triangleBudget": 5000,
+      "meshObjects": 13,
+      "glbBytes": 35480,
+      "blendBytes": 99116
     }
   ]
 }

@@ -26,6 +26,7 @@ Pozostałe materiały:
 - [Weryfikacja 7.12.D i 7.2](weryfikacja/WERYFIKACJA_ODBIOR_I_SZABLONY_7_12_D_FIZYCZNY.md) — zbiorczy odbiór fizyczny i szablony trzech zewnętrznych pakietów pokazowych oraz walidacja referencji analitycznych (zamknięcie punktów 7.12 i 7.2).
 - [Weryfikacja 7.13](weryfikacja/WERYFIKACJA_PUSTEGO_STARTU_I_KATALOGU_7_13_FINAL.md) — pusty start bez wbudowanych projektów, rozwijany katalog 4 zewnętrznych pakietów pokazowych z SHA-256 i ochrona danych.
 - [Weryfikacja 7.14](weryfikacja/WERYFIKACJA_TUTORIALU_7_14.md) — interaktywny tutorial krok po kroku oparty na pakiecie zestawu montażowego, 8 etapów Lean, persystencja i ochrona środowiska.
+- [Weryfikacja 6.3](weryfikacja/WERYFIKACJA_MODELI_WYPOSAZENIA_6_3.md) — 10 autorskich modeli wyposażenia, regałów i wyrobów w Blenderze (5.2.1 LTS), weryfikacja GLB, budżet $\le 5000$ trójkątów i integracja wizualna.
 
 - [Instrukcja użytkownika](../Instrukcja/Podrecznik_Uzytkownika.md) — źródło MD oraz wersje HTML/PDF w `Instrukcja/`.
 - [Projekty graficzne](../design/) — pliki `.pen`.

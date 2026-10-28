@@ -1,0 +1,64 @@
+{
+  "kind": "layout-equipment-modeling-brief",
+  "version": 1,
+  "equipment": {
+    "id": "concept-shelving-rack",
+    "name": "Regał półkowy magazynowy 1000x300x2500 — koncept",
+    "objectType": null,
+    "manufacturer": "",
+    "model": ""
+  },
+  "coordinates": {
+    "units": "mm",
+    "verticalAxis": "z",
+    "frontAxis": "+y",
+    "anchor": "footprint-center",
+    "groundContactZMm": {
+      "value": 0,
+      "basis": "assumed",
+      "source": "Umowny model demonstracyjny z podstawą na Z=0; nie jest to pomiar wyposażenia klienta."
+    }
+  },
+  "dimensionsMm": {
+    "width": {
+      "value": 1000,
+      "basis": "assumed",
+      "source": "Autorskie gabaryty demonstracyjne do wizualizacji; nie są pomiarem, wymiarem katalogowym Jabama ani danymi stanowiska użytkownika. Detale proceduralne są umowne."
+    },
+    "length": {
+      "value": 300,
+      "basis": "assumed",
+      "source": "Autorskie gabaryty demonstracyjne do wizualizacji; nie są pomiarem, wymiarem katalogowym Jabama ani danymi stanowiska użytkownika. Detale proceduralne są umowne."
+    },
+    "height": {
+      "value": 2500,
+      "basis": "assumed",
+      "source": "Autorskie gabaryty demonstracyjne do wizualizacji; nie są pomiarem, wymiarem katalogowym Jabama ani danymi stanowiska użytkownika. Detale proceduralne są umowne."
+    }
+  },
+  "appearance": {
+    "colorHex": null,
+    "distinctiveFeatures": "Stalowy regał półkowy z 4 pionowymi profilami, stopkami z prześwitem do posadzki oraz 5 poziomami półek z zagiętymi krawędziami usztywniającymi. Opracowany wg specyfikacji z materiałów użytkownika 1000x300x2500 mm. Model ma autorską paletę kilku materiałów; pojedynczy kolor nie jest zadeklarowany."
+  },
+  "references": [
+    {
+      "kind": "url",
+      "location": "Dane do wyposażenia/Regał/Regał 1000x300x2500.png",
+      "description": "Inspiracja ogólną kategorią wyposażenia; nie źródło gabarytów konceptu."
+    },
+    {
+      "kind": "cad",
+      "location": "tools/equipment-editor/concepts/concept-shelving-rack.blend",
+      "description": "Autorski koncept Blender; gabaryty i detale oznaczone jako założenia."
+    }
+  ],
+  "rights": {
+    "author": "Layout Studio — autorska geometria proceduralna",
+    "license": "",
+    "permissionNotes": "Własny model koncepcyjny. Strona producenta jest wyłącznie inspiracją kategorii; nie skopiowano zdjęć, znaków, tekstur ani plików modeli. Nie jest to deklaracja praw do materiałów producenta."
+  },
+  "modeling": {
+    "triangleBudget": 5000,
+    "serviceAndTransportNotes": ""
+  }
+}

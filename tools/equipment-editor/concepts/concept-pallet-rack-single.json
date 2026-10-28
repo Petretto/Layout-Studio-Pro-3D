@@ -1,0 +1,64 @@
+{
+  "kind": "layout-equipment-modeling-brief",
+  "version": 1,
+  "equipment": {
+    "id": "concept-pallet-rack-single",
+    "name": "Regał paletowy PHR 1-gniazdowy 2870x1100x4500 — koncept",
+    "objectType": null,
+    "manufacturer": "",
+    "model": ""
+  },
+  "coordinates": {
+    "units": "mm",
+    "verticalAxis": "z",
+    "frontAxis": "+y",
+    "anchor": "footprint-center",
+    "groundContactZMm": {
+      "value": 0,
+      "basis": "assumed",
+      "source": "Umowny model demonstracyjny z podstawą na Z=0; nie jest to pomiar wyposażenia klienta."
+    }
+  },
+  "dimensionsMm": {
+    "width": {
+      "value": 2870,
+      "basis": "assumed",
+      "source": "Autorskie gabaryty demonstracyjne do wizualizacji; nie są pomiarem, wymiarem katalogowym Jabama ani danymi stanowiska użytkownika. Detale proceduralne są umowne."
+    },
+    "length": {
+      "value": 1100,
+      "basis": "assumed",
+      "source": "Autorskie gabaryty demonstracyjne do wizualizacji; nie są pomiarem, wymiarem katalogowym Jabama ani danymi stanowiska użytkownika. Detale proceduralne są umowne."
+    },
+    "height": {
+      "value": 4500,
+      "basis": "assumed",
+      "source": "Autorskie gabaryty demonstracyjne do wizualizacji; nie są pomiarem, wymiarem katalogowym Jabama ani danymi stanowiska użytkownika. Detale proceduralne są umowne."
+    }
+  },
+  "appearance": {
+    "colorHex": null,
+    "distinctiveFeatures": "Wysokoskładowy regał paletowy PHR o jednej wnęce roboczej 2700 mm (szerokość całkowita 2870 mm, głębokość 1100 mm, wysokość 4500 mm). Dwie niebieskie ramy słupowe ze stężeniami kratownicowymi i stopami kotwionymi, 3 poziomy belek trawersowych pomarańczowych (poziomy 1400, 2800, 4200 mm) oraz tylne stężenie wiatrowe/krzyżowe. Model ma autorską paletę kilku materiałów; pojedynczy kolor nie jest zadeklarowany."
+  },
+  "references": [
+    {
+      "kind": "url",
+      "location": "Dane do wyposażenia/Regał paletowy PHR jednokolumnowy L=1 x 2700mm H=4500mm 0+3 poziomy Q=1000kg",
+      "description": "Inspiracja ogólną kategorią wyposażenia; nie źródło gabarytów konceptu."
+    },
+    {
+      "kind": "cad",
+      "location": "tools/equipment-editor/concepts/concept-pallet-rack-single.blend",
+      "description": "Autorski koncept Blender; gabaryty i detale oznaczone jako założenia."
+    }
+  ],
+  "rights": {
+    "author": "Layout Studio — autorska geometria proceduralna",
+    "license": "",
+    "permissionNotes": "Własny model koncepcyjny. Strona producenta jest wyłącznie inspiracją kategorii; nie skopiowano zdjęć, znaków, tekstur ani plików modeli. Nie jest to deklaracja praw do materiałów producenta."
+  },
+  "modeling": {
+    "triangleBudget": 5000,
+    "serviceAndTransportNotes": ""
+  }
+}

@@ -2,10 +2,29 @@ import * as THREE from 'three';
 import bench from './visualAssets/concept-assembly-bench.json';
 import cart from './visualAssets/concept-shelf-cart.json';
 import rack from './visualAssets/concept-parts-rack.json';
+import shelvingRack from './visualAssets/concept-shelving-rack.json';
+import palletRackSingle from './visualAssets/concept-pallet-rack-single.json';
+import palletRackDouble from './visualAssets/concept-pallet-rack-double.json';
+import industrialModule from './visualAssets/concept-industrial-module.json';
+import powerSubassembly from './visualAssets/concept-power-subassembly.json';
+import driveSubassembly from './visualAssets/concept-drive-subassembly.json';
+import assemblyFixture from './visualAssets/concept-assembly-fixture.json';
 import type {EquipmentVisualModelId} from './equipmentAppearance';
 
-const assets={'concept-assembly-bench':bench,'concept-shelf-cart':cart,'concept-parts-rack':rack};
-const templates=new Map<EquipmentVisualModelId,THREE.Object3D>();
+const assets: Record<EquipmentVisualModelId, any> = {
+  'concept-assembly-bench': bench,
+  'concept-shelf-cart': cart,
+  'concept-parts-rack': rack,
+  'concept-shelving-rack': shelvingRack,
+  'concept-pallet-rack-single': palletRackSingle,
+  'concept-pallet-rack-double': palletRackDouble,
+  'concept-industrial-module': industrialModule,
+  'concept-power-subassembly': powerSubassembly,
+  'concept-drive-subassembly': driveSubassembly,
+  'concept-assembly-fixture': assemblyFixture,
+};
+const templates = new Map<EquipmentVisualModelId, THREE.Object3D>();
+
 /** Bundled source meshes only. Preserve proportions inside the existing physical envelope. */
 export function createConceptVisual(id:EquipmentVisualModelId,width:number,length:number,height:number,wireframe=false):THREE.Group{
   if(!assets[id])throw new Error('Nieobsługiwany model wizualny wyposażenia.');

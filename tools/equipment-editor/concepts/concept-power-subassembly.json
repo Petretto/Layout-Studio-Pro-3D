@@ -1,0 +1,64 @@
+{
+  "kind": "layout-equipment-modeling-brief",
+  "version": 1,
+  "equipment": {
+    "id": "concept-power-subassembly",
+    "name": "Podzespół zasilania SUB-PWR — koncept",
+    "objectType": null,
+    "manufacturer": "",
+    "model": ""
+  },
+  "coordinates": {
+    "units": "mm",
+    "verticalAxis": "z",
+    "frontAxis": "+y",
+    "anchor": "footprint-center",
+    "groundContactZMm": {
+      "value": 0,
+      "basis": "assumed",
+      "source": "Umowny model demonstracyjny z podstawą na Z=0; nie jest to pomiar wyposażenia klienta."
+    }
+  },
+  "dimensionsMm": {
+    "width": {
+      "value": 500,
+      "basis": "assumed",
+      "source": "Autorskie gabaryty demonstracyjne do wizualizacji; nie są pomiarem, wymiarem katalogowym Jabama ani danymi stanowiska użytkownika. Detale proceduralne są umowne."
+    },
+    "length": {
+      "value": 350,
+      "basis": "assumed",
+      "source": "Autorskie gabaryty demonstracyjne do wizualizacji; nie są pomiarem, wymiarem katalogowym Jabama ani danymi stanowiska użytkownika. Detale proceduralne są umowne."
+    },
+    "height": {
+      "value": 250,
+      "basis": "assumed",
+      "source": "Autorskie gabaryty demonstracyjne do wizualizacji; nie są pomiarem, wymiarem katalogowym Jabama ani danymi stanowiska użytkownika. Detale proceduralne są umowne."
+    }
+  },
+  "appearance": {
+    "colorHex": null,
+    "distinctiveFeatures": "Charakterystyczny podzespół zasilania dla pakietu demonstracyjnego 03: podstawa montażowa, radiator wielożebrowy, transformator z uzwojeniem miedzianym i przemysłowe złącza wielopinowe. Model ma autorską paletę kilku materiałów; pojedynczy kolor nie jest zadeklarowany."
+  },
+  "references": [
+    {
+      "kind": "url",
+      "location": "https://layout-studio-pro.internal/pakiet-03-sub-pwr",
+      "description": "Inspiracja ogólną kategorią wyposażenia; nie źródło gabarytów konceptu."
+    },
+    {
+      "kind": "cad",
+      "location": "tools/equipment-editor/concepts/concept-power-subassembly.blend",
+      "description": "Autorski koncept Blender; gabaryty i detale oznaczone jako założenia."
+    }
+  ],
+  "rights": {
+    "author": "Layout Studio — autorska geometria proceduralna",
+    "license": "",
+    "permissionNotes": "Własny model koncepcyjny. Strona producenta jest wyłącznie inspiracją kategorii; nie skopiowano zdjęć, znaków, tekstur ani plików modeli. Nie jest to deklaracja praw do materiałów producenta."
+  },
+  "modeling": {
+    "triangleBudget": 5000,
+    "serviceAndTransportNotes": ""
+  }
+}

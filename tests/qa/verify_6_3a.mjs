@@ -52,15 +52,15 @@ try{
     await evaluate(`document.getElementById('concept-gallery').closest('details').open=true`);
     await evaluate(`[...document.querySelectorAll('#concept-gallery img')].forEach(i=>i.loading='eager')`);
     await until(()=>evaluate(`[...document.querySelectorAll('#concept-gallery img')].every(i=>i.complete&&i.naturalWidth>0)`));
-    strictEqual(await evaluate(`document.querySelectorAll('#concept-gallery img').length`),3);
-    for(const id of ['concept-assembly-bench','concept-shelf-cart','concept-parts-rack']){
+    strictEqual(await evaluate(`document.querySelectorAll('#concept-gallery img').length`),10);
+    for(const id of ['concept-assembly-bench','concept-shelf-cart','concept-parts-rack','concept-shelving-rack','concept-pallet-rack-single','concept-pallet-rack-double','concept-industrial-module','concept-power-subassembly','concept-drive-subassembly','concept-assembly-fixture']){
       const pendingClick=click(`[data-concept="${id}"]`);await sleep(100);await send('Page.handleJavaScriptDialog',{accept:true});await pendingClick;
       const card=await model();strictEqual(card.equipment.id,id);ok(Object.values(card.dimensionsMm).every(m=>m.basis==='assumed'));strictEqual(card.equipment.manufacturer,'');
     }
     const keep=await model(),pendingClick=click('[data-concept="concept-assembly-bench"]');await sleep(100);await send('Page.handleJavaScriptDialog',{accept:false});await pendingClick;strictEqual(JSON.stringify(await model()),JSON.stringify(keep));
-    await click('#export');await until(()=>existsSync(join(downloads,'concept-parts-rack_karta.json')));
+    await click('#export');await until(()=>existsSync(join(downloads,'concept-assembly-fixture_karta.json')));
     for(const width of [1440,600]){await viewport(width);ok(await noOverflow());await evaluate(`document.getElementById('concept-gallery').closest('details').scrollIntoView({block:'start'})`);await screenshot(`verify_6_3b_gallery_${width}`);}
-    console.log('PASS 6.3b: trzy rendery lokalne, wybór kart, założenia zachowane, ochrona niezapisanych danych, eksport konceptu i galeria 1440/600 px.');
+    console.log('PASS 6.3: dziesięć renderów lokalnych, wybór kart, założenia zachowane, ochrona niezapisanych danych, eksport konceptu i galeria 1440/600 px.');
   }else{
     for(const width of [1440,600]){await viewport(width);ok(await noOverflow());await evaluate(`window.scrollTo(0,0)`);await screenshot(`verify_6_3a_${width}`);}
   }

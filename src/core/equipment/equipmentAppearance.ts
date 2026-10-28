@@ -4,6 +4,13 @@ export const EQUIPMENT_VISUAL_MODELS = [
   {id:'concept-assembly-bench',name:'Koncept: stanowisko z nadbudową'},
   {id:'concept-shelf-cart',name:'Koncept: wózek półkowy'},
   {id:'concept-parts-rack',name:'Koncept: regał na części'},
+  {id:'concept-shelving-rack',name:'Koncept: regał półkowy magazynowy'},
+  {id:'concept-pallet-rack-single',name:'Koncept: regał paletowy 1-gniazdowy'},
+  {id:'concept-pallet-rack-double',name:'Koncept: regał paletowy 2-gniazdowy'},
+  {id:'concept-industrial-module',name:'Koncept: moduł przemysłowy / rama'},
+  {id:'concept-power-subassembly',name:'Koncept: podzespół zasilania SUB-PWR'},
+  {id:'concept-drive-subassembly',name:'Koncept: podzespół napędu SUB-DRV'},
+  {id:'concept-assembly-fixture',name:'Koncept: przyrząd montażowy z dociskiem'},
 ] as const;
 export type EquipmentVisualModelId = typeof EQUIPMENT_VISUAL_MODELS[number]['id'];
 export function isEquipmentVisualModelId(value:unknown):value is EquipmentVisualModelId{

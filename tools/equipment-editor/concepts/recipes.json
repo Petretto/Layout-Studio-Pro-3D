@@ -40,6 +40,90 @@
       "triangleBudget": 5000,
       "referenceUrl": "https://jabama.pl/pl/p/-Regal-z-pojemnikami-RP1800-jednostronny-1800x1000x400/792",
       "features": "Autorski regał jednostronny z ramą, listwami i otwartymi pojemnikami w czterech rzędach. Dostęp od +Y. Inspiracja kategorią organizacji drobnych części, bez kopiowania układu produktu, pojemności ani nośności. To nie jest regał przepływowy FIFO."
+    },
+    {
+      "id": "concept-shelving-rack",
+      "name": "Regał półkowy magazynowy 1000x300x2500 — koncept",
+      "family": "shelving-rack",
+      "objectType": null,
+      "widthMm": 1000,
+      "lengthMm": 300,
+      "heightMm": 2500,
+      "triangleBudget": 5000,
+      "referenceUrl": "Dane do wyposażenia/Regał/Regał 1000x300x2500.png",
+      "features": "Stalowy regał półkowy z 4 pionowymi profilami, stopkami z prześwitem do posadzki oraz 5 poziomami półek z zagiętymi krawędziami usztywniającymi. Opracowany wg specyfikacji z materiałów użytkownika 1000x300x2500 mm."
+    },
+    {
+      "id": "concept-pallet-rack-single",
+      "name": "Regał paletowy PHR 1-gniazdowy 2870x1100x4500 — koncept",
+      "family": "pallet-rack-single",
+      "objectType": null,
+      "widthMm": 2870,
+      "lengthMm": 1100,
+      "heightMm": 4500,
+      "triangleBudget": 5000,
+      "referenceUrl": "Dane do wyposażenia/Regał paletowy PHR jednokolumnowy L=1 x 2700mm H=4500mm 0+3 poziomy Q=1000kg",
+      "features": "Wysokoskładowy regał paletowy PHR o jednej wnęce roboczej 2700 mm (szerokość całkowita 2870 mm, głębokość 1100 mm, wysokość 4500 mm). Dwie niebieskie ramy słupowe ze stężeniami kratownicowymi i stopami kotwionymi, 3 poziomy belek trawersowych pomarańczowych (poziomy 1400, 2800, 4200 mm) oraz tylne stężenie wiatrowe/krzyżowe."
+    },
+    {
+      "id": "concept-pallet-rack-double",
+      "name": "Regał paletowy PHR 2-gniazdowy 5655x1100x4500 — koncept",
+      "family": "pallet-rack-double",
+      "objectType": null,
+      "widthMm": 5655,
+      "lengthMm": 1100,
+      "heightMm": 4500,
+      "triangleBudget": 5000,
+      "referenceUrl": "Dane do wyposażenia/Regał paletowy PHR dwukolumnowy L=2 x 2700mm H=4500mm 0+3 poziomy Q=1000kg",
+      "features": "Wysokoskładowy regał paletowy PHR o dwóch wnękach roboczych 2x2700 mm (szerokość całkowita 5655 mm, głębokość 1100 mm, wysokość 4500 mm). Trzy niebieskie ramy słupowe z kratownicą i stopami, wspólna rama środkowa, 2x3 poziomy belek trawersowych pomarańczowych na poziomach 1400, 2800, 4200 mm."
+    },
+    {
+      "id": "concept-industrial-module",
+      "name": "Moduł przemysłowy / korpus bazowy — koncept",
+      "family": "industrial-module",
+      "objectType": null,
+      "widthMm": 1200,
+      "lengthMm": 800,
+      "heightMm": 1400,
+      "triangleBudget": 5000,
+      "referenceUrl": "https://layout-studio-pro.internal/pakiet-03-modul-urzadzenia",
+      "features": "Charakterystyczna rama korpusu modułu przemysłowego dla pakietu demonstracyjnego 03: spawane profile pionowe, płyta bazowa pod podzespoły, tylna płyta montażowa, stopy poziomujące i górne uchwyty transportowe."
+    },
+    {
+      "id": "concept-power-subassembly",
+      "name": "Podzespół zasilania SUB-PWR — koncept",
+      "family": "power-subassembly",
+      "objectType": null,
+      "widthMm": 500,
+      "lengthMm": 350,
+      "heightMm": 250,
+      "triangleBudget": 5000,
+      "referenceUrl": "https://layout-studio-pro.internal/pakiet-03-sub-pwr",
+      "features": "Charakterystyczny podzespół zasilania dla pakietu demonstracyjnego 03: podstawa montażowa, radiator wielożebrowy, transformator z uzwojeniem miedzianym i przemysłowe złącza wielopinowe."
+    },
+    {
+      "id": "concept-drive-subassembly",
+      "name": "Podzespół napędu SUB-DRV — koncept",
+      "family": "drive-subassembly",
+      "objectType": null,
+      "widthMm": 450,
+      "lengthMm": 300,
+      "heightMm": 280,
+      "triangleBudget": 5000,
+      "referenceUrl": "https://layout-studio-pro.internal/pakiet-03-sub-drv",
+      "features": "Charakterystyczny moduł napędowy dla pakietu demonstracyjnego 03: silnik serwo z żebrowaną obudową, kołnierz przekładni planetarnej, wał zdawczy z wpustem oraz boczny wspornik montażowy."
+    },
+    {
+      "id": "concept-assembly-fixture",
+      "name": "Przyrząd montażowy z dociskiem — koncept",
+      "family": "assembly-fixture",
+      "objectType": null,
+      "widthMm": 600,
+      "lengthMm": 400,
+      "heightMm": 300,
+      "triangleBudget": 5000,
+      "referenceUrl": "https://layout-studio-pro.internal/pakiet-01-zestaw-montazowy",
+      "features": "Przyrząd montażowy dla pakietu demonstracyjnego 01: stalowa płyta bazowa z rowkami T, pryzmy ustalające geometrię korpusu oraz dwa szybkomocujące dociski mechaniczne (toggle clamps) z ergonomiczną rękojeścią."
     }
   ]
 }
