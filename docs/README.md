@@ -24,6 +24,7 @@ Pozostałe materiały:
 - [Weryfikacja C2-B3f](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3F.md) — bezpośrednie wejście 0 podmontażu z buforami korpusów, odbiorca bezpośredni z zatrzymaniem obsady i lokalne przekazanie 0/0.
 - [Weryfikacja C2-final](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_FINAL.md) — pełne zamknięcie podpakietu C2, reguła zakazu wiszenia detali w powietrzu, pakiet demonstracyjny v1.2.0.
 - [Weryfikacja 7.12.D i 7.2](weryfikacja/WERYFIKACJA_ODBIOR_I_SZABLONY_7_12_D_FIZYCZNY.md) — zbiorczy odbiór fizyczny i szablony trzech zewnętrznych pakietów pokazowych oraz walidacja referencji analitycznych (zamknięcie punktów 7.12 i 7.2).
+- [Weryfikacja 7.13](weryfikacja/WERYFIKACJA_PUSTEGO_STARTU_I_KATALOGU_7_13_FINAL.md) — pusty start bez wbudowanych projektów, rozwijany katalog 4 zewnętrznych pakietów pokazowych z SHA-256 i ochrona danych.
 - [Weryfikacja 7.14](weryfikacja/WERYFIKACJA_TUTORIALU_7_14.md) — interaktywny tutorial krok po kroku oparty na pakiecie zestawu montażowego, 8 etapów Lean, persystencja i ochrona środowiska.
 
 - [Instrukcja użytkownika](../Instrukcja/Podrecznik_Uzytkownika.md) — źródło MD oraz wersje HTML/PDF w `Instrukcja/`.
