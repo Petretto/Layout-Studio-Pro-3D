@@ -3,6 +3,8 @@ import {prepareC2B2bUiProject} from './fixtures/c2B2bUi';
 import {prepareC2B3aUiProject} from './fixtures/c2B3aUi';
 import {prepareC2B3bUiProject} from './fixtures/c2B3bUi';
 import {prepareC2B3cUiProject} from './fixtures/c2B3cUi';
+import {prepareC2B3dUiProject} from './fixtures/c2B3dUi';
+import {prepareC2B3eUiProject} from './fixtures/c2B3eUi';
 import {GraphBodyBuffers} from '../src/core/graphBodyBuffers';
 import {createSubassemblyBufferBook, applySubassemblyBufferEvent, subassemblyBufferLoad,
   type SubassemblyBufferPlace, type SubassemblyBufferBook} from '../src/core/subassemblyBufferState';
@@ -4933,13 +4935,225 @@ test('7.12.C2-B3b: bufor wejściowy przyjmuje korpus przed dostawą materiału i
   assert.deepEqual(result.materialEvents!.map(event=>[event.kind,event.atSeconds]),[['delivery',80],['consumption',80]]);
 });
 
-test('7.12.C2-B3b: jawne odmowy zera, zatrzymania obsady, lokalnej kontynuacji i ograniczonego końca',()=>{
+test('7.12.C2-B3b: jawne odmowy równoległego wejścia 0, częściowej obecności zatrzymanej obsady i ograniczonego końca',()=>{
   const reject=(change:(project:ReturnType<typeof graphBodyBufferedFixture>)=>void,pattern:RegExp)=>{const project=graphBodyBufferedFixture();change(project);const before=JSON.stringify(project);assert.throws(()=>scheduleWorkerRun(project,1,1,project.bodyRunInput),pattern);assert.equal(JSON.stringify(project),before);};
-  reject(project=>{project.stationBuffers!.buffers[0].outputCapacity=0;},/dodatnie pojemności/);
-  reject(project=>{project.stationBuffers!.buffers[0].blockingPolicy='bbas';},/zwolnienia operatora/);
+  reject(project=>{project.stationBuffers!.buffers[1].inputCapacity=0;project.physicalConcurrency={groups:[{id:'G-DIR',operationIds:[project.operations[0].id,project.operations[2].id]}]};},/równoległą operacją odbiorcy/);
+  reject(project=>{project.stationBuffers!.buffers[0].blockingPolicy='bbas';project.operations.find(operation=>operation.id==='BODY-FIRST')!.staffing!.timeVariants[0].timeProfile.operatorPresence=[{startSeconds:0,endSeconds:5,basis:'assumed'}];},/obecności/);
   reject(project=>{project.stationBuffers!.buffers[1].outputCapacity=1;},/jawnego odbioru/);
   reject(project=>{project.bodyRunInput!.bodies[0].location={kind:'station',stationId:'ST-C',copy:1};},/początkowy korpus/);
   reject(project=>{project.subassemblyBuffers!.buffers[1].inputCapacity=0;project.subassemblyFlow!.lots[0].consumptionQuantity=2;},/bezpośrednim wejściem/);
+});
+
+test('7.12.C2-B3e: oba zera korpusu z gałęzią — wyjazd 48, przyjazd i wspólny start 50, obsada zatrzymana lub zwolniona',()=>{
+  for(const policy of ['bbas','bbas-worker-released'] as const){
+    const project=graphBodyBufferedFixture();
+    project.stationBuffers={buffers:[
+      {stationId:'ST-A',copy:1,inputCapacity:0,outputCapacity:0,blockingPolicy:policy},
+      {stationId:'ST-C',copy:1,inputCapacity:0,outputCapacity:null,blockingPolicy:'bbas-worker-released'}
+    ]};
+    const before=JSON.stringify(project),result=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+    const first=result.runs.find(run=>run.operationId==='BODY-FIRST')!,recipient=result.runs.find(run=>run.operationId===project.operations[2].id)!;
+    assert.equal(JSON.stringify(project),before);assertNoWorkerOverlap(result);
+    assert.deepEqual([first.startSeconds,first.endSeconds,first.stationReleaseSeconds,first.blockedSeconds,first.reserveEndSeconds],[10,20,48,28,policy==='bbas'?48:20]);
+    assert.deepEqual([recipient.startSeconds,recipient.endSeconds,recipient.transport?.startSeconds,recipient.transport?.endSeconds],[50,60,48,50]);
+    assert.deepEqual(result.transportMovements!.map(move=>[move.purpose,move.startSeconds,move.endSeconds,move.lotId??'body']),[
+      ['transfer',20,22,'LOT-1'],['return',22,27,'body'],['transfer',48,50,'body'],['return',50,55,'body']
+    ]);
+    assert.deepEqual(result.bodyEvents!.map(event=>[event.kind,event.atSeconds]),[
+      ['reserve',10],['release',48],['start-transfer',48],['finish-transfer',50],['reserve',50],['release',60]
+    ]);
+    assert.deepEqual(result.bufferEvents!.map(event=>[event.kind,event.atSeconds,event.stationId]),[
+      ['handoff',10,'ST-A'],['blocked',20,'ST-A'],['released',48,'ST-A'],['handoff',50,'ST-C'],['released',60,'ST-C']
+    ]);
+    assert.equal(result.bufferBook!.tokens.length,0);
+    assert.equal(result.subassemblyEvents!.find(event=>event.kind==='consumed')!.atSeconds,50);
+    const history=prepareDomainPhysicalPlayback(project,result,{batch:1,arrivalIntervalSeconds:1,transportMode:'configured'});
+    assert.equal(domainPhysicalPlaybackFrame(history,35).bodies[0].status,'reserved');
+    assert.deepEqual(domainPhysicalPlaybackFrame(history,35).bodies[0].location,{kind:'station',stationId:'ST-A',copy:1});
+    assert.equal(domainPhysicalPlaybackFrame(history,49).bodies[0].status,'moving');
+  }
+});
+
+test('7.12.C2-B3e: zatrzymany monter korpusu wykonuje loaded własnego korpusu i operację odbiorcy, ale nie pusty dojazd',()=>{
+  const project=graphBodyBufferedFixture();
+  project.stationBuffers={buffers:[
+    {stationId:'ST-A',copy:1,inputCapacity:1,outputCapacity:0,blockingPolicy:'bbas'},
+    {stationId:'ST-C',copy:1,inputCapacity:0,outputCapacity:null,blockingPolicy:'bbas-worker-released'}
+  ]};
+  // Place subassembly producer on ST-C so CART-1 stays at ST-A for the body transfer.
+  const producerId=project.operations[0].id;
+  project.stations.find(s=>s.id==='ST-A')!.operationIds=project.stations.find(s=>s.id==='ST-A')!.operationIds.filter(id=>id!==producerId);
+  project.stations.find(s=>s.id==='ST-C')!.operationIds.unshift(producerId);
+  project.stationRouting!.operations.find(op=>op.operationId===producerId)!.candidates=[{stationId:'ST-C',copy:1,requiredEquipmentIds:[]}];
+  project.subassemblyBuffers={buffers:[{subassemblyId:'SUB-FLOW',unit:'szt.',stationId:'ST-C',copy:1,inputCapacity:2,outputCapacity:2,blockingPolicy:'bbas-worker-released'}]};
+  project.resourceCalendars!.stations['ST-C'].shifts[0].startSeconds=0;
+  project.materialSupply={items:[{id:'HOLD-SUP',componentId:'EXPLICIT-PART',targetStationId:'ST-C',initialStock:0,unit:'szt.',schedule:{kind:'explicit-deliveries',deliveries:[{deliveryTimeSeconds:50,quantity:1}]},source:'Jawna dostawa przy 50 s'}],consumptions:[{operationId:project.operations[2].id,supplyId:'HOLD-SUP',quantity:1,source:'Jawne pobranie'}]};
+  const bodyWorker=project.workers[1].id,branchWorker=project.workers[0].id,cartId=project.assemblyTransport!.carts[0].equipmentId;
+  project.assemblyTransport!.routes[0].alternatives=[{equipmentIds:[cartId],workerIds:[bodyWorker]}];
+  project.assemblyTransport!.emptyRoutes[0].workerAssignment={workerIds:[bodyWorker],source:'Jawny powrót wózka'};
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+  const first=result.runs.find(run=>run.operationId==='BODY-FIRST')!,recipient=result.runs.find(run=>run.operationId===project.operations[2].id)!;
+  assert.deepEqual([first.startSeconds,first.endSeconds,first.stationReleaseSeconds,first.reserveEndSeconds],[10,20,48,48]);
+  assert.deepEqual([recipient.startSeconds,recipient.endSeconds],[50,60]);
+  assert.deepEqual(result.transportMovements!.map(move=>[move.purpose,move.startSeconds,move.endSeconds,move.workerIds[0]]),[
+    ['transfer',48,50,bodyWorker],['return',60,65,bodyWorker]
+  ]);
+  assertNoWorkerOverlap(result);
+
+  // If the cart starts at ST-C and requires an empty approach to ST-A before picking up the body,
+  // the held bodyWorker cannot perform that empty approach while still holding ST-A.
+  const approachBlocked=structuredClone(project);
+  approachBlocked.assemblyTransport!.carts[0].initialLocation={stationId:'ST-C',copy:1};
+  approachBlocked.assemblyTransport!.carts[0].afterUnload='stay-at-destination';
+  assert.throws(()=>scheduleWorkerRun(approachBlocked,1,1,approachBlocked.bodyRunInput),/buffer-deadlock|Proces został zatrzymany|Brak miejsca/);
+
+  // Allowing the independent branchWorker on the empty approach lets the cart approach ST-C -> ST-A while bodyWorker stays held until 48.
+  const approachByOther=structuredClone(approachBlocked);
+  approachByOther.assemblyTransport!.emptyRoutes[0].workerAssignment={workerIds:[branchWorker],source:'Jawny dojazd niezależnej osoby'};
+  const withApproach=scheduleWorkerRun(approachByOther,1,1,approachByOther.bodyRunInput);
+  const heldFirst=withApproach.runs.find(run=>run.operationId==='BODY-FIRST')!;
+  assert.deepEqual([heldFirst.startSeconds,heldFirst.endSeconds,heldFirst.stationReleaseSeconds,heldFirst.reserveEndSeconds],[10,20,48,48]);
+  assert.deepEqual(withApproach.transportMovements!.map(move=>[move.purpose,move.startSeconds,move.endSeconds,move.workerIds[0]]),[
+    ['approach',20,25,branchWorker],['transfer',48,50,bodyWorker]
+  ]);
+  assertNoWorkerOverlap(withApproach);
+});
+
+test('7.12.C2-B3e: wyjście 0 do dodatniego wejścia oraz dodatnie wyjście do wejścia 0 z odblokowaniem kolejnego zlecenia',()=>{
+  // 1) output 0 -> positive input 1 with 2 jobs: job 1 leaves ST-A at 20..22 into ST-C input buffer (1/1); job 2 finishes ST-A and is held on ST-A until job 1 starts on ST-C at 50!
+  const outZero=graphBodyBufferedFixture(),lot=structuredClone(outZero.subassemblyFlow!.lots[0]),body=structuredClone(outZero.bodyRunInput!.bodies[0]);
+  outZero.workers.push({id:'BODY-RECEIVER',name:'Jawny niezależny monter odbiorcy — test'});
+  outZero.workerRunSelection!.teamWorkerIds.push('BODY-RECEIVER');
+  outZero.workerRunSelection!.operations.find(operation=>operation.operationId===outZero.operations[2].id)!.eligibleWorkerIds=['BODY-RECEIVER'];
+  outZero.resourceCalendars!.workers['BODY-RECEIVER']={shifts:[{startSeconds:0,endSeconds:200,basis:'assumed'}],breaks:[]};
+  outZero.stationBuffers={buffers:[
+    {stationId:'ST-A',copy:1,inputCapacity:2,outputCapacity:0,blockingPolicy:'bbas'},
+    {stationId:'ST-C',copy:1,inputCapacity:1,outputCapacity:null,blockingPolicy:'bbas-worker-released'}
+  ]};
+  outZero.subassemblyBuffers!.buffers[0].outputCapacity=4;outZero.subassemblyBuffers!.buffers[1].inputCapacity=4;
+  outZero.subassemblyFlow!.lots=[
+    {...structuredClone(lot),id:'LOT-1',producer:{...lot.producer,job:1},consumer:{...lot.consumer,job:1}},
+    {...structuredClone(lot),id:'LOT-2',producer:{...lot.producer,job:2},consumer:{...lot.consumer,job:2}}
+  ];
+  outZero.bodyRunInput={bodies:[{...structuredClone(body),id:'BODY-1'},{...structuredClone(body),id:'BODY-2'}],jobs:[{job:1,bodyId:'BODY-1'},{job:2,bodyId:'BODY-2'}]};
+  const resOutZero=scheduleWorkerRun(outZero,1,2,outZero.bodyRunInput);
+  const firstOutZero=resOutZero.runs.find(run=>run.job===1&&run.operationId==='BODY-FIRST')!;
+  const secondOutZero=resOutZero.runs.find(run=>run.job===2&&run.operationId==='BODY-FIRST')!;
+  assert.deepEqual([firstOutZero.startSeconds,firstOutZero.endSeconds,firstOutZero.stationReleaseSeconds,firstOutZero.reserveEndSeconds],[20,30,30,30]);
+  assert.equal(secondOutZero.stationReleaseSeconds,50);assert.equal(secondOutZero.reserveEndSeconds,50);
+  assertNoWorkerOverlap(resOutZero);
+
+  // 2) positive output 1 -> input 0 with 2 jobs: job 2 is held on ST-A until job 1 departs directly to ST-C at 48.
+  const inZero=structuredClone(outZero);
+  inZero.stationBuffers={buffers:[
+    {stationId:'ST-A',copy:1,inputCapacity:2,outputCapacity:1,blockingPolicy:'bbas'},
+    {stationId:'ST-C',copy:1,inputCapacity:0,outputCapacity:null,blockingPolicy:'bbas-worker-released'}
+  ]};
+  const resInZero=scheduleWorkerRun(inZero,1,2,inZero.bodyRunInput);
+  const secondFirst=resInZero.runs.find(run=>run.job===2&&run.operationId==='BODY-FIRST')!;
+  assert.equal(secondFirst.stationReleaseSeconds,48);assert.equal(secondFirst.reserveEndSeconds,48);
+  assert.deepEqual(resInZero.jobs.map(job=>job.finish),[60,74]);assertNoWorkerOverlap(resInZero);
+});
+
+test('7.12.C2-B3e: dostawa materiału i zajętość odbiorcy przesuwają bezpośredni wyjazd korpusu bez magazynowania przy wejściu 0',()=>{
+  const project=graphBodyBufferedFixture();
+  project.stationBuffers={buffers:[
+    {stationId:'ST-A',copy:1,inputCapacity:1,outputCapacity:0,blockingPolicy:'bbas'},
+    {stationId:'ST-C',copy:1,inputCapacity:0,outputCapacity:null,blockingPolicy:'bbas-worker-released'}
+  ]};
+  project.materialSupply={items:[{id:'DIR-BODY-SUP',componentId:'EXPLICIT-PART',targetStationId:'ST-C',initialStock:0,unit:'szt.',schedule:{kind:'explicit-deliveries',deliveries:[{deliveryTimeSeconds:80,quantity:1}]},source:'Jawna dostawa przy 80 s'}],consumptions:[{operationId:project.operations[2].id,supplyId:'DIR-BODY-SUP',quantity:1,source:'Jawne pobranie przy starcie odbiorcy'}]};
+  const result=scheduleWorkerRun(project,1,1,project.bodyRunInput);
+  const first=result.runs.find(run=>run.operationId==='BODY-FIRST')!,recipient=result.runs.find(run=>run.operationId===project.operations[2].id)!;
+  assert.deepEqual([first.startSeconds,first.endSeconds,first.stationReleaseSeconds,first.reserveEndSeconds,first.blockedSeconds],[10,20,78,78,58]);
+  assert.deepEqual([recipient.startSeconds,recipient.endSeconds,recipient.transport?.startSeconds,recipient.transport?.endSeconds],[80,90,78,80]);
+  assert.deepEqual(result.materialEvents!.map(event=>[event.kind,event.atSeconds]),[['delivery',80],['consumption',80]]);
+  assert.equal(result.subassemblyEvents!.find(event=>event.kind==='consumed')!.atSeconds,80);
+  assertNoWorkerOverlap(result);
+});
+
+test('7.12.C2-B3e: syntetyczny wzorzec C2 z zerowymi buforami korpusów i gałęziami zachowuje ciągłość odtwarzania i rezerwacji',()=>{
+  const input=JSON.parse(advancedDemoPackage().data.draftRaw).project,before=JSON.stringify(input),project=prepareC2B3eUiProject(input);
+  const result=scheduleWorkerRun(project,1,3,project.bodyRunInput);
+  assert.equal(JSON.stringify(input),before);assertNoWorkerOverlap(result);
+  const firstRuns=result.runs.filter(run=>run.operationId==='MU-OP10-M');
+  assert.deepEqual(firstRuns.map(run=>[run.startSeconds,run.endSeconds,run.stationReleaseSeconds,run.reserveEndSeconds,run.blockedSeconds]),[
+    [0,40,490,490,450],[490,530,570,570,40],[570,610,660,660,50]
+  ]);
+  const intRuns=result.runs.filter(run=>run.operationId==='MU-OP20-M');
+  assert.deepEqual(intRuns.map(run=>[run.startSeconds,run.endSeconds,run.stationReleaseSeconds,run.blockedSeconds]),[
+    [500,570,570,0],[580,650,660,10],[670,740,750,10]
+  ]);
+  assert.deepEqual(result.jobs.map(job=>job.finish),[630,720,810]);
+  assert.equal(result.bufferBook!.tokens.length,0);
+  assert.ok(result.bufferEvents!.some(event=>event.kind==='handoff'&&event.stationId==='ST-MU-MAIN2'));
+  assert.ok(result.bufferEvents!.some(event=>event.kind==='handoff'&&event.stationId==='ST-MU-MAIN3'));
+  assert.ok(result.reservations.reservations.every(reservation=>reservation.releasedAtSeconds===reservation.endSeconds&&reservation.endSeconds<Number.MAX_VALUE));
+  const history=prepareDomainPhysicalPlayback(project,result,{batch:3,arrivalIntervalSeconds:1,transportMode:'configured'});
+  assert.equal(domainPhysicalPlaybackFrame(history,495).bodies[0].status,'moving');
+  assert.equal(domainPhysicalPlaybackFrame(history,500).bodies[0].status,'reserved');
+});
+
+test('7.12.C2-B3d: dodatnie wyjście zatrzymuje obsadę 60–100, niezależny odbiorca zwalnia pojemność',()=>{
+  const project=graphBodyBufferedFixture(),lot=structuredClone(project.subassemblyFlow!.lots[0]),body=structuredClone(project.bodyRunInput!.bodies[0]);
+  project.stationBuffers!.buffers[0].blockingPolicy='bbas';
+  project.subassemblyBuffers!.buffers[0].outputCapacity=6;project.subassemblyBuffers!.buffers[1].inputCapacity=4;
+  project.subassemblyFlow!.lots=Array.from({length:3},(_,i)=>({...structuredClone(lot),id:`HOLD-LOT-${i+1}`,producer:{...lot.producer,job:i+1},consumer:{...lot.consumer,job:i+1}}));
+  project.bodyRunInput={bodies:Array.from({length:3},(_,i)=>({...structuredClone(body),id:`HOLD-BODY-${i+1}`})),jobs:Array.from({length:3},(_,i)=>({job:i+1,bodyId:`HOLD-BODY-${i+1}`}))};
+  project.workers.push({id:'BODY-RECEIVER',name:'Jawny niezależny monter odbiorcy — test'});project.workerRunSelection!.teamWorkerIds.push('BODY-RECEIVER');
+  project.workerRunSelection!.operations.find(operation=>operation.operationId===project.operations[2].id)!.eligibleWorkerIds=['BODY-RECEIVER'];
+  project.resourceCalendars!.workers['BODY-RECEIVER']={shifts:[{startSeconds:0,endSeconds:200,basis:'assumed'}],breaks:[]};
+  for(const calendar of Object.values(project.resourceCalendars!.workers))calendar.shifts[0].endSeconds=200;
+  for(const calendar of Object.values(project.resourceCalendars!.stations))calendar.shifts[0].endSeconds=200;
+  project.resourceCalendars!.stations['ST-C'].shifts[0].startSeconds=100;
+  for(const cart of project.assemblyTransport!.carts)cart.calendar.shifts[0].endSeconds=200;
+  const before=JSON.stringify(project),result=scheduleWorkerRun(project,1,3,project.bodyRunInput),held=result.runs.find(run=>run.job===3&&run.operationId==='BODY-FIRST')!;
+  assert.deepEqual([held.startSeconds,held.endSeconds,held.stationReleaseSeconds,held.reserveEndSeconds,held.blockedSeconds],[50,60,100,100,40]);
+  assert.deepEqual(result.jobs.map(job=>job.finish),[110,120,133]);assertNoWorkerOverlap(result);assert.equal(JSON.stringify(project),before);
+  assert.equal(result.reservations.reservations.find(reservation=>reservation.reservationId==='3:BODY-FIRST')!.endSeconds,100);
+  const unlimitedBranches=structuredClone(project);delete unlimitedBranches.subassemblyBuffers;
+  const noBranchLimits=scheduleWorkerRun(unlimitedBranches,1,3,unlimitedBranches.bodyRunInput);
+  assert.equal(noBranchLimits.runs.find(run=>run.job===3&&run.operationId==='BODY-FIRST')!.reserveEndSeconds,100);
+  assert.deepEqual(noBranchLimits.jobs.map(job=>job.finish),[110,120,133]);assertNoWorkerOverlap(noBranchLimits);
+});
+
+test('7.12.C2-B3d: źródłowy monter nie przewozi wcześniejszego korpusu, gdy zatrzymuje go pełne wyjście',()=>{
+  const project=prepareC2B3bUiProject(JSON.parse(advancedDemoPackage().data.draftRaw).project);
+  project.stationBuffers!.buffers[0].blockingPolicy='bbas';
+  const before=JSON.stringify(project);
+  assert.throws(()=>scheduleWorkerRun(project,1,3,project.bodyRunInput),(error:unknown)=>{
+    const diagnostic=parseProcessStallDiagnostic(error)!;assert.ok(diagnostic);assert.equal(diagnostic.type,'buffer-deadlock');
+    assert.ok(diagnostic.blockedStations.some(station=>station.blockedByOperationId==='MU-OP10-M'&&station.blockingPolicy==='bbas'&&station.holdingWorkerIds?.includes('MU-W3')));return true;
+  });assert.equal(JSON.stringify(project),before);
+});
+
+test('7.12.C2-B3d: przyszły powrót obsady czeka na znane zwolnienie, trzeci korpus rezerwuje osobę dopiero po powrocie',()=>{
+  const project=prepareC2B3dUiProject(JSON.parse(advancedDemoPackage().data.draftRaw).project),result=scheduleWorkerRun(project,1,3,project.bodyRunInput);
+  const held=result.runs.find(run=>run.job===3&&run.operationId==='MU-OP10-M')!;
+  assert.deepEqual([held.startSeconds,held.endSeconds,held.stationReleaseSeconds,held.reserveEndSeconds,held.blockedSeconds],[90,130,500,500,370]);
+  const returns=result.transportMovements!.filter(move=>move.routeId==='MU-RETURN-M1-INT');
+  assert.deepEqual(returns.map(move=>[move.startSeconds,move.endSeconds]),[[80,90],[510,520],[580,590]]);
+  assertNoWorkerOverlap(result);assert.deepEqual(result.jobs.map(job=>job.finish),[700,790,840]);
+  assert.ok(result.reservations.reservations.every(reservation=>reservation.releasedAtSeconds===reservation.endSeconds&&reservation.endSeconds<Number.MAX_VALUE));
+});
+
+test('7.12.C2-B3d: bbas przy wolnym wyjściu zwalnia obsadę po obróbce, lokalna kontynuacja zachowuje profil',()=>{
+  const plain=graphBodyBufferedFixture();plain.stationBuffers!.buffers[0].blockingPolicy='bbas';
+  const result=scheduleWorkerRun(plain,1,1,plain.bodyRunInput),run=result.runs.find(run=>run.operationId==='BODY-FIRST')!;
+  assert.equal(run.reserveEndSeconds,20);assert.equal(run.stationReleaseSeconds,20);assert.equal(result.jobs[0].finish,60);assertNoWorkerOverlap(result);
+  const local=graphLocalContinuationFixture();local.stationBuffers!.buffers[0].blockingPolicy='bbas';
+  const profile=local.operations.find(operation=>operation.id==='BODY-FIRST')!.staffing!.timeVariants[0].timeProfile;
+  profile.manualWork=[{startSeconds:0,endSeconds:5,basis:'assumed'}];profile.operatorPresence=[{startSeconds:0,endSeconds:5,basis:'assumed'}];profile.machineRun=[{startSeconds:5,endSeconds:10,basis:'assumed'}];
+  const continued=scheduleWorkerRun(local,1,1,local.bodyRunInput),initial=continued.runs.find(run=>run.operationId==='BODY-FIRST')!;
+  assert.equal(initial.reserveEndSeconds,15);assert.equal(initial.stationReleaseSeconds,50);assert.equal(initial.continuationWaitSeconds,30);assert.equal(continued.jobs[0].finish,72);assertNoWorkerOverlap(continued);
+});
+
+test('7.12.C2-B3d: częściowa obecność obsady korpusu wymaga dalszej integracji, bez dopowiadania powrotu',()=>{
+  for(const late of [false,true]){
+    const project=graphBodyBufferedFixture();project.stationBuffers!.buffers[0].blockingPolicy='bbas';
+    const profile=project.operations.find(operation=>operation.id==='BODY-FIRST')!.staffing!.timeVariants[0].timeProfile;
+    profile.manualWork=[{startSeconds:late?3:0,endSeconds:late?10:5,basis:'assumed'}];profile.operatorPresence=structuredClone(profile.manualWork);profile.machineRun=[{startSeconds:late?0:5,endSeconds:late?3:10,basis:'assumed'}];
+    const before=JSON.stringify(project);assert.throws(()=>scheduleWorkerRun(project,1,1,project.bodyRunInput),/wymaga jawnej obecności od początku do końca/);assert.equal(JSON.stringify(project),before);
+  }
 });
 
 test('7.12.C2-B3b: dodatnie bufory korpusów i podmontaży dzielą harmonogram, pełne wyjście zatrzymuje stanowisko',()=>{
@@ -5741,10 +5955,11 @@ test('3.5a1: harmonogram i worker nie ignorują zapisanych limitów buforów ani
   assert.equal(JSON.stringify(project),before);
   delete project.materialSupply; // Isolate body-buffer scope after the separate missing-consumption guard above.
   project.stationBuffers={buffers:[{stationId:'ST-C',copy:1,inputCapacity:0,outputCapacity:null,blockingPolicy:'bbas'}]};
-  assert.throws(()=>scheduleWorkerRun(project,1,1,project.bodyRunInput),/dodatnie pojemności/);
+  assert.equal(scheduleWorkerRun(project,1,1,project.bodyRunInput).bufferEvents![0].kind,'handoff');
+  assert.throws(()=>scheduleWorkerRun({...project,stationBuffers:{buffers:[{stationId:'ST-A',copy:1,inputCapacity:0,outputCapacity:null,blockingPolicy:'bbas'}]}},1,1,project.bodyRunInput),/poza jawną ścieżką korpusu/);
   assert.equal(scheduleWorkerRun(project,1,1,undefined,undefined,{transportMode:'just-in-time'}).jobs[0].finish,20);
   project.stationBuffers.buffers[0].inputCapacity=null;project.stationBuffers.buffers[0].outputCapacity=1;
-  assert.throws(()=>scheduleWorkerRun(project,1,1,project.bodyRunInput),/zwolnienia operatora/);
+  assert.throws(()=>scheduleWorkerRun(project,1,1,project.bodyRunInput),/jawnego odbioru gotowych wyrobów/);
 });
 test('3.5a1: puste kontrakty i jawne bufory bez limitu zachowują dawny wynik',()=>{
   const project=subassemblyScheduleFixture(),before=scheduleWorkerRun(project,1,1,project.bodyRunInput);

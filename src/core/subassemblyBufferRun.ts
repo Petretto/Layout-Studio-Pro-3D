@@ -47,6 +47,13 @@ export class SubassemblyBufferRun {
   mayHoldAt(operationId: string, location: StationCopyRef, project: DomainProjectV6) {
     return (project.subassemblyFlow?.lots??[]).some(lot=>lot.producer.operationId===operationId&&this.holdsWorkers(lot.subassemblyId,location));
   }
+  hasFiniteOutput(operationId: string, location: StationCopyRef, project: DomainProjectV6) {
+    return (project.subassemblyFlow?.lots??[]).some(lot=>{
+      if(lot.producer.operationId!==operationId)return false;
+      const book=this.books.get(lot.subassemblyId);
+      return !!book&&this.place(book,this.ref(location,'output')).capacity!==null;
+    });
+  }
   private ref(location: StationCopyRef, side: 'input'|'output'): BufferRef {return {stationId:location.stationId,copy:location.copy,side};}
   private book(lot: SubassemblyLotState) {return this.books.get(lot.declaration.subassemblyId)!;}
   private lot(lot: SubassemblyLotState) {return {id:lot.declaration.id,subassemblyId:lot.declaration.subassemblyId,unit:lot.declaration.unit,quantity:lot.declaration.quantity};}

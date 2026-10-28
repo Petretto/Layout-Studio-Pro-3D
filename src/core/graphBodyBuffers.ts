@@ -1,5 +1,5 @@
 import type {DomainProjectV6} from './domainProject';
-import {applyBodyEvent,type BodyBook,type BodyEvent} from './bodyState';
+import {applyBodyEvent,type BodyBook,type BodyEvent,type BodyTimeBasis} from './bodyState';
 import {applyBufferedBodyEvent} from './bufferedBodyState';
 import {applyBufferEvent,bufferHasSpace,createBufferBook,type BufferBook,type BufferRef} from './bufferState';
 import type {StationCandidate} from './stationRouting';
@@ -36,9 +36,7 @@ export class GraphBodyBuffers {
     let buffers=createBufferBook(project);
     const places=[...buffers.places];
     for(const place of places){
-      if(place.capacity===0)throw new Error('C2-B3b: bufory korpusów z gałęziami obsługują dodatnie pojemności; wejście/wyjście 0 wymaga dalszej integracji.');
       if(place.capacity!==null&&!spine.some(id=>{const target=this.targets.get(id)!;return target.stationId===place.stationId&&target.copy===place.copy;}))throw new Error('C2-B3b: skończony bufor poza jawną ścieżką korpusu.');
-      if(place.side==='output'&&place.capacity!==null&&place.blockingPolicy!=='bbas-worker-released')throw new Error('C2-B3b: skończone wyjścia korpusów z gałęziami wymagają polityki zwolnienia operatora po obróbce.');
     }
     for(const target of this.targets.values())for(const side of ['input','output'] as const){
       if(!places.some(place=>place.stationId===target.stationId&&place.copy===target.copy&&place.side===side))places.push({stationId:target.stationId,copy:target.copy,side,capacity:null});
@@ -50,6 +48,13 @@ export class GraphBodyBuffers {
   target(operationId:string){return this.targets.get(operationId)!;}
   localPredecessor(operationId:string){return this.localPrevious.get(operationId);}
   hasLocalNext(operationId:string){return [...this.localPrevious.values()].includes(operationId);}
+  inputIsDirect(operationId:string){return this.place(operationId,'input').capacity===0;}
+  outputIsDirect(operationId:string){return !this.hasLocalNext(operationId)&&this.place(operationId,'output').capacity===0;}
+  outputIsFinite(operationId:string){return this.targets.has(operationId)&&!this.hasLocalNext(operationId)&&this.place(operationId,'output').capacity!==null;}
+  holdsWorkers(operationId:string){
+    if(!this.targets.has(operationId)||this.hasLocalNext(operationId))return false;
+    const place=this.place(operationId,'output');return place.capacity!==null&&place.blockingPolicy==='bbas';
+  }
   private place(operationId:string,side:'input'|'output'){const target=this.target(operationId);return this.buffers.places.find(place=>place.stationId===target.stationId&&place.copy===target.copy&&place.side===side)!;}
   hasToken(bodyId:string){return this.buffers.tokens.some(token=>token.id===bodyId);}
   hasInputSpace(operationId:string){return bufferHasSpace(this.buffers,this.place(operationId,'input'));}
@@ -57,7 +62,25 @@ export class GraphBodyBuffers {
     let next=applyBufferEvent(this.buffers,{kind:'reserve',id:bodyId,to:this.place(operationId,'input'),atSeconds:at});
     next=applyBufferEvent(next,{kind:'arrive',id:bodyId,atSeconds:at});this.buffers=next;
   }
-  /** Undefined means full output: keep both the body reservation and station/equipment ownership. */
+  depart(bodies:BodyBook,event:{bodyId:string;fromOperationId?:string;toOperationId:string;atSeconds:number;endSeconds:number;basis:BodyTimeBasis}):BodyBook{
+    const to:BufferRef={...this.target(event.toOperationId),side:'input'};
+    if(this.inputIsDirect(event.toOperationId)){
+      const next=applyBufferedBodyEvent({bodies,buffers:this.buffers},{kind:'depart-direct',bodyId:event.bodyId,atSeconds:event.atSeconds,to,endSeconds:event.endSeconds,basis:event.basis,...(event.fromOperationId?{releaseOperationId:event.fromOperationId}:{})});
+      this.buffers=next.buffers;return next.bodies;
+    }
+    if(event.fromOperationId){
+      const next=applyBufferedBodyEvent({bodies,buffers:this.buffers},{kind:'depart-from-operation',bodyId:event.bodyId,atSeconds:event.atSeconds,operationId:event.fromOperationId,to,endSeconds:event.endSeconds,basis:event.basis});
+      this.buffers=next.buffers;return next.bodies;
+    }
+    const reserved=applyBufferedBodyEvent({bodies,buffers:this.buffers},{kind:'reserve-input',bodyId:event.bodyId,atSeconds:event.atSeconds,to});
+    const next=applyBufferedBodyEvent(reserved,{kind:'depart',bodyId:event.bodyId,atSeconds:event.atSeconds,endSeconds:event.endSeconds,basis:event.basis});
+    this.buffers=next.buffers;return next.bodies;
+  }
+  arriveDirect(bodies:BodyBook,event:{bodyId:string;operationId:string;atSeconds:number;endSeconds:number;basis:BodyTimeBasis}):BodyBook{
+    const next=applyBufferedBodyEvent({bodies,buffers:this.buffers},{kind:'arrive-direct',...event});
+    this.buffers=next.buffers;return next.bodies;
+  }
+  /** Undefined means full or zero-capacity output: keep both the body reservation and station/equipment ownership. */
   event(bodies:BodyBook,event:BodyEvent):BodyBook|undefined{
     if(event.kind==='release'&&this.hasLocalNext(event.operationId))throw new Error('Lokalna kontynuacja wymaga przekazania korpusu dopiero przy starcie następnej operacji.');
     if(event.kind==='reserve'){
@@ -67,9 +90,13 @@ export class GraphBodyBuffers {
         const next=applyBufferedBodyEvent({bodies,buffers:this.buffers},{...event,kind:'continue-operation',previousOperationId,location:this.target(event.operationId)});
         this.buffers=next.buffers;return next.bodies;
       }
+      if(this.inputIsDirect(event.operationId)){
+        const next=applyBufferedBodyEvent({bodies,buffers:this.buffers},{...event,kind:'start-direct'});
+        this.buffers=next.buffers;return next.bodies;
+      }
     }
     if(event.kind==='release'&&event.operationId===this.terminal)return applyBodyEvent(bodies,event);
-    if(event.kind==='release'&&!bufferHasSpace(this.buffers,this.place(event.operationId,'output')))return undefined;
+    if(event.kind==='release'&&(this.outputIsDirect(event.operationId)||!bufferHasSpace(this.buffers,this.place(event.operationId,'output'))))return undefined;
     const atSeconds=event.atSeconds,bodyId=event.bodyId;
     const transition=event.kind==='release'?{kind:'complete-to-output' as const,bodyId,atSeconds,operationId:event.operationId,to:this.place(event.operationId,'output')}
       :event.kind==='reserve'?{...event,kind:'start-operation' as const}

@@ -19,6 +19,8 @@ Pozostałe materiały:
 - [Weryfikacja C2-B3a](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3A.md) — wspólny odbiór jednej partii bezpośredniej i partii buforowanych.
 - [Weryfikacja C2-B3b](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3B.md) — dodatnie bufory korpusów z gałęziami i próba spiętrzenia.
 - [Weryfikacja C2-B3c](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3C.md) — lokalna kontynuacja korpusu w grafie gałęzi.
+- [Weryfikacja C2-B3d](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3D.md) — zatrzymanie obsady korpusu przy pełnym dodatnim wyjściu.
+- [Weryfikacja C2-B3e](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3E.md) — pojemności zerowe wejścia i wyjścia korpusów w grafie gałęzi.
 
 - [Instrukcja użytkownika](../Instrukcja/Podrecznik_Uzytkownika.md) — źródło MD oraz wersje HTML/PDF w `Instrukcja/`.
 - [Projekty graficzne](../design/) — pliki `.pen`.
