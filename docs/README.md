@@ -28,6 +28,7 @@ Pozostałe materiały:
 - [Weryfikacja 7.14](weryfikacja/WERYFIKACJA_TUTORIALU_7_14.md) — interaktywny tutorial krok po kroku oparty na pakiecie zestawu montażowego, 8 etapów Lean, persystencja i ochrona środowiska.
 - [Weryfikacja 6.3](weryfikacja/WERYFIKACJA_MODELI_WYPOSAZENIA_6_3.md) — 10 autorskich modeli wyposażenia, regałów i wyrobów w Blenderze (5.2.1 LTS), weryfikacja GLB, budżet $\le 5000$ trójkątów i integracja wizualna.
 - [Weryfikacja 7.1](weryfikacja/WERYFIKACJA_KWALIFIKACJI_DANYCH_7_1.md) — uporządkowanie pochodzenia i kwalifikacji danych walidacyjnych (pomiary rzeczywiste, pakiety syntetyczne, fixtures testowe) i zautomatyzowany audyt.
+- [Weryfikacja 7.9](weryfikacja/WERYFIKACJA_PILOTAZU_I_ZAKRESU_WYDANIA_7_9.md) — pilotażowy odbiór z użytkownikiem, eliminacja błędów krytycznych i zakres gotowego pierwszego wydania (zamknięcie etapu 7 i całego pierwszego wydania 68/68).
 
 - [Instrukcja użytkownika](../Instrukcja/Podrecznik_Uzytkownika.md) — źródło MD oraz wersje HTML/PDF w `Instrukcja/`.
 - [Projekty graficzne](../design/) — pliki `.pen`.
