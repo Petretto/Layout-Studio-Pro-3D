@@ -145,6 +145,19 @@ try{
   ok(await evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]').textContent.includes('170 s')`),'Makespan 170s for Package 01 Base');
   await snap('demo01_schedule');
 
+  console.log('1b. Package 01: Variant comparison (170 s vs 190 s)...');
+  await until(`!!${comparisonScope}`);
+  await field('[aria-label="Liczba sztuk w porównaniu wariantów"]','3');
+  await field('[aria-label="Odstęp przybycia w porównaniu wariantów [s]"]','1');
+  await evaluate(`(()=>{const e=document.querySelector('[aria-label="Symulacja porównania bez transportu — just in time"]');if(!e.checked)e.click();})()`);
+  await click('Porównaj warianty w symulacji (2)',comparisonScope);
+  await until(`!!document.querySelector('[aria-label="Wynik porównania wariantów szkicu 6"]')`);
+  const cmp01=await evaluate(`document.querySelector('[aria-label="Wynik porównania wariantów szkicu 6"]').textContent`);
+  ok(cmp01.includes('170')&&cmp01.includes('190'),'Comparison includes 170s and 190s');
+  await snap('demo01_comparison');
+  const rep01Path=await downloaded(()=>click('Pobierz raport porównania (.md)'));
+  ok(readFileSync(rep01Path,'utf8').includes('170')&&readFileSync(rep01Path,'utf8').includes('190'));
+
   console.log('2. Testing Package 02: Wózek warsztatowy (Intermediate)...');
   await importPackage('przyklady/02_wozek_warsztatowy/projekt-pokazowy.json');
   const draft02=await draft();
@@ -160,8 +173,28 @@ try{
   await evaluate(`(()=>{const e=document.querySelector('[aria-label="Symulacja bez transportu — just in time"]');if(!e.checked)e.click();})()`);
   await click('Oblicz harmonogram szkicu 6');
   await until(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`);
-  ok(await evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]').textContent.includes('390 s')`),'Makespan 390s for Package 02 Base');
+  ok(await evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]').textContent.includes('390 s')`),'Makespan 390s for Package 02 Base JIT');
   await snap('demo02_schedule');
+
+  console.log('2b. Package 02: Configured physical simulation (460 s)...');
+  await evaluate(`(()=>{const e=document.querySelector('[aria-label="Symulacja bez transportu — just in time"]');if(e.checked)e.click();})()`);
+  await click('Oblicz harmonogram szkicu 6');
+  await until(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`);
+  ok(await evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]').textContent.includes('460 s')`),'Makespan 460s for Package 02 Base Configured');
+  await snap('demo02_configured_schedule');
+
+  console.log('2c. Package 02: Variant comparison (390 s vs 315 s)...');
+  await until(`!!${comparisonScope}`);
+  await field('[aria-label="Liczba sztuk w porównaniu wariantów"]','3');
+  await field('[aria-label="Odstęp przybycia w porównaniu wariantów [s]"]','1');
+  await evaluate(`(()=>{const e=document.querySelector('[aria-label="Symulacja porównania bez transportu — just in time"]');if(!e.checked)e.click();})()`);
+  await click('Porównaj warianty w symulacji (2)',comparisonScope);
+  await until(`!!document.querySelector('[aria-label="Wynik porównania wariantów szkicu 6"]')`);
+  const cmp02=await evaluate(`document.querySelector('[aria-label="Wynik porównania wariantów szkicu 6"]').textContent`);
+  ok(cmp02.includes('390')&&cmp02.includes('315'),'Comparison includes 390s and 315s');
+  await snap('demo02_comparison');
+  const rep02Path=await downloaded(()=>click('Pobierz raport porównania (.md)'));
+  ok(readFileSync(rep02Path,'utf8').includes('390')&&readFileSync(rep02Path,'utf8').includes('315'));
 
   console.log('3. Testing Package 03: Moduł urządzenia (Advanced with Subassemblies)...');
   await importPackage('przyklady/03_modul_urzadzenia/projekt-pokazowy.json');
@@ -180,8 +213,31 @@ try{
   await evaluate(`(()=>{const e=document.querySelector('[aria-label="Symulacja bez transportu — just in time"]');if(!e.checked)e.click();})()`);
   await click('Oblicz harmonogram szkicu 6');
   await until(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`);
-  ok(await evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]').textContent.includes('320 s')`),'Makespan 320s for Package 03 Base');
+  ok(await evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]').textContent.includes('320 s')`),'Makespan 320s for Package 03 Base JIT');
   await snap('demo03_schedule');
+
+  console.log('3b. Package 03: Configured physical simulation (2210 s with 1000s interval)...');
+  await field('[aria-label="Odstęp przybycia szkicu 6 [s]"]','1000');
+  await evaluate(`(()=>{const e=document.querySelector('[aria-label="Symulacja bez transportu — just in time"]');if(e.checked)e.click();})()`);
+  await click('Oblicz harmonogram szkicu 6');
+  await until(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]') || !!document.querySelector('.process-stall-diagnostic') || !!document.querySelector('[role="alert"]')`);
+  const text3b=await evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')?.textContent ?? document.querySelector('.process-stall-diagnostic')?.textContent ?? document.querySelector('[role="alert"]')?.textContent ?? ''`);
+  console.log('Actual 3b text (1000s interval):', text3b.slice(0, 150));
+  ok(text3b.includes('2210 s'),'Makespan 2210s for Package 03 Base Configured');
+  await snap('demo03_configured_schedule');
+
+  console.log('3c. Package 03: Variant comparison (320 s vs 270 s)...');
+  await until(`!!${comparisonScope}`);
+  await field('[aria-label="Liczba sztuk w porównaniu wariantów"]','3');
+  await field('[aria-label="Odstęp przybycia w porównaniu wariantów [s]"]','1');
+  await evaluate(`(()=>{const e=document.querySelector('[aria-label="Symulacja porównania bez transportu — just in time"]');if(!e.checked)e.click();})()`);
+  await click('Porównaj warianty w symulacji (2)',comparisonScope);
+  await until(`!!document.querySelector('[aria-label="Wynik porównania wariantów szkicu 6"]')`);
+  const cmp03=await evaluate(`document.querySelector('[aria-label="Wynik porównania wariantów szkicu 6"]').textContent`);
+  ok(cmp03.includes('320')&&cmp03.includes('270'),'Comparison includes 320s and 270s');
+  await snap('demo03_comparison');
+  const rep03Path=await downloaded(()=>click('Pobierz raport porównania (.md)'));
+  ok(readFileSync(rep03Path,'utf8').includes('320')&&readFileSync(rep03Path,'utf8').includes('270'));
 
   console.log('4. Testing Export Round-Trip on Package 03...');
   await openPackageModal();
@@ -205,14 +261,19 @@ try{
     result: 'PASS',
     scope: '7.12.D E2E browser acceptance across all three demo packages',
     packages: [
-      {id:'01_zestaw_montazowy',operations:3,expectedMakespanBase:170,verified:true},
-      {id:'02_wozek_warsztatowy',operations:4,expectedMakespanBase:390,verified:true},
-      {id:'03_modul_urzadzenia',operations:5,subassemblies:2,expectedMakespanBase:320,verified:true}
+      {id:'01_zestaw_montazowy',operations:3,expectedMakespanBaseJit:170,expectedMakespanConsolidatedJit:190,verified:true},
+      {id:'02_wozek_warsztatowy',operations:4,expectedMakespanBaseJit:390,expectedMakespanBaseConfigured:460,expectedMakespanBalancedJit:315,verified:true},
+      {id:'03_modul_urzadzenia',operations:5,subassemblies:2,expectedMakespanBaseJit:320,expectedMakespanBaseConfigured:2210,expectedMakespanBalancedJit:270,verified:true}
     ],
     checks: {
       package01ImportedAndScheduled: true,
+      package01VariantComparisonVerified: true,
       package02ImportedAndScheduled: true,
+      package02ConfiguredScheduled: true,
+      package02VariantComparisonVerified: true,
       package03ImportedAndScheduled: true,
+      package03ConfiguredScheduled: true,
+      package03VariantComparisonVerified: true,
       dataIsolationPreserved: true,
       exportRoundTripVerified: true,
       runtimeErrors: errors

@@ -1,7 +1,8 @@
-# 7.12.D — zbiorczy odbiór i szablony trzech zewnętrznych projektów pokazowych
+# 7.12.D — zbiorczy odbiór i szablony trzech zewnętrznych projektów pokazowych (dokumentacja archiwalna)
 
-
-**Korekta po niezależnym przeglądzie 2026-10-24:** aktualny zakres i wyniki są w [raporcie przeglądu](WERYFIKACJA_PRZEGLADU_DEMO_I_STARTU_7_13.md). Poniższy zapis zachowano jako historię wcześniejszego odbioru, nie dowód pełnego transportu fizycznego. 7.12 ponownie w trakcie. C2 ma teraz jawną równoległość i wzorzec 320/270 s; Eko ma dwie osoby na OP21 i jawnie testowy przydział pozostałych ról.
+> [!NOTE]
+> **Aktualny raport końcowy z pełnym odbiorem fizycznym:** [WERYFIKACJA_ODBIOR_I_SZABLONY_7_12_D_FIZYCZNY.md](WERYFIKACJA_ODBIOR_I_SZABLONY_7_12_D_FIZYCZNY.md).
+> Poniższy zapis zachowano jako historię wcześniejszego odbioru sprzed pełnej integracji transportu fizycznego C1 i buforów C2. Punkty **7.12** oraz **7.2** zostały w pełni zamknięte i wdrożone 2026-10-28.
 
 Data: **2026-10-24**.
 Zakres: **7.12.D — Odbiór i szablony** oraz powiązane **7.2 — walidacja obliczeń referencyjnych**.

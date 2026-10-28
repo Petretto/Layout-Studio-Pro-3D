@@ -1,0 +1,44 @@
+{
+  "at": "2026-10-28T20:15:29.046Z",
+  "result": "PASS",
+  "scope": "7.12.D E2E browser acceptance across all three demo packages",
+  "packages": [
+    {
+      "id": "01_zestaw_montazowy",
+      "operations": 3,
+      "expectedMakespanBaseJit": 170,
+      "expectedMakespanConsolidatedJit": 190,
+      "verified": true
+    },
+    {
+      "id": "02_wozek_warsztatowy",
+      "operations": 4,
+      "expectedMakespanBaseJit": 390,
+      "expectedMakespanBaseConfigured": 460,
+      "expectedMakespanBalancedJit": 315,
+      "verified": true
+    },
+    {
+      "id": "03_modul_urzadzenia",
+      "operations": 5,
+      "subassemblies": 2,
+      "expectedMakespanBaseJit": 320,
+      "expectedMakespanBaseConfigured": 2210,
+      "expectedMakespanBalancedJit": 270,
+      "verified": true
+    }
+  ],
+  "checks": {
+    "package01ImportedAndScheduled": true,
+    "package01VariantComparisonVerified": true,
+    "package02ImportedAndScheduled": true,
+    "package02ConfiguredScheduled": true,
+    "package02VariantComparisonVerified": true,
+    "package03ImportedAndScheduled": true,
+    "package03ConfiguredScheduled": true,
+    "package03VariantComparisonVerified": true,
+    "dataIsolationPreserved": true,
+    "exportRoundTripVerified": true,
+    "runtimeErrors": []
+  }
+}

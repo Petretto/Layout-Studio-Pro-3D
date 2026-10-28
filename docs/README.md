@@ -23,6 +23,7 @@ Pozostałe materiały:
 - [Weryfikacja C2-B3e](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3E.md) — pojemności zerowe wejścia i wyjścia korpusów w grafie gałęzi.
 - [Weryfikacja C2-B3f](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3F.md) — bezpośrednie wejście 0 podmontażu z buforami korpusów, odbiorca bezpośredni z zatrzymaniem obsady i lokalne przekazanie 0/0.
 - [Weryfikacja C2-final](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_FINAL.md) — pełne zamknięcie podpakietu C2, reguła zakazu wiszenia detali w powietrzu, pakiet demonstracyjny v1.2.0.
+- [Weryfikacja 7.12.D i 7.2](weryfikacja/WERYFIKACJA_ODBIOR_I_SZABLONY_7_12_D_FIZYCZNY.md) — zbiorczy odbiór fizyczny i szablony trzech zewnętrznych pakietów pokazowych oraz walidacja referencji analitycznych (zamknięcie punktów 7.12 i 7.2).
 
 - [Instrukcja użytkownika](../Instrukcja/Podrecznik_Uzytkownika.md) — źródło MD oraz wersje HTML/PDF w `Instrukcja/`.
 - [Projekty graficzne](../design/) — pliki `.pen`.
