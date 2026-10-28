@@ -37,13 +37,15 @@ export function TutorialOverlay({
 
   // Synchronizacja karty widoku z bieżącym krokiem tutorialu
   useEffect(() => {
+    if (!progress.active) return;
     if (currentStep.tab && currentStep.tab !== currentTab) {
       onNavigateTab(currentStep.tab);
     }
-  }, [stepIndex, currentStep.tab, currentTab, onNavigateTab]);
+  }, [progress.active, stepIndex]);
 
   // Podświetlanie elementu docelowego w DOM
   useEffect(() => {
+    if (!progress.active) return;
     const selector = currentStep.targetSelector;
     if (!selector) return;
 
@@ -67,10 +69,11 @@ export function TutorialOverlay({
         targetElement.classList.remove('tutorial-target-highlight');
       }
     };
-  }, [stepIndex, currentStep.targetSelector, currentTab]);
+  }, [progress.active, stepIndex, currentStep.targetSelector, currentTab]);
 
   // Obsługa skrótów klawiaturowych (Escape, Strzałka w lewo/prawo)
   useEffect(() => {
+    if (!progress.active) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
@@ -88,7 +91,7 @@ export function TutorialOverlay({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [stepIndex, progress]);
+  }, [progress.active, stepIndex, progress]);
 
   const handleNext = () => {
     const nextCompleted = Array.from(new Set([...progress.completedStepIds, currentStep.id]));

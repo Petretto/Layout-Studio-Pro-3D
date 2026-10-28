@@ -122,23 +122,20 @@ export function App(){
     }else{void launch();}
   };
   const exitTutorial=()=>{
-    const close=()=>{
-      const next:TutorialProgress={...tutorialProgress,active:false};
-      setTutorialProgress(next);
-      saveTutorialProgress(next);
-      notify('Zakończono interaktywny tutorial.');
-    };
+    const next:TutorialProgress={...tutorialProgress,active:false};
+    setTutorialProgress(next);
+    saveTutorialProgress(next);
+    notify('Zakończono interaktywny tutorial.');
     if(tutorialProgress.previousWorkspaceSnapshot){
       confirm('Czy chcesz przywrócić stan projektu sprzed rozpoczęcia tutorialu?',()=>{
         try{
           const payload:WorkspaceBackupPayload=JSON.parse(tutorialProgress.previousWorkspaceSnapshot!);
           restoreWorkspaceBackup(localStorage,payload);
-          const next:TutorialProgress={...tutorialProgress,active:false,previousWorkspaceSnapshot:null};
-          saveTutorialProgress(next);
+          saveTutorialProgress({...next,previousWorkspaceSnapshot:null});
           window.location.reload();
-        }catch{close();}
+        }catch(e){notify(`Błąd przywracania stanu: ${(e as Error).message}`);}
       });
-    }else{close();}
+    }
   };
   const handleGlobalShortcuts=(e:KeyboardEvent|React.KeyboardEvent<HTMLDivElement>)=>{
       if(e.defaultPrevented)return;
@@ -258,13 +255,15 @@ export function App(){
   </dialog>
   <ProjectPackageModal unsavedChanges={(dirty||!!saveError)&&!isExportCurrent('json')} isOpen={isPackageModalOpen} onClose={()=>setIsPackageModalOpen(false)} onImported={()=>{workspaceRestored.current=true;}} />
   <WorkspaceBackupModal unsavedChanges={(dirty||!!saveError)&&!isExportCurrent('json')} isOpen={isBackupModalOpen} onClose={()=>setIsBackupModalOpen(false)} onRestored={()=>{workspaceRestored.current=true;}} />
-  <TutorialOverlay
-    progress={tutorialProgress}
-    onChangeProgress={setTutorialProgress}
-    currentTab={tab}
-    onNavigateTab={setTab}
-    onExitTutorial={exitTutorial}
-  />
+  {tutorialProgress.active && (
+    <TutorialOverlay
+      progress={tutorialProgress}
+      onChangeProgress={setTutorialProgress}
+      currentTab={tab}
+      onNavigateTab={setTab}
+      onExitTutorial={exitTutorial}
+    />
+  )}
   </div>;
 }
 export default App;
