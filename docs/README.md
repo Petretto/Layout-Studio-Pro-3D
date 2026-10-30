@@ -14,6 +14,8 @@ Główny rejestr statusu pozostaje w [PLAN_ROZWOJU.md](../PLAN_ROZWOJU.md). Zasa
 
 Pozostałe materiały:
 
+- [Plan audytu przedwydaniowego V1](plany/audit_plan.md) — zakres, kolejność i zasady niezależnego audytu.
+
 - [Przekazanie C2-B3-UI dla Terra](plany/PRZEKAZANIE_C2_B3_UI_TERRA.md) — formularz istniejących buforów podmontaży i kryteria odbioru; integracja harmonogramu pozostaje osobnym pakietem Sol.
 - [Weryfikacja C2-B3-UI](weryfikacja/WERYFIKACJA_C2_B3_UI.md) — wyniki testów formularza, zapisu i historii.
 - [Weryfikacja C2-B3a](weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3A.md) — wspólny odbiór jednej partii bezpośredniej i partii buforowanych.
