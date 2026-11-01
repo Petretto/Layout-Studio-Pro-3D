@@ -48,22 +48,35 @@ Odczytano obowiązkowe dokumenty: `PLAN_ROZWOJU.md`, `AGENTS.md`, `docs/plany/au
 
 Bramki: **G0** zatwierdzenie tego planu; **G1** odbiór P0/PT; **G2** zatwierdzenie projektu P1 przez właściciela i niezależny przegląd kontraktów; **G3** integracja/migracje/raport i UI odebrane; **G4** czysty nowy kandydat przechodzi regresję; **G5** niezależne audyty nowego RC i odbiór właściciela. Utworzenie RC2 dopiero po zakończeniu zmian i wymaganych testów, a wydanie/deploy produkcyjny po osobnej zgodzie.
 
+### Rejestr bramek do monitorowania
+
+Statusy poniżej są źródłem dla osobnego `progress-dashboard`. Zmiana statusu wymaga zapisanego dowodu odbioru; decyzja biznesowa nie zamyka automatycznie bramki technicznej. Pakiety i bramki nie zwiększają licznika głównych ID planu.
+
+| Bramka | Warunek | Status | Dowód |
+|---|---|---|---|
+| G0 | Zatwierdzenie planu remediacji przez właściciela | otwarta | Plan przygotowany; brak zatwierdzenia dalszej implementacji |
+| G1 | Ochrona danych P0 i wykonywalne testy PT odebrane | otwarta | API S-03 odtworzone; reprodukcja UI i naprawa przed nami |
+| G2 | Właściciel zatwierdził projekt P1 po niezależnym przeglądzie | otwarta | Architektura C jest rekomendacją do zatwierdzenia |
+| G3 | Migracje, integracja, wspólny raport oraz UI3/UI4/X3 odebrane | otwarta | Pakiety P2a–d/P3 nierozpoczęte |
+| G4 | Ukończone zmiany i pełna weryfikacja kandydata przed RC2 | otwarta | Nie utworzono RC2; brak nowego pełnego baseline |
+| G5 | Ponowny niezależny audyt nowego RC i odbiór właściciela | otwarta | V1 nie jest gotowe do wydania; deployment wymaga osobnej zgody |
+
 ## 4. Kolejność prac
 
-| Kolejność | Pakiet | Zależność i uzasadnienie |
-|---|---|---|
-| 1 | P0 — ochrona danych i DR | Najpierw S-03, potem wspólna ochrona i harness DR; nie czeka na przebudowę architektury |
-| 2 | PT — przywrócenie wiarygodnych testów | Stabilne selektory i asercje potrzebne do odbioru kolejnych zmian |
-| 3 | P1 — odbiór kontraktów integracji | Rozstrzyga trwałość, właścicieli i migrację przed zmianą zapisu |
-| 4 | P4b — zamknięcie publicznych powierzchni Eko | Niezależne od integracji; wykonanie wcześnie ogranicza dalszą dystrybucję |
-| 5 | P4a — web, telemetria i zależności | Ustala środowisko i bezpieczną bazę builda; nie odkładać podatności do końca |
-| 6 | P2a — koperta, magazyn i migracje | Po G2; fundament wspólnej tożsamości, backupu i transakcji |
-| 7 | P2b — edytory, bilans i layout | Wszyscy edytowalni konsumenci kierują zmiany do właściwego właściciela |
-| 8 | P2c — wyniki, silniki i warianty | Po P2a/b, bez przepisywania reguł fizycznych |
-| 9 | P2d — wspólny raport | Po kontraktach wyników; A4, MD i dane z jednej migawki |
-| 10 | P3 — UI3/UI4/X3 | Finalny odbiór zintegrowanego przepływu; makiety/stany można opracować po P1 |
-| 11 | P4c — dokumenty i wersjonowanie | Końcowa aktualizacja zgodna z rzeczywistym UI, bez zmiany historycznych raportów |
-| 12 | P5 — odbiór, RC2 i niezależne audyty | Po wszystkich poprzednich; brak automatycznego GO |
+| Kolejność | Pakiet | Status | Zależności | Warunek i uzasadnienie |
+|---|---|---|---|---|
+| 1 | P0 — ochrona danych i DR | nierozpoczęte | — | Najpierw S-03 w UI, potem wspólna ochrona i harness DR; po zatwierdzeniu planu G0 |
+| 2 | PT — przywrócenie wiarygodnych testów | nierozpoczęte | P0 | Stabilne selektory i asercje potrzebne do odbioru kolejnych zmian |
+| 3 | P1 — odbiór kontraktów integracji | nierozpoczęte | P0, PT | Rozstrzyga trwałość, właścicieli i migrację przed zmianą zapisu |
+| 4 | P4b — zamknięcie publicznych powierzchni Eko | nierozpoczęte | — | Po G0; niezależne od integracji, wykonanie wcześnie ogranicza dalszą dystrybucję |
+| 5 | P4a — web, telemetria i zależności | nierozpoczęte | — | Po G0; ustala środowisko i bezpieczną bazę builda |
+| 6 | P2a — koperta, magazyn i migracje | nierozpoczęte | P0, PT, P1, P4a | Po G2; fundament wspólnej tożsamości, backupu i transakcji |
+| 7 | P2b — edytory, bilans i layout | nierozpoczęte | P2a | Wszyscy edytowalni konsumenci kierują zmiany do właściwego właściciela |
+| 8 | P2c — wyniki, silniki i warianty | nierozpoczęte | P2a, P2b | Bez przepisywania reguł fizycznych |
+| 9 | P2d — wspólny raport | nierozpoczęte | P2c | Po kontraktach wyników; A4, MD i dane z jednej migawki |
+| 10 | P3 — UI3/UI4/X3 | nierozpoczęte | P0, PT, P2b, P2c, P2d, P4b | Finalny odbiór zintegrowanego przepływu; makiety/stany można opracować po P1 |
+| 11 | P4c — dokumenty i wersjonowanie | nierozpoczęte | P3, P4a, P4b | Końcowa aktualizacja zgodna z rzeczywistym UI, bez zmiany historycznych raportów |
+| 12 | P5 — odbiór, RC2 i niezależne audyty | nierozpoczęte | P0, PT, P1, P4b, P4a, P2a, P2b, P2c, P2d, P3, P4c | Po wszystkich poprzednich; brak automatycznego GO |
 
 P4a/P4b można realizować niezależnie od P1 w osobnych zadaniach, ale żaden pakiet nie startuje automatycznie w tym zadaniu. Rozbicie na 12 pozycji wynika z trzech granic wysokiego ryzyka (dane, integracja, wydanie) oraz osobnych odbiorów UI, raportu i dowodów. Sama integracja A-02 ma cztery pakiety wykonawcze; nie tworzyć checkpointu po każdym pliku.
 

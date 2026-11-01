@@ -19,6 +19,7 @@ Pozostałe materiały:
 - [Zakres wydania V1.0.0](plany/ZAKRES_WYDANIA_V1_0_0.md) — docelowy zakres, UI3/UI4/X3, web, prywatność, Eko i ograniczenia.
 - [Macierz audyt → remediacja](plany/MACIERZ_AUDYT_REMEDIACJA.md) — BL-01–03, S-01–18, luki dowodowe i warunki zamknięcia.
 - [Plan testów RC2](plany/PLAN_TESTOW_RC2.md) — scenariusze referencyjne, migracje, ochrona danych, UI/web i warunki utworzenia przyszłego RC.
+- [Osobny pulpit postępu](../progress-dashboard/README.md) — monitor planu i remediacji, lokalny LIVE lub snapshot; [odbiór aktualizacji RC1](weryfikacja/WERYFIKACJA_PULPITU_POSTEPU_RC1.md).
 
 - [Plan audytu przedwydaniowego V1](plany/audit_plan.md) — zakres, kolejność i zasady niezależnego audytu.
 

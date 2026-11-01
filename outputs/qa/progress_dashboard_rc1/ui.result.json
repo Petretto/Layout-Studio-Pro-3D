@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "checks": [
+    "LIVE counters, 12 packages, 6 gates, 4 decisions, 21 findings, no hardcoded PASS",
+    "Package model details and dependencies",
+    "Audit filter S-03 and acceptance detail",
+    "LIVE updates on supplementary document change; main-ID counters unchanged",
+    "LIVE missing-source warning and recovery",
+    "Stage 7 and reopened task 7.13",
+    "390px viewport without page overflow",
+    "file:// regenerated snapshot includes remediation",
+    "Invalid pasted document preserves last valid data",
+    "Manual main-plan import uses shared parser and does not merge stale remediation"
+  ],
+  "errors": [],
+  "viewport": {
+    "width": 390,
+    "scroll": 390
+  }
+}

@@ -1,0 +1,3740 @@
+// Generated snapshot; refresh with node progress-dashboard/update-data.mjs
+window.PLAN_DATA = {
+  "meta": {
+    "title": "Layout Studio Pro — Plan Rozwoju i Postęp",
+    "createdAt": "2026-09-29",
+    "lastUpdated": "2026-11-01",
+    "baseVersion": "Layout Studio Pro 3D 0.4.0",
+    "hostingUrl": "https://layout-studio-pro-3d.vercel.app/",
+    "repoUrl": "https://github.com/Petretto/Layout-Studio-Pro-3D",
+    "extractedAt": "2026-11-01T11:12:12.943Z"
+  },
+  "overall": {
+    "total": 72,
+    "done": 61,
+    "inProgress": 7,
+    "pending": 4,
+    "percent": 84.7
+  },
+  "firstRelease": {
+    "total": 68,
+    "done": 61,
+    "inProgress": 7,
+    "pending": 0,
+    "percent": 89.7
+  },
+  "stages": [
+    {
+      "stage": 1,
+      "name": "Stabilizacja i bezpieczeństwo projektu",
+      "status": "wdrożone",
+      "dependencies": "Punkt wyjścia 0.4.0",
+      "criteria": "projekt można zmodyfikować, zapisać, zamknąć i odtworzyć bez utraty danych. Podstawowe operacje mają testy oraz potwierdzony odbiór w UI. Nie ma nierozwiązanych błędów powodujących utratę danych lub niejawnie błędne wyniki w sprawdzanym zakresie.",
+      "tasks": [
+        {
+          "id": "1.1",
+          "stage": 1,
+          "step": 1,
+          "title": "Utworzyć nowy backup kodu, konfiguracji, przykładów i dokumentacji; opisać bezpieczne odtworzenie.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "1.2",
+          "stage": 1,
+          "step": 2,
+          "title": "Ponownie uruchomić testy i build; zapisać stan bazowy oraz przejść ścieżkę nowy projekt → import → proces → balans → layout → symulacja → raport → otwarcie zapisu.",
+          "status": "wdrożone",
+          "subtasks": [
+            {
+              "id": "1.2.1",
+              "parentId": "1.2",
+              "stage": 1,
+              "step": 2,
+              "subStep": "1",
+              "title": "Testy bazowe 35/35 i build; po poprawkach 40/40 i build. Wyniki w raporcie A.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "1.2.2",
+              "parentId": "1.2",
+              "stage": 1,
+              "step": 2,
+              "subStep": "2",
+              "title": "B: pełna ścieżka Eko/BOM, bilans, CAD, symulacja, raport, zapis lokalny oraz rzeczywisty eksport/import JSON. Po odtworzeniu 16 operacji, 60 materiałów, 16 stanowisk; partia 3 sztuk nadal 21170 s.",
+              "status": "wdrożone"
+            }
+          ]
+        },
+        {
+          "id": "1.3",
+          "stage": 1,
+          "step": 3,
+          "title": "Zweryfikować importy, usuwanie operacji, zmianę zależności, ciągłość ręcznych przydziałów oraz Cofnij/Ponów; naprawić wykryte regresje i dodać testy.",
+          "status": "wdrożone",
+          "subtasks": [
+            {
+              "id": "1.3.1",
+              "parentId": "1.3",
+              "stage": 1,
+              "step": 3,
+              "subStep": "1",
+              "title": "UI: usunięcie OP11 daje 15 stanowisk bez luk i 5 oczekiwanych brakujących referencji BOM; Cofnij/Ponów poprawne, formularz wyczyszczony. Ostatecznie przywrócono 16 stanowisk i 0 błędów.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "1.3.2",
+              "parentId": "1.3",
+              "stage": 1,
+              "step": 3,
+              "subStep": "2",
+              "title": "Ochrona przed nieistniejącą operacją przy usuwaniu i edycji relacji; dwa testy najpierw odtworzyły błąd, po poprawce przechodzą.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "1.3.3",
+              "parentId": "1.3",
+              "stage": 1,
+              "step": 3,
+              "subStep": "3",
+              "title": "Synchronizacja otwartego formularza procesu i BOM po Cofnij/Ponów; sprawdzona w przeglądarce na przykładzie silników.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "1.3.4",
+              "parentId": "1.3",
+              "stage": 1,
+              "step": 3,
+              "subStep": "4",
+              "title": "Czyszczenie formularza po zaakceptowanym imporcie; odbiór UI na XLSX Eko: 16 operacji, 60 materiałów, oba szkice formularzy wyczyszczone. Raport B, B02–B03.",
+              "status": "wdrożone"
+            }
+          ]
+        },
+        {
+          "id": "1.4",
+          "stage": 1,
+          "step": 4,
+          "title": "Potwierdzić i w razie potrzeby naprawić wybór i przeciąganie myszą w 3D oraz synchronizację geometrii 2D–3D.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "1.5",
+          "stage": 1,
+          "step": 5,
+          "title": "Wprowadzić trwałe identyfikatory stanowisk, niezależne od numeracji i aktualnego zestawu operacji.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "1.6",
+          "stage": 1,
+          "step": 6,
+          "title": "Zapewnić czytelny wybór zachowania ustawień przy zmianie przydziału, podziale lub scaleniu stanowisk; wyeliminować niejawne resetowanie zasobów.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "1.7",
+          "stage": 1,
+          "step": 7,
+          "title": "Dopracować zapis, odzyskiwanie i migrację starych projektów; chronić oryginał przy nieudanej migracji i przetestować ponowne otwarcie.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "1.8",
+          "stage": 1,
+          "step": 8,
+          "title": "Oznaczać nieaktualne wyniki po zmianie danych i wskazywać, co wymaga ponownego przeliczenia.",
+          "status": "wdrożone",
+          "subtasks": []
+        }
+      ],
+      "stats": {
+        "total": 8,
+        "done": 8,
+        "inProgress": 0,
+        "pending": 0,
+        "percent": 100
+      }
+    },
+    {
+      "stage": 2,
+      "name": "Model procesu i zasobów",
+      "status": "wdrożone",
+      "dependencies": "Fundament etapu 1",
+      "criteria": "jedna osoba nie wykonuje dwóch czynności jednocześnie; jeden korpus nie znajduje się na dwóch odległych stanowiskach. Równoległe czynności przy jednym korpusie są możliwe tylko przy zgodnych regułach, miejscu i dostępnej obsadzie. Czasy założone są odróżnione od pomiarowych.",
+      "tasks": [
+        {
+          "id": "2.1",
+          "stage": 2,
+          "step": 1,
+          "title": "Rozdzielić operację, stanowisko, pracownika/pulę pracowników, wyposażenie, wyrób i podzespół; opisać jednostki, relacje i migrację danych.",
+          "status": "wdrożone",
+          "subtasks": [
+            {
+              "id": "2.1.1",
+              "parentId": "2.1",
+              "stage": 2,
+              "step": 1,
+              "subStep": "1",
+              "title": "Spisać kontrakt bytów, jednostek i referencji oraz bezstratną ścieżkę migracji v4/v5 z jawnymi lukami danych; dowód w `docs/modele/MODEL_PROCESU_2_1.md`.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.1.2",
+              "parentId": "2.1",
+              "stage": 2,
+              "step": 1,
+              "subStep": "2",
+              "title": "Przygotować odczytowy podgląd migracji v4/v5 z zachowaniem źródła, trwałych ID i jawnymi brakami danych; odrzucać błędne referencje i zmieniony podgląd.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.1.3",
+              "parentId": "2.1",
+              "stage": 2,
+              "step": 1,
+              "subStep": "3",
+              "title": "Dodać osobny roboczy schemat 6, parser referencji i przygotowanie migracji tylko po zweryfikowanym podglądzie, bez aktywowania zapisu i symulacji.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.1.4",
+              "parentId": "2.1",
+              "stage": 2,
+              "step": 1,
+              "subStep": "4",
+              "title": "Dodać izolowany zapis szkicu 6 i odczyt z walidacją, zachowując dokładne źródło v4/v5 i chroniąc poprzedni zapis przy błędzie lub konflikcie.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.1.5",
+              "parentId": "2.1",
+              "stage": 2,
+              "step": 1,
+              "subStep": "5",
+              "title": "Pokazać podgląd migracji i luki danych w UI, jawnie zapisać pierwszy szkic 6, ponownie go otworzyć i udostępnić surową kopię uszkodzonego zapisu.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.1.6",
+              "parentId": "2.1",
+              "stage": 2,
+              "step": 1,
+              "subStep": "6",
+              "title": "Umożliwić jawne zastąpienie istniejącego lub uszkodzonego szkicu 6 po pobraniu jego kopii, bez utraty poprzedniej wartości przy konflikcie, błędzie walidacji lub zapisu.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.1.7",
+              "parentId": "2.1",
+              "stage": 2,
+              "step": 1,
+              "subStep": "7",
+              "title": "Edytować osoby i pule osób w szkicu 6 po trwałym ID, z walidacją członkostwa, bezpiecznym usuwaniem, zapisem i Cofnij/Ponów.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.1.8",
+              "parentId": "2.1",
+              "stage": 2,
+              "step": 1,
+              "subStep": "8",
+              "title": "Edytować definicję wyrobu i podzespoły w szkicu 6 po trwałym ID, z jawnymi referencjami operacji, zapisem i wspólnym Cofnij/Ponów.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.1.9",
+              "parentId": "2.1",
+              "stage": 2,
+              "step": 1,
+              "subStep": "9",
+              "title": "Edytować wyposażenie technologiczne w szkicu 6 po trwałym ID, z jawnymi opcjonalnymi powiązaniami do stanowiska i obiektu layoutu, bez wnioskowania możliwości z geometrii.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.1.10",
+              "parentId": "2.1",
+              "stage": 2,
+              "step": 1,
+              "subStep": "10",
+              "title": "Pozwolić ręcznie deklarować operacje obsługiwane przez wyposażenie w szkicu 6, z walidacją referencji i zgodnością wcześniejszych szkiców; nie utożsamiać możliwości z wymaganiem operacji.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.1.11",
+              "parentId": "2.1",
+              "stage": 2,
+              "step": 1,
+              "subStep": "11",
+              "title": "Zbiorczo odebrać migrację Eko i silników, odrębny zapis szkicu, UI oraz niezmienność wyników aktywnej symulacji v4/v5 po edycji szkicu.",
+              "status": "wdrożone"
+            }
+          ]
+        },
+        {
+          "id": "2.2",
+          "stage": 2,
+          "step": 2,
+          "title": "Rozdzielić czas pracy ręcznej, automatyczny czas maszyny i okres wymaganej obecności operatora.",
+          "status": "wdrożone",
+          "subtasks": [
+            {
+              "id": "2.2.1",
+              "parentId": "2.2",
+              "stage": 2,
+              "step": 2,
+              "subStep": "1",
+              "title": "W szkicu 6 zdefiniować opcjonalny profil z jawnymi przedziałami czasu ręcznego, automatu i obecności operatora; walidować go bez zgadywania podziału z v4/v5 i zachować zgodność dawnych szkiców.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.2.2",
+              "parentId": "2.2",
+              "stage": 2,
+              "step": 2,
+              "subStep": "2",
+              "title": "Dodać edycję profilu w UI, odrębny zapis, Cofnij/Ponów i ponowny odczyt z jawnymi jednostkami i pochodzeniem czasu.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.2.3",
+              "parentId": "2.2",
+              "stage": 2,
+              "step": 2,
+              "subStep": "3",
+              "title": "Zbiorczo odebrać spójność profilu, migracji i UI na Eko i silnikach oraz niezmienność dotychczasowej symulacji.",
+              "status": "wdrożone"
+            }
+          ]
+        },
+        {
+          "id": "2.3",
+          "stage": 2,
+          "step": 3,
+          "title": "Określać wymaganą liczbę pracowników przy operacji oraz jawne warianty czasu dla obsady, bez automatycznego dzielenia czasu przez liczbę osób.",
+          "status": "wdrożone",
+          "subtasks": [
+            {
+              "id": "2.3.1",
+              "parentId": "2.3",
+              "stage": 2,
+              "step": 3,
+              "subStep": "1",
+              "title": "Zdefiniować opcjonalne wymaganie minimalnej obsady i odrębne jawne profile czasu dla liczebności zespołu w szkicu 6, z walidacją i zgodnością dawnych szkiców.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.3.2",
+              "parentId": "2.3",
+              "stage": 2,
+              "step": 3,
+              "subStep": "2",
+              "title": "Umożliwić edycję obsady i wariantów czasu w UI szkicu, z zapisem, usuwaniem, Cofnij/Ponów i ponownym odczytem.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.3.3",
+              "parentId": "2.3",
+              "stage": 2,
+              "step": 3,
+              "subStep": "3",
+              "title": "Odebrać spójność obsady, wariantów, migracji i niezmienność aktywnej symulacji na Eko i silnikach.",
+              "status": "wdrożone"
+            }
+          ]
+        },
+        {
+          "id": "2.4",
+          "stage": 2,
+          "step": 4,
+          "title": "Obsłużyć operatorów współdzielonych między stanowiskami, ich rezerwację i zwalnianie bez nakładania przydziałów w czasie.",
+          "status": "wdrożone",
+          "subtasks": [
+            {
+              "id": "2.4.1",
+              "parentId": "2.4",
+              "stage": 2,
+              "step": 4,
+              "subStep": "1",
+              "title": "Zbudować niezależny rejestr rezerwacji konkretnych osób w jawnych przedziałach czasu, z ochroną trwałych ID, odmową kolizji i sprawdzonym zwalnianiem.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.4.2",
+              "parentId": "2.4",
+              "stage": 2,
+              "step": 4,
+              "subStep": "2",
+              "title": "Przed przebiegiem jawnie ustalić stały skład zespołu po ID; powiązać wymagania operacji, profil obecności i wybrany wariant czasu z przydziałem wyłącznie z tego składu. Nie dodawać ani nie zamieniać osób w trakcie przebiegu.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.4.2.1",
+              "parentId": "2.4",
+              "stage": 2,
+              "step": 4,
+              "subStep": "2.1",
+              "title": "Zbudować walidowany plan przebiegu ze stałą listą osób, jawnym wyborem wariantu i dopuszczonych osób dla każdej operacji; obliczyć okres wymaganej rezerwacji.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.4.2.2",
+              "parentId": "2.4",
+              "stage": 2,
+              "step": 4,
+              "subStep": "2.2",
+              "title": "Udostępnić wybór składu i wariantów w UI, bezpieczny zapis i ponowny odczyt wyborów oraz Cofnij/Ponów bez zmiany aktywnych projektów 4/5.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.4.3",
+              "parentId": "2.4",
+              "stage": 2,
+              "step": 4,
+              "subStep": "3",
+              "title": "Włączyć rezerwacje do nowej ścieżki harmonogramowania z oczekiwaniem na osoby z ustalonego zespołu; przy operacji utrzymać te same osoby od pierwszego do ostatniego przedziału obecności i zwolnić je po nim. Zachować wyniki aktywnych projektów 4/5.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.4.3.1",
+              "parentId": "2.4",
+              "stage": 2,
+              "step": 4,
+              "subStep": "3.1",
+              "title": "Zbudować odrębny rdzeń harmonogramu z jawnym składem, wariantami, kopiami stanowisk, kolejkami i rezerwacjami osób bez podwójnego zajęcia.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.4.3.2",
+              "parentId": "2.4",
+              "stage": 2,
+              "step": 4,
+              "subStep": "3.2",
+              "title": "Podłączyć nową ścieżkę do szkicu 6, pokazać oczekiwanie i przydział oraz odebrać scenariusze UI bez zmiany aktywnej symulacji 4/5.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.4.4",
+              "parentId": "2.4",
+              "stage": 2,
+              "step": 4,
+              "subStep": "4",
+              "title": "Odebrać brak podwójnego przydziału, zapis/odczyt, UI i odmowy błędnych danych na jawnych scenariuszach różnych procesów, w tym Eko z wyraźnie testowymi założeniami. Zgodność Eko z produkcją odbierać osobno w 7.1/7.2, a fizyczną równoległość w 2.8.",
+              "status": "wdrożone"
+            }
+          ]
+        },
+        {
+          "id": "2.5",
+          "stage": 2,
+          "step": 5,
+          "title": "Uwzględnić kalendarz zasobów, zmiany i przerwy; rozpoczętą operację zatrzymać na przerwę i wznowić z tym samym zespołem.",
+          "status": "wdrożone",
+          "subtasks": [
+            {
+              "id": "2.5.1",
+              "parentId": "2.5",
+              "stage": 2,
+              "step": 5,
+              "subStep": "1",
+              "title": "Zdefiniować i walidować jawne kalendarze zmian i przerw osób oraz stanowisk w szkicu 6, zachowując odczyt starszych szkiców; wyznaczać dostępne okna bez domyślnych godzin.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.5.2",
+              "parentId": "2.5",
+              "stage": 2,
+              "step": 5,
+              "subStep": "2",
+              "title": "Włączyć kalendarze do odrębnego harmonogramu szkicu 6: pauza operacji na niedostępność, wznowienie z tym samym zespołem i kopią stanowiska, bez podwójnej rezerwacji i bez zmiany aktywnej symulacji 4/5.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.5.3",
+              "parentId": "2.5",
+              "stage": 2,
+              "step": 5,
+              "subStep": "3",
+              "title": "Udostępnić edycję kalendarzy i czytelny podgląd pauz/oczekiwania w UI szkicu 6; odebrać zapis, ponowny odczyt, Cofnij/Ponów i scenariusze różnych procesów.",
+              "status": "wdrożone"
+            }
+          ]
+        },
+        {
+          "id": "2.6",
+          "stage": 2,
+          "step": 6,
+          "title": "Przypisywać operację do wielu dopuszczalnych stanowisk, z określoną regułą wyboru i wymaganym wyposażeniem.",
+          "status": "wdrożone",
+          "subtasks": [
+            {
+              "id": "2.6.1",
+              "parentId": "2.6",
+              "stage": 2,
+              "step": 6,
+              "subStep": "1",
+              "title": "Uzgodnić kontrakt dopuszczeń, regułę wyboru stanowiska i sposób zajmowania wyposażenia, zachowując kompatybilność.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.6.2",
+              "parentId": "2.6",
+              "stage": 2,
+              "step": 6,
+              "subStep": "2",
+              "title": "Dodać opcjonalne dane i walidację dopuszczeń oraz wymagań; odebrać starszy odczyt i ochronę zapisu.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.6.3",
+              "parentId": "2.6",
+              "stage": 2,
+              "step": 6,
+              "subStep": "3",
+              "title": "Zastosować kontrakt w odrębnym harmonogramie z kalendarzami i ochroną przed podwójną rezerwacją; sprawdzić ręcznie policzone scenariusze.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.6.4",
+              "parentId": "2.6",
+              "stage": 2,
+              "step": 6,
+              "subStep": "4",
+              "title": "Dodać edytor i podgląd wybranego stanowiska/wyposażenia; odebrać historię, zapis/odczyt i różne procesy.",
+              "status": "wdrożone"
+            }
+          ]
+        },
+        {
+          "id": "2.7",
+          "stage": 2,
+          "step": 7,
+          "title": "Rozróżnić przygotowanie podzespołu od montażu na wspólnym korpusie; śledzić miejsce i dostępność korpusu.",
+          "status": "wdrożone",
+          "subtasks": [
+            {
+              "id": "2.7.1",
+              "parentId": "2.7",
+              "stage": 2,
+              "step": 7,
+              "subStep": "1",
+              "title": "Zdefiniować niezależny rejestr fizycznych instancji korpusu z jawną lokalizacją, zajęciem i przemieszczeniem; bez wnioskowania z grafu i 3D.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.7.2",
+              "parentId": "2.7",
+              "stage": 2,
+              "step": 7,
+              "subStep": "2",
+              "title": "Dodać jawne role operacji: przygotowanie podzespołu lub praca na korpusie, powiązania i walidację odczytu/zapisu bez dopowiadania danych.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.7.3",
+              "parentId": "2.7",
+              "stage": 2,
+              "step": 7,
+              "subStep": "3",
+              "title": "Podłączyć lokalizację i dostępność korpusu do odrębnego harmonogramu, z odmową brakujących danych i ochroną tożsamości.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.7.4",
+              "parentId": "2.7",
+              "stage": 2,
+              "step": 7,
+              "subStep": "4",
+              "title": "Dodać edytor i inspekcję korpusu/podzespołów; odebrać UI, historię, zapis/odczyt i różne procesy.",
+              "status": "wdrożone"
+            }
+          ]
+        },
+        {
+          "id": "2.8",
+          "stage": 2,
+          "step": 8,
+          "title": "Wprowadzić reguły dopuszczalnej równoległości i wzajemnego wykluczania czynności na jednym wyrobie.",
+          "status": "wdrożone",
+          "subtasks": [
+            {
+              "id": "2.8.1",
+              "parentId": "2.8",
+              "stage": 2,
+              "step": 8,
+              "subStep": "1",
+              "title": "Uzgodnić kontrakt jawnych dopuszczeń i domyślnych wykluczeń; dodać opcjonalne dane, walidację referencji i zgodność zapisu.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.8.2",
+              "parentId": "2.8",
+              "stage": 2,
+              "step": 8,
+              "subStep": "2",
+              "title": "Włączyć reguły do harmonogramu, rejestru korpusu i zajęcia kopii bez konfliktów lokalizacji/osób/wyposażenia; odebrać scenariusze i fizyczne trasy gałęzi w uzgodnionym zakresie.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.8.3",
+              "parentId": "2.8",
+              "stage": 2,
+              "step": 8,
+              "subStep": "3",
+              "title": "Dodać edytor i inspekcję przyczyn, odebrać UI, Cofnij/Ponów, zapis/odczyt oraz różne procesy i raport ograniczeń.",
+              "status": "wdrożone"
+            }
+          ]
+        },
+        {
+          "id": "2.9",
+          "stage": 2,
+          "step": 9,
+          "title": "Przygotować scenariusze Eko: niezależne podmontaże, montaż drzwi razem lub kolejno, wspólna obsada i dostępność ramy.",
+          "status": "wdrożone",
+          "subtasks": [
+            {
+              "id": "2.9.1",
+              "parentId": "2.9",
+              "stage": 2,
+              "step": 9,
+              "subStep": "1",
+              "title": "Sprawdzić źródła i braki, przygotować matrycę scenariuszy oraz uzgodnić jawne deklaracje testowe lub dane rzeczywiste.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "2.9.2",
+              "parentId": "2.9",
+              "stage": 2,
+              "step": 9,
+              "subStep": "2",
+              "title": "Wykonać uzgodnione warianty Eko, odebrać wyniki, zasoby, lokalizację ramy, UI, historię i odczyt oraz raport ograniczeń.",
+              "status": "wdrożone"
+            }
+          ]
+        }
+      ],
+      "stats": {
+        "total": 9,
+        "done": 9,
+        "inProgress": 0,
+        "pending": 0,
+        "percent": 100
+      }
+    },
+    {
+      "stage": 3,
+      "name": "Symulacja powiązana z layoutem",
+      "status": "wdrożone",
+      "dependencies": "Etap 2; podstawowe trasy i punkty transportowe",
+      "criteria": "wyniki prostych scenariuszy zgadzają się z obliczeniami ręcznymi. Wpływ zmiany trasy i pojemności bufora można wyjaśnić harmonogramem. Przesunięcie obiektu wpływa na czas tylko wtedy, gdy zmienia modelowaną trasę lub inne jawne ograniczenie. Animacja nie wpływa na wynik obliczeń.",
+      "tasks": [
+        {
+          "id": "3.1",
+          "stage": 3,
+          "step": 1,
+          "title": "Oddzielić obliczenia symulacji od animacji; uruchamiać obliczenia w tle, z postępem i możliwością anulowania.",
+          "status": "wdrożone",
+          "subtasks": [
+            {
+              "id": "3.1.1",
+              "parentId": "3.1",
+              "stage": 3,
+              "step": 1,
+              "subStep": "1",
+              "title": "Przenieść podgląd harmonogramu szkicu 6 do osobnego workera, dodać postęp/anulowanie i ochronę przed nieaktualnymi zdarzeniami, odebrać zgodność wyników i UI.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "3.1.2",
+              "parentId": "3.1",
+              "stage": 3,
+              "step": 1,
+              "subStep": "2",
+              "title": "Przenieść aktywne obliczenia 4/5 do tła bez zmiany wyników i oddzielić cykl obliczeń od animacji.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "3.1.3",
+              "parentId": "3.1",
+              "stage": 3,
+              "step": 1,
+              "subStep": "3",
+              "title": "Odebrać obie ścieżki: responsywność, postęp, anulowanie, zmiana wejścia i brak zależności wyniku od animacji; raport ograniczeń.",
+              "status": "wdrożone"
+            }
+          ]
+        },
+        {
+          "id": "3.2",
+          "stage": 3,
+          "step": 2,
+          "title": "Dodać punkty wejścia/wyjścia materiału i edytowalne trasy transportowe, z kontrolą jednostek i połączeń.",
+          "status": "wdrożone",
+          "subtasks": [
+            {
+              "id": "3.2.1",
+              "parentId": "3.2",
+              "stage": 3,
+              "step": 2,
+              "subStep": "1",
+              "title": "Zinwentaryzować istniejące trasy, przygotować propozycję kontraktu punktów i połączeń oraz wskazać decyzję dotyczącą magazynu.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "3.2.2",
+              "parentId": "3.2",
+              "stage": 3,
+              "step": 2,
+              "subStep": "2",
+              "title": "Wdrożyć uzgodniony model punktów/tras, walidację referencji i kompatybilny zapis szkicu 6; zweryfikować ochronę źródeł i istniejących wyników.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "3.2.3",
+              "parentId": "3.2",
+              "stage": 3,
+              "step": 2,
+              "subStep": "3",
+              "title": "Dodać edycję punktów i połączeń, jednostki, wspólną historię i odbiór UI/zapisu; opisać zakres użycia w symulacji.",
+              "status": "wdrożone"
+            }
+          ]
+        },
+        {
+          "id": "3.3",
+          "stage": 3,
+          "step": 3,
+          "title": "Wyznaczać czas transportu z długości trasy, prędkości, załadunku i rozładunku.",
+          "status": "wdrożone",
+          "subtasks": [
+            {
+              "id": "3.3.1",
+              "parentId": "3.3",
+              "stage": 3,
+              "step": 3,
+              "subStep": "1",
+              "title": "Dodać jawny model parametrów i wyliczenie czasu, walidację, kompatybilny zapis oraz integrację z rdzeniem przewozu i połączeniami materiałowymi.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "3.3.2",
+              "parentId": "3.3",
+              "stage": 3,
+              "step": 3,
+              "subStep": "2",
+              "title": "Dodać formularze czasu wpisanego/wyliczanego, jednostki i inspekcję składowych; odebrać historię, zapis/odczyt i wyniki dwóch procesów w UI.",
+              "status": "wdrożone"
+            }
+          ]
+        },
+        {
+          "id": "3.4",
+          "stage": 3,
+          "step": 4,
+          "title": "Modelować dostępność transportu międzyoperacyjnego na montażu: operator montażowy, wózek lub przenośnik; odróżnić czas przemieszczenia od oczekiwania na zasób. Nie modelować czasu pracy operatorów magazynu. Zakres szkicu 6 i ograniczenia: raport 3.4m3.",
+          "status": "wdrożone",
+          "subtasks": [
+            {
+              "id": "3.4.1",
+              "parentId": "3.4",
+              "stage": 3,
+              "step": 4,
+              "subStep": "1",
+              "title": "Zinwentaryzować aktualne rezerwacje, przygotować propozycję kontraktu zasobów, warianty domenowe i kryteria odbioru.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "3.4.2",
+              "parentId": "3.4",
+              "stage": 3,
+              "step": 4,
+              "subStep": "2",
+              "title": "Po decyzji wdrożyć kontrakt zapisu, referencje zasobów i kalendarze z ochroną starych szkiców.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "3.4.3",
+              "parentId": "3.4",
+              "stage": 3,
+              "step": 4,
+              "subStep": "3",
+              "title": "Zintegrować atomowe rezerwacje transportu ze wspólnymi osobami, oczekiwaniem i wynikiem workera. Wiele kopii partii: jawny limit 64 kombinacji (3.4m2b), bez modelu pojemności buforów.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "3.4.4",
+              "parentId": "3.4",
+              "stage": 3,
+              "step": 4,
+              "subStep": "4",
+              "title": "Dodać edytor i inspekcję; odebrać historię, zapis/odczyt i dwa niezależne procesy w UI. Kontrakt urządzeń/tras odebrany w 3.4j, formularz partii i pełny odbiór w 3.4m3.",
+              "status": "wdrożone"
+            }
+          ]
+        },
+        {
+          "id": "3.5",
+          "stage": 3,
+          "step": 5,
+          "title": "Wprowadzić bufory o ograniczonej pojemności oraz jednoznaczne reguły blokowania i zwalniania stanowiska. Dla zaopatrzenia montażu uwzględniać zapas, zużycie, ilość i częstotliwość dostaw materiału potrzebną do płynnej produkcji, bez czasu/rezerwacji operatorów magazynu.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "3.6",
+          "stage": 3,
+          "step": 6,
+          "title": "Pokazywać stany pracy, oczekiwania na materiał/operatora, blokady wyjścia i transportu wraz z czasami ich trwania.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "3.7",
+          "stage": 3,
+          "step": 7,
+          "title": "Wykrywać zatrzymanie lub zakleszczenie procesu i przedstawiać jego przyczynę zamiast pozornego zakończenia symulacji.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "3.8",
+          "stage": 3,
+          "step": 8,
+          "title": "Dodać wykres Gantta operacji, stanowisk i pracowników oraz przejście z wyniku do odpowiedniego obiektu.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "3.9",
+          "stage": 3,
+          "step": 9,
+          "title": "Sprawdzić wyniki na ręcznie policzonych scenariuszach i większych partiach; zapisać pomiary czasu obliczeń i responsywności UI.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "3.10",
+          "stage": 3,
+          "step": 10,
+          "title": "Rozszerzyć wybór szybkości odtwarzania symulacji ponad obecne 100× dla długich procesów. Przy wysokich mnożnikach zachować dokładny czas symulowany, kolejność zdarzeń, pauzę i możliwość inspekcji; wynik obliczeń nie może zależeć od prędkości odtwarzania.",
+          "status": "wdrożone",
+          "subtasks": []
+        }
+      ],
+      "stats": {
+        "total": 10,
+        "done": 10,
+        "inProgress": 0,
+        "pending": 0,
+        "percent": 100
+      }
+    },
+    {
+      "stage": 4,
+      "name": "Balansowanie i porównywanie wariantów",
+      "status": "wdrożone",
+      "dependencies": "Etapy 2–3",
+      "criteria": "można porównać dodanie operatora, stanowiska i reorganizację pracy, rozróżniając szacunek zdolności od wyniku symulacji. Raport zawiera wersję danych, warunki eksperymentu i założenia kosztowe. Etap 4 wdrożony w całości (`7/7 = 100,0%`).",
+      "tasks": [
+        {
+          "id": "4.1",
+          "stage": 4,
+          "step": 1,
+          "title": "Pokazywać oddzielnie obciążenie stanowisk, maszyn i operatorów oraz objaśnić mianowniki wskaźników.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "4.2",
+          "stage": 4,
+          "step": 2,
+          "title": "Umożliwić blokowanie przydziałów przed automatycznym balansowaniem.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "4.3",
+          "stage": 4,
+          "step": 3,
+          "title": "Uwzględniać wymagania wyposażenia i kompetencji oraz wskazywać brak wykonalnego przydziału.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "4.4",
+          "stage": 4,
+          "step": 4,
+          "title": "Wyjaśniać przyczynę ograniczenia przepustowości: obróbka, obsada, transport, blokada lub brak materiału.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "4.5",
+          "stage": 4,
+          "step": 5,
+          "title": "Porównywać zapisane warianty przy tych samych warunkach eksperymentu: bazowy, dodatkowy pracownik, dodatkowe stanowisko, zmieniony layout.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "4.6",
+          "stage": 4,
+          "step": 6,
+          "title": "Zestawiać wydajność, czas przejścia, WIP, obsadę, powierzchnię i koszty przy jawnych stawkach oraz założeniach.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "4.7",
+          "stage": 4,
+          "step": 7,
+          "title": "Proponować zmiany wraz z uzasadnieniem i wynikiem sprawdzenia w symulacji; bez deklaracji gwarantowanego optimum.",
+          "status": "wdrożone",
+          "subtasks": []
+        }
+      ],
+      "stats": {
+        "total": 7,
+        "done": 7,
+        "inProgress": 0,
+        "pending": 0,
+        "percent": 100
+      }
+    },
+    {
+      "stage": 5,
+      "name": "Edytor hali i spójny interfejs",
+      "status": "wdrożone",
+      "dependencies": "Stabilny model danych; podstawowe poprawki UX od etapu 1",
+      "criteria": "po poprawnym imporcie procesu użytkownik widzi wstępną propozycję layoutu, a następnie samodzielnie odwzorowuje prostą halę i reorganizuje linię bez edycji plików. Grupy i powiązania pozostają spójne po przesuwaniu, kopiowaniu i cofaniu. Próba wykonana w docelowej przeglądarce jest opisana w raporcie.",
+      "tasks": [
+        {
+          "id": "5.1",
+          "stage": 5,
+          "step": 1,
+          "title": "Przygotować i porównać dwie propozycje organizacji UI; w razie potrzeby użyć Figmy lub Pencil i zapisać decyzję projektową.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "5.2",
+          "stage": 5,
+          "step": 2,
+          "title": "Uporządkować przestrzeń pracy według wybranego B: większy rzut w środku, biblioteka/drzewo po lewej i właściwości po prawej otwierane na żądanie, wyniki i oś czasu na dole w zwijanym panelu; uwzględnić mniejsze ekrany.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "5.3",
+          "stage": 5,
+          "step": 3,
+          "title": "Dodać zaznaczanie wielu obiektów, grupowanie, kopiowanie i wyrównywanie.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "5.4",
+          "stage": 5,
+          "step": 4,
+          "title": "Przenosić stanowisko razem z przypisanym FIFO i strefą obsługi bez utraty relacji technologicznych.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "5.5",
+          "stage": 5,
+          "step": 5,
+          "title": "Dodać przyciąganie do siatki, krawędzi i punktów połączeń oraz możliwość jego wyłączenia.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "5.6",
+          "stage": 5,
+          "step": 6,
+          "title": "Dodać wymiarowanie, pomiary odległości, warstwy i blokowanie obiektów.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "5.7",
+          "stage": 5,
+          "step": 7,
+          "title": "Obsłużyć podkład hali z kalibracją skali.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "5.8",
+          "stage": 5,
+          "step": 8,
+          "title": "Ustalić i wdrożyć obsługiwany podzbiór importu DXF, z raportem pominiętej geometrii i sprawdzeniem jednostek.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "5.9",
+          "stage": 5,
+          "step": 9,
+          "title": "Czytelnie pokazywać strefy obsługi, odkładania i komunikacji; ostrzeżenia geometryczne odróżnić od oceny zgodności BHP.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "5.10",
+          "stage": 5,
+          "step": 10,
+          "title": "Zapewnić wspólne zaznaczenie i dane 2D–3D, spójne skróty, nazwy narzędzi i podpowiedzi.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "5.11",
+          "stage": 5,
+          "step": 11,
+          "title": "Dodać przełączanie prezentacji czasu między sekundami, minutami i godzinami dziesiętnymi w wynikach, osi czasu i właściwych polach czasu. Jednostka ma być zawsze widoczna, a zmiana widoku lub jednostki wejścia ma przeliczać wartość bez zmiany czasu zapisanego wewnętrznie w sekundach (np. 150 min = 2,5 h).",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "5.12",
+          "stage": 5,
+          "step": 12,
+          "title": "Udostępnić gotowe, pobieralne szablony importu procesu i BOM co najmniej w XLSX, zgodne z bieżącym importerem. Opisać wymagane i opcjonalne kolumny, formaty, jednostki i identyfikatory; sprawdzić import wypełnionych szablonów oraz czytelne błędy przy brakach. Inne formaty są opcjonalne.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "5.13",
+          "stage": 5,
+          "step": 13,
+          "title": "Po wprowadzeniu lub imporcie poprawnego procesu automatycznie pokazać pierwszą propozycję layoutu opartą na grafie operacji i wstępnym bilansie, także w docelowym modelu stanowisk. Nie wymagać osobnego przycisku do utworzenia pierwszej propozycji. Uwzględniać BOM przy prezentacji przepływu materiałów, jeśli jest dostępny; jego brak nie blokuje szkicu rozmieszczenia stanowisk. Oznaczać domyślne wymiary i wyposażenie jako założenia wizualne, bez przypisywania im zdolności technologicznej. Przy braku wymiarów hali nie deklarować dopasowania do rzeczywistej przestrzeni. Ręczne pozycje chronić przed automatycznym nadpisaniem; ponowne generowanie wymaga jawnej akcji i ostrzeżenia. Odebrać na procesach niezależnych od Eko.",
+          "status": "wdrożone",
+          "subtasks": []
+        }
+      ],
+      "stats": {
+        "total": 13,
+        "done": 13,
+        "inProgress": 0,
+        "pending": 0,
+        "percent": 100
+      }
+    },
+    {
+      "stage": 6,
+      "name": "Biblioteka wyposażenia i 3D",
+      "status": "wdrożone",
+      "dependencies": "Etapy 3 i 5",
+      "criteria": "3D pozwala zlokalizować problem i edytować układ, a animacja pozostaje zgodna z harmonogramem. Model wizualny nie jest źródłem czasów operacji ani niezależną kopią danych procesu.",
+      "tasks": [
+        {
+          "id": "6.1",
+          "stage": 6,
+          "step": 1,
+          "title": "Ustalić standard wyposażenia: skala, jednostki, punkt ustawienia, obrys kolizji, strefa obsługi, punkty transportu i metadane źródła/licencji.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "6.2",
+          "stage": 6,
+          "step": 2,
+          "title": "Przygotować parametryczne stoły, regały, palety, pojemniki, wózki i przenośniki.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "6.3",
+          "stage": 6,
+          "step": 3,
+          "title": "Przygotować charakterystyczne modele wyposażenia i wyrobów dla wspieranych zastosowań oraz pakietów pokazowych 7.12 tam, gdzie prosta geometria nie wystarcza; sprawdzić skalę, pochodzenie/licencję i budżet złożoności. Modelowanie Eko nie jest wymagane; jawnie syntetyczne modele demonstracyjne nie są pomiarami urządzeń klienta. Zachować dotychczasowe rezultaty 6.3a/b.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "6.4",
+          "stage": 6,
+          "step": 4,
+          "title": "Oddzielić model wizualny od parametrów technologicznych, aby wymiana wyglądu nie zmieniała zdolności produkcyjnej.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "6.5",
+          "stage": 6,
+          "step": 5,
+          "title": "Dodać wygodne manipulatory przesuwania i obrotu oraz ukrywanie warstw i obiektów.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "6.6",
+          "stage": 6,
+          "step": 6,
+          "title": "Animować produkty, podzespoły i transport zgodnie z harmonogramem symulacji; umożliwić pauzę i inspekcję stanu.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "6.7",
+          "stage": 6,
+          "step": 7,
+          "title": "Sprawdzić czytelność oraz wydajność większej sceny i zapewnić użyteczny tryb uproszczony (LOD/Bounding Box dla słabszych GPU) oraz możliwość otwierania widoków (3D, rzut CAD, przepływ procesu) w osobnym oknie (Popout Window).",
+          "status": "wdrożone",
+          "subtasks": []
+        }
+      ],
+      "stats": {
+        "total": 7,
+        "done": 7,
+        "inProgress": 0,
+        "pending": 0,
+        "percent": 100
+      }
+    },
+    {
+      "stage": 7,
+      "name": "Walidacja różnych procesów i przygotowanie komercyjne",
+      "status": "w trakcie",
+      "dependencies": "Etapy 1–6; zbieranie danych od początku",
+      "criteria": "wyniki mieszczą się w wcześniej uzgodnionych tolerancjach dla zweryfikowanych przypadków 7.2, a scenariusze 7.11 oraz trzy zewnętrzne pakiety 7.12 potwierdzają obsługę różnych procesów. Aplikacja uruchamia się bez zaszytego projektu i umożliwia wczytanie plików oraz przejście tutorialu 7.14. Odbiór funkcjonalny na danych syntetycznych jest oddzielony od porównania z rzeczywistą produkcją; kompletność Eko nie jest bramką wydania. Aplikację można zainstalować, zaktualizować i odzyskać dane na docelowym komputerze. Dostępne są instrukcja, rejestr zmian, jawne ograniczenia i raport odbioru. Testy nie zastępują oceny technologicznej, ergonomicznej ani certyfikacji przemysłowej.",
+      "tasks": [
+        {
+          "id": "7.1",
+          "stage": 7,
+          "step": 1,
+          "title": "Uporządkować pochodzenie i kwalifikację danych walidacyjnych: oddzielić rzeczywiste pomiary, dane syntetyczne i historyczne fixture. Zachować rejestr Eko i jego braki jako materiał testowy, bez wymagania ich pełnego uzupełnienia przed wydaniem. Ustalić zasady pochodzenia i kompletności dla trzech pakietów 7.12. Odebrać nowy zakres osobno; istniejące 7.1a–d pozostają dowodami historycznymi.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "7.2",
+          "stage": 7,
+          "step": 2,
+          "title": "Odebrać poprawność obliczeń na jawnych scenariuszach: ustalić oczekiwane wyniki analityczne lub niezależne obliczenia referencyjne oraz tolerancje przed testem, sprawdzić bilans i harmonogram dla przypadków 7.12. Wyniki silnika nie mogą być jedynym źródłem wzorca. Porównanie z rzeczywistą produkcją jest odrębnym odbiorem na uzgodnionych danych klienta; brak kompletnych danych Eko nie blokuje tego zakresu pierwszego wydania. Testy syntetyczne nie potwierdzają zgodności z produkcją.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "7.3",
+          "stage": 7,
+          "step": 3,
+          "title": "Dodać przezbrojenia i warianty produktów, z regułami kolejności oraz czasami przejść.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "7.4",
+          "stage": 7,
+          "step": 4,
+          "title": "Dodać zmienność czasów i awarie oraz powtarzalne serie eksperymentów z ziarnem losowym i zakresem niepewności wyników.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "7.5",
+          "stage": 7,
+          "step": 5,
+          "title": "Rozdzielić szczegółowo modelowane straty od rezerwy OEE, aby nie naliczać tych samych strat dwukrotnie.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "7.6",
+          "stage": 7,
+          "step": 6,
+          "title": "Ustalić sposób dystrybucji i wdrożyć instalację/uruchamianie, aktualizacje oraz kopie i odzyskiwanie projektu; sprawdzić na czystym komputerze.",
+          "status": "w trakcie",
+          "subtasks": []
+        },
+        {
+          "id": "7.7",
+          "stage": 7,
+          "step": 7,
+          "title": "Przeprowadzić przegląd zależności, licencji kodu i modeli oraz bezpieczeństwa adekwatnego do sposobu dystrybucji.",
+          "status": "w trakcie",
+          "subtasks": []
+        },
+        {
+          "id": "7.8",
+          "stage": 7,
+          "step": 8,
+          "title": "Zaktualizować edytowalną instrukcję ze screenshotami, pełny opis funkcji, rejestr zmian i znane ograniczenia.",
+          "status": "w trakcie",
+          "subtasks": [
+            {
+              "id": "7.8.1",
+              "parentId": "7.8",
+              "stage": 7,
+              "step": 8,
+              "subStep": "1",
+              "title": "Aktualizacja podręcznika użytkownika ze screenshotami po wdrożeniu Etapów 1–4: obsługa szkicu 6, harmonogramu, wykresu Gantta, buforów, zaopatrzenia materiałowego, kompetencji obsady, bilansowania z ograniczeniami, biblioteki wariantów oraz propozycji zmian z weryfikacją symulacyjną.",
+              "status": "wdrożone"
+            },
+            {
+              "id": "7.8.2",
+              "parentId": "7.8",
+              "stage": 7,
+              "step": 8,
+              "subStep": "2",
+              "title": "Finalna aktualizacja instrukcji, pełnego opisu funkcji i ograniczeń po zakończeniu Etapów 5–7 (nowy edytor hali, CAD 2D/3D i walidacja komercyjna).",
+              "status": "w trakcie"
+            }
+          ]
+        },
+        {
+          "id": "7.9",
+          "stage": 7,
+          "step": 9,
+          "title": "Wykonać pilotażowy odbiór z użytkownikiem na uzgodnionych scenariuszach, usunąć błędy krytyczne i zapisać zakres gotowego wydania.",
+          "status": "w trakcie",
+          "subtasks": []
+        },
+        {
+          "id": "7.10",
+          "stage": 7,
+          "step": 10,
+          "title": "Dopracować wygląd generowanego raportu PDF: czytelną hierarchię, typografię, tabele i wykresy, podziały stron oraz wersję do druku. Sprawdzić na krótkim i długim projekcie, także pod kątem obciętego tekstu i zgodności liczb z wynikami aplikacji.",
+          "status": "w trakcie",
+          "subtasks": []
+        },
+        {
+          "id": "7.11",
+          "stage": 7,
+          "step": 11,
+          "title": "Odebrać uniwersalność na co najmniej dwóch odmiennych procesach niezależnych od Eko, w zadaniach inżyniera procesu i konsultanta Lean: wprowadzenie lub import własnych danych procesu i BOM, wariant bazowy i usprawniony, porównanie, eksport oraz ponowny odczyt projektu. Sprawdzić brak założeń zakodowanych pod Eko, rozdzielenie danych projektów i jawne wskazanie brakujących danych.",
+          "status": "wdrożone",
+          "subtasks": []
+        },
+        {
+          "id": "7.12",
+          "stage": 7,
+          "step": 12,
+          "title": "Przygotować trzy zewnętrzne, kompletne projekty pokazowe o rosnącej złożoności, każdy w osobnym podkatalogu z projektem, operacjami/czasami, BOM, zasobami, warunkami bilansowania i symulacji, wariantami oraz instrukcją i szablonami. Jeden projekt zawiera główną nitkę i co najmniej dwie gałęzie podmontaży łączące się z nią. Dane jawnie syntetyczne; odbiór importu, symulacji, porównania i odtworzenia przez UI. Uzupełnienie 2026-11-01: 7.12.I — integracja przepływu modeli 4/6 zgodnie z A-02, bez zmiany odebranego kontraktu C2.",
+          "status": "w trakcie",
+          "subtasks": []
+        },
+        {
+          "id": "7.13",
+          "stage": 7,
+          "step": 13,
+          "title": "Usunąć projekty wbudowane na sztywno z produkcyjnego startu i interfejsu; zapewnić pusty projekt, otwarcie własnego pliku oraz pobranie i jawne wczytanie zewnętrznych pakietów 7.12. Zachować zapisane projekty użytkownika i potrzebne fixture testowe. Brak automatycznego ładowania danych demonstracyjnych lub przywracania Eko jako fallback. Zakres obejmuje język interfejsu U i redesign X według `docs/plany/PLAN_WDROZENIA_UI_UX.md`.",
+          "status": "w trakcie",
+          "subtasks": []
+        },
+        {
+          "id": "7.14",
+          "stage": 7,
+          "step": 14,
+          "title": "Wdrożyć interaktywny tutorial na zewnętrznym projekcie podstawowym 7.12: import, kontrola danych, bilans, layout, symulacja, zapis wariantu, porównanie i raport. Obsłużyć pomijanie, powrót, wznowienie i zakończenie bez utraty własnej pracy użytkownika; wskazać ograniczenia przykładów.",
+          "status": "wdrożone",
+          "subtasks": []
+        }
+      ],
+      "stats": {
+        "total": 14,
+        "done": 7,
+        "inProgress": 7,
+        "pending": 0,
+        "percent": 50
+      }
+    },
+    {
+      "stage": 8,
+      "name": "VSM i A3 w kolejnej wersji",
+      "status": "nierozpoczęte",
+      "dependencies": "Po odbiorze pierwszego wydania",
+      "criteria": "",
+      "tasks": [
+        {
+          "id": "8.1",
+          "stage": 8,
+          "step": 1,
+          "title": "Dodać VSM: mapę obecnego i docelowego strumienia wartości z przepływem materiału i informacji, zapasami, czasami oraz jawnymi źródłami danych. Przed implementacją ustalić zakres symboli, poziom agregacji i kryteria odbioru.",
+          "status": "nierozpoczęte",
+          "subtasks": []
+        },
+        {
+          "id": "8.2",
+          "stage": 8,
+          "step": 2,
+          "title": "Dodać kartę A3 analizy problemu powiązaną z projektem i wariantami: stan obecny, cel, rozpoznanie przyczyn, proponowane działania, odpowiedzialność i termin, wyniki weryfikacji oraz eksport czytelny do omówienia z klientem. Przed implementacją ustalić zakres danych i kryteria odbioru.",
+          "status": "nierozpoczęte",
+          "subtasks": []
+        },
+        {
+          "id": "8.3",
+          "stage": 8,
+          "step": 3,
+          "title": "Dodać w głównej aplikacji konfigurator parametrów i modułów wyposażenia po wybraniu obiektu: stoły, wózki, regały i pozostałe wspierane rodziny, z przebudową modelu 3D, spójnym obrysem 2D, historią, zapisem i biblioteką własnych konfiguracji. Zakres i pakiety poniżej; kolejna wersja po pierwszym wydaniu.",
+          "status": "nierozpoczęte",
+          "subtasks": []
+        },
+        {
+          "id": "8.4",
+          "stage": 8,
+          "step": 4,
+          "title": "Dodać import geometrii i modeli CAD 3D, z priorytetem STEP (`.stp`, `.step`) z SolidWorks 2025/2026 oraz Inventora; po sprawdzeniu wykonalności rozszerzyć formaty. Zapewnić kontrolę jednostek, części/złożeń, jakości i złożoności konwersji, zapis źródła oraz użycie modelu jako wyposażenia bez automatycznego odtworzenia konfiguracji parametrycznej. Zakres i pakiety poniżej; kolejna wersja po pierwszym wydaniu.",
+          "status": "nierozpoczęte",
+          "subtasks": []
+        }
+      ],
+      "stats": {
+        "total": 4,
+        "done": 0,
+        "inProgress": 0,
+        "pending": 4,
+        "percent": 0
+      }
+    }
+  ],
+  "packages": [
+    {
+      "tag": "Bieżący pakiet",
+      "date": "2026-11-01",
+      "historical": false,
+      "summary": "**V1 pozostaje nieukończone; poniższe odbiory z 2026-10-28 są historyczne.** Odczytano trzy raporty 01.2/01.3/01.4 dla SHA `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`. Właściciel zatwierdził cele: A-01 — całe UI3/UI4/X3 w V1, A-02 — zintegrowany przepływ 4/6 i wspólny raport, A-03 — web V1.0.0, A-04 — Eko poza publicznym katalogiem i assetami do potwierdzenia praw. Powstał [plan remediacji](docs/plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md) z architekturą, zakresem, macierzą i testami. Projekt techniczny integracji wymaga osobnego zatwierdzenia, a planowanie nie rozpoczyna implementacji.\n\nAktualne statusy **7.6, 7.7, 7.8, 7.9, 7.10, 7.12 i 7.13: w trakcie**. Przyczyny: niepełny dowód DR i brak odbioru kanału web; podatność Vite; nieaktualne dokumenty; niewystarczający pilot; nowy obowiązek wspólnego raportu; nowy zakres integracji **7.12.I**; otwarte UI/X3 i potwierdzona na API regresja S-03. Nie cofa to historycznych zakresów C2 B1–B3f/A2 i nie zmienia ich reguł domenowych. Model 4 nie jest usuwany ani automatycznie zastępowany 6. Nowy zakres 7.12.I obejmuje P1/P2a–d z planu remediacji, bez dodatkowego głównego ID licznika.\n\nDowód obecnej analizy: syntetyczna reprodukcja API S-03 w `outputs/qa/plan_remediacji_rc1/`; UI nadal NOT_VERIFIED. Nie wykonano zmian funkcjonalnych, aktualizacji zależności ani deploya. **Następny pakiet po zatwierdzeniu planu: P0 — przeglądarkowa reprodukcja S-03 i ochrona wczytywania/odzyskiwania.** Sol do oceny i granic danych, Terra do wydzielonego UI, niezależny Sol/Claude Opus do odbioru kontraktu. RC2 dopiero po ukończeniu i weryfikacji zmian; gotowość V1 po ponownym audycie.\n\nPostęp po ponownym otwarciu siedmiu głównych ID: cały plan **61/72 = 84,7%**, pierwsze wydanie **61/68 = 89,7%**, Etap 7 **7/14 = 50,0%**. Licznik jest rejestrem głównych statusów, nie estymacją nakładu ani gotowości wydania.\n\n**Dodatkowy pakiet pomocniczy — pulpit postępu, 2026-11-01:** zaktualizowano osobny `progress-dashboard/` o decyzje A-01–A-04, 12 pakietów z zależnościami/modelami, sześć otwartych bramek i macierz 21 ustaleń. Jeden parser oraz LIVE z sześciu dokumentów, bez stałego PASS i bez mieszania samego importowanego MD ze starszą remediacją. Testy monitora 7/7 PASS, rzeczywisty Edge 10 scenariuszy PASS i oględziny desktop/mobile; [raport](docs/weryfikacja/WERYFIKACJA_PULPITU_POSTEPU_RC1.md). Nie rozpoczęto P0 ani zmian funkcjonalnych aplikacji głównej. Liczniki 61/72 i 61/68 bez zmiany."
+    },
+    {
+      "tag": "7.9",
+      "date": "2026-10-28",
+      "historical": true,
+      "summary": "7.9: **pilotażowy odbiór z użytkownikiem, eliminacja błędów krytycznych i zakres gotowego pierwszego wydania (Etapy 1–7: 68/68 = 100,0%)** — przeprowadzono kompleksowy odbiór pilotażowy w czystym, bezgłowym profilu Edge CDP (`tests/qa/verify_7_9_pilot.mjs`, ALL PASS, 0 wyjątków w konsoli, 0 błędów blokujących): 1. czysty start `newProject()` bez wbudowanych projektów (0 stanowisk, 0 operacji, nota ostrzegawcza); 2. rozwijany katalog 4 pakietów pokazowych z dynamiczną walidacją sum SHA-256; 3. interaktywny tutorial Lean (7.14) — 8 kroków z nawigacją, podświetleniami i fiszkami pojęć Lean; 4. Pakiet 02 wózek warsztatowy — załoga transportowa i weryfikacja czasów partii (460 s / 385 s); 5. Pakiet 03 moduł urządzenia — zbiegające się gałęzie podmontaży, reguła braku wiszenia w powietrzu (C2: `inputCapacity >= 1` po co najmniej jednej stronie), bufory z zatrzymaniem obsady (`bbas`) oraz porównanie wariantów; 6. widok CAD 2D i 3D z modelami Blendera 5.2.1 LTS (w tym regały z wytycznych użytkownika). Suita testów regresji: **495/495 PASS** (110 core + 385 network), build produkcyjny PASS (1993 moduły), zrzuty ekranu w `outputs/qa/7_9_pilot/`. Zdefiniowano i udokumentowano granice pierwszego wydania (VSM, bezpośredni import CAD STEP/SolidWorks przesunięte do Etapu 8 / v2.0; brakujące dane Eko pozostają materiałem regresyjnym bez blokowania wydania komercyjnego). Raport: [Weryfikacja 7.9](docs/weryfikacja/WERYFIKACJA_PILOTAZU_I_ZAKRESU_WYDANIA_7_9.md). **Punkt 7.9 w pełni wdrożony — Etap 7 (14/14 = 100%) oraz Pierwsze Wydanie Komercyjne (Etapy 1–7: 68/68 = 100,0%) ZAMKNIĘTE.** Postęp: cały plan 68/72 = 94,4%, pierwsze wydanie: 68/68 = 100,0%, Etap 7: 14/14 = 100,0%."
+    },
+    {
+      "tag": "7.1",
+      "date": "2026-10-28",
+      "historical": true,
+      "summary": "7.1: **uporządkowanie pochodzenia i kwalifikacji danych walidacyjnych (pomiary, syntetyczne pakiety, fixtures testowe) oraz zautomatyzowany audyt** — trwale rozdzielono i zautomatyzowano audyt trzech kategorii danych: 1. rzeczywiste pomiary fabryczne (`measured`) Eko (lipiec 2026, 12 potwierdzonych czasów, 60 BOM, 13 osób, rama 1.4) z zachowanym rejestrem 14 luk pomiarowych w `docs/dane/DANE_EKO_7_1.md` i audytem `outputs/data_audit/eko_7_1d.json`, przy potwierdzeniu decyzji użytkownika z 2026-10-19, że braki Eko nie blokują pierwszego wydania komercyjnego i Eko stanowi materiał testowo-regresyjny; 2. dane syntetyczne (`synthetic`): trzy wersjonowane zewnętrzne pakiety demonstracyjne 7.12 (01 zestaw montażowy, 02 wózek warsztatowy, 03 moduł urządzenia) o pełnej izolacji przestrzeni nazw (prefiksy `ZM-`, `WW-`, `MU-`), braku wycieków ID i jawnych referencjach analitycznych, a także 10 modeli Blender 6.3 z flagami `basis: \"assumed\"` i `isCertifiedTechnologicalCapacity: false`; 3. fixtures testowe (`fixture`) do wewnętrznej regresji. Nowy skrypt `scripts/audit_data_qualification_7_1.mjs` weryfikujący automatycznie kwalifikację danych, sumy SHA-256 i separację prefiksów: ALL PASS (6/6). Audyt Eko PASS, suita testów 7.12 i 7.2 104/104 PASS, linki dokumentacji PASS. Raport: [Weryfikacja 7.1](docs/weryfikacja/WERYFIKACJA_KWALIFIKACJI_DANYCH_7_1.md). **Punkt 7.1 w pełni wdrożony**. Postęp: 67/72 = 93,1%, pierwsze wydanie: 67/68 = 98,5%, Etap 7: 13/14 = 92,9%."
+    },
+    {
+      "tag": "6.3",
+      "date": "2026-10-28",
+      "historical": true,
+      "summary": "6.3: **charakterystyczne modele wyposażenia i wyrobów w Blenderze (5.2.1 LTS), weryfikacja GLB, budżet ≤ 5000 trójkątów i integracja wizualna** — przygotowano i odebrano pełny zestaw 10 autorskich modeli demonstracyjnych w trybie bezgłowym (`--background --factory-startup --python-exit-code 1`): 3 modele regałów opracowane bezpośrednio na podstawie rysunków i specyfikacji dostarczonych przez użytkownika w `Dane do wyposażenia` (regał półkowy magazynowy 1000x300x2500 mm, wysokoskładowy regał paletowy PHR 1-gniazdowy 2870x1100x4500 mm na 3 europalety oraz regał paletowy PHR 2-gniazdowy 5655x1100x4500 mm z 3 ramami słupowymi i podwójnymi trawersami), 4 charakterystyczne modele dla zewnętrznych pakietów pokazowych 7.12 (moduł przemysłowy / korpus bazowy dla Pakietu 03, podzespół zasilania `SUB-PWR`, podzespół napędu `SUB-DRV` oraz przyrząd montażowy z dociskiem szybkomocującym toggle clamp dla Pakietu 01) oraz 3 zachowane modele z 6.3b (stanowisko montażowe, wózek półkowy, regał na części). Wszystkie modele zweryfikowane pod kątem dokładności gabarytów (tolerancja <0,1 mm), kontaktu z podłożem Z=0, symetrii rzutu X/Y, rygorystycznego limitu wielokątów (od 216 do 1068 trójkątów, limit 5000) oraz ochrony niezmiennika oddzielenia modelu wizualnego od technologii (Zasada 6 i Plan 6.4: wymiana wyglądu `visualModelId` nie zmienia czasów operacji ani zdolności linii). Bezgłowy generator Blendera PASS (`CONCEPTS_PASS`), niezależne ponowne otwarcie w Blenderze 10/10 PASS (`BLEND_REOPEN_PASS`), testy Three.js GLB i kart briefów 13/13 PASS (`tests/equipmentConcepts.test.mjs`), test przeglądarkowy Edge CDP `tests/qa/verify_6_3a.mjs --concepts` PASS (10 renderów, wybór, pobieranie JSON, 1440/600 px), regresja wyglądu 6.4 4/4 PASS, build produkcyjny PASS (7,37s), raport: [Weryfikacja 6.3](docs/weryfikacja/WERYFIKACJA_MODELI_WYPOSAZENIA_6_3.md). **Punkt 6.3 w pełni wdrożony** (zamykając Etap 6 do 7/7 = 100%). Postęp: 66/72 = 91,7%, pierwsze wydanie: 66/68 = 97,1%, Etap 6: 7/7 = 100%."
+    },
+    {
+      "tag": "7.13",
+      "date": "2026-10-28",
+      "historical": true,
+      "summary": "7.13: **pusty start bez wbudowanych projektów, rozwijany katalog zewnętrznych pakietów 7.12 i ochrona danych** — potwierdzono pełną separację danych demonstracyjnych od runtime produkcyjnego; nowy profil przeglądarki startuje czysto z `newProject()` (0 operacji, 0 stanowisk, 0 materiałów, czytelna nota ostrzegawcza), brak w interfejsie jakichkolwiek zaszytych przycisków dawnych projektów (Eko, silniki EV, baterie EV). Rozwijany katalog demonstracyjny (`DemoCatalog.tsx`) ładuje metadane na żądanie z `public/demo-projects/index.json` i udostępnia 4 wersjonowane zewnętrzne pakiety (01 zestaw montażowy, 02 wózek warsztatowy, 03 moduł urządzenia, 04 Eko) z niezależnymi plikami `.project.json` i kompletnymi archiwami `.zip` (12 plików), sprawdzając sumy SHA-256 w locie przed zapisem. Działania zastępujące stan projektu chronione jawnym potwierdzeniem i automatyczną kopią ratunkową (`createWorkspaceBackup`). Testy jednostkowe/integracyjne 6/6 PASS, Python ZIP validator 3/3 PASS, sprawdzanie assetów `--check` PASS, test akceptacyjny Edge CDP w czystym profilu `tests/qa/verify_7_13_closure.mjs` PASS (3 zrzuty ekranu w `outputs/qa/7_13_closure/`), 0 wyjątków w konsoli, build produkcyjny PASS (1993 moduły), raport: [Weryfikacja 7.13](docs/weryfikacja/WERYFIKACJA_PUSTEGO_STARTU_I_KATALOGU_7_13_FINAL.md). **Punkt 7.13 w pełni wdrożony**. Postęp: 65/72 = 90,3%, pierwsze wydanie: 65/68 = 95,6%, Etap 7: 12/14 = 85,7%."
+    },
+    {
+      "tag": "7.14",
+      "date": "2026-10-28",
+      "historical": true,
+      "summary": "7.14: **interaktywny tutorial krok po kroku oparty na projekcie podstawowym (01_zestaw_montazowy)** — wdrożono kompletny, 8-etapowy scenariusz Lean: 1. Wprowadzenie i wybór projektu (dashboard) → 2. Popyt klienta i takt time (demand) → 3. Operacje i struktura procesu (process) → 4. Bilansowanie linii i wykres Yamazumi (balance) → 5. Rozmieszczenie hali i CAD 2D (layout) → 6. Symulacja harmonogramu i czasu partii (stations) → 7. Porównanie wariantów reorganizacji (stations) → 8. Raport inżynierski i eksport (report). Każdy etap zawiera cel, pojęcie Lean (fiszka edukacyjna), szczegółową instrukcję, podpowiedź oraz dynamiczne podświetlanie elementów docelowych UI (`tutorial-highlight-target`). Pływający dock (`TutorialOverlay.tsx`) zintegrowany w `App.tsx` z automatyczną synchronizacją kart nawigacyjnych, obsługą skrótów klawiaturowych (Escape, Ctrl/Alt+Strzałki) oraz wbudowanym alternatywnym modalem pełnotekstowym (`TutorialModalText.tsx`). Pełna ochrona środowiska użytkownika: tworzenie automatycznej migawki bezpieczeństwa (`createWorkspaceBackup(localStorage)`) przed uruchomieniem tutorialu oraz możliwość bezpiecznego przywrócenia poprzedniego stanu projektu przy wyjściu. Persystencja stanu w `localStorage` pod kluczem `layout-studio-tutorial-v1` z klamrowaniem indeksów i odpornością na uszkodzony JSON. Testy jednostkowe w `tests/core.test.ts` (PASS), test akceptacyjny Edge CDP w czystym profilu `tests/qa/verify_7_14.mjs` (PASS, 10 zrzutów ekranu w `outputs/qa/7_14_tutorial/`), 0 wyjątków JS w konsoli, build produkcyjny PASS (`tsc && vite build`, 1993 moduły), linki dokumentacji i czystość katalogu głównego PASS (`node scripts/verify_documentation.mjs`). Raport: [Weryfikacja 7.14](docs/weryfikacja/WERYFIKACJA_TUTORIALU_7_14.md). **Punkt 7.14 w pełni wdrożony**. Postęp: 64/72 = 88,9%, pierwsze wydanie: 64/68 = 94,1%, Etap 7: 11/14 = 78,6%."
+    },
+    {
+      "tag": "7.12.D oraz 7.2",
+      "date": "2026-10-28",
+      "historical": true,
+      "summary": "7.12.D oraz 7.2: **zbiorczy odbiór fizyczny i szablony trzech zewnętrznych pakietów pokazowych (01, 02, 03) oraz domknięcie referencji analitycznych 7.2** — w czystym profilu przeglądarki Edge CDP (`tests/qa/verify_7_12d.mjs`) odebrano pełną ścieżkę wszystkich trzech pakietów demonstracyjnych w nowej ramie aplikacji (AppShell / Menu projektu): import pakietu, pobranie kopii ratunkowej, symulacja harmonogramu JIT oraz pełnego transportu fizycznego, porównanie wariantów w UI z pobraniem raportów Markdown (`.md`), eksport pakietu z UI i jego bezbłędny re-import (atomowy round-trip, tożsamość głęboka draftu). Brak wycieków ID między projektami (`ZM-`, `WW-`, `MU-`), brak powiązań z Eko, 0 wyjątków JavaScript w konsoli przeglądarki (`errors: []`). Referencje analityczne 7.2 potwierdzone numerycznie w symulacji: pakiet 01 (170 s / 190 s), pakiet 02 (JIT 390 s / 315 s, fizyczny 460 s / 385 s), pakiet 03 (JIT 320 s / 270 s, fizyczny 2210 s / 2180 s). Wszystkie arkusze Excela i szablony importu BOM/procesu przeszły importery bez błędów. Testy celowane suity 7.12 i 7.2: **104/104 PASS**, build produkcyjny PASS (1989 modułów), sprawdzanie katalogu demonstracyjnego i generatorów `--check` PASS. Raport: [7.12.D i 7.2 fizyczny](docs/weryfikacja/WERYFIKACJA_ODBIOR_I_SZABLONY_7_12_D_FIZYCZNY.md). **Punkty 7.12 oraz 7.2 w pełni wdrożone**. Postęp: 63/72 = 87,5%, pierwsze wydanie: 63/68 = 92,6%, Etap 7: 10/14 = 71,4%."
+    },
+    {
+      "tag": "7.12.C2-final",
+      "date": "2026-10-28",
+      "historical": true,
+      "summary": "7.12.C2-final: **zamknięcie i pełny odbiór podpakietu C2 oraz kontraktu buforów podmontaży C2-B** — decyzja domenowa użytkownika z 2026-10-28 potwierdza, że detale zbiegające się na węźle integracji nie mogą „wisieć w powietrzu” ani być odkładane w niedozwolonych miejscach; linia musi posiadać bufor wejściowy (`inputCapacity >= 1`) co najmniej po jednej ze zbiegających się stron. Odmowa schedulera dla jednoczesnych zdalnych bezpośrednich wejść 0 korpusu i podmontażu oraz wielu partii bezpośrednich stanowi ostateczną regułę procesu. Zewnętrzny pakiet `przyklady/03_modul_urzadzenia/` podniesiony do wersji 1.2.0 (12 plików, manifest zaktualizowany, archiwum ZIP i katalog demonstracyjny odświeżone, referencje 2210/2180 s oraz JIT 320/270 s potwierdzone). Generator `--check` PASS, katalog `--check` PASS, celowane testy C2 73/73 PASS, suita 7.12 104/104 PASS, szersza regresja 192/192 PASS, build produkcyjny PASS (1989 modułów). Backup `backup/v0.4.0_przed_c2_final_20261028` (8 plików SHA-256 PASS). Raport: [C2-final](docs/weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_FINAL.md). **Podpakiet C2 w pełni wdrożony**; całe 7.12 w trakcie do zbiorczego odbioru fizycznego 7.12.D (zamykającego jednocześnie 7.2). Postęp: 61/72 = 84,7%, pierwsze wydanie: 61/68 = 89,7%."
+    },
+    {
+      "tag": "7.12.C2-B3f",
+      "date": "2026-10-28",
+      "historical": true,
+      "summary": "7.12.C2-B3f: **wdrożone bezpośrednie wejście 0 podmontażu ze skończonymi/zerowymi buforami korpusów, odbiorca bezpośredni z zatrzymaniem obsady (`bbas`) i lokalne przekazanie `0 → 0`** — pojedyncza partia na wejściu 0 (`subassemblyBuffers.inputCapacity = 0`) współdziała ze skończonymi i zerowymi buforami korpusów na uporządkowanej ścieżce (gdy korpus jest już w dodatnim buforze wejściowym odbiorcy lub w lokalnej kontynuacji `B3c`), z towarzyszami w dodatnich buforach podmontaży pozostawiającymi resztę, z odbiorcą posiadającym własne skończone/zerowe wyjście z zatrzymaniem obsady (`bbas`) oraz z lokalnym przekazaniem `0 → 0` na tej samej kopii bez pośredniego depozytu i ruchu. 5 nowych testów, celowane **161/161 PASS**, build/typecheck i rzeczywisty UI w Edge z odświeżeniem/eksportem PASS. Syntetyczny C2 (`prepareC2B3fUiProject`): `SUB-PWR` na wejściu 0 (`occupied = 0`), `SUB-DRV` w buforze dodatnim (`20 szt.`, zapas reszt `6 szt.`), `ST-MU-MAIN1` `1/1 bbas`, `ST-MU-MAIN2` `1/0 bbas`, `ST-MU-MAIN3` `0/null` z bezpośrednim przekazaniem `handoff`. Instrukcja MD/HTML/PDF: 66 stron/53 ilustracje, kontrola PASS. Backup 6 niezależnych SHA PASS. Raport: [B3f](docs/weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3F.md). Jednoczesne zdalne `0 + 0` korpusu i podmontażu na tej samej operacji, wiele bezpośrednich partii naraz, częściowa obecność przy `bbas` i pełny odbiór C2 nadal w trakcie. Sol do oceny/implementacji/weryfikacji. Postęp: 61/72 = 84,7%; pierwsze wydanie 61/68 = 89,7%."
+    },
+    {
+      "tag": "7.12.C2-B3e",
+      "date": "2026-10-28",
+      "historical": true,
+      "summary": "7.12.C2-B3e: **wdrożone zerowe pojemności buforów korpusów w grafie z gałęziami podmontaży** — `inputCapacity = 0` i `outputCapacity = 0` na uporządkowanej ścieżce korpusu, bezpośredni start i przekazanie (`handoff`), zwolnienie zatrzymanego montera (`bbas`) do załadowanego przewozu własnego korpusu przy wyjściu 0, dostarczenie wymaganych partii podmontaży do dodatnich buforów odbiorcy przed bezpośrednim wyjazdem korpusu na wejście 0 oraz ochrona stanowisk o niepewnym czasie zwolnienia. 5 nowych testów, celowane 156/156 PASS, okresowy pełny checkpoint regresji **488/488 PASS** (109 core + 379 network), build/typecheck i rzeczywisty UI w Edge z odświeżeniem/eksportem PASS. Syntetyczny C2 z podwójnym zerem (`ST-MU-MAIN1` wyjście 0 `bbas` → `ST-MU-MAIN2` wejście 0 / wyjście 0 → `ST-MU-MAIN3` wejście 0): wyroby 630/720/810 s, zatrzymanie `MU-W3` 0–490 s, przekazania bez oczekiwania 500/580/670 s, reszty podmontaży 6+6 szt. Instrukcja MD/HTML/PDF: 66 stron/53 ilustracje, kontrola i oględziny PASS. Backup 6 niezależnych SHA PASS. Raport: [B3e](docs/weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3E.md). Wejście 0 podmontażu ze skończonymi buforami korpusu zostało zintegrowane w B3f. Postęp: 61/72 = 84,7%; pierwsze wydanie 61/68 = 89,7%."
+    },
+    {
+      "tag": "7.12.C2-B3d",
+      "date": "2026-10-28",
+      "historical": true,
+      "summary": "7.12.C2-B3d: **wdrożone dodatnie wyjścia korpusów z zatrzymaniem pełnej obsady** — `bbas` utrzymuje osoby do rzeczywistego odłożenia korpusu; wspólna ochrona przyszłych prac, przewozów i powrotów. 5 nowych testów, 151/151 celowanych regresji, build/typecheck i rzeczywisty UI z odświeżeniem/eksportem PASS. Niezależny wzorzec: zatrzymanie 60–100, wyroby 110/120/133; syntetyczny C2 z jawnym dodatkowym monterem przewozu: obsada 90–500, blokada 370, wyroby 700/790/840. Bez takiej obsady jawny martwy punkt. Profile lokalnej kontynuacji B3c zachowane. Instrukcja MD/HTML/PDF: 66 stron/53 ilustracje, kontrola i oględziny PASS. Backup 4 niezależne SHA PASS. Raport: [B3d](docs/weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3D.md). Zera i częściowa obecność zatrzymanej obsady korpusu, wiele bezpośrednich partii i pełny odbiór C2 nadal w trakcie. Sol do oceny/implementacji/weryfikacji. Postęp: 61/72 = 84,7%; pierwsze wydanie 61/68 = 89,7%."
+    },
+    {
+      "tag": "7.12.C2-B3c",
+      "date": "2026-10-28",
+      "historical": true,
+      "summary": "7.12.C2-B3c: **wdrożona lokalna kontynuacja korpusu w grafie** — korpus, kopia i poprzednie wyposażenie pozostają zajęte do rzeczywistego startu następnej operacji na tej samej kopii; brak fikcyjnego depozytu/ruchu, osoby według profili. 7 nowych wzorców i 146/146 związanych regresji, build/typecheck i rzeczywisty UI z odświeżeniem/eksportem PASS. Referencja 20–50 s lokalnego oczekiwania, pobranie partii/materiału przy 50, koniec 72. Syntetyczny C2: oczekiwanie 40–100, lokalna obróbka 100–140, koniec 630. Instrukcja MD/HTML/PDF: 66 stron/53 ilustracje, kontrola i oględziny PASS. Backup 4 niezależne SHA PASS. Raport: [B3c](docs/weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3C.md). Zera i zatrzymanie obsady korpusów, wiele bezpośrednich partii i pełny odbiór C2 pozostają w trakcie; Sol do oceny/implementacji/weryfikacji. Postęp: 61/72 = 84,7%; pierwsze wydanie: 61/68 = 89,7%."
+    },
+    {
+      "tag": "7.12.C2-B3b",
+      "date": "2026-10-28",
+      "historical": true,
+      "summary": "7.12.C2-B3b: **wdrożone dodatnie bufory korpusów z gałęziami**, jedna jawna kopia każdej operacji uporządkowanej ścieżki i polityka `bbas-worker-released`. Atomowe rezerwacje przed odjazdem, niezależne limity podmontaży, blokada stanowiska/wyposażenia po obróbce, rzeczywiste pobrania i historia korpusu. 5 nowych testów, checkpoint 471/471 (109 core +362 network), 139/139 celowanych, build i rzeczywisty UI z odświeżeniem/eksportem PASS. Próba spiętrzenia 3 szt./1 s: 700/790/840 s, blokada trzeciego korpusu 140–500, osoba do 140, zapasy reszt 6+6. Backup 5 niezależnych SHA PASS. Raport: [B3b](docs/weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3B.md). Całe C2/7.12 nadal w trakcie; następne zera/zatrzymanie obsady i lokalna kontynuacja w grafie, wspólny odbiór kilku bezpośrednich partii/korpusu i końcowy odbiór C2. Sol do oceny/implementacji/weryfikacji. Postęp bez zmiany: 61/72 = 84,7%; pierwsze wydanie 61/68 = 89,7%."
+    },
+    {
+      "tag": "7.12.C2-B3a",
+      "date": "2026-10-28",
+      "historical": true,
+      "summary": "7.12.C2-B3a: **wdrożony odbiór mieszany** — jedna partia przy wejściu 0 oraz pozostałe w osobnych dodatnich buforach. Wspólny start/pobranie, zachowanie reszt i zabezpieczeń zasobów. Decyzja użytkownika 2026-10-27: przy mieszanych politykach jednego producenta wspólna obsada czeka do odłożenia/wyjazdu wszystkich oczekujących partii; wdrożono. 8 testów B3a (7 nowych, 1 zmieniony), 99/99 celowanych regresji, build/typecheck oraz rzeczywisty UI z odświeżeniem/eksportem PASS. Dwie gałęzie C2: przewozy 60–70 i 90–100, pobranie 100, koniec 170, zapas 2; to zredukowana próba, nie obciążony pełny C2. Backup 4 niezależne SHA PASS. Raport: [B3a](docs/weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B3A.md). Następne: skończone bufory korpusów w grafie, wspólna gotowość kilku bezpośrednich partii/korpusu, pozostałe ograniczenia B2b i obciążony C2. Sol do oceny/implementacji/weryfikacji; całe C2/7.12 w trakcie. Postęp: 61/72 = 84,7%; pierwsze wydanie: 61/68 = 89,7%."
+    },
+    {
+      "tag": "7.12.C2-B3-UI (2026-10-27)",
+      "date": "2026-10-28",
+      "historical": true,
+      "summary": "7.12.C2-B3-UI (2026-10-27): **formularz wdrożony w zakresie B2a/B2b**. Osobna edycja pojemności podzespołów, walidacja, historia i chroniony zapis; bez zmiany schematu i schedulera. Testy B2a 11/11, build i rzeczywisty UI z odtworzeniem i eksportem/importem PASS. Raport: [weryfikacja](docs/weryfikacja/WERYFIKACJA_C2_B3_UI.md), poprzedni kontrakt: [przekazanie dla Terra](docs/plany/PRZEKAZANIE_C2_B3_UI_TERRA.md). Wspólny odbiór gałęzi/korpusu i poprawność rezerwacji pozostają osobnym zakresem Sol; całe C2/7.12 w trakcie. Postęp: 61/72 = 84,7%; pierwsze wydanie: 61/68 = 89,7%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.12.C2-B2b (2026-10-26): **wdrożone w ograniczonym zakresie** — `bbas` przy pełnej jawnej obecności producenta, wyjście 0 i bezpośredni odbiór jednej całej partii na wejściu 0. Ochrona przyszłych operacji, pustych dojazdów i powrotów; monter zwalnianego źródła może wykonać przewóz załadowany, bez wcześniejszego dojazdu. Ręczne wzorce 48/50/60 s, blokada 30–50 s i rzeczywisty martwy punkt 20 s PASS. Pełny checkpoint 458/458; po końcowych ograniczeniach zakresu 92/92 (15 nowych), build/typecheck i rzeczywisty UI PASS: 170 s, blokada 40 s, osoby do 90 s, przejazd 90–100, powrót 170–180, odświeżenie/eksport. Backup `backup/v0.4.0_przed_c2_b2b_20261026`: 12 niezależnych SHA PASS. Instrukcja MD/HTML/PDF: 65 stron/53 ilustracje, kontrola i oględziny zmienionych stron PASS. Raport `docs/weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B2B.md`. Całe B/C2/7.12 nadal w trakcie. **Następny B3**: wspólny odbiór kilku gałęzi i korpusu, skończone bufory korpusów, obciążony C2, pozostałe jawnie odrzucone kombinacje i formularz konfiguracji. Sol: ocena/algorytm/weryfikacja; formularz można wydzielić dla Terra po kontrakcie. Postęp bez zmiany 84,7% / 89,7%.\n\n2026-10-26 — **7.8 / organizacja dokumentacji: zakończone zadanie utrzymaniowe na polecenie użytkownika.** Przeniesiono 113 dokumentów i materiałów projektowych do tematycznych `docs/` oraz `design/`, dodano indeks i regułę umieszczania nowych raportów/kontraktów poza katalogiem głównym. Poprawiono odwołania i ścieżki dwóch skryptów; historyczne backupy i dane projektów zachowano. Raport: `docs/weryfikacja/UPORZADKOWANIE_KATALOGU_20261026.md`. Główne ID bez zmiany: 84,7% / 89,7%; dalszy pakiet funkcjonalny pozostaje C2-B2b."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.12.C2-B2a (2026-10-26): **wdrożone w zakresie dodatnich buforów podmontaży**, całe B/7.12 w trakcie. Decyzja użytkownika: osobny limit każdego podzespołu i osobny dla korpusów. Opcjonalne `subassemblyBuffers` modelu 6, rezerwacja celu w sztukach, atomowe odkładanie całych partii, blokowanie stanowiska/wyposażenia po obróbce z operatorem zwolnionym, reszty na wejściu odbiorcy i inspekcja UI. Pełny checkpoint 441/441 PASS; po końcowych korektach 77/77 regresji, w tym 11/11 nowych PASS. Build/typecheck i rzeczywisty Edge: chroniony import, 2210 s, odrębne zapasy 6+6, odświeżenie i eksport PASS. Backup 13 niezależnych SHA PASS: `backup/v0.4.0_przed_7_12c2_b2_20261026`. Instrukcja MD/HTML/PDF: 64 strony, 52 obrazy, kontrola automatyczna i oględziny zmienionych stron PASS. Raport `docs/weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B2A.md`. **Następny B2b: zatrzymanie operatora i przekazanie przy pojemności 0**, potem B3: skończone bufory korpusów z gałęziami, spiętrzenie C2 i formularz. Nieobsługiwane kombinacje nadal odrzucane; konfiguracja B2a przez pakiet projektu. Postęp 84,7% / 89,7% bez zmiany."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.12.C2-B1 (2026-10-25): **odebrany wewnętrzny rejestr**, całe B/7.12 w trakcie. Ilości w sztukach, rezerwacja przed odjazdem, przyjazd bez podwójnego liczenia i atomowe pobranie. Decyzja użytkownika: z 5 po pobraniu 3 pozostają 2 w buforze odbiorcy, zajmują pojemność; bez nowego jawnego przypisania nie są ponownie zużywane/przewożone. 6/6 nowych i 66/66 końcowego podzbioru regresji PASS; build/typecheck PASS. Backup: `backup/v0.4.0_przed_7_12c2_b1_20261025`, 7 plików, niezależne SHA-256 PASS. Brak aktywacji schedulera, zmiany zapisów lub UI; raport `docs/weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_B1.md`. **Następny B2: integracja harmonogramu gałęzi**, w tym bezpośrednie przekazanie przy pojemności 0; potem B3: spiętrzenie, inspekcja zapasów i rzeczywisty UI/zapis. Postęp 84,7% / 89,7% bez zmiany."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.12.C2-A (2026-10-25): odebrany podpakiet transportu i zaopatrzenia podmontaży. Pakiet 1.1.0: 3 korpusy, 4 wózki, przewozy i jawne powroty wykonywane przez monterów, 8 zapasów; dostawy magazynowe bez rezerwacji monterów. Niezależne referencje dla 3 sztuk/odstępu 1000 s/JIT OFF: 2210/2180 s (pierwsza sztuka 210/180 s). Brak zasilacza do 900 s opóźnia pierwszą sztukę do 1100/1070 s. Nie jest to próba przepustowości przy spiętrzeniu. 6 celowanych C2, 28 regresyjnych, 3 katalogu/ZIP, generator --check, build i rzeczywisty UI z odświeżeniem PASS. Backup 632 SHA PASS. Raport `docs/weryfikacja/WERYFIKACJA_C2_FIZYCZNY_A_7_12.md`. **Całe C2/7.12 w trakcie: następny C2-B — ograniczone bufory gałęzi**, potem D. Pojemność w sztukach podzespołu (partia 5 szt. zajmuje 5), kontrakt `docs/modele/MODEL_BUFOROW_PODMONTOW_C2.md`; reszty partii wymagają jawnego rozwiązania. Postęp bez zmiany: 84,7% / 89,7%.\n\nDoprecyzowanie użytkownika 2026-10-25 (3.4/3.5, C1 i kolejne przykłady): **monterzy wykonują transport między operacjami wyłącznie w obrębie linii/procesu. Materiały z magazynu dostarczają inne osoby.** Obsadę i rezerwacje monterów rozliczać tylko dla transportu montażowego (`assemblyTransport`, scope assembly-only). Zaopatrzenie z magazynu (`materialSupply`) pozostaje osobną dostępnością: jawny zapas, ilości i terminy dostaw; bez zajmowania monterów i bez modelowania obciążenia osób magazynowych w bieżącym zakresie. Obecny C1 już zachowuje ten podział, więc wyniki 460/385 s pozostają bez zmian. Zmiana dokumentacyjna; bez nowych testów automatycznych i bez zmiany statusów głównych ID."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.12.C1-fizyczny (2026-10-25): odebrany w zakresie syntetycznego pakietu 1.1.0 — jawne 3 korpusy, 3 wózki i powroty, transport wykonują monterzy (decyzja użytkownika), bez dodatkowych osób. Puste powroty 10 s jako osobne założenie dydaktyczne. Uzupełniono dwa pominięte komponenty zaopatrzenia, łącznie 7 jawnych zapasów/zużyć. Ręczne wzorce zapisane przed symulatorem: configured 460/385 s, odrębny JIT nadal 390/315 s. Próby brakującego zapasu do dostawy 900 s oraz blokady po obróbce 120–590 s PASS. 6 celowanych C1, okresowa pełna sekwencyjna regresja 425/425 (109 core +316 network), build, 3 testy ZIP i generator --check PASS. UI: pobrany pakiet, oba warianty, 18 ruchów, 7 zapasów, opóźnienie 1285 s, zapis/odświeżenie i odtwarzanie A2b2b PASS. Backup 631 niezależnych SHA PASS. Instrukcja i katalog zaktualizowane. Raport `docs/weryfikacja/WERYFIKACJA_C1_FIZYCZNY_7_12.md`. Główne 7.12 nadal w trakcie do C2/D i pozostałego A2. Następny: fizyczny odbiór C2. Postęp 84,7% / 89,7% bez zmiany."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.12.A2b2b (2026-10-25): wdrożone w zakresie integracji historii fizycznej z UI/3D — wspólny wynik i warunki, stany korpusów/wózków, symboliczne punkty stanowisk, ukrycie statycznej bryły śledzonego wózka, brak pozycji w przejeździe bez geometrycznej drogi, JIT bez instancji fizycznych. Oś obejmuje powrót po produkcji (test 22/27 s), bez zmiany makespan. 23/23 celowanych, końcowy build i rzeczywisty WebGL/UI PASS: granice, cofanie, 5000×/niezmienny SHA, zmiana warunków i wariantu, brak geometrii, zapis/odświeżenie i ponowne 3D. Backup 628 niezależnych SHA PASS. Instrukcja MD/HTML/PDF zaktualizowana. Raport `docs/weryfikacja/WERYFIKACJA_SPOJNOSCI_MODELU_7_12_A2.md`. Całe A2/7.12 nadal w trakcie; geometryczna droga nie wynika z długości/czasu, płynny ruch wymaga osobnego kontraktu. Następny pakiet: fizyczny odbiór C1 (transport/bufory/zaopatrzenie), potem C2/D. Postęp 84,7% / 89,7% bez zmiany."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.13.3 (2026-10-25): wdrożone — rozwijany katalog czterech zewnętrznych przykładów na Pulpicie, JSON i komplet ZIP (12 plików) dla każdego, pochodzenie i ograniczenia, kontrola SHA-256 przed pobraniem. Pobieranie bez zastąpienia projektu; osobny import z dotychczasowym podglądem/kopią/potwierdzeniem. Build przygotowuje assety z manifestów; lokalny serwer udostępnia je bez internetu, hosting wymaga połączenia do pobrania. Backup 612 SHA PASS, 3 testy niezależnego czytnika ZIP, 35 celowanych testów projektów, generator --check i build PASS. UI: 8/8 rzeczywistych pobrań zgodnych SHA, import wszystkich czterech JSON, anulowanie/odświeżenie, brak indeksu/ponowienie i uszkodzony plik bez utraty pracy PASS; 1280/390 px bez poziomego przepełnienia. Instrukcja zaktualizowana. Raport `docs/weryfikacja/WERYFIKACJA_KATALOGU_PRZYKLADOW_7_13_3.md`. Główne 7.13 i 7.12 nadal w trakcie; następny A2b2b/fizyczny odbiór C/D. Postęp 84,7% / 89,7% bez zmiany."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.12/7.13 — przegląd integracyjny (2026-10-24): 7.12 ponownie w trakcie; C1/C2/D mają potwierdzony zakres procesowy JIT, nie odbiór fizycznego transportu/zapasów i A2b2b. Naprawiono brak jawnej równoległości C2: trzy przygotowania startują razem, wzorzec partii 3 szt. 320/270 s zamiast historycznych 410/340. Eko: OP21 dwie osoby przez 1320 s, 12 średnich pomiarowych/4 czasy przykładowe, 17 ról testowych zamiast pozornego odtworzenia rzeczywistych 13 osób; poprawiono słownik i sumę 25550 s. Eko 13550/14150/14150 s dotyczy trybu configured, nie JIT. Generatory czterech pakietów --check PASS; 35 celowanych, pełne core 109 i network 311 (420/420) PASS, build i UI pustego startu/importu C2/Eko PASS. Backup 610 SHA-256 PASS. Raport `docs/weryfikacja/WERYFIKACJA_PRZEGLADU_DEMO_I_STARTU_7_13.md`."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.13.2 (2026-10-24): wdrożone — pusty start przy braku zapisu, usunięte przyciski predefiniowanych Eko/silników/baterii, import zewnętrznego pakietu z Pulpitu. newProject nie zależy od danych silników; zachowano dotychczasowe wartości domyślne parametrów i jawne oznaczenie do sprawdzenia. Odczyt istniejących zapisów, klucze/migracje/backup bez zmian. Główne 7.13 nadal w trakcie do dystrybucji/pobierania katalogów i dalszego UI U/X; kolejny pakiet 7.13.3 — katalog zewnętrznych przykładów bez automatycznego ładowania."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.13.1 (2026-10-24): w trakcie — adaptacja projektu Eko jako zewnętrznego, pełnego pakietu demonstracyjnego `przyklady/04_eko/` (12 plików, manifest z sumami SHA-256, otoczka `layout-studio-project-package` v1, 16 operacji z realnymi pomiarami fabrycznymi z lipca 2026 dla OP10–OP21, 60 pozycji BOM, 3 warianty domenowe równoległości: 13 550 s / 14 150 s / 14 150 s). Generator `--check` PASS, celowane testy 3/3 PASS, regresja pakietów pokazowych 33/33 PASS, test E2E w czystym profilu Edge PASS. Raport `docs/weryfikacja/WERYFIKACJA_EKO_DEMO_7_13.md`. Pozostaje odpięcie stałych projektów wbudowanych ze startu aplikacji i obsługa pustego startu."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.12 (2026-10-24): wdrożone (zamknięcie podpakietu 7.12.D oraz całości 7.12) — zbiorczy odbiór i szablony trzech zewnętrznych projektów pokazowych o rosnącej złożoności (`01_zestaw_montazowy`, `02_wozek_warsztatowy`, `03_modul_urzadzenia`), każdy z 12 plikami, manifestem z sumami SHA-256, arkuszami XLSX bez formuł i niezależnymi wzorcami. Weryfikacja E2E w czystym profilu przeglądarki Edge (CDP) z zerem błędów JS, round-trip importu/eksportu, separacja danych/brak wycieków ID oraz pełna zgodność symulacji (170 s / 190 s, 390 s / 315 s, 410 s / 340 s) zamykająca także referencje 7.2. Celowane 4/4 PASS, cała suita 7.12 30/30 PASS. Raport `docs/weryfikacja/WERYFIKACJA_ODBIOR_I_SZABLONY_7_12_D.md`. Postęp: cały plan 62/72 = **86,1%**, pierwsze wydanie 62/68 = **91,2%**."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.12.C2 (2026-10-24): wdrożone — przygotowanie kompletnego zewnętrznego pakietu demonstracyjnego poziomu zaawansowanego `przyklady/03_modul_urzadzenia/` (12 plików, manifest z sumami SHA-256, otoczka pakietu projektu, proces/BOM w XLSX bez formuł, linia główna korpusu zasilana z dwóch równoległych zbiegających się gałęzi podzespołów SUB-PWR i SUB-DRV w węźle integracji MU-OP20-M, reguła A przepływu podzespołów, transport i bufory, niezależny analityczny rachunek wzorcowy 410s/340s). Generator `--check` PASS, celowane testy 4/4 PASS, regresja całego pakietu 7.12 (26/26 PASS). Raport `docs/weryfikacja/WERYFIKACJA_PROJEKTU_ZAAWANSOWANEGO_7_12_C2.md`. Główne 7.12 nadal w trakcie (pozostaje końcowy pakiet 7.12.D dla zbiorczego odbioru i szablonów)."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.12.C1 (2026-10-24): wdrożone — przygotowanie kompletnego zewnętrznego pakietu demonstracyjnego poziomu średniego `przyklady/02_wozek_warsztatowy/` (12 plików, manifest ze sumami SHA-256, otoczka pakietu projektu, proces/BOM w XLSX bez formuł, czasy zespołowe 80s/45s, kompetencje, bufory, zaopatrzenie materiałowe i niezależny analityczny rachunek wzorcowy 390s/315s). Generator `--check` PASS, celowane testy 4/4 PASS, regresja 7.12.B 4/4 PASS. Raport `docs/weryfikacja/WERYFIKACJA_PROJEKTU_SREDNIEGO_7_12_C1.md`. Główne 7.12 nadal w trakcie (pozostaje C2 dla projektu zaawansowanego i zbiorczy odbiór D)."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.13.X/UI2c (2026-10-24): wdrożone w zakresie poprawek i częściowego odbioru integracyjnego — zwykły rzut 2D cały widoczny (1242,4×432 przy 1280×720; 1402,4×540 przy 1440×900), zachowany formularz zaznaczenia po powrocie z 3D, poprawione granice Tab i zakres stylów PopoutWindow. Backup 565 plików, niezależne SHA-256 PASS. Build i pełna sekwencyjna regresja bieżącego workspace 417/417 PASS (108 core/309 network, z niezwiązanymi lokalnymi testami niewłączonymi do commitu UI2c). Edycja geometrii 2D/3D, Cofnij/Ponów, zapis/odświeżenie i przesunięcie klawiaturą PASS. Instrukcja MD/HTML/PDF 61 stron/50 obrazów. Raport `docs/weryfikacja/WERYFIKACJA_UI_UX_UI2.md`. Całe UI2 nadal w trakcie: pozostały przeciąganie wskaźnikiem, zawartość osobnych okien i wymuszony brak WebGL; ograniczenia CUA i lista prób jawnie zapisane. Bez zmian schematów i reguł obliczeń."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.13.X/UI2b (2026-10-24): wdrożone w zakresie ramy 3D, grup narzędzi i parametrów/wyników na żądanie. Skupienie/disclosures zachowują instancję symulacji i czas, komunikaty błędów/postępu/CSV pozostają widoczne. Backup 563 pliki, osobne SHA-256 PASS. Celowane 14/14, build i rzeczywisty UI produkcyjny PASS: Start/pauza/reset/suwak, 1× i 5000×, identyczny CSV, warstwy/LOD/kamera/inspekcja oraz poprawione granice Tab. Instrukcja MD/HTML/PDF 61 stron/50 ilustracji. Raport `docs/weryfikacja/WERYFIKACJA_UI_UX_UI2.md`. Całe UI2 nadal w trakcie do końcowego odbioru: zwykły 2D 1280×720, gesty/zapis geometrii, zawartość osobnych okien i brak WebGL. Popout zweryfikowany tylko jako przekazanie/powrót głównego widoku. Bez zmiany schematów i reguł obliczeń; fizyczna integracja A2b2b nadal odrębna."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.13.X/UI2a (2026-10-24): wdrożone — kompaktowe grupy narzędzi i tryb skupienia hali 2D, mobilny pasek przewijany, Escape/zamknięcie i jawne tryby pomiaru. Backup 562 pliki, niezależne SHA-256 PASS. Celowane 19/19, build i rzeczywisty UI (warstwy, zoom, edycja/Cofnij/Ponów, zapis/odświeżenie) PASS. Instrukcja MD/HTML/PDF 60 stron/49 obrazów. Skupienie: SVG 1402,4×722 przy 1440×900 i 1242,4×542 przy 1280×720. Zwykły 1280×720 ma widoczne 55,1% wysokości, więc pełny próg UI2 pozostaje otwarty. Raport `docs/weryfikacja/WERYFIKACJA_UI_UX_UI2.md`. Całe UI2 w trakcie; następny UI2b — 3D/sterowanie i zbiorczy odbiór CAD/symulacji. Bez zmiany schematów i obliczeń."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.13.X/UI1a (rozpoczęcie 2026-10-23, odbiór 2026-10-24): wdrożone — kompaktowa rama, menu projektu/eksportu/pomocy i sześć obszarów nawigacji z zachowaniem dziesięciu podwidoków. Nagłówek 171 → 56 px desktop, 421,9 → 104 px telefon; treść 390×844: 329,6 → 648 px. Backup 554 pliki, osobne SHA-256 PASS. Celowane 2/2, pełna sekwencyjna regresja 402/402, build, rzeczywisty UI i zapis/odświeżenie PASS. Produkcyjny Start 2,071 → 43,340 s, pauza stabilna 67,338 s. Instrukcja MD/HTML/PDF: 59 stron, 48 obrazów. Raport `docs/weryfikacja/WERYFIKACJA_UI_UX_UI1.md`, dowody `outputs/qa/ui1/`. Bez zmian schematów i reguł obliczeń. Cały UI1 i 7.13.X/U nadal w trakcie; pozostają prototypy/audyt i UI2–UI4. Kolejny pakiet: UI2 — viewport hali i panele na żądanie. Wdrożenia UI1a na Vercel nie potwierdzono."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.13.X1 (2026-10-23): analiza referencji i plan nowego UI/UX przygotowane w `docs/plany/PLAN_WDROZENIA_UI_UX.md`. Przeczytano specyfikację Stitch, `precision_industrial_cad/DESIGN.md`, cztery pliki HTML i obejrzano cztery PNG; porównano ze strukturą aplikacji. Sześć pozycji nawigacji, cztery pakiety UI1–UI4, mapowanie istniejących funkcji, zachowanie paneli na żądanie, zgodności źródeł i reguł domeny. **X1 w trakcie** do bazowego audytu interakcji oraz uzupełnienia/przeglądu prototypów; **stan przed UI1a: wdrożenie UI1–UI4 nierozpoczęte**. Zalecany następny krok UI: wspólny nagłówek/nawigacja i prototypy brakujących ekranów (UI1), następnie CAD/symulacja (UI2). UI1 może poprzedzać zakończenie A2 bez pozornego scalenia modeli; fizyczna integracja A2b2b i odbiór przykładów nadal otwarte. Zmiana dokumentacyjna, bez zmian kodu, testów, builda i podręcznika. Postęp głównych ID bez zmiany 84,7% / 89,7%.\n\nOdbiór wdrożenia 6.6-fix (2026-10-23): commit aplikacji `5adb875` jest na `main`; GitHub Vercel success oraz rzeczywisty zdalny Start/pauza PASS po wczytaniu nowego bundle. Czas 3,115 → 89,956 s, pauza stabilna; stara karta wymaga odświeżenia Ctrl+F5. Dowody `outputs/qa/6_6_start_fix/vercel_report.json` i `vercel_running.png`. Zakres zdalny ograniczony do zgłoszonego startu/pauzy; szersze próby opisano jako lokalne."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "6.6-fix (2026-10-23): wdrożone — naprawiono Start w głównej zakładce symulacji: polecenia paska 3D wykonywane są jednorazowo, a ponowne wejście nie powtarza starego polecenia. Błąd odtworzony na Vercel; naprawa odebrana lokalnie w Vite i produkcyjnym buildzie przez rzeczywisty UI (Start 3D i dolny, ciągły czas, pauza, reset, suwak/wznowienie, powrót do zakładki, koniec 30/30). 4/4 celowanych testów 3.10/6.6 i build PASS; rozszerzono test UI o ciągłość czasu i ponowne wejście, sprawdzono składnię, nie uruchamiano ponownie całego skryptu CDP. Backup 479 plików SHA-256 PASS w `backup/v0.4.0_przed_6_6_start_fix_20261023`. Raport `docs/weryfikacja/WERYFIKACJA_ANIMACJI_I_INSPEKCJI_6_6.md`. Bez zmian algorytmów, zapisu i sposobu obsługi opisanego w instrukcji. 6.6 ponownie wdrożone, A2b2b nadal następny."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.12.A2b2a (2026-10-23): wdrożone — rdzeń odczytu historii korpusów i wózków z gotowego wyniku, bez drugiego harmonogramowania lub dopowiadania geometrii. Weryfikacja końcowych rejestrów, granice czasu, cofanie, lokalna kontynuacja, blokada bufora, sekwencyjne dojazdy i wspólny przewóz zestawu, równoległe operacje na jednym korpusie; JIT bez pozycji. 20/20 testów celowanych PASS (7 nowych), TypeScript/Vite PASS. Backup `backup/v0.4.0_przed_7_12a2b2a_20261023`: 478 plików, osobna kontrola skopiowanych SHA-256 PASS. Bez zmian schematów, zapisu, algorytmów i interfejsu; instrukcja/UI zostają do b2b. Raport `docs/weryfikacja/WERYFIKACJA_SPOJNOSCI_MODELU_7_12_A2.md`. **A2b2 i A2 nadal w trakcie**; następny **A2b2b** — podłączenie do odtwarzania i 3D, jawne braki geometrii, UI i instrukcja. Dodano plan UI/UX 7.13.X1–X3, wymagany w bieżącym wydaniu. Postęp 84,7% / 89,7% bez zmian; Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.12.A2b1 (odbiór 2026-10-22, start 2026-10-21): wdrożone — geometria 3D aktywnego projektu i odtwarzanie stanów operacji z rzeczywistego harmonogramu tego samego workera. Bez drugiej symulacji i konwersji do 4; powiązanie model/warunki/wynik przez SHA, pauza/krok/czas/prędkości do 5000×/wybór, unieważnianie po danych i warunkach, odrzucanie spóźnionych odpowiedzi. Znaczniki pokazują operacje, nie fizyczne położenie wyrobu; nie dopowiadają brakującej geometrii lub kopii. Backup `backup/v0.4.0_przed_7_12a2b1_20261021`: 474 pliki, skopiowane SHA-256 PASS. Schematy i zapis bez zmian. Celowane 11/11, manifest 1/1, build i Edge ze SwiftShader PASS; pełna regresja sekwencyjna 393/393 (106 core + 287 network) PASS. Równoległe przebiegi przekraczały progi czasowe testów 3.9; progi/algorytmy bez zmian, szczegóły w raporcie. Instrukcja MD/HTML/PDF 58 stron/47 obrazów. Raport `docs/weryfikacja/WERYFIKACJA_SPOJNOSCI_MODELU_7_12_A2.md`. Całe A2 nadal w trakcie, następny A2b2 — fizyczne pozycje/ruch korpusów i wózków. Dodano przyszły 7.13.U upraszczający techniczne nazwy interfejsu. Postęp bez zmiany: 84,7% / 89,7%; Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.12.A2a (2026-10-21): wdrożone — wspólny odczyt aktywnego szkicu 6: przydziały rejestru, wybrane czasy/obsada i dopuszczenia, rzut geometrii oraz raport statyczny oznaczony SHA-256 modelu. Bez konwersji do 4 i ponownego bilansowania; brakujące czasy/kopie i alternatywne dopuszczenia nie tworzą pozornej zdolności. Panel aktualizuje się po wariancie/Cofnij/Ponów i eksporcie/imporcie/odświeżeniu; źródło 4 zachowane. Backup `backup/v0.4.0_przed_7_12a2a_20261021`: 470 plików, osobna kontrola skopiowanych SHA-256 PASS. Schematy i zapis bez zmian. Celowane A2a/B/4.5/4.6 12/12, dodatkowy manifest 1/1, build i Edge PASS; konsolidacja ma 50/0/40 s, 72 szt./h, stół S2 Y=4000 mm i harmonogram JIT 190 s. Instrukcja MD/HTML/PDF 56 stron/46 obrazów. Raport `docs/weryfikacja/WERYFIKACJA_SPOJNOSCI_MODELU_7_12_A2.md`. Cały A2 pozostaje w trakcie; następny A2b — 3D i animacja właściwego harmonogramu 6. Główne widoki/A4 4 nadal oddzielne. Postęp bez zmiany 84,7% / 89,7%; Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.12.B (2026-10-21): wdrożone w jawnym zakresie procesowym JIT z buforami — katalog `przyklady/01_zestaw_montazowy/`, 12 plików: pakiet A1, manifest/SHA, proces i BOM XLSX, projekcje źródła/szkicu/wariantów, warunki sesji, słownik, README oraz niezależne referencje. Trzy manualne operacje 20/30/40 s, takt 60 s, materiał 25 PLN/szt.; baza 3 stanowiska/3 osoby i konsolidacja 2 aktywne/2 osoby, przy niezmienionym popycie i czasach. Bufory wejść/pośrednich wyjść po 3, końcowe wyjście jawnie null; lokalna kontynuacja na tej samej kopii. Ręczny wzorzec i silnik: koniec partii 3 szt. po 170/190 s. Nie zmieniano silnika w celu dopasowania wzorca; historię doprecyzowania buforów zapisano. Generator/manifest/arkusze 4/4, regresja celowana 14/14, Edge (pusty projekt, pakiet/XLSX, bilans/layout, JIT, harmonogram/porównanie/raport, Cofnij/Ponów, własny wariant i eksport/import/reload) PASS. Bez zmian źródeł aplikacji, schematów i modułów zapisu; bez nowego builda/pełnej regresji (ostatnia 382/382 w A1). Instrukcja MD/HTML/PDF: 55 stron/45 obrazów. Raport `docs/weryfikacja/WERYFIKACJA_PROJEKTU_PODSTAWOWEGO_7_12_B.md`. Główne 7.12 nadal w trakcie; następny A2 przed fizycznymi C/D. Główne widoki/raport 4 nie są wynikami konsolidacji 6. Postęp bez zmiany: 84,7% / 89,7%; Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.12.A1 (odbiór 2026-10-21, start 2026-10-19): wdrożone — pojedynczy pakiet rodziny projektu (źródło 4, opcjonalne źródło 5, dokładny szkic 6 i warianty tego samego źródła). Przycisk Pakiet projektu, walidacja wersji/źródeł/ID/SHA/limitu, podgląd, kopia ratunkowa i potwierdzenie, ochrona przed nieaktualnym snapshotem i wycofanie po awarii. Biblioteka scenariuszy 4 zachowana; brakujące 5/warianty 6 usuwają stary zapis. Brak oryginału 4 dla źródła 5 wymaga jawnego pliku. Backup `backup/v0.4.0_przed_7_12a1_20261019`: 449 plików, SHA-256 PASS. Schematy bez migracji. Celowane 12/12, pełna integracyjna 382/382, próby API obu źródeł, build i Edge UI (czysty profil, import/reload/eksport, anulowanie, quota/rollback/odzyskanie) PASS. Instrukcja MD/HTML/PDF: 53 strony/44 obrazy. Raport `docs/weryfikacja/WERYFIKACJA_PAKIETU_PROJEKTU_7_12_A1.md`. Główne 7.12 w trakcie, następny 7.12.B; A2 pozostaje przed odbiorem fizycznych przykładów. Postęp bez zmiany: 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%. Wdrożenia Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.6a (2026-10-19): wdrożone — naprawiono luki L2–L6 audytu 7.12.A. Walidacja wszystkich pięciu obszarów, źródeł i bibliotek oraz blokada SHA przed zapisem także w API; poprawny licznik wariantów. Pełne odtworzenie: null usuwa stary slot, inne klucze zachowane, źródła niezależnych dokumentów bez przymusowego łączenia. Snapshot przed mutacją, kontrola jego aktualności, wycofanie i weryfikacja po błędach; trwała awaria rollbacku jawna z dostępem do kopii. UI wymaga pobrania kopii ratunkowej i potwierdzenia, wstrzymuje autozapis/skróty i blokuje edycję po niepotwierdzonym wycofaniu. Format kopii v1/schematy bez migracji, poprawna historyczna kopia zgodna. Backup `backup/v0.4.0_przed_7_6a_20261019`: 448 plików, SHA-256 PASS. Testy celowane 9/9, audyt `--recovery-fixed`, świeży build i Edge UI z wstrzykniętymi awariami PASS. Pełna regresja integracyjna 376/376 PASS. Instrukcja MD/HTML/PDF: 52 strony/43 obrazy, kontrola treści i granic PASS; przegląd zmienionych renderów PASS. Raport `docs/weryfikacja/WERYFIKACJA_DYSTRYBUCJI_I_ODZYSKIWANIA_7_6.md`. Główne 7.6 ponownie wdrożone; A1 i A2 nadal otwarte. Bez zmian symulacji/danych Eko. Lokalne pliki użytkownika zachowane, Vercel nie zweryfikowano. Postęp: 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%. Następny pakiet 7.12.A1."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.12.A (2026-10-19): odebrany audyt i kontrakt, główne 7.12 w trakcie — macierz danych/plików/importerów/odtworzenia oraz kontrakt katalogów, manifestu i niezależnych wzorców w `docs/weryfikacja/WERYFIKACJA_PAKIETOW_POKAZOWYCH_7_12_A.md`, `przyklady/KONTRAKT_PAKIETU.md` i `przyklady/README.md`. XLSX i JSON/archiwa 4/5 są użyteczne częściowo; szkic i biblioteka 6 nie mają bezpośredniego importera plikowego. Audyt syntetycznej próby PASS odtworzenia możliwości i luk, istniejące testy celowane 7/7 PASS, świeży build PASS, Edge UI PASS (rzeczywisty import 4/5, pobranie szkicu, odrzucenie szkicu przez import główny bez mutacji, poprawna kopia środowiska i odczyt po reloadzie; 0 wyjątków JS). Nie testowano jeszcze trzech pełnych projektów ani ich fizycznej symulacji. Odtworzono luki 7.6: SHA nie blokuje restore, brak walidacji pełnych otoczek/bibliotek, pozostawianie obcych slotów przy null, częściowy zapis przy błędzie oraz błędny licznik wariantów. 7.6 przywrócono do w trakcie; nie naprawiano kodu aplikacji w A. Następnie 7.6a → 7.12.A1 → 7.12.B; przed fizycznymi przykładami także A2. Dawne odbiory, źródła i lokalne pliki użytkownika zachowano. Proponowany nowy format pakietu nie jest jeszcze obsługiwany. Postęp: 60/72 = 83,3%, pierwsze wydanie 60/68 = 88,2%.\n\nDecyzja planistyczna 2026-10-19 — Eko pozostaje materiałem testowym, nie projektem zaszytym w produkcie. Zaktualizowano zakres 7.1/7.2 i 6.3 oraz dodano 7.12 (trzy kompletne pakiety pokazowe), 7.13 (pusty start i ładowanie z plików), 7.14 (interaktywny tutorial). Wszystkie nowe punkty są nierozpoczęte; aktualizacja planu nie stanowi ich wdrożenia. Dawne potwierdzenia, audyty i odbiory zachowane. Najpierw 7.12.A: sprawdzić rzeczywiste możliwości zapisu/importu i uzgodnić kontrakt kompletnego pakietu, następnie 7.12.B: przygotować i odebrać najprostszy przykład. Nie kontynuować zbierania danych Eko jako domyślnej ścieżki krytycznej. Zmiana wyłącznie planistyczna; bez zmian aplikacji, testów regresji, builda lub PDF. Postęp po dodaniu zakresu: 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.1d (2026-10-19): odebrany pakiet metadanych, główne 7.1 w trakcie — EKO-U6 potwierdza czasy OP10–OP21 jako średnie z kilku pomiarów. Liczba prób, dane surowe, rozrzut i szczegółowa metoda pozostają nieznane. Bez zmiany wartości, bez rozszerzania potwierdzenia na przykładowe OP22–OP25 i bez wymyślania zmienności Monte Carlo. Nowy audyt `outputs/data_audit/eko_7_1d.json`; wcześniejsze wyniki zachowane. Audyt i kontrola agregacji, niezmienności czasów, obsady i SHA-256 PASS (16 operacji, 12 średnich, 4 testowe, 60 BOM, 7 źródeł). Zaktualizowano rejestr danych i instrukcję zbierania; bez zmian aplikacji, regresji/builda/UI lub PDF. Nadal potrzebne m.in. przypisania osób, kalendarze, dane przestrzenne i wyniki produkcji. Postęp bez zmiany: 61/69 = 88,4%, pierwsze wydanie 61/65 = 93,8%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.1c (2026-10-19): odebrany pakiet danych, główne 7.1 w trakcie — zapisano EKO-U5: cały proces manualny, brak maszyn i automatyzacji; obie osoby obecne przez całe pakowanie OP21. 1320 s pozostaje czasem zespołu, bez skalowania. Audyt rozróżnia potwierdzony brak odcinków maszyn od nieznanych profili ręcznych/ID osób. Zachowano 12 czasów potwierdzonych źródłowo i 4 przykładowe, bez rozszerzania obsady na OP22–OP25. Nowy `outputs/data_audit/eko_7_1c.json` (audyt v2, nie projekt aplikacji); historyczny wynik i zastane lokalne zmiany zachowane. Audyt i kontrola zakresu danych/SHA-256 PASS: 16 operacji, 60 BOM, 7 źródeł. Zaktualizowano `docs/dane/DANE_EKO_7_1.md` i instrukcję zbierania danych. Bez zmian aplikacji, regresji/builda/UI lub nowego PDF. Następne wyjaśnienie: pojedynczy pomiar/średnia/norma; nadal brak m.in. rzeczywistych ID osób, kalendarzy, geometrii, transportu, buforów i wyników produkcji do 7.2. Postęp głównych ID bez zmiany: 61/69 = 88,4%, pierwsze wydanie 61/65 = 93,8%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.10a / 7.11a / 7.8.2a (2026-10-19): wdrożone — po przeglądzie ponownie odebrano trzy punkty. Poprawiono KPI nominalnej zdolności (3600 / efektywny odstęp) i wydzielono wymagane tempo; testy liczb, kopii, czasu zespołu i braku danych. Edge 7.10: krótki PDF 3 strony/238400 B, długi 6 stron/560734 B, oba KPI i granice tekstu poprawne. Nowy `tests/qa/verify_7_11a.mjs`: rzeczywisty import XLSX procesu/BOM, baza Manual i reorganizacja RPW przy stałym popycie, zapis/porównanie migawek, pobranie i import CSV/JSON, odświeżenie, zachowanie danych dwóch projektów oraz odrzucenie obcego BOM — PASS, 0 wyjątków JS. Baterie 6 → 1 stanowisko przy 303,75 s; silniki 6 → 2 przy 151,875 s. Zakres aktywnego schematu 4 i danych syntetycznych; bez odbioru pełnej fizycznej symulacji szkicu 6. Biblioteka wariantów wspólna w przeglądarce, migawki zachowują dane projektów. Przywrócono LOD/Popout w instrukcji, poprawiono opisy KPI i ścieżki użytkownika. MD/HTML/PDF zgodne: 51 stron, 42 obrazy, brak brakujących sekcji/terminów, pustych stron i tekstu poza stroną; wizualny odbiór renderów PASS. Wynik 51 stron zastępuje wcześniejszą deklarację 45 (przed naprawą faktycznie 48). Celowane testy 7.10/7.11: 3/3 PASS; okresowa pełna regresja po integracji trzech pakietów: 371/371 PASS (Node test), build PASS z dotychczasowym ostrzeżeniem rozmiaru paczek. Raporty: `docs/weryfikacja/WERYFIKACJA_RAPORTU_PDF_7_10.md`, `docs/weryfikacja/WERYFIKACJA_UNIWERSALNOSCI_7_11.md`, `docs/weryfikacja/WERYFIKACJA_AKTUALIZACJI_DOKUMENTACJI_7_8_2.md`. Bez zmian schematu lub reguł symulacji. Lokalne pliki użytkownika zachowane, Vercel nie zweryfikowano. Postęp: cały plan 61/69 = 88,4%, pierwsze wydanie 61/65 = 93,8%. Dalej pozostają 6.3, 7.1, 7.2 i 7.9; ten pakiet ich nie odbiera."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.8.2 (2026-10-18): wdrożone — finalna aktualizacja instrukcji użytkownika, pełnego opisu funkcji (`docs/produkt/FUNKCJE_PROGRAMU.md`), rejestru zmian (`docs/historia/ZMIANY_v0.4.0.md`) i jawnych ograniczeń po zakończeniu Etapów 5–7 (nowy edytor hali CAD 2D/3D, automatyczna propozycja layoutu 5.13, manipulatory 3D 6.5, animacja 3D z inspekcją 6.6, tryb uproszczony LOD i Popout Windows 6.7, przezbrojenia 7.3, symulacja stochastyczna Monte Carlo 7.4, dekompozycja strat OEE 7.5, dystrybucja offline-first i backup SHA-256 7.6, audyt licencji i bezpieczeństwa 7.7, profesjonalny raport inżynierski PDF z wykresem Yamazumi 7.10 oraz uniwersalność na bateriach i silnikach EV 7.11). Podręcznik użytkownika `Instrukcja/Podrecznik_Uzytkownika.md` (zregenerowane pliki HTML i 45-stronicowy PDF, 5,56 MB, 39 zweryfikowanych ilustracji) stanowi pełną, kompletną dokumentację aplikacji. Kopia zapasowa: `backup/v0.4.0_przed_7_8_2_20261018` (440 plików z SHA256). Pełny zestaw testów 370/370 PASS, build PASS. Raport `docs/weryfikacja/WERYFIKACJA_AKTUALIZACJI_DOKUMENTACJI_7_8_2.md`. Postęp: cały plan 61/69 = 88,4%, pierwsze wydanie 61/65 = 93,8%, Etap 7: 8/11 = 72,7%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.11 (2026-10-18): wdrożone — odbiór uniwersalności na co najmniej dwóch odmiennych procesach niezależnych od Eko (moduły baterii EV oraz silniki trakcyjne EV) w zadaniach inżyniera procesu i konsultanta Lean (Plan 7.11). Przygotowano dwa niezależne zestawy danych procesowych i materiałowych: `tests/fixtures/baterie_proces.xlsx` + `tests/fixtures/baterie_bom.xlsx` (montaż modułów baterii EV, przepływ liniowy, 6 operacji, 6 pozycji BOM, waluta EUR, takt 86,4 s) oraz `tests/fixtures/silniki_proces.xlsx` + `tests/fixtures/silniki_bom.xlsx` (montaż silników elektrycznych EV, układ gniazdowy U-Shape, 6 operacji, 5 pozycji BOM, waluta USD, takt 60 s). Zweryfikowano: import z arkuszy XLSX (`importProcess`, `importBOM`) bez błędów, automatyczne generowanie wstępnej propozycji layoutu w hali z oznaczeniem obiektów jako założenia wizualne (`isVisualAssumption: true`), bilansowanie heurystykami RPW i LCR, budowę i porównanie wariantu bazowego i wariantu usprawnionego o zwiększonym popycie, eksport i ponowny odczyt projektów w JSON (`parseProject`), separację identyfikatorów i walut bez przenikania danych oraz jawne wskazywanie brakujących danych (`isConfirmed: false` dla niepotwierdzonych wymiarów hali). Kopia zapasowa: `backup/v0.4.0_przed_7_11_20261018` (434 pliki z SHA256). Test jednostkowy w `tests/core.test.ts`, pełny zestaw testów **370/370 PASS** (100%), build PASS. Weryfikacja E2E w przeglądarce Edge przez CDP (`tests/qa/verify_7_11.mjs`, zrzuty `outputs/qa/verify_7_11_batteries_layout.png`, `verify_7_11_batteries_report.png`, `verify_7_11_motors_layout.png`, `verify_7_11_motors_report.png`, 0 błędów konsoli). Podręcznik użytkownika zaktualizowany (sekcja 5.12, HTML i PDF zregenerowane). Raport `docs/weryfikacja/WERYFIKACJA_UNIWERSALNOSCI_7_11.md`. Postęp: cały plan 60/69 = 87,0%, pierwsze wydanie 60/65 = 92,3%, Etap 7: 7/11 = 63,6%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.10 (2026-10-18): wdrożone — dopracowanie wyglądu generowanego raportu PDF: czytelna hierarchia, typografia inżynierska, tabele i wykresy, podziały stron oraz wersja do druku (Plan 7.10). Utworzono komponent `src/components/report/EngineeringReportView.tsx` oraz dedykowany arkusz stylów `EngineeringReportView.css` z regułami `@media print` (`A4 portrait`, `margin: 12mm 10mm 15mm 10mm`, zapobieganie łamaniu wierszy tabel i kart KPI `break-inside: avoid`). Raport zawiera formalny nagłówek z kodem projektu i statusem, podsumowanie wykonawcze (KPI cards: Takt Time, Wąskie Gardło, Stacje, Operatorzy, Efektywność %, Przepustowość), założenia produkcyjne i popytowe, bilansowanie linii z wektorowym wykresem słupkowym Yamazumi (SVG/CSS) i przerywaną linią odniesienia Takt Time, tabelę operacji marszruty technologicznej, zestawienie materiałowe (BOM) z kalkulacją kosztów, parametry przestrzenne hali layoutu, raport audytu Quality Gate oraz zastrzeżenia inżynierskie (Zasada 5, Zasada 6, BHP) wraz z metryką formalnych podpisów akceptacyjnych. Zapewniono przełącznik widoków (`Widok dokumentu A4` vs `Surowy Markdown`). Weryfikacja: kopia `backup/v0.4.0_przed_7_10_20261018` (430 plików z SHA256), test jednostkowy w `tests/core.test.ts`, pełny zestaw testów 369/369 PASS, build PASS. Weryfikacja E2E przez CDP (`tests/qa/verify_7_10.mjs`) dla projektu krótkiego (`outputs/qa/report_7_10_short.pdf` — 236 KB) oraz długiego Eko D5c (16 operacji, 60 BOM, `outputs/qa/report_7_10_long.pdf` — 559 KB, wielostronicowy, brak obciętych tekstów, 0 błędów konsoli). Podręcznik użytkownika zaktualizowany (sekcja 5.11, HTML i PDF zregenerowane). Raport `docs/weryfikacja/WERYFIKACJA_RAPORTU_PDF_7_10.md`. Postęp: cały plan 59/69 = 85,5%, pierwsze wydanie 59/65 = 90,8%, Etap 7: 6/11 = 54,5%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.7 (2026-10-18): wdrożone — przegląd zależności, licencji kodu i modeli oraz bezpieczeństwa adekwatnego do sposobu dystrybucji (Plan 7.7). Audyt 95 pakietów npm: 100% zależności produkcyjnych na licencjach permisywnych (MIT, Apache-2.0, ISC), brak zakażenia licencjami Copyleft (GPL/AGPL). Wykryto i usunięto podatność DoS w parserze map źródłowych poprzez dodanie reguły w `overrides` (`source-map-js: \"^1.2.2\"`), osiągając wynik **0 podatności (0 vulnerabilities)** w `npm audit`. Weryfikacja modeli 3D i wyposażenia: 16 typów w `DEFAULT_EQUIPMENT_SPECS` posiada jawną licencję MIT (`src/core/equipment/equipmentStandard.ts`), modele konceptualne Blender/GLTF stanowią autorskie opracowania demonstracyjne bez praw osób trzecich. Narzędzie automatycznego audytu `scripts/audit_licenses_and_security.mjs` (`npm run audit:licenses`, raport JSON `outputs/security_audit/audit_7_7.json`), test jednostkowy w `tests/core.test.ts`, aktualizacja podręcznika użytkownika (sekcja 5.10, HTML i PDF). Kopia zapasowa: `backup/v0.4.0_przed_7_7_20261018` (428 plików z SHA256). Testy 368/368 PASS, build PASS. Raport `docs/weryfikacja/WERYFIKACJA_LICENCJI_I_BEZPIECZENSTWA_7_7.md`. Postęp: cały plan 58/69 = 84,1%, pierwsze wydanie 58/65 = 89,2%, Etap 7: 5/11 = 45,5%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.6 (2026-10-18): wdrożone — ustalenie sposobu dystrybucji i wdrożenie instalacji/uruchamiania offline, aktualizacji oraz kopii i odzyskiwania projektu (Disaster Recovery & Workspace Backup); weryfikacja na czystym komputerze (ID 7.6). Pakiet 7.6: format i silnik pełnego backupu środowiska roboczego (`src/core/workspaceBackup.ts`) z czystą implementacją algorytmu FIPS 180-4 SHA-256 (32-bit `Uint32Array`), weryfikacja integralności sumy kontrolnej SHA-256, modal kopii i odzyskiwania w UI (`WorkspaceBackupModal.tsx`), automatyczny Rollback Snapshot przed nadpisaniem pamięci w celu bezpiecznego odzyskiwania awaryjnego (Disaster Recovery) oraz cofanie przywrócenia, integracja w pasku górnym nagłówka oraz pulpicie startowym (`App.tsx`). Skrypt weryfikacji czystej instalacji i braku CDN (`scripts/verify_clean_install.mjs`, `npm run verify:clean` 5/5 PASS), dedykowany skrót uruchomieniowy Windows (`Uruchom_Layout_Studio.bat`), weryfikacja E2E w przeglądarce Edge przez CDP (`tests/qa/verify_7_6.mjs`, zrzut `outputs/qa/verify_7_6_modal.png`), aktualizacja podręcznika użytkownika (sekcja 5.9, generowanie HTML i PDF). Kopia zapasowa: `backup/v0.4.0_przed_7_6_20261018` (422 pliki z SHA256). Testy celowane 1/1 PASS, pełna regresja 367/367 PASS (100%), build PASS. Raport `docs/weryfikacja/WERYFIKACJA_DYSTRYBUCJI_I_ODZYSKIWANIA_7_6.md`. Postęp: cały plan 57/69 = 82,6%, pierwsze wydanie 57/65 = 87,7%, Etap 7: 4/11 = 36,4%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.5 (2026-10-18): wdrożone — rozdzielenie szczegółowo modelowanych strat od rezerwy OEE, ochrona przed podwójnym naliczaniem tych samych strat w bilansie i symulacji (`src/core/oeeLossDecomposition.ts`, `src/components/demand/DemandWizardView.tsx`). Analityczna dekompozycja strat jawnych: dostępności (awarie MTBF/MTTR, przezbrojenia, przerwy kalendarzowe), wydajności (transport, blokady buforów wyjściowych, zmienność losowa), jakości. Wykrywanie ryzyka podwójnego naliczenia strat (współczynnik ryzyka, poziomy: brak, umiarkowane, wysokie) w statycznym takcie vs dynamicznej symulacji. Kalkulator skorygowanego taktu (Adjusted Takt Time) z uwzględnieniem strat jawnych oraz rezydualnej rezerwy OEE, rekomendacje Lean oraz funkcja jednoklikowej harmonizacji OEE. Kopia zapasowa: `backup/v0.4.0_przed_7_5_20261018` (420 plików z SHA256). Testy celowane PASS w `tests/core.test.ts`, pełna regresja 366/366 PASS (100%), build PASS. Raport `docs/weryfikacja/WERYFIKACJA_DEKOMPOZYCJI_OEE_7_5.md`, podręcznik użytkownika zaktualizowany (sekcja 5.8, zrzut ekranu, PDF). Postęp: cały plan 56/69 = 81,2%, pierwsze wydanie 56/65 = 86,2%, Etap 7: 3/11 = 27,3%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.4 (2026-10-18): wdrożone — symulacja stochastyczna Monte Carlo, zmienność czasów i awarie maszyn (MTBF/MTTR) z deterministyczną powtarzalnością ziarna losowego (PRNG) i zakresem niepewności wyników (`src/core/stochasticSimulation.ts`, `src/core/domainProject.ts`, `src/components/studio/DomainStochasticSimulationPanel.tsx`, `src/components/studio/DomainDraftPanel.tsx`). Generator PRNG (SplitMix32/Mulberry32) z obsługą rozkładów trójkątnego, normalnego, jednostajnego, wykładniczego i lognormalnego. Niezmiennik Zasady 5: to samo ziarno daje w 100% identyczny wynik; naprawiono tolerancję float (EPSILON = 1e-9) w `src/core/workProjection.ts` zapobiegając fałszywym zakleszczeniom kalendarza. Statystyki min, max, mean, median, stdDev, p10, p90, p95 dla Makespanu i Throughputu oraz częstotliwość występowania wąskich gardeł (Bottleneck Frequency). Integracja z UI szkicu 6 (konfigurator, losowanie ziarna, tabela MTBF/MTTR, pasek postępu replikacji, karty wyników, historia Cofnij/Ponów). Kopia zapasowa: `backup/v0.4.0_przed_7_4_20261018` (1638 plików z SHA256). Testy 365/365 PASS (89 core + 276 network), build `tsc && vite build` PASS, manual HTML/PDF zaktualizowany. Raport `docs/weryfikacja/WERYFIKACJA_ZMIENNOSCI_I_AWARII_7_4.md`. Postęp: cały plan 55/69 = 79,7%, pierwsze wydanie 55/65 = 84,6%, Etap 7: 2/11 = 18,2%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.3 (2026-10-18): wdrożone — przezbrojenia i warianty produktów, reguły kolejności, macierz czasów przejść, sekwencjonowanie zleceń partii oraz integracja z symulacją i wykresem Gantta (`src/core/changeoverMatrix.ts`, `src/components/studio/DomainChangeoverEditor.tsx`). Kopia zapasowa: `v0.4.0_przed_7_3_20261018` (817 plików z SHA256). Raport `docs/weryfikacja/WERYFIKACJA_PRZEZBROJEN_7_3.md`."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.1b (2026-10-18): w trakcie — po EKO-U3 użytkownik doprecyzował EKO-U4: 13 osób łącznie w procesie, tylko pakowanie OP21 w 2 osoby, pozostałe mierzone OP10–OP20 po 1. Zamknięto EKO-C2. Czas pakowania 1320 s pozostaje bez skalowania. W rejestrze/audycie przypisano liczebności do 12 mierzonych operacji; nie nadano tożsamości osób, współdzielenia, kalendarzy ani obsady testowym OP22–OP25. Audyt, zgodność źródeł i kontrola liczebności/czasu OP21 PASS. Bez zmian aplikacji i projektów, bez builda/regresji/UI. 7.1 pozostaje w trakcie; postęp 53/69 = 76,8%, pierwsze wydanie 53/65 = 81,5%. Dowody w `dane/eko/7_1/potwierdzenia_zrodel.json` i `docs/dane/DANE_EKO_7_1.md`."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.1a (2026-10-18): odebrano audyt i przygotowanie zbierania danych — użytkownik potwierdził rzeczywiste dane procesu/BOM, lipiec 2026 i ramę 1.4 (EKO-U1), a następnie pozostawienie OP22–OP25 jako przykładów „prawdopodobnych” (EKO-U2). 12 czasów z potwierdzonego rzeczywistego źródła, 4 testowe, 60 BOM; 7 źródeł z SHA-256, porównanie ID/czasów z przykładem i odwołań BOM PASS. Trzy puste karty CSV (pomiary, przedziały, obsada/zasoby) sprawdzone przez SheetJS. Rejestr 14 obszarów danych/braków `docs/dane/DANE_EKO_7_1.md`, rejestr potwierdzeń i instrukcja kart w `dane/eko/7_1`, wynik `outputs/data_audit/eko_7_1.json`, odtwarzalny skrypt audytu. Bez zmian aplikacji/schematu, arkuszy źródłowych i plików użytkownika; bez builda/regresji/UI i bez potrzeby odświeżania podręcznika aplikacji/PDF. Główne 7.1 w trakcie. Następne pakiety: 7.1b — rzeczywista obsada, profile i pozostałe dane z ID/źródłami; 7.1c — kompletność i przekazanie do 7.2. Zapytano o liczbę osób odpowiadającą pomiarom OP10–OP21; nie przyjęto domyślnej obsady. Postęp bez wzrostu: 53/69 = 76,8%; pierwsze wydanie 53/65 = 81,5%. Vercel nie weryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "6.7b (2026-10-18): odebrano — rzeczywista scena 100/300 obiektów, Edge 155/WebGL2/Intel UHD Graphics, dwie próbki każdego trybu w kolejności ABBA. Dla 300 obiektów LOD zmniejszył draw calls 9960→607 i trójkąty 191176→3816; mediana odstępu klatek 121,3–139,6→12,0 ms w środowisku headless. Naprawiono wykrytą pustą scenę: kadr pomija manipulator z niewidoczną płaszczyzną 100000 jednostek oraz ukryte korzenie sceny. 3/3 testy celowane 6.7 PASS, build PASS, regresja rzeczywistych okien 6.7a PASS, wybór/zbliżenie/ukrywanie/przywracanie/dopasowanie sceny 300 obiektów i niezmienność całego zapisu PASS. Instrukcja MD/HTML/PDF zaktualizowana i sprawdzona; raport `docs/weryfikacja/WERYFIKACJA_WYDAJNOSCI_I_OKIEN_6_7.md`, surowe wyniki `outputs/qa/benchmark_6_7/report.json`. 6.7 wdrożone w zmierzonym zakresie; brak gwarancji FPS na innych GPU/monitorach, pomiar bez odtwarzania animacji, czas pierwszego wczytania poza pomiarem. 6.3 nadal w trakcie dla rzeczywistych maszyn/Eko. Następny punkt 7.1: rejestr rzeczywistych danych i braków; pomiarów nie zastępować założeniami. Vercel nie weryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "6.7a (2026-10-18): odebrano poprawkę okien — stabilny cykl życia mimo zmian callbacku rodzica, skróty CAD/3D w dokumencie danego widoku, wspólna historia i zapis przez zdarzenia React portalu. Rzeczywiste okna Edge: CAD/edycja strzałką/zapis/Cofnij/przywrócenie, przepływ/zmiana w rodzicu/natywne zamknięcie, 3D/skrót G/przywrócenie PASS; 1440/600 px, brak wyjątków. Pełna okresowa regresja po pakietach 6.5–6.7: 354/354 PASS, build PASS. Instrukcja MD/HTML/PDF: 44 strony/41 obrazów, kontrola automatyczna i wizualna dodanych stron PASS. Dotychczasowy test 6.7 sprawdzał przyciski, nie działanie okna. Przywrócono główne 6.7 do „w trakcie”: nadal brak pomiaru większej sceny i docelowego słabszego GPU. Raport `docs/weryfikacja/WERYFIKACJA_WYDAJNOSCI_I_OKIEN_6_7.md`, sekcja 6.7a. Postęp 52/69 = 75,4%; pierwsze wydanie 52/65 = 80,0%. Vercel nie zweryfikowano. Następny pakiet: pomiar większej sceny w 6.7."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "6.6 (2026-10-18): w trakcie — animacja produktów, podzespołów i transportu zgodnie z harmonogramem symulacji; pauza i inspekcja stanu (`src/components/studio/Scene.tsx`, `src/components/studio/Simulation.tsx`, `src/core/algorithms/simulationAnimation.ts`, `src/App.tsx`). Synchronizacja pozycji 3D produktów z czasem symulacji (czas rzeczywisty / suwak osi czasu), animacja produktów na blatach stanowisk w trakcie operacji, płynne przemieszczanie międzyoperacyjne po trasach transportowych z użyciem wózków/palet, prezentacja stanu kolejki i buforów. Funkcja pauzy, interaktywna inspekcja stanu kliknięciem obiektu w 3D (numer sztuki, operacja, stanowisko, czasy, postęp). Niezmiennik Zasady 6: animacja i wizualizacja nie zmieniają wyników symulacji. Kopia zapasowa: `backup/v0.4.0_przed_6_6_20261018` (399 plików z SHA256)."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "6.5 (2026-10-18): wdrożone — dodanie wygodnych manipulatorów przesuwania i obrotu (Three.js TransformControls) oraz ukrywania warstw i obiektów w 3D (`src/core/algorithms/layoutSelection.ts`, `src/components/studio/Scene.tsx`, `src/components/viewport3d/Factory3DView.tsx`, `src/components/studio/HallWorkspace.css`). Translacja w płaszczyźnie posadzki w osiach X, Z (odpowiadających współrzędnym CAD X, Y w mm) ze stałą elewacją posadzki (blokada osi Y), obrót wokół osi pionowej (Yaw, rotationDeg 0–360°), skróty klawiszowe W (przesuwanie), E / R (obrót), Q (wyłączenie manipulatora), G (przyciąganie do siatki posadzki i skoków kąta 15°). Ścisła ochrona obiektów zablokowanych (locked): brak podłączenia manipulatora, odznaka `🔒 Zablokowany (brak manipulacji)` w formularzu 3D. Jednokrokowa historia operacji (Ctrl+Z / Ctrl+Y) rejestrowana wyłącznie na zakończenie manipulacji myszą (dragging-changed / mouseUp). Rozwijane menu „Warstwy 3D” na pasku narzędziowym z niezależnym filtrowaniem 5 warstw (Stanowiska, Bufory i logistyka, Strefy operatorów, Przeszkody, Połączenia procesu / spaghetti) spójnym z CAD 2D oraz ukrywanie zaznaczonego obiektu (H), przywracanie ukrytych (Shift+H / N). Brak wpływu modeli i manipulatorów na parametry technologiczne, czasy i symulację (Zasada 6). Kopia zapasowa: `backup/v0.4.0_przed_6_5_20261018` (391 plików z SHA256). Testy celowane 75/75 PASS (w tym 6 nowych testów w `tests/core.test.ts`), kompilacja produkcyjna `npm.cmd run build` PASS, weryfikacja automatyczna Edge CDP (`tests/qa/verify_6_5.mjs`) PASS (5 zrzutów ekranu w `outputs/qa/`: translate, rotate, layers dropdown, locked protection, mobile 600px). Podręcznik użytkownika Markdown/HTML zaktualizowany (opis skrótów, nowa sekcja 5.3 ze screenshotami). Kontrakt i raport: `docs/weryfikacja/WERYFIKACJA_MANIPULATOROW_I_WARSTW_6_5.md`. Postęp: cały plan 51/69 = 73,9%, pierwsze wydanie 51/65 = 78,5%, Etap 6: 4/7 = 57,1%. Następny punkt: 6.6 (Animacja produktów, podzespołów i transportu zgodnie z harmonogramem symulacji; pauza i inspekcja stanu)."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "6.4 (2026-10-18): wdrożone — osobne opcjonalne `LayoutObject.visualModelId`, wybór 3 wbudowanych konceptów 6.3b/powrót do generatora w aktywnych właściwościach 2D/3D. Bez zmiany typu, ID, przypisań, geometrii, zasobów i trybu layoutu; wybór zachowany dla tych samych ID w auto. Koncept zachowuje proporcje i mieści się w obrysie, a nakładki nadal wynikają ze standardu/typu. Wspólny renderer Scene/Factory3DView, osobne zasoby instancji. Zapis 4/5/6 kompatybilny, nieznane ID odrzucane; bez przełączania schematu. Backup `backup/v0.4.0_przed_6_4_20261018` (384 SHA256). Testy celowane 11/11 PASS (generatory, zapis/migracja, pełne wyniki 4/5/6 bez zmiany), build PASS, Edge WebGL/historia/zapis-odczyt/ochrona niezapisanych wymiarów/1440-600 px PASS. Instrukcja Markdown/HTML/PDF uzupełniona, 36 stron/34 obrazy, kontrola i odbiór dodanej sekcji PASS. Kontrakt `docs/modele/MODEL_WYGLADU_WYPOSAZENIA_6_4.md`, raport `docs/weryfikacja/WERYFIKACJA_WYGLADU_WYPOSAZENIA_6_4.md`. Pozostaje ostrzeżenie dużego pakietu sceny; większa scena w 6.7. Konfigurator 8.3/import CAD 8.4 poza zakresem. 6.3 nadal w trakcie dla maszyn/Eko. Następny punkt 6.5; Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "6.3b (2026-10-18): odebrany pakiet koncepcyjny — po wskazaniu materiałów Jabama przez użytkownika przygotowano 3 własne modele Blender/GLB: stanowisko z nadbudową, wózek półkowy i regał na części. Bez kopiowania zdjęć, tekstur, oznaczeń i geometrii producenta. Wszystkie gabaryty/detale jawnie autorskie założenia demonstracyjne, nie dane Jabama ani stanowisk klienta. Receptury, rendery, karty JSON i galeria w edytorze 6.3a. Blender 5.2.1 LTS: generacja i ponowny odczyt 3/3 plików PASS, rzeczywiste GLB w Three.js/karty 6/6 PASS (576/508/1068 trójkątów, limit 5000, skala/osie/podłoże), Edge UI i regresja 6.3a PASS (1440/600 px). Backup `backup/v0.4.0_przed_6_3b_inspiracje_20261018` (363 SHA256). Instrukcja README i Markdown/HTML/PDF zaktualizowane; 34 strony/32 obrazy, kontrola i wizualny odbiór dodanej sekcji PASS. Raport `docs/weryfikacja/WERYFIKACJA_KONCEPTOW_WYPOSAZENIA_6_3b.md`. Główne 6.3 nadal w trakcie w zakresie maszyn/Eko i docelowego odbioru; integracja wymiennego wyglądu w 6.4. Bez wzrostu głównych liczników, bez głównego builda/regresji (osobne narzędzie/assety), Vercel nie weryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "6.3a (2026-10-18): pakiet pomocniczy odebrany — na prośbę użytkownika bez referencji przygotowano samodzielny lokalny edytor `tools/equipment-editor/index.html`, pusty szablon JSON, eksport/import karty wyposażenia, pochodzenie/źródła wymiarów, punkt bazowy, opis wyglądu, referencje i uprawnienia. Typy/nazwy na podstawie `equipmentStandard.ts`; `parametricEquipmentModels.ts` wykorzystano jako kontekst generatora, nie źródło pomiarów. Brak automatycznych wymiarów, nieznane liczby null, osobny format v1 bez zmian projektu/symulacji. Backup `backup/v0.4.0_przed_6_3a_edytor_20261018` (351 SHA256). Testy kontraktu 3/3 i rzeczywisty Edge file:// eksport/import/ochrona danych/1440-600 px PASS. Instrukcja README oraz Markdown/HTML/PDF zaktualizowane, 33 strony/31 obrazów, kontrola i odbiór dodanej strony PASS. Raport `docs/weryfikacja/WERYFIKACJA_KARTY_WYPOSAZENIA_6_3a.md`. Główne 6.3 w trakcie: brak modeli Blender i ich odbioru; dalsze modelowanie po uzupełnieniu karty/referencji. Liczniki głównych ID bez wzrostu; bez głównego builda/regresji (osobne narzędzie), Vercel nie weryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "6.2 (2026-10-18): wdrożone — parametryczne stoły, regały, palety, pojemniki, wózki, przenośniki i nakładki 3D (`src/core/equipment/parametricEquipmentModels.ts`, `docs/modele/PARAMETRYCZNE_WYPOSAZENIE_6_2.md`). Proceduralne generatory Three.js dla wszystkich standardowych 15 typów `ObjectType` oraz modeli rozszerzonych: stoły robocze (blat, ESD, stopy, nadstawka, tablica 5S, belka LED, aparatura), regały FIFO (bieżnie rolkowe, pojemniki KLT, konstrukcja lean pipe), palety EPAL (1200x800x144 mm, deski, płozy, obrys posadzki, sztaple), pojemniki VDA 4500 KLT, wózki transportowe (spawana rama, burty, dyszel, koła Z=0) i AMR/AGV (LIDAR, LED 360°, podnośnik nożycowy), przenośniki rolkowe (ceowniki, ocynkowane rolki co 100 mm, nogi H, motoreduktor), maty ergo, tablice 5S i słupy Andon; nakładki 3D standardu 6.1 (strefy obsługi, obrysy kolizji, porty transportu) z przełącznikami w `Scene.tsx` i `Factory3DView.tsx`; współdzielona paleta materiałów PBR i bezpieczne zwalnianie GPU w `disposeEquipmentGroup`. Backup `backup/v0.4.0_przed_6_2_20261018` (196 plików z SHA256). Testy celowane 67/67 PASS (`core.test.ts`), okresowa pełna regresja 339/339 PASS (100%), build PASS (7.59s). Raport `docs/weryfikacja/WERYFIKACJA_PARAMETRYCZNEGO_WYPOSAZENIA_6_2.md`. Następny punkt: 6.3 (modele charakterystyczne maszyn w Blenderze). Postęp: cały plan 49/67 = 73,1%, pierwsze wydanie 49/65 = 75,4%, Etap 6: 2/7 = 28,6%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "6.1 (2026-10-18): wdrożone — standard wyposażenia: skala, jednostki, punkt ustawienia, obrys kolizji, strefa obsługi, punkty transportu i metadane źródła/licencji (`src/core/equipment/equipmentStandard.ts`, `docs/modele/STANDARD_WYPOSAZENIA_6_1.md`). Backup `backup/v0.4.0_przed_6_1_20261018` (345 plików z SHA256). Pełna regresja 332/332 PASS, build PASS (7.27s). Raport `docs/weryfikacja/WERYFIKACJA_STANDARDU_WYPOSAZENIA_6_1.md`. Następny punkt: 6.2 (parametryczne stoły, regały, palety, pojemniki, wózki i przenośniki). Postęp: cały plan 48/67 = 71,6%, pierwsze wydanie 48/65 = 73,8%, Etap 6: 1/7 = 14,3%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "5.9 (2026-10-18): wdrożone — czytelna wizualizacja stref obsługi (`service`), odkładania (`staging`) i komunikacji (`communication`) w edytorze CAD 2D (`computeFunctionalZones`, przełącznik `Warstwa: Strefy obsługi, odkładania i komunikacji`, kreskowane obrysy `.cad-functional-zones`) oraz jawne odróżnienie ostrzeżeń geometrycznych od oceny zgodności BHP (`analyzeGeometricLayoutWarnings`, `BHP_GEOMETRY_DISCLAIMER`, `BHP_SAFE_STATE_NOTE`, odznaki `Geometria rzutu (nie BHP)`, prefiks `[Geometria rzutu — nie BHP]`, wyróżnienie `data-geo-warning=\"true\"` na rzucie i przycisk `Zaznacz obiekt`) w `src/core/algorithms/layoutSelection.ts`, `src/components/studio/LayoutEditor.tsx` i `src/components/studio/HallWorkspace.css`. Backup `backup/v0.4.0_przed_5_9_20261018` (487 plików z SHA256). Testy celowane 14/14 PASS (`5.3`–`5.9`), okresowa pełna regresja 321/321 PASS (trzeci pakiet od `5.6`), build PASS, Edge CDP UI 5.9 PASS (`tests/qa/verify_5_9.mjs`, 1440/600 px) oraz regresja UI 5.7–5.8 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 28 stron/28 obrazów (`outputs/qa/manual_5_9`). Raport `docs/weryfikacja/WERYFIKACJA_STREF_I_GEOMETRII_5_9.md`. Następny punkt: 5.10. Postęp: cały plan 45/67 = 67,2%, pierwsze wydanie 45/65 = 69,2%, Etap 5: 11/13 = 84,6%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "5.8 (2026-10-18): wdrożone — ustalenie i wdrożenie obsługiwanego podzbioru importu DXF (`LWPOLYLINE`, `POLYLINE`+`VERTEX`+`SEQEND`, `CIRCLE`, osiowe `LINE` na warstwach hali/przeszkód, `TEXT`/`MTEXT` w sekcji `ENTITIES`, z ignorowaniem `BLOCKS` i pełnym roundtripem z `exportToDxf`), weryfikacja jednostek (`$INSUNITS` dla `mm`, `cm`, `m`, `in`, `ft` oraz blokada `requiresUnitConfirmation` przy braku jednostek lub `$INSUNITS=0` do czasu jawnego wyboru jednostki przez użytkownika) oraz kompletny raport pominiętej geometrii (`skippedEntities`: typ, warstwa, liczba wystąpień i przyczyna dla `INSERT`, `SPLINE`, `ARC`, `ELLIPSE`, `HATCH`, `DIMENSION`, `3DFACE`, łuków `bulge` i polilinii `< 3` wierzchołków) w `src/core/export/dxfImporter.ts` i `src/components/studio/LayoutEditor.tsx`. Backup `backup/v0.4.0_przed_5_8_20261018` (336 plików z SHA256). Testy celowane 12/12 PASS (`5.3`–`5.8`), build PASS, Edge CDP UI 5.8 PASS (`tests/qa/verify_5_8.mjs`, 1440/600 px) oraz regresja UI 5.2–5.7 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 27 stron/27 obrazów (`outputs/qa/manual_5_8`). Raport `docs/weryfikacja/WERYFIKACJA_IMPORTU_DXF_5_8.md`. Następny punkt: 5.9. Postęp: cały plan 44/67 = 65,7%, pierwsze wydanie 44/65 = 67,7%, Etap 5: 10/13 = 76,9%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "5.7 (2026-10-18): wdrożone — podkład hali z kalibracją skali (`FacilityUnderlay` w `facility.underlay`: obraz PNG/JPEG/SVG/WebP w rzucie CAD 2D, warstwa `Warstwa: Podkład hali`, `underlayDimensionsMm`, interaktywna dwupunktowa kalibracja skali na rzucie `calibrateUnderlayScale`, ręczna edycja `mmPerPixel`, przesunięcie X/Y, przezroczystość, dopasowanie wymiarów hali do podkładu oraz walidacja i persystencja w `parseProject`/`validateProject`). Backup `backup/v0.4.0_przed_5_7_20261018` (323 pliki z SHA256). Testy celowane 10/10 PASS (`5.3`–`5.7`), build PASS, Edge CDP UI 5.7 PASS (`tests/qa/verify_5_7.mjs`, 1440/600 px) oraz regresja UI 5.2–5.6 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 26 stron/26 obrazów (`outputs/qa/manual_5_7`). Raport `docs/weryfikacja/WERYFIKACJA_PODKLADU_HALI_5_7.md`. Następny punkt: 5.8. Postęp: cały plan 43/67 = 64,2%, pierwsze wydanie 43/65 = 66,2%, Etap 5: 9/13 = 69,2%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "5.6 (2026-10-18): wdrożone — wymiarowanie obiektów i przeszkód (`.cad-object-dimension`, `.cad-obstacle-dimension`), automatyczne pomiary odległości między dwoma zaznaczonymi obiektami (`measureObjectsDistance`: prześwit obróconych obrysów `edgeGapMm`, odległość `środek–środek`, `ΔX`, `ΔY`, linia wymiarowa `.cad-dimension-overlay`), interaktywny pomiar odległości punkt–punkt na rzucie (`Mierz odległość`, `measurePointsDistance`, `.cad-ruler-overlay`), widoczność 6 warstw (`Stanowiska`, `Bufory i logistyka`, `Strefy operatorów`, `Relacje technologiczne`, `Przeszkody`, `Wymiary i pomiary`) oraz trwałe blokowanie obiektów (`LayoutObject.locked`, `lockLayoutObjects`, ochrona przed przesunięciem, zmianą wymiarów, wyrównaniem i usunięciem). Backup `backup/v0.4.0_przed_5_6_20261018` (321 plików z SHA256). Testy celowane 8/8 PASS (`5.3`–`5.6`), okresowa pełna regresja 315/315 PASS (trzeci pakiet od `5.3`), build PASS, Edge CDP UI 5.6 PASS (`tests/qa/verify_5_6.mjs`, 1440/600 px) oraz regresja UI 5.2–5.5 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 25 stron/25 obrazów (`outputs/qa/manual_5_6`). Raport `docs/weryfikacja/WERYFIKACJA_WYMIAROW_I_WARSTW_5_6.md`. Następny punkt: 5.7. Postęp: cały plan 42/67 = 62,7%, pierwsze wydanie 42/65 = 64,6%, Etap 5: 8/13 = 61,5%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "5.5 (2026-10-18): wdrożone — przyciąganie do siatki (`facility.gridSizeMm`), krawędzi obiektów/przeszkód (`edges`) i punktów połączeń (`objectConnectionPoints`: środek technologiczny + środki 4 boków) oraz możliwość jego wyłączenia (`src/core/algorithms/layoutSelection.ts`, `src/components/studio/LayoutEditor.tsx`). Niezależne przełączniki każdego trybu, przycisk `Wyłącz przyciąganie / Włącz przyciąganie`, tymczasowe wyłączenie klawiszem `Alt` (ruch co 1 mm), wizualne znaczniki portów `.cad-connection-point` i prowadnice `.cad-snap-guide`. Backup `backup/v0.4.0_przed_5_5_20261018` (464 pliki z SHA256). Testy celowane 6/6 PASS (`5.3`–`5.5`), build PASS, Edge CDP UI 5.5 PASS (`tests/qa/verify_5_5.mjs`, 1440/600 px) oraz regresja UI 5.2, 5.3 i 5.4 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 24 strony/24 obrazy (`outputs/qa/manual_5_5`). Raport `docs/weryfikacja/WERYFIKACJA_PRZYCIAGANIA_5_5.md`. Następny punkt: 5.6. Postęp: cały plan 41/67 = 61,2%, pierwsze wydanie 41/65 = 63,1%, Etap 5: 7/13 = 53,8%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "5.4 (2026-10-18): wdrożone — przenoszenie stanowiska razem z przypisanym regałem FIFO i strefą obsługi operatora bez utraty relacji technologicznych (`src/core/algorithms/layoutSelection.ts`, `src/components/studio/LayoutEditor.tsx`). Wspólne przesuwanie myszą na rzucie CAD 2D (z podglądem na żywo fioletowych linii relacji `layoutRoutes`), zmiana X/Y we Właściwościach oraz wyrównywanie zespołów stanowisk (`TableESD` + `FlowRackFIFO3Tier` + `OperatorErgoMat` tej samej kopii `-COPY-N`). Przełącznik `Przenoś stanowisko z FIFO i strefą` (domyślnie aktywny), przycisk `Zaznacz zespół stanowiska` oraz tryb korekty pojedynczego elementu po odznaczeniu opcji. Schemat zapisu bez zmian. Backup `backup/v0.4.0_przed_5_4_20261018` (314 plików z SHA256). Testy celowane 4/4 PASS (`5.3` + `5.4`), build PASS, Edge CDP UI 5.4 PASS (`tests/qa/verify_5_4.mjs`, 1440/600 px) oraz regresja UI 5.2 i 5.3 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 23 strony/23 obrazy, kontrola `verify_manual.py` i odbiór wizualny PASS. Raport `docs/weryfikacja/WERYFIKACJA_ZESPOLU_STANOWISKA_5_4.md`. Następny punkt: 5.5. Postęp: cały plan 40/67 = 59,7%, pierwsze wydanie 40/65 = 61,5%, Etap 5: 6/13 = 46,2%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "5.3 (2026-10-18): wdrożone — wielokrotne zaznaczenie wyposażenia CAD 2D przez Shift/Ctrl/Meta i pola wyboru drzewa, trwałe grupy wizualne, wspólne przesuwanie jednym gestem i wyrównywanie obróconych obrysów; grupy zachowują odstępy. Decyzja użytkownika: kopie wyłącznie geometrii z nowymi ID/grupami, bez przypisania do stanowiska i bez zwiększenia zdolności produkcyjnej; przesunięcia X/Y jawne. Opcjonalne `LayoutObject.visualGroupId`, stare dane bez migracji, walidacja i roundtrip; historia/zapis-odczyt PASS. Backup `backup/v0.4.0_przed_5_3_20261018` (325 plików SHA256). Celowane 2/2 i okresowa pełna regresja 309/309 PASS (trzeci pakiet od 4.6), build PASS, Edge UI 5.3 i regresja 5.2 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 22 strony/22 obrazy, kontrola i wizualny odbiór PASS. Raport `docs/weryfikacja/WERYFIKACJA_GRUP_I_KOPII_5_3.md`. Przeszkody w osobnym edytorze, automatyczne zespoły stanowiska w 5.4, wspólne zaznaczenie 3D w 5.10. Następny punkt 5.4. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "5.2 (2026-10-18): wdrożone — wybrany B w aktywnym edytorze projektu 4: większy rzut, biblioteka/drzewo po lewej i parametry/właściwości po prawej na żądanie, jeden panel naraz, Escape i wewnętrzne przewijanie; zwijane dolne listy oraz istniejąca symulacja projektu 4 z osią czasu uruchamiana po otwarciu. Zachowane potwierdzenia, historia, ID i zapis; usuwanie nieaktualnego formularza po zmianie projektu. Backup `backup/v0.4.0_przed_5_2_20261018` (322 pliki SHA256). Testy celowane 6/6 PASS, build PASS, Edge CDP UI/gest/siatka/historia/zapis-odczyt/wyniki PASS (1440/960/600 px). Instrukcja Markdown/HTML/PDF zaktualizowana; 21 stron/21 obrazów, kontrola i wizualny odbiór PASS. Raport `docs/weryfikacja/WERYFIKACJA_EDYTORA_5_2.md`. Bez zmiany schematu lub reguł symulacji; kontekst szkicu 6 odrębny. Następny punkt 5.3. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "5.1 (2026-10-18): wdrożone — użytkownik wybrał **B: większy rzut, panele na żądanie** po porównaniu A/B w `docs/projekty/PROPOZYCJE_UI_5_1.html`. Wdrożenie 5.2 ma korzystać z drzewa po lewej i właściwości po prawej otwieranych nad rzutem oraz zwijanego dolnego panelu; uwzględnić mniejsze ekrany i wewnętrzne przewijanie. Podglądy mają wspólne zaznaczenie, bez zmiany aplikacji/zapisów. Edge CDP PASS (`tests/qa/verify_5_1.mjs`, 1440/960/600 px, klawiatura/mysz, panele i przewijanie); zrzuty `outputs/qa/verify_5_1_*.png`. Decyzja i granice: `docs/projekty/PROJEKT_ORGANIZACJI_EDYTORA_5_1.md`. Historyczna rekomendacja A nie nadpisuje wyboru B. Bez regresji/builda aplikacji — projekt UI, nie wdrożenie edytora. Następny punkt 5.2; po rzeczywistej zmianie obsługi obowiązkowo zaktualizować instrukcję.\n\nZasada utrzymania instrukcji (2026-10-18, decyzja użytkownika): po ukończeniu całego pakietu lub znacznej części planu aktualizować instrukcję, jeżeli zmiany wpływają na działanie programu lub interakcję z użytkownikiem. Obowiązek dopisano do procedury odbioru pakietów; bez zmiany statusów funkcji i licznika postępu."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "7.8.1 (2026-10-18): wdrożone — istniejący podręcznik Markdown jako edytowalne źródło, HTML i PDF uzupełniono po Etapach 1–4 o konfigurację i zapis szkicu 6, osoby/czasy/kompetencje/wyposażenie, kalendarze/transport, bufory/zaopatrzenie, harmonogram/Gantt/diagnostykę, bilans, bibliotekę wariantów, jawne koszty i propozycje usprawnień. Zrzuty z zapisanych odbiorów oznaczone jako syntetyczne; do Gantta użyto zatwierdzonej kopii Git bez nadpisania lokalnej zmiany. Backup `backup/v0.4.0_przed_7_8_1_20261018` (316 plików z SHA256). Generacja HTML i Edge CDP PDF PASS (21 wczytanych obrazów), kontrola Python PASS (21 stron, brak brakujących obrazów/rozdziałów, pustych stron i tekstu poza stroną), wizualny odbiór renderów wszystkich stron PASS. Bez testów regresji/builda aplikacji — dokumentacja, bez zmian modelu/produktu. Raport `docs/weryfikacja/WERYFIKACJA_INSTRUKCJI_7_8_1.md`. Główne 7.8 nadal w trakcie do 7.8.2; licznik głównych ID bez zmiany. Następny pakiet 5.1 — propozycje organizacji edytora hali i decyzja projektowa. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "4.7 (2026-10-16): wdrożone — proponowanie zmian wraz z uzasadnieniem i wynikiem sprawdzenia w symulacji; bez deklaracji gwarantowanego optimum. Zamknięcie i odbiór Etapu 4 (7/7 = 100,0% wdrożone). Wdrożono moduł domenowy `src/core/domainImprovementProposals.ts` oraz integrację w UI `src/components/studio/DomainVariantComparisonPanel.tsx`: 1) jawne stałe zastrzeżenie metodologiczne `NON_OPTIMUM_DISCLAIMER` prezentowane w UI i w raporcie Markdown; 2) generator kandydatów bazujący wyłącznie na zadeklarowanych zasobach (bez zmyślania obiektów, czasów ani stawek): `add-team-worker`, `expand-worker-eligibility`, `change-staffing-variant`, `activate-station-copy`, `rebalance-work` (RPW/LCR z silnika 4.3), `release-blocked-worker` (bufor bbas -> bbas-worker-released), `saved-variant` (z biblioteki wariantów 4.5); 3) weryfikacja w symulacji przy identycznych warunkach eksperymentu (`VariantExperimentConditions`); 4) notatka `staticVsDynamicNote` rozróżniająca statyczny szacunek zdolności (najwolniejsza kopia, pułap `[szt./h]`) od wyniku dynamicznego (makespan, przepustowość, czas przejścia, WIP) oraz klasyfikacja statusu: `Poprawa w symulacji` (`improved`), `Brak zmiany` (`unchanged`), `Pogorszenie` (`regressed`), `Odmowa / niewykonalność` (`refused`); 5) akcje w UI: `Zapisz jako wariant` (do biblioteki 4.5) oraz `Zastosuj do szkicu 6` (z historią `Cofnij dane szkicu` / `Ponów dane szkicu`); 6) generator i eksport raportu Markdown `buildImprovementProposalsMarkdownReport` z wersją danych (schemat v6, źródło v4/v5), warunkami, założeniami kosztowymi i dowodami; 7) ochrona starszych projektów 4/5 i `originalJson`. Backup `backup/v0.4.0_przed_4_7_20261016` (314 plików z SHA256). Celowane testy 20/20 PASS (2 nowe testy 4.7), typecheck/build PASS, Edge CDP UI PASS (`tests/qa/verify_4_7.mjs`, `outputs/qa/verify_4_7.png`). Raport `docs/weryfikacja/WERYFIKACJA_PROPOZYCJI_ZMIAN_4_7.md`. Etap 4 wdrożony w całości. Następny krok: Etap 5 / 5.1 (propozycje organizacji UI hali) lub wydzielony pakiet 7.8.1 (aktualizacja instrukcji użytkownika po Etapach 1–4). Postęp 36/67 = 53,7%, pierwsze wydanie 36/65 = 55,4%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "4.6 (2026-10-16): wdrożone w zakresie zapisanych wariantów szkicu 6 — rozszerzono `src/core/domainVariantComparison.ts` i `src/components/studio/DomainVariantComparisonPanel.tsx` o pełne zestawienie 6 wymiarów (wydajność statyczna `[szt./h]` vs dynamiczna przepustowość symulacji `[szt./h]` i $\\Delta$, czas przejścia wyrobu `lead time` i czas w procesie `span` od $O_1$ ze wskaźnikiem przepływu $T_{\\text{netto}}/T_{\\text{span}}$, WIP całego wyrobu policzony analitycznie na osi czasu `WIP aktywny` oraz `WIP w systemie` średni i szczytowy, obsada i wykorzystanie zespołu/kopii względem makespanu, powierzchnia hali i suma obrysów 2D `layoutObjects` z obrysem minimalnym AABB bez zmyślania wymiarów dla stacji bez geometrii, oraz koszty przy jawnych stawkach i założeniach: `costBasis`, `accountingMode: makespan | active-only`, walidacja ujemnych/niepoprawnych stawek i brak wyceny bez jawnych stawek). Dodano tabelę syntezy `aria-label=\"Tabela syntezy wskaźników 4.6\"` oraz generator i eksport raportu porównania `.md` zawierającego wersję danych (`schemaVersion`), warunki eksperymentu i założenia kosztowe. Zmiana każdego parametru stawek lub założeń kosztowych unieważnia wynik porównania. Backup `backup/v0.4.0_przed_4_6_20261016` (311 plików z SHA256). Celowane 18/18 PASS (2 nowe testy 4.6), okresowa pełna regresja 305/305 PASS (trzeci ukończony pakiet od 4.3c, po 4.4, 4.5 i 4.6), typecheck/build PASS, Edge CDP UI PASS (`tests/qa/verify_4_6.mjs`, `outputs/qa/verify_4_6.png`). Raport `docs/weryfikacja/WERYFIKACJA_ZESTAWIENIA_WARIANTOW_4_6.md`. Następny punkt: 4.7. Postęp 35/67 = 52,2%, pierwsze wydanie 35/65 = 53,8%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "4.5 (2026-10-16): wdrożone w zakresie zapisanych wariantów szkicu 6 — `domainVariantComparison.ts` i panel `DomainVariantComparisonPanel.tsx`: izolowana biblioteka wariantów (`layout-studio-domain-v6-variants-v1`, maks. 20, ochrona źródeł 4/5 i uszkodzonych zapisów), zapisywanie wariantów `baseline`, `additional-worker`, `additional-station`, `changed-layout`, przywracanie do aktywnego szkicu 6 z historią `Cofnij/Ponów` oraz porównywanie wybranych wariantów w tle (`schedule.worker.ts`) przy jednakowych, jawnych warunkach eksperymentu (`batch`, `arrivalIntervalSeconds`, `transportMode: configured | just-in-time`). Kontrola zmienionych czynników (`process`, `workers`, `stations`, `layout`) z ostrzeżeniami przy zmianach wieloczynnikowych lub zmianie procesu/popytu. Oddzielenie szacunku statycznego (`[s/szt.]` bez dzielenia czasu operacji przez liczbę osób) od wyników dynamicznych harmonogramu (makespan i Δ vs baza, przepustowość `[szt./h]` i Δ, średni czas przejścia, praca netto, unia pracy najdłużej pracującej kopii, oczekiwania jednoprzyczynowe, oddzielne oczekiwania mieszane bez dzielenia czasu, blokady wyjścia, ruchy transportowe, jawne założenia). Zmiana warunków, bazy, wyboru lub szkicu unieważnia wynik porównania. Backup `backup/v0.4.0_przed_4_5_20261016` (307 plików z SHA256). Celowane 19/19 PASS (3 nowe testy 4.5), typecheck/build PASS, Edge CDP UI PASS (`tests/qa/verify_4_5.mjs`, `outputs/qa/verify_4_5.png`). Bez pełnej regresji (drugi pakiet od pełnego przebiegu 296/296 w 4.3c). Raport `docs/weryfikacja/WERYFIKACJA_POROWNANIA_WARIANTOW_4_5.md`. Następny punkt: 4.6. Postęp 34/67 = 50,7%, pierwsze wydanie 34/65 = 52,3%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "4.4 (2026-10-16): wdrożone w zakresie harmonogramu szkicu 6 — `throughputExplanation.ts` i panel dowodów ograniczeń: praca netto, obsada, transport, blokady/bufory i materiał/podzespoły oraz osobno kalendarz i pozostałe ograniczenia. Powiązanie dowodu ze sztuką/operacją/kopią i przejście do wykonania na Gantcie, źródło czasu pomiar/założenie, unia pracy na kopii bez podwójnego naliczania, brak arbitralnego podziału oczekiwań mieszanych, jawne założenia JIT. Starszy równy podział oznaczono jako umowną agregację. Brak twierdzenia o jednej głównej przyczynie ani przewidywanym zysku bez porównania przebiegów. Backup `backup/v0.4.0_przed_4_4_20261016` (304 pliki z SHA256). Celowane 22/22 PASS (4 nowe), typecheck/build PASS, Edge CDP UI PASS (`tests/qa/verify_4_3c.mjs --throughput`, `outputs/qa/verify_4_4.png`, 3 sztuki/60 s, JIT, Gantt, dostawa i oczekiwanie 15 s, reload i izolacja 4/5). Bez zmiany schematu, harmonogramu i zapisu; bez pełnej regresji, ostatnia 296/296 w 4.3c. Raport `docs/weryfikacja/WERYFIKACJA_OGRANICZEN_PRZEPUSTOWOSCI_4_4.md`. Postęp 33/67 = 49,3%, pierwsze wydanie 33/65 = 50,8%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "4.3 / 4.3c (2026-10-16): wdrożone w zakresie szkicu 6 — bilans statyczny na istniejących, jawnie dopuszczonych kopiach (decyzja użytkownika). `domainBalancing.ts`: priorytety RPW/LCR, limit sumy czasów wybranych wariantów na kopię, jawne wyposażenie, uzupełniające się kompetencje obsady, blokady stanowisk, kolejność ręcznego rejestru i miejsca zaopatrzenia. Ograniczone przeszukiwanie z powrotem: osobne wyniki braku przydziału dla statycznych ograniczeń i limitu 20000 prób. `DomainBalancingPanel.tsx`: podgląd z trwałymi ID i pochodzeniem czasu, jawne zatwierdzenie ograniczenia dopuszczeń do pokazanych kopii, wspólna historia i unieważnienie harmonogramu. Zapis zachowuje puste stanowiska, ID, geometrię, wyposażenie i trasy; nie tworzy nowych stanowisk ani nie nadaje kompetencji. Poprawiono wyprowadzanie przypisań na potrzeby walidacji blokad i respektowanie blokady stanowiska w harmonogramach szkicu. Backup `backup/v0.4.0_przed_4_3c_20261016` (301 plików z SHA256). Celowane 59/59 PASS (7 nowych); okresowa pełna regresja 296/296 PASS po trzech pakietach i integracji, typecheck/build PASS, Edge CDP UI PASS (`tests/qa/verify_4_3c.mjs`, `outputs/qa/verify_4_3c.png`, RPW/LCR, historia, zapis/reload, worker/JIT, izolacja 4/5 i oryginału). Bilans nie stanowi dowodu przepustowości ani dynamicznej wykonalności: weryfikuje ją harmonogram. Aktywny bilans starszych projektów 4/5 pozostaje niezależny. Kontrakt i ograniczenia: `docs/modele/MODEL_KOMPETENCJI_I_PRZYDZIALOW_4_3.md`. Następny punkt 4.4. Postęp 32/67 = 47,8%, pierwsze wydanie 32/65 = 49,2%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "4.3b (2026-10-16): zakończony pakiet — formularz `DomainCompetencyEditor.tsx`: słownik ze stałymi zapisanymi ID, kompetencje osób, wymagania operacji, walidacja, ochrona używanych definicji, ocena pokrycia dla zapisanej obsady, Odrzuć/usunięcie i wspólne Cofnij/Ponów. Zmiany unieważniają harmonogram przez istniejący mechanizm szkicu. Backup `backup/v0.4.0_przed_4_3b_20261016` (299 plików z SHA256). Celowane 4.3a 6/6 PASS, typecheck/build PASS, Edge CDP UI PASS (`tests/qa/verify_4_3b.mjs`, `outputs/qa/verify_4_3b.png`): formularz, odmowy, worker/JIT, historia, reload i izolacja projektów 4/5 oraz oryginału. Raport `docs/modele/MODEL_KOMPETENCJI_I_PRZYDZIALOW_4_3.md`. Bez pełnej regresji. Następny 4.3c — integracja automatycznego bilansu z dopuszczeniami i zasobami; całe 4.3 pozostaje w trakcie. Postęp 31/67 = 46,3%, pierwsze wydanie 31/65 = 47,7%. Vercel nie zweryfikowano.\n\nRejestr rozpoczęcia 4.3 (2026-10-16): nierozpoczęte → w trakcie. Pakiet 4.3a zakończony w zakresie rdzenia; postęp głównych ID pozostaje 31/67 = 46,3%, pierwsze wydanie 31/65 = 47,7% (`node scripts/plan_progress.mjs`)."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "4.3a (2026-10-16): zakończony pakiet rdzenia — opcjonalny kontrakt kompetencji szkicu 6, walidacja referencji, API edycji i kontrola rzeczywistej obsady w zwykłym harmonogramie, buforach i bezpośrednim przekazaniu. Decyzja użytkownika: kompetencje obsady uzupełniają się. Brak zespołu dokładnej liczebności oraz limit przeszukiwania mają odrębne komunikaty. Backup `backup/v0.4.0_przed_4_3a_20261016` (296 plików z SHA256). Celowane 58/58 PASS (6 nowych), typecheck/build PASS; zapis/odczyt i ochrona źródeł 4/5 przez testy, bez odbioru UI i pełnej regresji. Kontrakt/raport `docs/modele/MODEL_KOMPETENCJI_I_PRZYDZIALOW_4_3.md`. Następne 4.3b — formularz i odbiór, 4.3c — integracja bilansu z dopuszczeniami i zasobami; całe 4.3 pozostaje w trakcie. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "4.2 (2026-10-16): wdrożone — umożliwić blokowanie przydziałów przed automatycznym balansowaniem. Rozszerzenie modelu operacji (`ProcessStep.lockedWorkstation`) oraz algorytmu bilansowania (`src/core/algorithms/lineBalancingEngine.ts`) dla heurystyk RPW i LCR. Zapewniono stabilne utrzymanie operacji zablokowanych na przypisanych stanowiskach (`assignedWorkstationId`), dopakowywanie operacji swobodnych wokół nich z zachowaniem czasu taktu i relacji pierwszeństwa, tranzytywną kontrolę kolejności stacji (blokada zablokowanego poprzednika na późniejszej stacji) oraz wymóg ciągłości numeracji stacji (odrzucenie luk). W UI Studio (`BalancingBoard.tsx` i `OperationInspector.tsx`): oznaczanie zablokowanych operacji symbolem 🔒 na wykresie Yamazumi i liście rozwijanej, szybki przycisk akcji w toolbarze oraz checkbox i selektor stacji docelowej w formularzu edycyjnym operacji. Backup `backup/v0.4.0_przed_4_2_20261016` (164 pliki z SHA256). Testy jednostkowe 35/35 PASS (`tests/core.test.ts`), pełna regresja 283/283 PASS, kompilacja/build PASS, test Edge CDP zrzut `outputs/qa/verify_4_2.png` (94 662 bajty). Raport: `docs/weryfikacja/RAPORT_BLOKOWANIA_PRZYDZIALOW_4_2.md`. Następny punkt: 4.3 — wymagania wyposażenia i kompetencji. Postęp: cały plan 31/67 = 46,3%, pierwsze wydanie 31/65 = 47,7%, Etap 4: 2/7 = 28,6%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "4.1 (2026-10-16): wdrożone — pokazywać oddzielnie obciążenie stanowisk, maszyn i operatorów oraz objaśnić mianowniki wskaźników. Moduł obliczeniowy `src/core/workloadBalancing.ts` rozdzielający statyczne obciążenie stanowisk, maszyn i operatorów, z uwzględnieniem liczby kopii, obsady i profili technologicznych. Jawna prezentacja mianowników ($K \\cdot T_{\\text{takt}}$ oraz $(O \\cdot K) \\cdot T_{\\text{takt}}$), formuł i opisów w dedykowanej tabeli widoku bilansowania `BalancingBoard.tsx`. W dynamicznym harmonogramie symulacji partii (`scheduleStateMetrics.ts` oraz `DomainWorkerSchedulePanel.tsx`): wdrożenie `EquipmentStateMetrics` (czas pracy technologicznej, transport, bezczynność, stopień wykorzystania) oraz wzbogacenie metryk stanowisk i pracowników o ścisłe bazy mianownika (makespan) i wzory obliczeniowe. Backup `backup/v0.4.0_przed_4_1_20261016` (162 pliki z SHA256). Pełna regresja 282/282 PASS, build/typecheck PASS, test Edge CDP zrzut `outputs/qa/verify_4_1.png` (111 505 bajtów). Raport: `docs/weryfikacja/RAPORT_OBCIAZENIA_I_MIANOWNIKOW_4_1.md`. Następny punkt: 4.2 — umożliwić blokowanie przydziałów przed automatycznym balansowaniem. Postęp: cały plan 30/67 = 44,8%, pierwsze wydanie 30/65 = 46,2%, Etap 4: 1/7 = 14,3%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.9 (2026-10-16): wdrożone — sprawdzenie wyników na ręcznie policzonych scenariuszach i większych partiach oraz pomiary czasu obliczeń i responsywności UI. Formalny odbiór i zamknięcie Etapu 3 (10/10 = 100,0% wdrożone). Weryfikacja 5 precyzyjnych scenariuszy matematycznych (dokładność 1 ms): 1) czasy transportu, wydłużenie o delta t i niezmiennik translacji obiektów 3D; 2) wpływ pojemności buforów (0 vs 1) oraz polityk blokowania operatora (bbas vs bbas-worker-released); 3) lokalna kontynuacja na tej samej kopii bez ruchu i buforów; 4) zaopatrzenie materiałowe i opóźnienie dostaw; 5) pełna niezależność obliczeń od prędkości animacji (1x–5000x) i pauzy. Pomiary skalowalności: harmonogram z buforami dla partii 100 sztuk (200 operacji) w 258 ms (klonowanie Web Workera 2,5 ms, Gantt 28 ms); symulacja sieciowa 1000 sztuk w 52 ms; test Edge CDP responsywności UI: obliczenia 296 ms, zmiana widoku 68 ms, kliknięcie 4 ms (zrzut `outputs/qa/verify_3_9.png`). Raport: `docs/weryfikacja/WERYFIKACJA_SKALOWALNOSCI_I_DOKLADNOSCI_3_9.md`. Backup `backup/v0.4.0_przed_3_9_20261015` (290 plików z SHA256). Pełna regresja 280/280 PASS, build/typecheck PASS. Następny punkt: 4.1 (Etap 4) — oddzielne obciążenie stanowisk, maszyn i operatorów oraz mianowniki wskaźników. Postęp: cały plan 29/67 = 43,3%, pierwsze wydanie 29/65 = 44,6%, Etap 3: 10/10 = 100,0%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.8 (2026-10-15): wdrożone — wykres Gantta operacji, stanowisk i pracowników oraz przejście z wyniku do odpowiedniego obiektu. Moduł analityczny osi czasu i bloków zdarzeń (`src/core/scheduleGantt.ts`), interaktywny komponent wykresu Gantta z trzema perspektywami widoku w UI Studio (`ScheduleGanttChart.tsx`), podświetlanie i dwukierunkowe przejście do obiektu (operacja, stanowisko, pracownik), automatyczne rozwijanie inspekcji i synchronizacja z tabelami. Backup `backup/v0.4.0_przed_3_8_20261015` (286 plików z SHA256). Pełna regresja 273/273 PASS, typecheck/build PASS, Edge CDP UI PASS (`outputs/qa/verify_3_8.png`, proces JIT/transport/bufory/zaopatrzenie/reload i izolacja 4/5). Dokumentacja: `docs/modele/MODEL_GANTTA_3_8.md`, `docs/weryfikacja/WERYFIKACJA_GANTTA_3_8.md`. Następny punkt: 3.9 — sprawdzenie wyników na ręcznie policzonych scenariuszach i większych partiach. Postęp: cały plan 28/67 = 41,8%, pierwsze wydanie 28/65 = 43,1%, Etap 3: 9/10 = 90,0%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.7 (2026-10-15): wdrożone — wykrywanie zatrzymania lub zakleszczenia procesu i przedstawianie jego przyczyny zamiast pozornego zakończenia symulacji. Kompletny moduł diagnostyczny `src/core/processStallDetection.ts` zintegrowany z silnikami symulacji `bufferedProcessSchedule.ts` i `workerSchedule.ts`. Precyzyjna klasyfikacja przyczyn (`worker-deadlock`, `buffer-deadlock`, `material-starvation`, `calendar-exhaustion`, `transport-deadlock`, `subassembly-starvation`, `process-stall`), dedykowane rekomendacje inżynierskie oraz inspekcja zablokowanych stanowisk/korpusów i wstrzymanych operacji. W panelu harmonogramu Studio (`DomainWorkerSchedulePanel.tsx` oraz `studio.css`) wdrożono ostrzegawczą kartę diagnostyczną z czasem zatrzymania, ramką rekomendacji, tabelą zablokowanych stacji i tabelą operacji. Bezpieczna serializacja przez granicę Web Worker. Backup `backup/v0.4.0_przed_3_7a_20261015` (283 zgodne SHA256). Testy celowane i pełna regresja 270/270 PASS, typecheck/build PASS, Edge CDP UI PASS (`outputs/qa/verify_3_7.png`, proces JIT/transport/bufory/zaopatrzenie/reload i izolacja 4/5). Dokumentacja: `docs/modele/MODEL_ZAKLESZCZEN_3_7.md`, `docs/weryfikacja/WERYFIKACJA_ZAKLESZCZEN_3_7.md`. Następny punkt: 3.8 — wykres Gantta operacji, stanowisk i pracowników. Postęp: cały plan 27/67 = 40,3%, pierwsze wydanie 27/65 = 41,5%, Etap 3: 8/10 = 80,0%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.6 (2026-10-15): wdrożone — stany pracy, oczekiwania na materiał/operatora, blokady wyjścia i transportu wraz z czasami ich trwania w odrębnym harmonogramie szkicu 6. Kompletny zakres analityczny (3.6a) i prezentacyjny w UI Studio (3.6b): moduł `src/core/scheduleStateMetrics.ts` oblicza czasy realizacji partii, czasy pracy brutto/netto, ścisłe partycjonowane rozbicie przyczyn oczekiwania bez podwójnego naliczania (`workers`, `material`, `transport`, `buffer`, `station`, `calendar`), blokady po pracy i oczekiwanie lokalne na tej samej kopii, strukturę czasów transportu (przewozy, dojazdy, powroty) oraz obciążenie i wskaźniki zajęcia/aktywności per stanowisko/kopia i per pracownik (z uwzględnieniem zatrzymania w blokadzie bbas). Panel `DomainWorkerSchedulePanel.tsx` prezentuje kafelki sumaryczne, zestawienie przyczyn oczekiwań, wzbogaconą tabelę wykonań (kolumny czasu pracy i blokad) oraz rozwijane inspekcje stanów stanowisk i pracowników. Backup `backup/v0.4.0_przed_3_6b_20261015` (283 zgodne SHA256). Pełna regresja 266/266 PASS, typecheck/build PASS, Edge CDP UI PASS (`outputs/qa/verify_3_6b.png`, `outputs/qa/verify_3_6b_inspections.png`, JIT, transport, reload i izolacja 4/5). Następny punkt: 3.7 — wykrywanie zatrzymania lub zakleszczenia procesu i przedstawianie jego przyczyny zamiast pozornego zakończenia symulacji. Postęp: cały plan 26/67 = 38,8%, pierwsze wydanie 26/65 = 40,0%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.5 (2026-10-15): wdrożone — pojemności buforów stanowisk oraz zaopatrzenie materiałowe montażu w szkicu 6. Kompletny zakres: kontrakty `StationBuffersV6` i `MaterialSupplyV6`, walidacja, niezależne rejestry miejsc/rezerwacji i dostępności materiałów, reguły blokowania wyjścia (`bbas` zatrzymanie lub `bbas-worker-released` zwolnienie operatora), atomowe przekazania przy pojemności 0 na wejściu i wyjściu, lokalna kontynuacja na tej samej kopii bez buforów, dostawy cykliczne i jawne przed pobraniem, atomowe pobranie przy starcie operacji bez pracy magazynierów, tryb JIT i fizyczny transport. Dwa kompletne formularze UI w Studio (`DomainBuffersEditor.tsx`, `DomainSupplyEditor.tsx`) ze wspólną historią Cofnij/Ponów, walidacją w UI, odrzuceniem zmian, usuwaniem konfiguracji i unieważnieniem symulacji. Backup `backup/v0.4.0_odbior_3_5_20261015` (280 zgodnych SHA256). Pełna regresja 263/263 PASS, typecheck/build PASS, Edge CDP UI PASS (`outputs/qa/verify_3_5c1.png`, `outputs/qa/verify_3_5c2.png`, łączny test JIT/transportu/buforów/zaopatrzenia/reload/izolacji 4/5). Następny punkt: 3.6 — stany pracy, oczekiwania na materiał/operatora, blokady wyjścia i transportu z czasami trwania. Postęp: cały plan 25/67 = 37,3%, pierwsze wydanie 25/65 = 38,5%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.5c2 / część 3.5 (2026-10-15): zakończony zakres — formularz zaopatrzenia materiałowego montażu w UI Studio (`DomainSupplyEditor.tsx`) w szkicu 6: pozycje materiałowe przy stanowiskach montażowych (ID, komponent, stanowisko, zapas początkowy, jednostka, źródło), harmonogramy dostaw cyklicznych (wielkość partii, interwał, opcjonalny jawny czas pierwszej dostawy) oraz dostaw jawnych (lista terminów i ilości), a także przypisania zużycia materiałów do operacji (operacja, pozycja zaopatrzenia, ilość, źródło). Pełna walidacja spójności (odrzucenie ujemnych zapasów/ilości, duplikatów ID i przypisań, nieznanych referencji stanowisk i operacji), wspólna historia Cofnij/Ponów, odrzucenie zmian formularza, usunięcie konfiguracji oraz unieważnienie wyniku symulacji. Backup `backup/v0.4.0_przed_3_5c2_20261015` (279 zgodnych SHA256). Testy celowane 69/69 PASS (w tym 3 nowe scenariusze jednostkowe/integracyjne), core 34/34 PASS, typecheck/build PASS, Edge CDP UI PASS (`outputs/qa/verify_3_5c2.png`, reload, unieważnienie symulacji, historia, usuwanie, izolacja źródeł 4/5). Następny krok: zbiorczy odbiór i integracja buforów i zaopatrzenia (3.5c / 3.5). Całe 3.5 w trakcie, postęp 35,8% / 36,9%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.5c1 / część 3.5 (2026-10-15): zakończony zakres — formularz buforów stanowisk w UI Studio (`DomainBuffersEditor.tsx`) w szkicu 6: pojemności wejściowe i wyjściowe (jawne lub bez limitu), wybór wszystkich kopii osobno (`copy=null`) lub konkretnej kopii, reguły blokowania wyjścia z jawną polityką operatora (`bbas` zatrzymanie lub `bbas-worker-released` zwolnienie). Walidacja nakładających się reguł, nieznanych stanowisk i ujemnych limitów, wspólna historia Cofnij/Ponów, odrzucenie zmian, usuwanie konfiguracji oraz natychmiastowe unieważnienie wyniku symulacji. Backup `backup/v0.4.0_przed_3_5c1_20261015` (278 zgodnych SHA256). Testy celowane buforów 66/66 PASS (w tym 3 nowe scenariusze jednostkowe/integracyjne), typecheck/build PASS, Edge CDP UI PASS (`outputs/qa/verify_3_5c1.png`, reload, unieważnienie symulacji, izolacja źródeł 4/5). Następny 3.5c2 — formularz zaopatrzenia materiałowego montażu w UI. Całe 3.5 w trakcie, postęp 35,8% / 36,9%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.5b2c4 / część 3.5 (2026-10-15): zakończony zakres — zatwierdzona lokalna kontynuacja na tej samej kopii bez buforów/ruchu, utrzymanie stanowiska/wyposażenia, osoby według profili, osobny czas oczekiwania. Późniejsza obecność przy bbas i ochrona przyszłych rezerwacji, bez domyślnego powrotu nieobecnej osoby. Backup 278 zgodnych SHA256, celowane 44/44, jedna okresowa pełna regresja 257/257, typecheck/build i Edge worker/material/JIT/reload/izolacja PASS. Schemat bez zmian, zakres liniowy z ograniczonymi buforami. Następny 3.5c1 — formularz buforów i historia/zapis. Pozostałe granice w modelu/raporcie. Całe 3.5 w trakcie, postęp 35,8% / 36,9%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.5b2c3 / część 3.5 (2026-10-15): zakończony zakres — fizyczne wejście/wyjście 0: przyszły przydział operacji przed wyjazdem, start dokładnie przy przyjeździe, korpus przy wyjściu 0 blokuje źródło do wyjazdu. Osoby/wyposażenie/materiały i kalendarze chronią przyszły odbiór; brak fikcyjnego składowania. Backup 277 SHA256, celowane 75/75, po dopracowaniu 38/38, końcowe nowe scenariusze 11/11 PASS, typecheck/build i Edge obu polityk/JIT/reload/izolacji PASS. Bez pełnej regresji i zmiany schematu. Następny 3.5b2c4 — lokalne przekazania i dalsze profile; pozostałe granice w modelu/raporcie 3.5. Całe 3.5 w trakcie, postęp 35,8% / 36,9%. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.5b2c2 / część 3.5 (2026-10-15): zakończony zakres — aktywny harmonogram fizyczny z dodatnimi/nieograniczonymi buforami: jeden ciąg na korpusie/jedna kopia operacji. Przyjazd przed gotowością operacji, atomowy korpus/bufor, blokady i polityki osób, zestawy z kolejnymi dojazdami, powroty, przenośniki i zaopatrzenie. Backup 277 zgodnych SHA256. Pełna integracyjna regresja 239/240 (jedna odmowa tekstowa), po poprawce wyłącznie 29/29 celowanych; finalne nowe scenariusze 9/9, typecheck/build i Edge obu polityk/JIT/reload/izolacji PASS. Nie raportujemy pełnego 241/241 jako wykonanego. Bez zmiany zapisu; Vercel nie zweryfikowano. Następny 3.5b2c3 — wspólny przydział przekazania przy pojemności 0 i dalsze profile; pozostałe granice opisane w modelu/raporcie 3.5. Całe 3.5 w trakcie, postęp 35,8% / 36,9%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.5b2c1 / część 3.5 (2026-10-14): zakończony zakres wewnętrzny — atomowe przejścia korpus/bufor i adapter pojedynczego przewozu wózka/osoby, rezerwacja celu przed wyjazdem i ochrona nowszych rejestrów. Backup 275 zgodnych SHA256, końcowy podzbiór 23/23 PASS, typecheck/build PASS. Aktywny harmonogram/UI/zapis bez zmian; bez pełnej regresji i UI. Następny 3.5b2c2 — integracja kolejki fizycznej i wspólny przydział przekazania przy pojemności 0. Całe 3.5 w trakcie; postęp 35,8% / 36,9%. Raport 3.5. Vercel nie zweryfikowano."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.5b2b / część 3.5 (2026-10-14): zakończony pierwszy zakres — ograniczone bufory w jawnym JIT: pojedynczy ciąg i jedna kopia na operację, osobny koniec pracy/zwolnienie, blokada stanowiska/wyposażenia i dwie polityki osób, inspekcja. Backup `backup/v0.4.0_przed_3_5b2b_20261014` (273 zgodnych SHA256). Celowane 5 PASS, jedna pełna regresja 224/224 PASS na integracji; po lokalnym zabezpieczeniu obecności tylko podzbiór buforów: finalnie 8/8 PASS. Końcowy typecheck/build i Edge obu polityk/workera/JIT/reload/izolacji PASS. Zakresy nieobsługiwane jawnie odmawiają. Całe 3.5 nadal w trakcie; następny 3.5b2c — fizyczny transport i dalsze profile z buforami, formularze w 3.5c. Postęp 35,8% / 36,9%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.5b2a / część 3.5 (2026-10-14): zakończony zakres — niezależny rejestr pojemności/rezerwacji, osobne kopie, miejsce przed wyjazdem, zwolnienie źródła/przyjazd, odmowy konfliktów i jawne polityki operatora. Pojemność 0 wymaga gotowej operacji bez oczekiwania. Backup `backup/v0.4.0_przed_3_5b2a_20261014` (272 zgodnych SHA256). Testy celowane 5/5 PASS, typecheck/build PASS; bez pełnej regresji i UI, bo rejestr nie jest jeszcze podłączony. Raport 3.5. Następny 3.5b2b — faktyczne blokowanie/zwalnianie i rezerwacje w harmonogramie. Całe 3.5 w trakcie; postęp 35,8% / 36,9%.\n\nZasady testów (2026-10-14): zakończony zakres — AGENTS.md ogranicza testy bieżące do zmienionego obszaru/dependencies, pełna regresja domyślnie po 3 pakietach implementacyjnych albo przy uzasadnionym szerokim punkcie integracji. Runner wspiera --suite=core|network|all i --test-name-pattern; smoke 12/12 testów 3.5b1 PASS (bez pełnej regresji). Postęp 35,8% / 36,9%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.5b1 / część 3.5 (2026-10-14): zakończony zakres — jawne zużycie, jawny pierwszy termin, rejestr zapasu/dostaw/przyszłych pobrań i atomowe pobranie przy faktycznym starcie, dostawa przed pobraniem, brak pracy magazynierów. Odczyt starych kontraktów chroniony; JIT działa. Backup `backup/v0.4.0_przed_3_5b1_20261014` (271 zgodnych SHA256). 213/213 testów, build/typecheck i Edge późnej/terminowej dostawy, bilansu, workera/JIT/reload/izolacji 4/5 PASS. Raport 3.5. Całe 3.5 w trakcie; następny 3.5b2 — blokowanie ograniczonych buforów, potem 3.5c — formularze. Postęp 35,8% / 36,9%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.5a1 / część 3.5 (2026-10-14): zakończony zakres — przegląd po Gemini i jawne odmowy niepodłączonego zaopatrzenia/ograniczonych buforów zamiast ich pomijania. JIT świadomie zakłada dostępność materiału, nie ignoruje ograniczeń buforów. Schemat i zapis bez zmian. Backup `backup/v0.4.0_przed_3_5a1_20261014` (270 zgodnych SHA256). 201/201 testów, build/typecheck i Edge workera/odmowy/JIT/reload/izolacji 4/5 PASS. Zatwierdzone reguły pobrania/dostaw i blokowania zapisane w AGENTS.md/modelu; raport `docs/weryfikacja/WERYFIKACJA_BUFOROW_I_ZAOPATRZENIA_3_5.md`. Całe 3.5 nadal w trakcie. Następny 3.5b — jawne zużycie i terminy, rejestr dostępności oraz integracja. Postęp 35,8% / 36,9%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.5a / część 3.5 (2026-10-12): zakończony zakres — specyfikacja kontraktu buforów stanowisk (`StationBuffersV6`) z regułą blokowania oraz zaopatrzenia materiałowego montażu (`MaterialSupplyV6`) z harmonogramami cyklicznymi i jawnymi (bez czasu/pracy magazynierów). Walidacja, odmowy nieznanych stanowisk/kopii/ujemnych wartości, ochrona źródeł 4/5 i migracja wsteczna. Backup `backup/v0.4.0_przed_3_5a_20261012` (266 zgodnych SHA256). 199/199 testów, build/typecheck PASS. Całe 3.5 w trakcie; następny pakiet 3.5b — reguły blokowania buforów i dostępności materiałów w silniku symulacji."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.4m3 / 3.4.4 i 3.4 (2026-10-12): wdrożone — formularz partii z jawnymi ilościami/jednostkami/wykonaniami, walidacją, wspólnym zapisem i Cofnij/Ponów. Backup `backup/v0.4.0_przed_3_4m3_20261012` (261 zgodnych SHA256). 194/194 testów, build/typecheck i Edge dwóch niezależnych procesów: dodanie/edycja, odmowy, usunięcie/Odrzuć, historia/reload, worker, unieważnienie wyniku, JIT, izolacja 4/5 PASS. Punkt 3.4 zamknięty w zakresie szkicu 6; limit 64 kombinacji kopii i ograniczenia buforów jawne. Następny 3.5 — pojemność buforów i jawne zaopatrzenie, bez czasu magazynierów. Postęp 24/67 = 35,8%, pierwsze wydanie 24/65 = 36,9%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.4m2b / część 3.4.3 (2026-10-12): zakończony zakres — wiele kopii odbiorców przez niezależne pełne przebiegi kombinacji, wybór według gotowości/startu/tras, bez rezerwacji przegranych. Jawny limit 64 kombinacji i odmowa zamiast niesprawdzonego wyboru. Backup `backup/v0.4.0_przed_3_4m2b_20261012` (261 zgodnych SHA256). 194/194 testów, build/typecheck i Edge: druga kopia/zmiana kalendarza, worker, JIT, reload, izolacja 4/5 PASS. Integracja 3.4.3 odebrana w opisanym zakresie; 3.4.4 ponownie w trakcie dla formularza partii 3.4m3. Całe 3.4 nadal w trakcie. Postęp 34,3% / 35,4%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.4m2 / część 3.4.3 (2026-10-12): zakończony pierwszy zakres — wytworzenie, przewóz i pobranie partii przy rzeczywistym starcie, wspólne osoby/urządzenia, dojazdy/powroty, kalendarze, wynik workera i inspekcja. Jedna jawna kopia odbiorcy; wybór wielu kopii odmawia do 3.4m2b. Formularz partii w 3.4m3. Backup `backup/v0.4.0_przed_3_4m2_20261012` (260 zgodnych SHA256). 188/188 testów, build/typecheck, Edge transfer/powrót/JIT/reload/izolacja PASS. Całe 3.4.3/3.4 nadal w trakcie. Postęp 34,3% / 35,4%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.4m1 / część 3.4.3 (2026-10-12): zakończony zakres — zatwierdzone A, kontrakt jawnych partii podzespołów, referencje wykonań, ilości/jednostki i bilans pobrania, parser/API zapisu, ochrona źródeł 4/5. Fizyczny przebieg z kontraktem jawnie odmawia do integracji 3.4m2; JIT działa. Backup `backup/v0.4.0_przed_3_4m1_20261012` (258 zgodnych SHA256). 179/179 testów, build/typecheck i Edge odczytu/odmowy/JIT/reload/izolacji PASS. Całe 3.4 w trakcie; następne 3.4m2 — zdarzenia partii i transport, potem 3.4m3 — formularz/inspekcja. Postęp 34,3% / 35,4%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.4m / część 3.4.3 (2026-10-12): zakończono przygotowanie propozycji kontraktu fizycznych partii podzespołów; implementacja oczekuje na decyzję o dostępności i pobraniu. Opis i trzy pakiety w `docs/modele/MODEL_ZASOBOW_TRANSPORTU_3_4.md`. Bez zmian schematu i obliczeń. Propozycja A: dostępność po końcu przygotowania, pobranie przy starcie odbiorcy; B: jawne momenty wewnątrz operacji. Ilości/przypisania zawsze jawne, bez danych dopowiedzianych z BOM. Postęp 34,3% / 35,4%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.4l / rozszerzenie 3.4 (2026-10-12): zakończony zakres — jawna opcja symulacji samego procesu just in time w harmonogramie szkicu 6, domyślnie wyłączona. Pomija transport i fizyczne lokalizacje korpusów, zachowuje zależności operacji oraz zasoby i kalendarze montażu. Bez zmiany schematu i zapisu; wynik oznaczony JIT. Backup `backup/v0.4.0_przed_3_4l_20261012` (258 plików, zgodne SHA256). 176/176 testów, build/typecheck oraz Edge: konfiguracja transportu / brak konfiguracji / gałęzie, przełączanie, worker, odczyt i izolacja 4/5 PASS. Całe 3.4 nadal w trakcie — transport podzespołów do integracji. Postęp 34,3% / 35,4%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.4k / część 3.4.3 (2026-10-12): zakończony zakres — zatwierdzone przez użytkownika zawsze kolejne dojazdy według zapisanej kolejności urządzeń. Przewóz czeka na rzeczywiste przyjazdy całego zestawu; UI pokazuje i pozwala zmienić kolejność ze wspólną historią. Schemat bez zmian. Backup `backup/v0.4.0_przed_3_4k_20261012` (258 plików, SHA256 bez rozbieżności). 173/173 testy, build/typecheck i Edge workera, zmiany kolejności/Cofnij/Ponów, inspekcji i odczytu PASS. Całe 3.4.3/3.4 w trakcie: fizyczny transport podzespołów pozostaje do integracji. Postęp 34,3% / 35,4%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.4j / 3.4.4 (2026-10-12): wdrożone — pełny edytor kontraktu transportu montażowego: wymagania tras, wózki/przenośniki, jawne lokalizacje/polityki, kalendarze urządzeń i puste trasy z czasem/obsadą. Backup `backup/v0.4.0_przed_3_4j_20261012` (257 plików, SHA256 bez rozbieżności). 169/169 testów, build/typecheck i Edge: nowy kontrakt, istniejący wózek, przenośnik na gałęziach; odmowy, historia, odrzucenie, usuwanie i odczyt z identycznym wynikiem workera PASS. Schemat i algorytm harmonogramu bez zmian. Całe 3.4 nadal w trakcie: fizyczny transport podzespołów i dojazdy wielu wózków w 3.4.3. Postęp 34,3% / 35,4%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.4i / część 3.4.4 (2026-10-09): zakończony zakres — edytor wymagań tras, źródeł i jawnych zestawów osób/urządzeń, wspólna historia i odczyt. Backup `backup/v0.4.0_przed_3_4i_20261009` (256 plików, SHA256 bez rozbieżności). 169/169 testów, build/typecheck i Edge: proces sekwencyjny, gałęzie i utworzenie nowego kontraktu; błędy nie zmieniają zapisu, Cofnij/Ponów, odrzucenie i usuwanie, ponowny odczyt i wynik workera PASS. Całe 3.4.4 w trakcie: formularze urządzeń/kalendarzy/pustych tras pozostają do kolejnego zakresu. Postęp 34,3% / 35,4%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.4h / część 3.4.3 (2026-10-09): zakończony zakres — atomowy przewóz zadeklarowanym zestawem wielu wózków z miejsca odbioru; wspólne kalendarze, położenia i osobne powroty. Backup `backup/v0.4.0_przed_3_4h_20261009` (256 plików, SHA256 bez rozbieżności). 169/169 testów, build/typecheck i Edge workera/inspekcji/zapisu/odczytu PASS. Całe 3.4.3 w trakcie: transport podzespołów oraz dojazdy zestawu wielu wózków pozostają do integracji; formularz kontraktu do 3.4.4. Postęp 34,3% / 35,4%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.4g / część 3.4.3 (2026-10-09): zakończony zakres — jawna obsada dojazdu w zapisie, dojazdy i zadeklarowane powroty w kolejce zdarzeń oraz inspekcja ruchów w UI. Backup `backup/v0.4.0_przed_3_4g_20261009` (256 plików, SHA256 bez rozbieżności). 166/166 testów, build/typecheck i Edge (dojazd/powrót, worker, zapis/odczyt) PASS. Cały 3.4.3 pozostaje w trakcie: transport podzespołów i wiele wózków w jednym zestawie nie są obsługiwane; formularz kontraktu pozostaje w 3.4.4. Postęp 23/67 = 34,3%, pierwsze wydanie 23/65 = 35,4%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.4f / część 3.4.3 (2026-10-09): ukończono integrację przewozów bez dojazdu z kolejką zdarzeń: jawne zestawy osób/przenośników i do jednego wózka, atomowy przydział, wyłączność, zdarzenia przyjazdu i inspekcja osób/urządzeń. 162/162 testy, build, Edge rzeczywistego workera/odczytu, odmowy powrotów oraz regresji dawnych tras. Backup `backup/v0.4.0_przed_3_4f_20261009`: 255 plików, 0 rozbieżności SHA256. Raport `docs/weryfikacja/WERYFIKACJA_ZASOBOW_TRANSPORTU_3_4.md`. Cały 3.4.3 w trakcie; następny zakres: obsada dojazdów, fizyczne dojazdy i powroty w kolejce zdarzeń. Nieobsłużone reguły jawnie odmawiają wyniku. Postęp 34,3% / 35,4%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.4e / część 3.4.3 (2026-10-09): ukończono rdzeń atomowej rezerwacji jawnego odcinka z jednym wózkiem i wspólnymi osobami montażu, ciągłe kalendarze, przyszłe konflikty, oddzielne oczekiwanie i czas jazdy, bez teleportacji i domyślnej obsady dojazdu. 159/159 testów i build poprawne. Backup `backup/v0.4.0_przed_3_4e_20261009`: 254 pliki, 0 rozbieżności SHA256. Raport `docs/weryfikacja/WERYFIKACJA_ZASOBOW_TRANSPORTU_3_4.md`. Cały 3.4.3 w trakcie; następny zakres to kolejka zdarzeń, wybór alternatyw/przenośniki i jawne powroty. Guard harmonogramu pozostaje aktywny. Postęp 34,3% / 35,4%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.4d / 3.4.2 (2026-10-09): wdrożone — opcjonalny kontrakt assemblyTransport, istniejące ID osób/wyposażenia, kalendarze, jawne polityki wózków, dojazdy i końce przenośników. 155/155 testów, build, Edge odczytu/odmowy workera i regresji starych tras; źródła 4/5 zachowane. Backup `backup/v0.4.0_przed_3_4d_20261009`: 252 pliki, 0 rozbieżności SHA256. Raport `docs/weryfikacja/WERYFIKACJA_ZASOBOW_TRANSPORTU_3_4.md`. Harmonogram z nowymi wymaganiami odmawia wyniku do integracji 3.4.3. Cały 3.4 w trakcie; postęp 34,3% / 35,4%. Następny pakiet 3.4.3 — atomowe rezerwacje i fizyczny ruch."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.4c (2026-10-09): doprecyzowano zakres — 3.4 dotyczy transportu międzyoperacyjnego montażu; nie liczymy czasu/rezerwacji operatorów magazynu. Zaopatrzenie opisujemy przez zapas, zużycie, ilość i częstotliwość dostaw w 3.5 oraz oczekiwanie na materiał w 3.6. Kontrakt `docs/modele/MODEL_ZASOBOW_TRANSPORTU_3_4.md` zaktualizowany. Rejestr wózków pozostaje niepodłączony; nie wprowadza magazynowej floty ani pracy magazynierów. 3.4.2 w trakcie; postęp 34,3% / 35,4%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.4b / 3.4.2 (2026-10-09): częściowy pakiet — użytkownik zatwierdził 1B. Dodano niezależny wykonawczy rejestr fizycznego ruchu wózków: jawne miejsca i czasy, jeden stan, wyłączność egzemplarza, kalendarze i odmowy. 151/151 testów i build poprawne. Backup `backup/v0.4.0_przed_3_4b_20261009`: 250 plików, 0 rozbieżności SHA256. Raport `docs/weryfikacja/WERYFIKACJA_ZASOBOW_TRANSPORTU_3_4.md`. Schemat, zapis, harmonogram i UI bez nowych reguł; 3.4.2 pozostaje w trakcie. Historyczne pytania o powrót i dojścia następnie zawężono doprecyzowaniem 3.4c; nie blokują one prac nad zaopatrzeniem bez modelu pracy magazynierów. Postęp 34,3% / 35,4%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.4a / 3.4.1 (2026-10-09): zakończono pakiet dokumentacyjny — stan zastany, wspólna tożsamość osób, atomowe rezerwacje, kryteria i warianty dostępności/fizycznego ruchu. Kontrakt `docs/modele/MODEL_ZASOBOW_TRANSPORTU_3_4.md`. Decyzja 1A/1B do przeglądu użytkownika; brak zmian schematu i harmonogramu. 3.4 w trakcie. Postęp 23/67 = 34,3%, pierwsze wydanie 23/65 = 35,4%."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.3b / 3.3.2, 3.3 (2026-10-09): wdrożone — formularze czasu wpisanego/wyliczanego, jednostki mm/s, m/s, m/min i s/min, źródła i składowe. 148/148 testów, build, dwa procesy w Edge: gałęzie i podmontaż/montaż, historia i odczyt; regresja Eko. Backup `backup/v0.4.0_przed_3_3b_20261009`: 248 plików, 0 rozbieżności SHA256. Raport `docs/weryfikacja/WERYFIKACJA_CZASU_TRANSPORTU_3_3.md`. Postęp 34,3% / 35,4%. Następny pakiet 3.4 — kontrakt zasobów transportowych przed integracją."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.9b / 2.9.1–2.9.2, 2.9 (2026-10-08): wdrożone wyłącznie do testowania funkcjonalności — użytkownik zatwierdził 1A/2A i doprecyzował ramę dostarczaną z magazynu na rolotok. Trzy osobne warianty Eko: drzwi razem, kolejno, wspólna osoba; konkretne dane produkcyjne docelowo wpisuje użytkownik. 135/135 testów, build, UI wszystkich wariantów, historia/odczyt i ochrona dokładnego źródła oraz 4/5 poprawne. Backup `backup/v0.4.0_przed_2_9b_20261008`: 190 plików, 0 rozbieżności SHA256. Raport `docs/weryfikacja/WERYFIKACJA_EKO_2_9.md`, kontrakt `docs/dane/SCENARIUSZE_EKO_2_9.md`, osobne szkice i wyniki `outputs/scenarios/eko_2_9`. Bez zmiany kodu produkcyjnego/schematu. Dostawa i wciąganie ramy przed początkiem testu; brak deklaracji ich czasu. Rzeczywisty odbiór produkcyjny pozostaje w 7.1/7.2."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.9a / 2.9.1 (2026-10-08): częściowy etap — sprawdzono eksport Eko v5 (16 operacji, 60 BOM, 17 rekordów stanowisk), graf przykładu v4 i instrukcję. Matryca i braki w `docs/dane/SCENARIUSZE_EKO_2_9.md`; propozycje 1A/1B, 2A/2B następnie zatwierdzone w 2.9b. Bez zmiany danych źródłowych lub algorytmu."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.8d / 2.8.3, 2.8 (2026-10-07): wdrożone w uzgodnionym zakresie osobnego szkicu 6 — edytor jawnych grup, inspekcja całych zestawów i dopuszczeń, wspólna historia, walidowane usuwanie i zapis. 133/133 testów, build, trzy scenariusze UI (korpus, przygotowanie i pary bez trójki), regresja tras, Cofnij/Ponów i odczyt poprawne. Backup `backup/v0.4.0_przed_2_8d_20261007`: 188 plików, 0 rozbieżności SHA256. Raport `docs/weryfikacja/WERYFIKACJA_ROWNOLEGLOSCI_2_8.md`, instrukcja `Instrukcja/Korpus_v6.md`. Następne 2.9: rzeczywiste scenariusze Eko; dopuszczenia i dane produkcyjne wymagają jawnego opisu. Instancje/zużycie podzespołów, bufory i zasoby transportowe poza zakresem tego odbioru."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.8c / 2.8.2 (2026-10-07): wdrożone w uzgodnionym zakresie szkicu 6 — zatwierdzone pierwszeństwo tras gałęzi 1A, automatyczne przyszłe kopie, przeliczanie przy faktycznym przydziale, jedna lokalizacja i ochrona rezerwacji. 133/133 testów, build, UI gałęzi i regresja współdzielenia, historia oraz odczyt poprawne. Backup `backup/v0.4.0_przed_2_8c_20261007`: 188 plików, 0 rozbieżności SHA256. Raport `docs/weryfikacja/WERYFIKACJA_ROWNOLEGLOSCI_2_8.md`. Następny pakiet 2.8.3: edytor grup i zbiorczy odbiór; cały 2.8 pozostaje w trakcie."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.8b / 2.8.2 (2026-10-07): częściowy odbiór — jawne grupy, wiele rezerwacji korpusu i współdzielenie kopii do końca ostatniej czynności; osoby/wyposażenie wyłączne, transport czeka na wszystkie prace. 128/128 testów, build, UI i odczyt poprawne. Backup 188 plików, 0 rozbieżności SHA256. Ówczesna odmowa wielu kopii gałęzi została zastąpiona integracją w 2.8c."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.8a / 2.8.1 (2026-10-07): wdrożone — zatwierdzone 1A/2A, opcjonalne jawne grupy, walidacja referencji i całego równoczesnego zestawu bez łączenia grup. Zapis/odczyt i migracje źródeł 4/5 z ochroną oryginału; 124/124 testów, build poprawny. Backup `backup/v0.4.0_przed_2_8a_20261007`: 186 plików, 0 rozbieżności SHA256. Raport `docs/weryfikacja/WERYFIKACJA_ROWNOLEGLOSCI_2_8.md`. Cały 2.8 w trakcie; następne 2.8.2 — integracja rezerwacji korpusu, kopii i zasobów. Harmonogram z nowymi regułami jawnie odmawia wyniku do tej integracji."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.7e / 2.7.4 (2026-10-07): wdrożone — edytor ról, jawnych instancji i przypisań korpusów, czasów tras oraz inspekcja przebiegu. Opcjonalny zapis konfiguracji wejściowej w szkicu 6, wspólne Cofnij/Ponów i ochrona źródeł 4/5. 121/121 testów, build, Edge CDP przewozu i przygotowania podzespołu, ponowny odczyt i regresja 2.6e poprawne. Backup `backup/v0.4.0_przed_2_7e_20261007`: 182 pliki, 0 rozbieżności SHA256. Raport `docs/weryfikacja/WERYFIKACJA_KORPUSU_2_7.md`, instrukcja `Instrukcja/Korpus_v6.md`. 2.7 wdrożone w zakresie osobnego szkicu 6; instancje/zużycie podzespołów, bufory i zasoby transportowe nie są odebrane. Następny punkt: 2.8 — reguły fizycznej równoległości i wykluczania; 2.6 pozostaje w trakcie dla fizycznych gałęzi."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.7d / 2.7.3 (2026-10-07): wdrożone w zakresie rdzenia korpusu i jego przewozu — zatwierdzone 1A (jawny czas każdej skierowanej trasy) i 2A (cel zajęty od wyjazdu do końca operacji). Automatyczny wybór najwcześniejszego startu po dojeździe, krótsza droga przy remisie; wynik oddziela jazdę, oczekiwanie i pracę. 120/120 testów i build poprawny, zapis/ponowny odczyt tras oraz rejestr zdarzeń zgodne. Backup `backup/v0.4.0_przed_2_7d_20261007`: 182 pliki, 0 rozbieżności SHA256. Raport `docs/weryfikacja/WERYFIKACJA_KORPUSU_2_7.md`. Następne 2.7.4: edytor czasu tras, instancji i inspekcja UI. Cały 2.7 pozostaje w trakcie; zasoby transportowe i fizyczna równoległość nie są odebrane."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.7c / 2.7.3 (2026-10-07): w trakcie — odebrano integrację jawnych instancji i przypisań korpusu z odrębnym harmonogramem dla pracy w zadeklarowanym miejscu. Rezerwacja przez operację i pauzy, ID i zdarzenia w wyniku; przygotowanie podzespołów nie zajmuje korpusu. 117/117 testów i build poprawny. Backup `backup/v0.4.0_przed_2_7c_20261007`: 181 plików, 0 rozbieżności SHA256. Transport wymaga uzgodnienia źródła czasu i reguły zajęcia celu; propozycje w `docs/modele/MODEL_KORPUSU_2_7.md`. Zapis wejścia instancji i UI pozostają do 2.7.4; raport `docs/weryfikacja/WERYFIKACJA_KORPUSU_2_7.md`."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.7b / 2.7.2 (2026-10-07): wdrożone — opcjonalne jawne role przygotowania podzespołów i pracy na korpusie, walidacja powiązań i edycja rdzenia. Zapis/odczyt na źródłach 4/5, odmowy błędnych referencji i ochrona oryginału; starsze szkice bez zmian. 114/114 testów i build poprawny. Backup `backup/v0.4.0_przed_2_7b_20261007`: 180 plików, 0 rozbieżności SHA256. Raport `docs/weryfikacja/WERYFIKACJA_KORPUSU_2_7.md`. Cały 2.7 w trakcie; następne 2.7.3 — integracja instancji z harmonogramem. Do tego momentu harmonogram z rolami jawnie odmawia wyniku; UI pozostaje do 2.7.4."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.7a / 2.7.1 (odbiór 2026-10-07): wdrożone — niezależny rejestr fizycznych instancji korpusu, jawnych lokalizacji, zajęcia i przemieszczeń. Odmowa podwójnego zajęcia, przemieszczenia podczas pracy i cofania czasu; brak automatycznego tworzenia korpusów. 111/111 testów i build poprawny. Backup `backup/v0.4.0_przed_2_7a_20261006`: 177 plików, 0 rozbieżności SHA256. Raport `docs/weryfikacja/WERYFIKACJA_KORPUSU_2_7.md`. Cały 2.7 pozostaje w trakcie; następny pakiet 2.7.2: jawne role operacji i walidacja danych."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.6e / 2.6.1, 2.6.3–2.6.4 (2026-10-06): odebrano automatyczny wybór dalszej trasy między wieloma dopuszczonymi kopiami kolejnych operacji. Najwcześniejszy start ma pierwszeństwo; droga jest przeliczana przy kolejnym przydziale, wynik oddziela plan od wybranego przejścia. Kontrakt 2.6.1 wdrożony dla jednego ciągu operacji. Testy 109/109, build, UI wielu przyszłych kopii i regresja trzyoperacyjna poprawne. Backup `backup/v0.4.0_przed_2_6e_20261006`: 175 plików, 0 rozbieżności SHA256. Raport `docs/weryfikacja/WERYFIKACJA_STANOWISK_2_6.md`. 2.6 pozostaje w trakcie w zakresie fizycznych gałęzi, zależnych od 2.7/2.8; następny krok to model korpusu i podzespołów 2.7."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.6d / 2.6.4 (2026-10-06): wdrożony edytor dopuszczeń i ich kolejności, stałego wyposażenia konkretnej kopii oraz rzeczywistych długości skierowanych tras ze źródłem i potwierdzeniem. Edge CDP: pakowanie i obróbka/montaż — utworzenie od zera, zapis, edycja, walidacja, usuwanie, Cofnij/Ponów i ponowny odczyt; projekty 4/5 bez zmian. Testy 108/108, build poprawny. Backup `backup/v0.4.0_przed_2_6d_20261006`: 173 pliki, 0 rozbieżności SHA256. Raport `docs/weryfikacja/WERYFIKACJA_STANOWISK_2_6.md`. Punkt 2.6 w trakcie: do uzgodnienia cel porównania drogi przy wielu przyszłych stanowiskach/rozgałęzieniach w 2.6.1."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.6c / 2.6.3 (2026-10-06): wdrożone dopuszczenia kopii i stałe wyposażenie w odrębnym harmonogramie. Najwcześniejszy start ma pierwszeństwo; rzeczywista długość trasy rozstrzyga remis do jednoznacznej kopii następnej operacji. Brak trasy lub niejednoznaczny cel wymagany do porównania powoduje odmowę. Wynik UI pokazuje egzemplarze i trasę rozstrzygającą. Testy 108/108, build i Edge CDP poprawne; zapis/ponowny odczyt zachowuje wynik. Backup `backup/v0.4.0_przed_2_6c_20261006`: 172 pliki, 0 rozbieżności SHA256. Raport `docs/weryfikacja/WERYFIKACJA_STANOWISK_2_6.md`. 2.6 w trakcie; następne 2.6.4 i doprecyzowanie wielu przyszłych stanowisk/rozgałęzień."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.6b / 2.6.2 (2026-10-06): wdrożony opcjonalny kontrakt dopuszczeń kopii, stałego wyposażenia i potwierdzonych długości rzeczywistych tras ze źródłem. Zapis/odczyt Eko v5 i niezależnych silników v4; walidacja nieznanych ID, sprzecznych kopii/wyposażenia i błędnych tras. Backup `backup/v0.4.0_przed_2_6b_20261006`: 170 plików, 0 rozbieżności SHA256. Testy 106/106, build i regresja UI 2.5 poprawne. Raport `docs/weryfikacja/WERYFIKACJA_STANOWISK_2_6.md`. Punkt 2.6 w trakcie; następny pakiet 2.6.3. Harmonogram szkicu zawierającego nowe dopuszczenia jawnie odmawia wyniku do integracji, bez ignorowania ograniczeń."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.6a / 2.6.1 (2026-10-06): w trakcie — projekt kontraktu dopuszczalnych stanowisk i wymagań wyposażenia w `docs/modele/MODEL_STANOWISK_2_6.md`. Wybrano najwcześniejszy start z kryterium najkrótszej drogi do następnej operacji oraz stałe wyposażenie stanowiska/kopii. Potwierdzono pierwszeństwo najwcześniejszego startu; rzeczywista trasa rozstrzyga remis. Wybór wyposażenia: stałe egzemplarze konkretnej kopii."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.5c / 2.5.3 (2026-10-06): wdrożony edytor jawnych zmian i przerw osób/stanowisk z pochodzeniem oraz podgląd odcinków pracy, pauz i rezerwacji. Edge CDP na Eko i niezależnym syntetycznym pakowaniu potwierdził zapis, odmowę błędnych danych, Cofnij/Ponów, usunięcie, ponowny odczyt i izolację projektów 4/5. Backup `backup/v0.4.0_przed_2_5c_20261006`: 167 plików, 0 rozbieżności SHA256. Testy 105/105, build poprawny. Punkty 2.5.3 i 2.5 wdrożone w zakresie szkicu 6; raport `docs/weryfikacja/WERYFIKACJA_KALENDARZA_2_5.md`. Następny punkt: 2.6 — wymaga kontraktu wyboru dopuszczalnego stanowiska i wymaganego wyposażenia."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.5b / 2.5.2 (2026-10-06): kalendarzowy przebieg odrębnego harmonogramu szkicu 6 wymaga jawnych kalendarzy osób i stanowisk, pauzuje pracę poza wspólnym oknem i wznawia ją z tym samym zespołem oraz na tej samej kopii. Wynik rdzenia zawiera odcinki pracy, pauzy i oczekiwanie na kalendarz; częściowe dane lub zbyt krótki horyzont blokują ten przebieg. Szkic bez pola kalendarzy zachowuje jawnie oznaczony podgląd logiczny 2.4. Backup 167 plików: `backup/v0.4.0_przed_2_5b_20261006` (0 rozbieżności SHA256); testy 105/105 i build poprawne. Kontrakt `docs/modele/MODEL_KALENDARZA_2_5.md`, raport `docs/weryfikacja/WERYFIKACJA_KALENDARZA_2_5.md`. Punkt 2.5.2 wdrożony; 2.5 w trakcie do edytora, podglądu i odbioru UI w 2.5.3."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.5a / 2.5.1 (2026-10-05): opcjonalne kalendarze po ID osób i stanowisk w szkicu 6, walidacja zmian, przerw i pochodzenia czasu oraz wyznaczanie wspólnej dostępności bez domyślnych godzin. Starsze szkice pozostają czytelne. Backup 164 plików: `backup/v0.4.0_przed_2_5a_20261005` (164 zgodne SHA256, 0 rozbieżności). Testy 104/104 i build poprawne; zapis/odczyt na niezależnym przykładzie silników, odmowy błędnych danych i izolacja 4/5. Kontrakt `docs/modele/MODEL_KALENDARZA_2_5.md`, raport `docs/weryfikacja/WERYFIKACJA_KALENDARZA_2_5.md`. Punkt 2.5.1 wdrożony; 2.5 w trakcie do zastosowania pauzy i wznowienia z tym samym zespołem w 2.5.2 oraz UI w 2.5.3."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.4f / 2.4.4 (2026-10-05): zbiorczy odbiór logicznego przydziału w niekompletnym szkicu 6 — Edge CDP potwierdził brak nakładających się rezerwacji tej samej osoby w 32 wykonaniach, identyczny wynik po ponownym otwarciu szkicu, nietrwałość samego wyniku i odmowę brakującego odstępu wejścia. Testy rdzenia objęły także niezależne scenariusze silników, dwie osoby, graf poprzedników i odmowy błędnych danych. Dokładne zapisy szkicu 6 i warsztatu 5 oraz dane projektu 4 bez zmian; ponowne otwarcie odświeża tylko znacznik automatycznego zapisu 4. Punkty 2.4.4 i 2.4 wdrożone w zakresie szkicu 6. Produkcyjna walidacja Eko należy do 7.1/7.2, a fizyczna równoległość podzespołów do 2.8. Raport `docs/weryfikacja/WERYFIKACJA_OPERATOROW_2_4.md`."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.4e / 2.4.3.2 (2026-10-05): osobny podgląd harmonogramu szkicu 6 przyjmuje jawną partię i odstęp przybycia, pokazuje przydział osób/kopii, czas i przyczyny oczekiwania oraz odmawia brakujących danych. Wynik jest tylko w pamięci widoku i znika po zmianie wejścia lub szkicu. Edge CDP potwierdził 32 wykonania na przykładowym Eko z syntetyczną obsadą, oczekiwanie na osobę, odmowę braku odstępu i brak zmian zapisów 4/5/6. Testy 103/103 i build poprawne. Raport `docs/weryfikacja/WERYFIKACJA_OPERATOROW_2_4.md`. Punkty 2.4.3.2 i 2.4.3 wdrożone; 2.4 pozostaje w trakcie do odbioru 2.4.4."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.4d / 2.4.3.1 (2026-10-05): odrębny rdzeń zdarzeniowy szkicu 6 wyznacza przydział konkretnych osób z zamrożonego składu, zajmuje jawną kopię stanowiska, rezerwuje te same osoby od pierwszej do ostatniej obecności i raportuje czas oraz przyczyny oczekiwania. Brak jawnej liczby kopii albo przypisania operacji blokuje przebieg. Z ostrożności jedna sztuka ma jedną trwającą operację; równoległość podzespołów czeka na reguły fizyczne 2.8. Backup 161 plików: `backup/v0.4.0_przed_2_4d_20261005` (161 zgodnych SHA256, 0 rozbieżności). Testy 103/103 i build poprawne; raport `docs/weryfikacja/WERYFIKACJA_OPERATOROW_2_4.md`. Punkty 2.4.2 i 2.4.3.1 wdrożone; 2.4.3 i 2.4 w trakcie do integracji UI i odbioru."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.4c / 2.4.2.2 (2026-10-05): edytor stałego składu i jawnych wyborów wariantów oraz dopuszczonych osób dla wszystkich operacji szkicu 6. Opcjonalny zapis odrzuca obce ID, brak wariantu i niepełny skład; starsze szkice czyta bez migracji, a zmiany przechodzą przez kontrolę konfliktu i wspólne Cofnij/Ponów. Backup 157 plików: `backup/v0.4.0_przed_2_4c_20261005` (157 zgodnych SHA256, 0 rozbieżności). Testy 101/101 i build poprawne. Edge CDP: 16 operacji, zapis, odmowa niepełnego wyboru, usunięcie, historia, ponowny odczyt i izolacja v4/v5; `outputs/qa/verify_2_4c_run_selection.png`. Raport `docs/weryfikacja/WERYFIKACJA_OPERATOROW_2_4.md`. Punkt 2.4.2.2 wdrożony; 2.4.2 i 2.4 w trakcie do faktycznego przydziału i harmonogramu 2.4.3."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.4b / 2.4.2.1 (2026-10-05): nieaktywny, walidowany plan pojedynczego przebiegu ze stałą listą ID pracowników, jawnym wariantem czasu każdej operacji i wskazanymi osobami dopuszczonymi do niej. Okres rezerwacji obejmuje pierwszy do ostatniego przedziału obecności, również przerwę między nimi. Brak danych, obce ID i zbyt mały skład blokują plan. Backup 156 plików: `backup/v0.4.0_przed_2_4b_20261005` (156 zgodnych SHA256, 0 rozbieżności). Testy 100/100 i build poprawne. Kontrakt `docs/modele/MODEL_OPERATOROW_2_4.md`, raport `docs/weryfikacja/WERYFIKACJA_OPERATOROW_2_4.md`. Punkt 2.4.2.1 wdrożony; 2.4.2 w trakcie do UI i zapisu wyborów."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.4 — doprecyzowanie reguły (2026-10-05): przed każdym przebiegiem produkcyjnym użytkownik wskazuje stały skład zespołu. Harmonogram może przydzielać operacje tylko tym osobom, bez automatycznego dodawania lub zamiany pracowników w trakcie. Brak wystarczającej liczby wolnych osób powoduje oczekiwanie; po zwolnieniu pracownik może przejść na inne stanowisko. Dla pojedynczej operacji przydzielone osoby pozostają te same od pierwszego do ostatniego przedziału obecności. Kontrakt `docs/modele/MODEL_OPERATOROW_2_4.md`; status 2.4 pozostaje w trakcie."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.4a / 2.4.1 (2026-10-05): niezależny od aktywnej symulacji rejestr rezerwacji konkretnych pracowników po trwałych ID i jawnych przedziałach czasu. Odrzuca nieznane lub powtórzone osoby i nakładające się rezerwacje, pozwala na ponowne użycie od chwili zwolnienia. Użytkownik ustalił, że przy operacji te same osoby pozostaną zarezerwowane od pierwszego do ostatniego przedziału obecności, także między nimi; powiązanie reguły z operacją należy do 2.4.2. Backup 153 plików: `backup/v0.4.0_przed_2_4a_20261005` (153 zgodne SHA256, 0 rozbieżności). Testy 99/99 i build poprawne. Kontrakt `docs/modele/MODEL_OPERATOROW_2_4.md`, raport `docs/weryfikacja/WERYFIKACJA_OPERATOROW_2_4.md`. Punkt 2.4.1 wdrożony; 2.4 w trakcie."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.3c / 2.3.3 (2026-10-05): zbiorczy odbiór obsady na Eko v4/v5 i silnikach v4. Po jawnym wpisaniu dwóch założonych wariantów zapis i odczyt szkicu zachowały dokładne źródło, pozostałe dane operacji i aktywne projekty; pełne wyniki dotychczasowej symulacji są identyczne. Ponowiony Edge CDP potwierdził edytor, odmowę błędu, Cofnij/Ponów, usuwanie i odczyt po przeładowaniu. Testy 97/97 oraz build poprawne. Bez zmiany schematu, algorytmu lub ścieżki trwałości; nowa kopia strukturalna nie była wymagana. Raport `docs/weryfikacja/WERYFIKACJA_OBSADY_2_3.md`. Punkt 2.3 wdrożony w zakresie niekompletnego szkicu 6; etap 2 pozostaje w trakcie."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.3b / 2.3.2 (2026-10-04): edytor minimum obsady i jawnych wariantów czasu w szkicu 6, z walidacją, bezpiecznym zapisem, usuwaniem, wspólnym Cofnij/Ponów i odczytem po przeładowaniu. Profil referencyjny i aktywne projekty 4/5 pozostały odrębne. Backup 152 plików: `backup/v0.4.0_przed_2_3b_20261004` (152 zgodne SHA256, 0 rozbieżności). Testy 96/96 i build poprawne; Edge CDP potwierdził dwa warianty, odmowę błędnego minimum, historię, usuwanie i ponowny odczyt. Ponowiony test UI profilu czasu 2.2 przeszedł. Raport `docs/weryfikacja/WERYFIKACJA_OBSADY_2_3.md`, zrzut `outputs/qa/verify_2_3b_staffing.png`. Punkt 2.3.2 wdrożony; 2.3 w trakcie do odbioru zbiorczego."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.3a / 2.3.1 (2026-10-04): w niekompletnym szkicu 6 dodano opcjonalne minimum obsady operacji i niezależne, pełne profile czasu dla jawnie podanych liczebności zespołu. Parser odrzuca błędne liczby, duplikaty, wariant poniżej minimum i niepoprawny profil bez nadpisania szkicu. Dawne szkice pozostają czytelne; migracja nie wyprowadza obsady ze stanowisk ani nie dzieli czasu. Backup 150 plików: `backup/v0.4.0_przed_2_3a_20261004_224147` (150 zgodnych SHA256, 0 rozbieżności). Testy 95/95 i build poprawne; zapis/odczyt na Eko v5 i dokładne źródło zachowane. Kontrakt `docs/modele/MODEL_OBSADY_2_3.md`, raport `docs/weryfikacja/WERYFIKACJA_OBSADY_2_3.md`. Punkt 2.3.1 wdrożony; 2.3 w trakcie do edytora i odbioru zbiorczego."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.2c / 2.2.3 (2026-10-04): zbiorczy odbiór profilu czasu na Eko v4/v5 i silnikach v4. Migracja nie dopowiada profili; zapis i ponowny odczyt jawnego profilu zachowują stary czas standardowy, dokładne źródło i pełne wyniki aktywnej symulacji. Ponowny Edge CDP potwierdził edytor, jednostki, walidację, Cofnij/Ponów i odczyt po przeładowaniu. 93/93 testy i build poprawne. Bez przebudowy modułów lub schematu; nowa kopia nie była wymagana. Raport `docs/weryfikacja/WERYFIKACJA_CZASU_2_2.md`. Punkt 2.2 wdrożony w zakresie niekompletnego szkicu 6; etap 2 pozostaje w trakcie."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.2b / 2.2.2 (2026-10-04): ręczny edytor profilu czasu operacji w szkicu 6: wybór operacji, jawne przedziały i pochodzenie, s/min/h w prezentacji, walidacja, odrębny zapis z kontrolą konfliktu, wspólne Cofnij/Ponów, usunięcie i ponowne otwarcie. Backup 148 plików: `backup/v0.4.0_przed_2_2b_20261004_215035` (zgodne SHA256). 92/92 testy i build poprawne. Edge CDP potwierdził wpis 2,5 min jako 150 s, zmianę jednostki bez mutacji, odmowę błędnego przedziału, historię, przeładowanie i niezmienność v4/v5; zrzut `outputs/qa/verify_2_2b_time_profile.png`. Raport `docs/weryfikacja/WERYFIKACJA_CZASU_2_2.md`. Punkt 2.2 pozostaje w trakcie do zbiorczego odbioru 2.2.3."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.2a / 2.2.1 (2026-10-04): opcjonalny, jawny profil czasowy operacji w niekompletnym szkicu 6. Rozdziela przedziały pracy ręcznej, pracy automatu i wymaganej obecności operatora oraz pochodzenie pomierzone/założone bez wyprowadzania ich z dawnego czasu standardowego. Walidacja i zapis odrzucają niepoprawne przedziały bez nadpisania szkicu; dawne szkice pozostają czytelne, aktywne v4/v5 i wyniki symulacji bez zmian. Backup 146 plików: `backup/v0.4.0_przed_2_2a_20261004_214349` (zgodne SHA256). 91/91 testów i build poprawne; kontrakt `docs/modele/MODEL_CZASU_2_2.md`, raport `docs/weryfikacja/WERYFIKACJA_CZASU_2_2.md`. Punkt 2.2 w trakcie do edytora UI i odbioru końcowego."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.1k / 2.1.11 (2026-10-04): zbiorczy odbiór punktu 2.1 na Eko v4/v5 i silnikach v4. Po edycji i ponownym otwarciu odrębnego szkicu 6 aktywne źródła i pełne wyniki dotychczasowej symulacji są identyczne; istniejące testy potwierdzają kompletność referencji, ochronę źródła i odmowy migracji, a Edge CDP potwierdza UI, Cofnij/Ponów, odczyt, odzyskanie i zastąpienie. 89/89 testów, build i UI poprawne. Bez zmian struktury modułów lub schematu; nowa kopia nie była wymagana. Raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`. Punkt 2.1 wdrożony jako fundament odrębnego, nadal niekompletnego modelu; reguły zasobów i aktywacja nowej symulacji należą do 2.2–2.9."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.1j / 2.1.10 (2026-10-04): opcjonalna, ręczna lista operacji, które wyposażenie technologiczne może obsłużyć w szkicu 6. Brak pola oznacza „nie określono” także w dawnych szkicach. Backup 129 plików: `backup/v0.4.0_przed_2_1j_20261004_211725` (zgodne SHA256). 88/88 testów i build poprawne. Edge CDP potwierdził zapis OP10/OP11, Cofnij/Ponów, przeładowanie, wyczyszczenie i przywrócenie z nienaruszonym v4/v5; zrzut `outputs/qa/verify_2_1j_capabilities.png`. Raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`. Deklaracja możliwości nie oznacza wymagania operacji ani nie zmienia bilansu lub symulacji; punkt 2.1 nadal w trakcie."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.1i / 2.1.9 (rozpoczęty 2026-10-03, odebrany 2026-10-04): ręczna edycja wyposażenia w szkicu 6 po trwałym ID, z opcjonalnymi jawnymi powiązaniami do stanowiska i obiektu layoutu, walidacją referencji, odrębnym zapisem oraz wspólnym Cofnij/Ponów. Backup 127 plików: `backup/v0.4.0_przed_2_1i_20261003_105556` (zgodne SHA256). 87/87 testów i build poprawne. Edge CDP potwierdził dodanie, zmianę, odmowę podwójnego lub sprzecznego powiązania, Cofnij/Ponów, usunięcie, przywrócenie i ponowne otwarcie bez zmiany v4/v5; zrzut `outputs/qa/verify_2_1i_equipment.png`. Raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`. Punkt 2.1 pozostaje w trakcie: możliwości wyposażenia i reguły jego wymagania przez operacje pozostają nieokreślone."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.1h / 2.1.8 (2026-10-03): ręczna edycja definicji wyrobu i podzespołów w odrębnym szkicu 6, z trwałym ID, jawnymi referencjami do operacji, walidacją, bezpiecznym zapisem oraz wspólnym Cofnij/Ponów z osobami i pulami. Backup 125 plików: `backup/v0.4.0_przed_2_1h_20261003_103639` (zgodne SHA256). 86/86 testów, build poprawny. Edge CDP `tests/qa/verify_2_1e.mjs` potwierdził dodanie, zmianę nazw, usunięcie i przywrócenie obu definicji, relacje OP10/OP11, zapis po przeładowaniu i niezmienność v4/v5; zrzut `outputs/qa/verify_2_1h_product.png`. Raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`. Punkt 2.1 pozostaje w trakcie do edycji wyposażenia i pełnego odbioru modelu; definicje nie wpływają na bilans ani symulację."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.1g (2026-10-03): edytor osób i pul w niekompletnym szkicu 6, z trwałymi ID, walidacją członkostwa, odmową usunięcia osoby używanej przez pulę, zapisem po każdej zaakceptowanej zmianie i Cofnij/Ponów. Backup 123 plików: `backup/v0.4.0_przed_2_1g_20261003_102214` (zgodne SHA256). Testy 85/85, build poprawny. Rozszerzony odbiór Edge CDP `tests/qa/verify_2_1e.mjs` potwierdził dodanie i zmianę osób/puli, odmowę błędnego usunięcia, bezpieczną zmianę członkostwa i usunięcie, Cofnij/Ponów, ponowne otwarcie i niezmienność v4/v5; zrzut `outputs/qa/verify_2_1g_people.png`. Raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`. Punkt 2.1 w trakcie do edycji pozostałych bytów domenowych i pełnego odbioru modelu; osoby nie wpływają jeszcze na bilans ani symulację."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.1f (2026-10-03): kontrolowane zastąpienie istniejącego lub uszkodzonego szkicu v6 dopiero po pobraniu jego pełnej/surowej kopii, przeglądzie nowego źródła i jawnym potwierdzeniu. Nowy szkic jest walidowany przed zapisem, a poprzednia wartość porównywana znak po znaku; konflikt i błąd pamięci nie zmieniają jej. Backup 123 plików: `backup/v0.4.0_przed_2_1f_20261003_101316` (zgodne SHA256). Testy 84/84, build poprawny. Rozszerzony odbiór Edge CDP `tests/qa/verify_2_1e.mjs` potwierdził odzyskanie uszkodzonego szkicu, jawne zastąpienie poprawnego szkicu z innym źródłem, odmowę przy konflikcie i limicie pamięci, ponowne otwarcie oraz nienaruszone dane v4/v5; zrzut `outputs/qa/verify_2_1f_recovered.png`. Raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`. Punkt 2.1 nadal w trakcie do edytora danych domenowych i pełnego odbioru modelu."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.1e (2026-10-03): UI podglądu migracji v4/v5 do niekompletnego szkicu v6 w warsztacie stanowisk. Pokazuje powiązania i luki danych, wymaga potwierdzenia przed pierwszym zapisem, odrzuca nieaktualny podgląd, odczytuje szkic po przeładowaniu i pozwala pobrać surową kopię uszkodzonej wartości. Backup 121 plików: `backup/v0.4.0_przed_2_1e_20261003_084320` (zgodne SHA256). Odbiór Edge CDP `tests/qa/verify_2_1e.mjs` potwierdził przepływ Eko v5, podgląd v4, zapis/ponowne otwarcie, ochronę aktywnych projektów v4/v5 i pobranie uszkodzonego szkicu; zrzuty `outputs/qa/verify_2_1e_saved.png` oraz `outputs/qa/verify_2_1e.png`. 83/83 testy i build poprawne. Raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`. Punkt 2.1 w trakcie: szkic wymaga późniejszego edytora uzupełniania danych, jawnego zastąpienia po odzyskaniu oraz dalszego odbioru migracji."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.1d (2026-10-03): izolowany moduł zapisu/odczytu szkicu schematu 6 pod osobnym kluczem `layout-studio-domain-v6-draft-v1`. Zachowuje dokładny tekst źródła v4/v5, waliduje oba projekty przy zapisie i odczycie, odróżnia pusty, poprawny, uszkodzony i niedostępny zapis. Odmawia nadpisania przy konflikcie, uszkodzeniu, zmianie źródła lub błędzie walidacji; błąd limitu pamięci zachowuje poprzednią wartość. Backup 120 plików: `backup/v0.4.0_przed_2_1d_20261003_083551` (zgodne SHA256). Testy Eko v4/v5, ponownego odczytu, aktualizacji i odmów: 83/83; build poprawny. Raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`. Punkt 2.1 pozostaje w trakcie: moduł nie jest jeszcze podłączony do UI i nie ma odbioru zapisu w przeglądarce."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.1c (2026-10-03): osobny, nieaktywny schemat roboczy 6 i parser rozdzielają operacje, stanowiska, obsadę, osoby/pule, wyposażenie technologiczne, wyrób i podzespoły. Migracja wymaga zweryfikowanego podglądu 2.1b i zachowuje dokładny tekst źródła osobno. Brakujących bytów nie dopowiedziano, szkic ma wyłącznie status `incomplete`. Backup 119 plików: `backup/v0.4.0_przed_2_1c_20261003_082515` (zgodne SHA256). Eko v4/v5, roundtrip i odmowy błędnych referencji: 81/81 testów, build poprawny; raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`. Punkt 2.1 w trakcie do zapisu, UI i odbioru ponownego otwarcia."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.1b (2026-10-03): odczytowy, wersjonowany podgląd migracji modelu procesu ze schematów 4/5 zachowuje oryginalny JSON, mapy operacja–stanowisko, jawnie zapisane liczby obsady/kopii i wizualne powiązania wyposażenia; wskazuje luki danych bez tworzenia osób, podzespołów ani możliwości maszyn. Backup 117 plików: `backup/v0.4.0_przed_2_1b_20261003_081637` (zgodne SHA256). Testy Eko i silników, błędnych referencji, odmowy zmienionego podglądu: 78/78; build poprawny. Raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`. Punkt 2.1 w trakcie; nie podłączono nowego modelu do UI, zapisu ani symulacji."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "2.1a (2026-10-03): opisano kontrakt oddzielnych operacji, stanowisk, pracowników/pul, wyposażenia, wyrobu i podzespołów oraz jednostki, referencje i ścieżkę migracji v4/v5. Dokument `docs/modele/MODEL_PROCESU_2_1.md` wskazuje dane, których nie wolno dopowiadać z obecnego projektu, i kryteria następnego pakietu. Zweryfikowano liczby w rzeczywistym eksporcie Eko i 76/76 testów; kod, schematy i wyniki symulacji bez zmian. Punkt 2.1 pozostaje w trakcie do implementacji wersjonowanego modelu, parsera, migracji i odbioru UI.\n \n1.5/1.6 (2026-10-02): Domknięcie i całościowy odbiór punktów 1.5 i 1.6 (trwałe identyfikatory stanowisk niezależne od numeracji i zestawu operacji; eliminacja niejawnego resetowania zasobów i wyposażenia przy zmianie przydziału, podziale, scaleniu i usunięciu operacji). Wprowadzono i zweryfikowano: trwałe identyfikatory `ST-...` generowane stabilnie w rejestrze stanowisk v5; przesuwanie stanowisk w górę/dół bez mutacji ID i geometrii; ochronę kolejności grafu technologicznego przed niepoprawnym przestawieniem; jawny podział stanowiska z zachowaniem starego ID, zasobów i geometrii stacji źródłowej oraz utworzeniem nowego unikalnego ID bez powiązań; jawne scalenie wymagające wskazania pozostającego ID z prezentacją obiektów i ustawień wycofywanego ID przed zatwierdzeniem; panel usuwania operacji ze stanowiska (`removeStationOperation`), który czyści relacje technologiczne i referencje BOM, lecz zachowuje stanowisko jako puste (`operationIds: []`), z cyklem 0 s, nienaruszonym trwałym ID, wyposażeniem w `layoutObjects` i zasobami w `workstationSettings`. Brak wymaganego wyposażenia (np. brak stołów) natychmiast blokuje symulację jawnym błędem layoutu bez domyślania się geometrii. Zautomatyzowany odbiór UI w przeglądarce Edge (CDP) na porcie 5197 (`tests/qa/verify_1_5_1_6.mjs`) potwierdził: odmowę zamiany kolejności naruszającej graf OP10/OP11, zamianę kolejności niezależnych stacji z zachowaniem ID, podział stacji z blokadą brakującego stołu i ręczne dodanie stołu w edytorze geometrii, usunięcie OP10 ze stanowiska 1 z zachowaniem pustego stanowiska i jego ID, pełny cykl Cofnij/Ponów oraz odczyt po przeładowaniu strony (18 stanowisk z zachowanymi danymi). 76/76 testów jednostkowych i build poprawne. Raporty: `docs/weryfikacja/WERYFIKACJA_STALE_ID_1_5_1_6.md` oraz uzupełnienie `docs/weryfikacja/WERYFIKACJA_STABILIZACJA_D.md`. Punkty 1.5 i 1.6 wdrożone; Etap 1 wdrożony w całości.\n \n1.7 (2026-10-02): Domknięcie i całościowy odbiór punktu 1.7 (zapis, odzyskiwanie i migracja starych projektów; ochrona oryginału przy nieudanej migracji; ponowne otwarcie). Konsolidacja zrealizowanych prac D5c–D5k: ochrona oryginału przy migracji Eko, odzyskiwanie uszkodzonego localStorage w v4 i v5 z pobraniem surowej kopii, blokada migracji przy osieroconych zasobach, import projektów bez wersji z normalizacją i zachowaniem bajtowego źródła, wersjonowane przenośne archiwa v4/v5, atomowy import przy limicie pamięci, jawna migracja starszego localStorage i walidacja dużych archiwów. Backup 128 plików: `backup/v0.4.0_przed_1_7_20261002_220500` (zgodne SHA256). Zautomatyzowany odbiór UI w przeglądarce Edge (CDP) na porcie 5194 potwierdził wszystkie 4 scenariusze: odzyskiwanie corrupt stringa, jawną migrację projektu bez wersji, blokadę migracji z osieroconym zasobem bez mutacji v5 i zachowanie danych po przeładowaniu. 75/75 testów i build poprawne. Raport: `docs/weryfikacja/WERYFIKACJA_MIGRACJA_ZAPIS_1_7.md`. Punkt 1.7 wdrożony."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "5.11 (2026-10-02): Przełączanie prezentacji i edycji jednostek czasu między sekundami (s), minutami (min) i godzinami dziesiętnymi (h) w całym interfejsie: metrykach (Pulpit, Popyt, Bilans), polach edycyjnych operacji i zasobów, tabelach procesu i wariantów, osi czasu symulacji i diagramie. Wartości wewnętrzne pozostają niezmiennie w sekundach (brak zmian w schemacie danych i algorytmach; pełna zgodność z zapisanymi projektami). Jednostka czasu jest zawsze jawnie prezentowana. Backup 124 plików: `backup/v0.4.0_przed_5_11_20261002_215000` (zgodne SHA256). Zautomatyzowany odbiór UI w przeglądarce Edge (CDP) na porcie 5195 potwierdził przełączanie jednostek w locie, dynamiczne etykiety kolumn i formularzy, edycję 2,5 min = 150 s w modelu, niezmienność wewnętrznych sekund w localStorage oraz formatowanie metryk. 75/75 testów i build poprawne. Raport: `docs/weryfikacja/WERYFIKACJA_JEDNOSTKI_CZASU_5_11.md`. Punkt 5.11 wdrożony."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "5.12 (2026-10-02): Gotowe, pobieralne szablony importu procesu i BOM w XLSX i CSV, zgodne z bieżącym importerem. Wzorcowe dane wielogałęziowe procesu (OP10 → OP20, OP25 → OP30) oraz 5 komponentów BOM z wszystkimi dopuszczalnymi pojemnikami (BoxKLT, Tray, Carton, Pallet). Dwuarkuszowy plik XLSX: arkusz 0 „Dane” gotowy do natychmiastowego importu bez usuwania opisów, arkusz 1 „Opis kolumn” ze specyfikacją wymagań, typów i jednostek. W UI dodano przyciski „Szablon XLSX” i „Szablon CSV”, rozwijaną tabelę specyfikacji kolumn z odznakami wymagań, a błędy importu wskazują dokładne nazwy brakujących nagłówków przy zachowaniu atomowości (dane projektu nienaruszone). Backup 105 plików: `backup/v0.4.0_przed_5_12_20261002_213500` (zgodne SHA256). Zautomatyzowany odbiór UI w przeglądarce Edge (CDP) na porcie 5196 potwierdził pobranie szablonów, import procesu (4 stacje) i czytelny błąd przy brakujących kolumnach BOM. 73/73 testy i build poprawne. Raport: `docs/weryfikacja/WERYFIKACJA_SZABLONY_5_12.md`. Punkt 5.12 wdrożony."
+    },
+    {
+      "tag": "Bieżący pakiet",
+      "date": "",
+      "historical": false,
+      "summary": "3.10 (2026-10-02): Rozszerzenie wyboru szybkości odtwarzania symulacji ponad obecne 100× dla długich procesów (1×, 2×, 5×, 10×, 20×, 50×, 100×, 200×, 500×, 1000×, 2000×, 5000×). Funkcja pomocnicza `stepSimulationTime` zabezpiecza granicę czasu (brak przekroczenia `end`, przycięcie skoku po uśpieniu karty do 0,25 s real-time), natychmiastowa inspekcja stanu na pauzie (w tym aktywne stacje i WIP), płynna zmiana szybkości w locie. Potwierdzono całkowitą niezależność wyników symulacji i CSV od prędkości odtwarzania. Backup 103 plików: `backup/v0.4.0_przed_3_10_20261002_211700` (zgodne SHA256). Zautomatyzowany odbiór UI w przeglądarce Edge (CDP) na procesie Eko (partia 3 sztuk, 21 170 s) w karcie symulacji oraz w warsztacie v5, 70/70 testów i build poprawne. Raport: `docs/weryfikacja/WERYFIKACJA_SYMULACJA_3_10.md`. Punkt 3.10 wdrożony.\n\nE6 (2026-10-02): eksporty procesu i BOM XLSX/CSV mają osobne znaczniki porównujące eksportowane wiersze; szablony są niezależne od projektu. JSON wariantu oznaczono jako niezmienną migawkę. Backup 103 plików: `backup/v0.4.0_przed_E6_20261002_203301` (zgodne SHA256). UI na porcie 5192 potwierdził selektywne unieważnianie, Cofnij, ponowny eksport, pobrania i ponowne otwarcie; 69/69 testów oraz build poprawne. Punkt 1.8 wdrożony w zakresie bieżącej sesji; raport E. Przeglądarka nie potwierdza aplikacji fizycznego zapisu pliku/PDF.\n\nE5 (2026-10-02): znaczniki czterech eksportów warsztatu v5 przetrwały zmianę karty; porównanie podpisu projektu po ponownym odczycie zachowuje zgodność, edycja i Cofnij odświeżają status tylko właściwych plików. Karta raportu oznacza wywołanie drukowania dla wersji projektu, ostrzega po zmianie danych i nie sugeruje, że PDF został zapisany. Backup 103 plików: `backup/v0.4.0_przed_E5_20261002_201400` (zgodne SHA256). UI Eko, 69/69 testów i build poprawne; raport E. Punkt 1.8 pozostaje w trakcie do objęcia pozostałych eksportów danych i określenia granicy sesji.\n\nE4 (2026-10-02): znacznik CSV symulacji pozostaje dostępny po przebudowaniu widoku, zmianie karty i powrocie do projektu v4/v5. Zmiana wyniku oznacza raport jako nieaktualny; przy błędach blokujących symulację pojawia się komunikat o braku możliwości potwierdzenia aktualności. Cofnij lub nowy eksport przywracają status odpowiedni do bieżącego wyniku. Backup 103 plików: `backup/v0.4.0_przed_E4_20261002_200255` (zgodne SHA256). UI v4/v5, 69/69 testów i build poprawne; raport E. Punkt 1.8 w trakcie do rozstrzygnięcia statusu drukowania PDF i granicy między sesjami.\n\nE3 (2026-10-02): warsztat v5 pokazuje w bieżącej sesji aktualność JSON projektu, archiwum v5, oryginału v4 i pierwotnego importu. UI na izolowanych portach 5188/5189 potwierdził pobrania, edycję, selektywne ponowienie JSON, Cofnij oraz zachowanie 17 stanowisk i źródeł po odświeżeniu. 69/69 testów i build poprawne. Nie zmieniono formatu ani obliczeń; punkt 1.8 pozostaje w trakcie do statusu PDF i komunikacji CSV po zmianie projektu w symulacji. Szczegóły w raporcie E.\n\nE2 (2026-10-02): eksporty archiwum v4, DXF, bilansu CSV i raportu MD mają osobne migawki bieżącej sesji. Po zmianie projektu pasek wskazuje, które pobrane pliki trzeba odnowić; Cofnij przywraca aktualność tylko plików odpowiadających przywróconemu stanowi. Eksport archiwum nie zmienia już czasu zwykłego JSON. Backup 115 plików: `backup/v0.4.0_przed_E2_20261002_194043` (zgodne SHA256). UI na porcie 5187 potwierdził wszystkie pięć pobrań, edycję, ponowny eksport jednego formatu i Cofnij; 69/69 testów i build poprawne. Punkt 1.8 nadal w trakcie do statusu warsztatu v5, PDF i zmian projektu w otwartej symulacji; raport E.\n\nE1 (2026-10-02): status pobranego JSON projektu i CSV symulacji wskazuje aktualność względem bieżących danych oraz potrzebę ponownego eksportu. Cofnij przywracające dane JSON i przywrócenie identycznych parametrów symulacji przywracają status aktualny; szybkość odtwarzania nie unieważnia CSV. Backup 114 plików: `backup/v0.4.0_przed_E1_20261002_193011` (zgodne SHA256). UI na porcie 5186 potwierdził oba cykle statusu oraz pobrane pliki CSV z 30 i 31 wierszami; 69/69 testów i build poprawne. Punkt 1.8 pozostaje w trakcie do oznaczenia pozostałych eksportów i odbioru zmian projektu przy otwartej symulacji; raport E.\n\nD5k (2026-10-02): odbiór dużego archiwum ujawnił przepełnienie stosu w walidacji długiego base64 przed próbą zapisu. Zastąpiono wyrażenie z powtarzaną grupą walidacją liniową i obliczeniem rozmiaru z długości kodowania, bez zmiany formatu. Backup 114 plików: `backup/v0.4.0_przed_D5k_20261002_192024` (zgodne SHA256). Test regresyjny najpierw odtworzył błąd; po poprawce 69/69 testów i build poprawne. UI: archiwum 5,6 MB zostało poprawnie rozpoznane i odrzucone dopiero przy limicie localStorage bez zmiany projektu, a archiwum 1,4 MB przeszło import, ponowny odczyt i pobranie źródła o identycznym SHA256. Punkt 1.7 nadal w trakcie do odbioru rzeczywistych dawnych zapisów; raport D.\n\nD5j (2026-10-02): bezpośredni odczyt poprawnego starszego zapisu localStorage projektu 4 nie uruchamia już automatycznego nadpisania po normalizacji. Przed włączeniem zapisu użytkownik pobiera surową kopię i potwierdza migrację; anulowanie zachowuje oryginał. Backup 113 plików: `backup/v0.4.0_przed_D5j_20261002_070009` (zgodne SHA256). UI na izolowanym porcie potwierdził identyczny SHA256 zapisu bez wersji przed migracją i pobranej kopii, odczyt schematu 4 po migracji oraz 2 trwałe ID warsztatu 5 po ponownym otwarciu. 68/68 testów i build poprawne. Punkt 1.7 nadal w trakcie do szerszego odbioru dawnych rzeczywistych zapisów; raport D.\n\nD5i (2026-10-02): import projektu 4 zapisuje projekt i archiwum źródła przed zmianą stanu UI oraz historii Cofnij/Ponów. Przy braku miejsca lub dostępu do localStorage import nie zastępuje bieżącego projektu i pokazuje jednoznaczny komunikat. Backup 112 plików: `backup/v0.4.0_przed_D5i_20261002_064811` (zgodne SHA256). UI przy wypełnionej pamięci potwierdził odmowę importu Eko bez zmiany 6 operacji projektu bazowego; po zwolnieniu miejsca import 16 operacji i 60 pozycji BOM, Cofnij/Ponów, ponowne otwarcie i bajtowy oryginał Eko przeszły odbiór. 68/68 testów i build poprawne. Punkt 1.7 pozostaje w trakcie do szerszego odbioru dawnych zapisów; raport D.\n\nD5h (2026-10-02): dodano osobny, wersjonowany format przenośnego archiwum JSON dla projektu 4 i warsztatu 5, z projektem, pierwotnym importem oraz migawką migracji v4 w archiwum v5. Zwykłe eksporty JSON i ich import pozostały zgodne. Backup 111 plików: `backup/v0.4.0_przed_D5h_20261002_063408` (zgodne SHA256). UI na dwóch izolowanych adresach potwierdził przeniesienie v4/v5, zachowanie obu trwałych ID v5, źródła o identycznym SHA256 oraz odrzucenie nieobsługiwanej wersji bez zmiany zapisów. 68/68 testów i build poprawne. Punkt 1.7 nadal w trakcie do szerszego odbioru dawnych zapisów i dużych archiwów; raport D.\n\nD5g (2026-10-01): importer projektu 4 zapisuje bajtowo oryginalny plik JSON jako osobny artefakt lokalny, niezależny od znormalizowanego projektu i migawki użytej do migracji v5. Kopia jest powiązana z historią Cofnij/Ponów i przenoszona do osobnego zapisu warsztatu 5; oba widoki udostępniają jej pobranie. Starsze zapisy bez nowego pola pozostają czytelne. Backup 109 plików: `backup/v0.4.0_przed_D5g_20261001_232729` (zgodne SHA256). UI: plik D5f odzyskany po migracji i przeładowaniu z identycznym SHA256, edycja i Cofnij v5 zachowały archiwum; 66/66 testów i build poprawne. Eksport przenośny projektu nie zawiera archiwum, a importy sprzed D5g nie odzyskają nieprzechowanych bajtów. Punkt 1.7 pozostaje w trakcie; raport D.\n\nD5f (2026-10-01): odbiór starszego pliku bez pola wersji, utworzonego z dołączonego przykładu silników EV. Import do projektu 4, zapis/odczyt i migracja do v5 zachowały 6 operacji, 5 pozycji BOM i 2 stanowiska; trwałe ID v5 przetrwały przeładowanie. Kod bez zmian, 65/65 testów. Wykryto ograniczenie: „Pobierz oryginał 4” udostępnia znormalizowany projekt 4, nie bajtową kopię importowanego pliku bez wersji. Zachowanie surowego importu pozostaje do wykonania w 1.7; raport D.\n\nD5e (2026-10-01): odbiór nieudanej migracji na syntetycznym wariancie Eko z osieroconym wpisem zasobów `[\"QA-OLD\"]`. Projekt 4 wczytał się poprawnie, ale migracja zgłosiła błąd bez zastąpienia 16 trwałych stanowisk v5. Oryginalny JSON warsztatu miał ten sam SHA256 przed i po próbie; po przeładowaniu v5 zachował ID i zapis, a projekt 4 nadal zawierał osierocony wpis. Kod bez zmian, 65/65 testów; szczegóły w raporcie D. ID 1.7 pozostaje w trakcie do pełniejszego odbioru starszych zapisów.\n\nD5d (2026-10-01): UI odzyskiwania uszkodzonego localStorage v5 potwierdzone na izolowanym porcie. Surowy znacznik QA pobrano bez zmian, import bez zgody nie nadpisał go, anulowanie i samo odblokowanie nie zmieniły zapisu; dopiero potwierdzony import Eko v5 odtworzył 16 stanowisk po przeładowaniu. Natywne `confirm` zastąpiono potwierdzeniem w warsztacie. Backup 107 plików: `backup/v0.4.0_przed_D5d_20261001_225237` (zgodne SHA256). 65/65 testów i build poprawne. Raport D; 1.7 w trakcie do próby nieudanej migracji.\n\nD5c (2026-10-01): odbiór ochrony oryginalnego JSON schematu 4 po migracji Eko. Rzeczywisty plik `tests/qa/Eko_D5c_original_v4.json` ma 16 operacji i 60 pozycji BOM; ponowne pobranie po przeładowaniu dało ten sam SHA256. Import pliku do projektu 4 i ponowny odczyt odtworzyły dane, a osobny warsztat 5 pozostał dostępny. Kod bez zmian; odzyskiwanie uszkodzonego zapisu nadal otwarte. Raport D. ID 1.7 w trakcie.\n\nD5b (2026-10-01): warsztat v5 korzysta z pełnej osi czasu symulacji i pokazuje trwałe ID stanowisk; aktywne wykonania są przekazywane do podglądu 3D. Błędy layoutu nadal blokują kontrolki. Backup 105 plików: `backup/v0.4.0_przed_D5b_20261001_223242` (zgodne SHA256). UI Eko: partia 3 sztuk 21 170 s, Cofnij po błędzie brakującego stołu i ponowny odczyt poprawnego zapisu. 65/65 testów i build poprawne. Szczegóły w raporcie D; 1.5–1.6 pozostają w trakcie.\n\nD4f (2026-10-01): dodano edycję geometrii wyposażenia warsztatu schematu 5 po trwałym ID stanowiska. Backup 103 plików: `backup/v0.4.0_przed_D4f_20261001_221758` (zgodne SHA256). UI Eko na izolowanym porcie: podział 17 → 18 stanowisk, jawne dodanie stołu, usunięcie błędu layoutu, symulacja, edycja X i obrotu, Cofnij/Ponów, usunięcie z Cofnij i ponowny odczyt. Rzut 2D oraz podgląd 3D korzystają z zapisanej geometrii; 65/65 testów i build poprawne. Szczegóły w raporcie D. ID 1.5 i 1.6 pozostają w trakcie do integracji z pozostałymi widokami.\n\nD4e (2026-10-01): dodano edycję ustawień zasobów po trwałym ID w warsztacie schematu 5. Backup 102 plików: `backup/v0.4.0_przed_D4e_20261001_182847` (zgodne SHA256). UI Eko potwierdził walidację, niezależność cyklu od samej obsady, jawny cykl zespołu, błąd brakującego stołu po zwiększeniu kopii, blokadę symulacji, Cofnij/Ponów i odczyt po przeładowaniu. Późniejszy odbiór potwierdził przywrócenie domyślnych zasobów, jego Cofnij/Ponów i odczyt po ponownym otwarciu; zapis testowy wrócił do wartości bazowych. 64/64 testy i build poprawne. Szczegóły w raporcie D. ID 1.6 pozostaje w trakcie.\n\nD4d (2026-10-01): dodano UI jawnego podziału i scalenia stanowisk schematu 5. Podział zachowuje stare ID, zasoby i geometrię, tworząc nowe ID bez powiązań. Scalenie wymaga wskazania zachowanego ID, pokazuje obiekty i ustawienia wycofywanego ID oraz wymaga zaznaczenia zgody i potwierdzenia. Backup 101 plików: `backup/v0.4.0_przed_D4d_20261001_181257` (SHA256 zgodne). Eko: podział/scalenie, Cofnij/Ponów, zapis/odświeżenie i syntetyczne ustawienia zasobów potwierdzone w UI; 64/64 testy i build poprawne. 1.5 i 1.6 pozostają w trakcie. Raport D.\n\nD5a (2026-10-01): potwierdzono zapis pliku wyeksportowanego przez UI, jego strukturę i ponowny import przez UI. Rzeczywisty eksport Eko schematu 5 (`tests/qa/Eko_D5_actual_export_v5.json`, 44 879 bajtów, SHA256 w raporcie D) odtworzył 17 trwałych stanowisk, 53 obiekty layoutu i przydział OP22 po odświeżeniu. Błędny plik z obcym ID geometrii został odrzucony bez zastąpienia poprawnego zapisu. Osobny poprawny plik Eko 16 stanowisk przeszedł import i symulację 3 sztuk (21 170 s). 1.5 pozostaje w trakcie: otwarte są podział/scalenie i integracja edytorów. Raport D.\n\nD3b/D4c (2026-10-01): uruchomiono odrębny warsztat projektu schematu 5 z migracją bieżącego projektu, zapisem lokalnym, trwałymi ID, przenoszeniem operacji, zmianą kolejności, pustym stanowiskiem, Cofnij/Ponów, eksportem/importem JSON i symulacją. Brak layoutu pozostaje jawny; jego wygenerowanie wymaga osobnej akcji. Backup 97 plików: `backup/v0.4.0_przed_UI_v5_20261001_173152` (SHA256 zgodne). 62/62 testy i build poprawne. UI Eko: migracja, przeniesienie OP22, Cofnij/Ponów, zapis/odświeżenie, dodanie stanowiska i jawne generowanie potwierdzone; eksport/import pliku oraz podział/scalenie w UI pozostają do odbioru. 1.5 w trakcie. Raport D.\n\nD4b (2026-10-01): dodano atomową zmianę rejestru stanowisk dla kolejności, podziału i scalenia. Wycofanie ID z powiązanymi zasobami lub geometrią jest blokowane do jawnego rozstrzygnięcia; istniejące ID zachowują ustawienia i obiekty. 61/61 testów i build poprawne. Brak jeszcze UI dla decyzji 1.6; 1.5 w trakcie. Raport D.\n\nD4a (2026-10-01): zasoby schematu 5 wiążą się z trwałym ID stanowiska, a odrębne wyprowadzenie bilansu/layoutu zachowuje zapisaną geometrię i zgłasza brakujące kopie. Eko po migracji ma tę samą liczbę tras i te same czasy zakończenia partii w symulacji. 59/59 testów i build poprawne. Aktywne UI i zapis pozostają w schemacie 4; 1.5 w trakcie. Raport D.\n\nD3a (2026-10-01): dodano bilans schematu 5 oparty na rejestrze stanowisk i przeniesienie operacji do istniejącego trwałego ID. Numer wynika wyłącznie z kolejności. Zmiana grupowania przez RPW/LCR wymaga jawnego uzgodnienia tożsamości; puste stanowisko zachowuje ID, zasoby i geometrię. Test Eko i przypadki negatywne: 57/57 testów, build poprawny. Edytor UI i aktywna ścieżka schematu 5 nadal nie są podłączone; 1.5 w trakcie. Raport D.\n\nD2c (2026-10-01): kopia bieżących 93 plików z kontrolą SHA256 w `backup/v0.4.0_przed_aktywacja_D3_20261001_171226`. Dodano odrębny parser schematu 5 z walidacją rejestru, ręcznych przypisań, zasobów i powiązań layoutu; przygotowana migracja jest nim sprawdzana. Eksport Eko przechodzi zapis/odczyt 16 stanowisk. 53/53 testy i build poprawne. Aktywny import/zapis nadal używa schematu 4; etap 1.5 w trakcie. Raport D.\n\nD2b (2026-10-01): dodano jawną konwersję sprawdzonego podglądu do przygotowanego projektu schematu 5. Przypisania ręczne, powiązania geometrii i zasoby otrzymują trwałe ID; nieaktualne cache bilansu i tras są pomijane. Osierocone zasoby lub zmieniony podgląd zatrzymują konwersję. Oryginalny JSON jest zachowany. 51/51 testów i build poprawne. Schemat 5 nadal nie jest przyjmowany przez aplikację; D2–D5 i etap 1.5 pozostają w trakcie. Raport D.\n\nD2a (2026-09-30): pełny backup 89 plików ze sprawdzeniem SHA256 i podgląd migracji powiązań stanowisk gotowe. Nie przełączono schematu zapisu; etap 1.5 nadal w trakcie. D2b–D4 wymagają integracji rejestru z edytorami i zapisami. Raport D.\n\nPakiet D / 1.5–1.6 zamknięty 2026-10-02: rejestr stanowisk v5 zapewnia trwałe ID (`ST-...`), niezależność od numeracji, edycję zasobów i geometrii po trwałym ID, bezpieczną zamianę kolejności z walidacją grafu, jawny podział i scalenie z ochroną wyposażenia oraz panel usuwania operacji z zachowaniem pustej stacji i jej obiektów. Odbiór UI zrealizowany w teście Edge CDP (`tests/qa/verify_1_5_1_6.mjs`), 76/76 testów jednostkowych i build poprawne. Szczegóły w `docs/weryfikacja/WERYFIKACJA_STALE_ID_1_5_1_6.md` i `docs/weryfikacja/WERYFIKACJA_STABILIZACJA_D.md`. Etap 1 został w pełni wdrożony.\n\nPakiet C zamknięty 2026-09-30: potwierdzono przeciąganie z siatką/bez siatki, Cofnij/Ponów, synchronizację 2D–3D i zapis. Poniższe otwarte diagnozy C są historią; rozstrzygnięcie w raporcie C3. Następny krok: 1.5 — trwałe identyfikatory stanowisk.\n\n- Pakiet A wykonany w ograniczonym zakresie: backup, testy bazowe, poprawki wspólnego usuwania i synchronizacji formularzy. Raport: `docs/weryfikacja/WERYFIKACJA_STABILIZACJA_A.md`.\n- Kroki nadrzędne 1.2–1.3 zakończone; dowody zapisano w raporcie pakietu B.\n- Pakiet B zakończony: odbiór importu/usuwania i zapisu w UI (1.2.2, 1.3.1, 1.3.4) na odizolowanych danych portu 4193. Następny mały pakiet: obsługa myszy 3D (1.4).\n- Dane Eko można zbierać równolegle w ramach 7.1.\n- Aktywny pakiet C / 1.4: synchronizacja formularza 3D po Cofnij/Ponów poprawiona i sprawdzona. Przeciąganie oraz czarny widok po geście wymagają dalszej diagnozy; raport `docs/weryfikacja/WERYFIKACJA_STABILIZACJA_C.md`.\n- C2a: zabezpieczono kamerę przed obrotem pod podłogę; w edycji lewy przycisk nie obraca kamery. Powtórzona próba nie wywołała czarnego widoku. Samo przeciąganie nadal niepotwierdzone, 1.4 pozostaje w trakcie. Backup i zakres odbioru w raporcie C.\n- Warunki pakietu B spełnione: usunięcie OP11 i Cofnij/Ponów poprawne; operacja przywrócona. Rzeczywisty eksport JSON pobrany i ponownie zaimportowany; wynik symulacji zachowany. Dowód: `tests/qa/Eko_B_export_20260930_183858.json`. Kalibracja będzie wymagała rzeczywistych danych procesu.\n- Kopia bazowa: `backup/v0.4.0_przed_stabilizacja_20260929_225906` — 81 plików, zgodność SHA256. Procedura odtworzenia w raporcie pakietu A. Przed kolejną przebudową modułu wykonać nową kopię."
+    }
+  ],
+  "changelog": [
+    {
+      "date": "2026-10-28",
+      "id": "7.9",
+      "change": "nierozpoczęte → wdrożone",
+      "notes": "Pilotażowy odbiór z użytkownikiem, eliminacja błędów krytycznych i zakres gotowego pierwszego wydania. Przeglądarkowy test bezgłowy Edge CDP (`tests/qa/verify_7_9_pilot.mjs`, PASS, 0 wyjątków JS), czysty start `newProject()`, rozwijany katalog SHA-256, tutorial Lean 7.14, pakiety 02 i 03, zbiegające się gałęzie C2, modele Blendera 6.3, pełna regresja 495/495 PASS, build PASS. Raport: [Weryfikacja 7.9](docs/weryfikacja/WERYFIKACJA_PILOTAZU_I_ZAKRESU_WYDANIA_7_9.md). **Zamknięcie Etapu 7 (14/14 = 100%) oraz Pierwszego Wydania (Etapy 1–7: 68/68 = 100,0%)**. Postęp: cały plan 68/72 = 94,4%."
+    },
+    {
+      "date": "2026-10-28",
+      "id": "7.1",
+      "change": "w trakcie → wdrożone",
+      "notes": "Uporządkowanie pochodzenia i kwalifikacji danych walidacyjnych (pomiary fabryczne Eko z zachowanym rejestrem 14 luk, syntetyczne pakiety 01–03 z prefiksami przestrzeni nazw, fixtures testowe) oraz zautomatyzowany audyt SHA-256 (`scripts/audit_data_qualification_7_1.mjs`, 6/6 PASS). Raport: [Weryfikacja 7.1](docs/weryfikacja/WERYFIKACJA_KWALIFIKACJI_DANYCH_7_1.md). Postęp: cały plan 67/72 = 93,1%, pierwsze wydanie 67/68 = 98,5%, Etap 7: 13/14 = 92,9%."
+    },
+    {
+      "date": "2026-10-28",
+      "id": "6.3",
+      "change": "w trakcie → wdrożone",
+      "notes": "Modele wyposażenia w Blenderze 5.2.1 LTS: 10 autorskich modeli demonstracyjnych w trybie bezgłowym (3 modele regałów z danych użytkownika `Dane do wyposażenia`, 4 modele dla pakietów 7.12, 3 modele bazowe 6.3b). Weryfikacja Three.js GLB 13/13 PASS, bezgłowy Blender PASS, build PASS. Raport: [Weryfikacja 6.3](docs/weryfikacja/WERYFIKACJA_MODELI_WYPOSAZENIA_6_3.md). Domknięcie Etapu 6 (7/7 = 100%). Postęp: cały plan 66/72 = 91,7%, pierwsze wydanie 66/68 = 97,1%, Etap 6: 7/7 = 100,0%."
+    },
+    {
+      "date": "2026-10-28",
+      "id": "7.13",
+      "change": "w trakcie → wdrożone",
+      "notes": "Pusty start bez projektów wbudowanych, rozwijany katalog 4 zewnętrznych pakietów pokazowych z walidacją SHA-256 oraz ochrona środowiska przed nadpisaniem. Czysty start na nowym profilu (0 operacji/stanowisk/materiałów), brak na sztywno zaszytych danych w bundle produkcyjnym, potwierdzenia operacji zastępujących projekt, automatyczne migawki bezpieczeństwa `createWorkspaceBackup`. Testy 6/6 PASS, Python ZIP 3/3 PASS, katalog `--check` PASS, test akceptacyjny Edge CDP `tests/qa/verify_7_13_closure.mjs` PASS (3 zrzuty w `outputs/qa/7_13_closure/`), build PASS (1993 moduły), raport: [Weryfikacja 7.13](docs/weryfikacja/WERYFIKACJA_PUSTEGO_STARTU_I_KATALOGU_7_13_FINAL.md). Postęp: cały plan 65/72 = 90,3%, pierwsze wydanie 65/68 = 95,6%, Etap 7: 12/14 = 85,7%."
+    },
+    {
+      "date": "2026-10-28",
+      "id": "7.14",
+      "change": "nierozpoczęte → wdrożone",
+      "notes": "Interaktywny tutorial krok po kroku na bazowym pakiecie zestawu montażowego: 8 etapów Lean, pojęcia inżynierskie, pływający dock `TutorialOverlay`, alternatywny modal pełnotekstowy `TutorialModalText`, automatyczna nawigacja kart, selektory podświetleń UI, skróty klawiszowe, bezpieczny snapshot i przywracanie środowiska `createWorkspaceBackup`, persystencja `layout-studio-tutorial-v1`. Test jednostkowy w `tests/core.test.ts` PASS, automatyczny test akceptacyjny Edge CDP `tests/qa/verify_7_14.mjs` PASS (10 zrzutów w `outputs/qa/7_14_tutorial/`), build PASS (1993 moduły), raport: [Weryfikacja 7.14](docs/weryfikacja/WERYFIKACJA_TUTORIALU_7_14.md). Postęp: cały plan 64/72 = 88,9%, pierwsze wydanie 64/68 = 94,1%, Etap 7: 11/14 = 78,6%."
+    },
+    {
+      "date": "2026-10-28",
+      "id": "7.12, 7.2",
+      "change": "w trakcie → wdrożone (7.12); nierozpoczęte → wdrożone (7.2)",
+      "notes": "Zbiorczy odbiór fizyczny i szablony trzech zewnętrznych pakietów pokazowych 01, 02, 03 w czystym profilu Edge CDP (`tests/qa/verify_7_12d.mjs`) oraz walidacja referencji analitycznych na jawnych scenariuszach. Pakiety 01 (170/190 s), 02 (JIT 390/315 s, fizyczny 460/385 s), 03 (JIT 320/270 s, fizyczny 2210/2180 s). Weryfikacja symulacji JIT i skonfigurowanej, porównania wariantów w UI, pobierania raportów Markdown, atomowego round-trip eksportu i importu, zero błędów JS w konsoli. Raport: [7.12.D i 7.2](docs/weryfikacja/WERYFIKACJA_ODBIOR_I_SZABLONY_7_12_D_FIZYCZNY.md). Postęp: cały plan 63/72 = 87,5%, pierwsze wydanie 63/68 = 92,6%, Etap 7: 10/14 = 71,4%."
+    },
+    {
+      "date": "2026-10-28",
+      "id": "7.12.C2",
+      "change": "w trakcie → wdrożone",
+      "notes": "Pełny odbiór podpakietu C2 (transport, zaopatrzenie, zbieganie gałęzi oraz bufory C2-B); decyzja domenowa z 2026-10-28 wyklucza wiszenie detali w powietrzu bez bufora wejściowego; pakiet demonstracyjny 03 v1.2.0, 73/73 testów C2 PASS, 104/104 suity 7.12 PASS, 192/192 regresji PASS, build PASS. Raport `docs/weryfikacja/WERYFIKACJA_BUFOROW_PODMONTOW_C2_FINAL.md`. Całe 7.12 w trakcie do zbiorczego odbioru fizycznego 7.12.D (zamykającego jednocześnie 7.2). Postęp 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%."
+    },
+    {
+      "date": "2026-10-24",
+      "id": "7.12.C1",
+      "change": "podpakiet wdrożony, 7.12 w trakcie",
+      "notes": "Kompletny zewnętrzny projekt średni `przyklady/02_wozek_warsztatowy/`, 12 plików z manifestem SHA-256, otoczka A1, arkusze XLSX bez formuł, czasy zespołowe 80s/45s na OP20, kompetencje, bufory, zaopatrzenie materiałowe i niezależne obliczenia wzorcowe 390s/315s. Generator `--check` PASS, celowane testy 4/4 PASS, regresja 7.12.B 4/4 PASS. Raport `docs/weryfikacja/WERYFIKACJA_PROJEKTU_SREDNIEGO_7_12_C1.md`. Kod UI nienaruszony. Postęp bez zmian: 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%."
+    },
+    {
+      "date": "2026-10-22",
+      "id": "7.12.A2b1, 7.13.U",
+      "change": "A2b1 wdrożone; A2 w trakcie; U zaplanowane",
+      "notes": "3D i odtwarzanie operacji z harmonogramu, sterowanie czasem/wybór, unieważnienie starych wyników. Backup 474 SHA-256 PASS, celowane 11/11 i manifest 1/1, build, Edge SwiftShader i pełna sekwencyjna 393/393 PASS; równoległe przekroczenia czasu testów 3.9 jawne w raporcie, bez zmiany progów. Instrukcja 58 stron/47 obrazów. Następny A2b2 (ruch fizyczny); U uprości język interfejsu po integracji. Postęp 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%."
+    },
+    {
+      "date": "2026-10-21",
+      "id": "7.12.A2a / A2",
+      "change": "A2a wdrożone, całe A2 w trakcie",
+      "notes": "Spójny odczyt modelu 6: przydziały/czasy/dopuszczenia, rzut i raport statyczny z tym samym SHA. Bez przeliczania jako 4; wariant/Cofnij/Ponów/import/reload sprawdzone w Edge, 190 s zachowane. Backup 470 SHA-256 PASS, celowane 12/12 i manifest 1/1, build i instrukcja 56 stron/46 obrazów PASS. Raport A2. Następny A2b (3D/animacja). Postęp 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%."
+    },
+    {
+      "date": "2026-10-21",
+      "id": "7.12.B",
+      "change": "nierozpoczęte → w trakcie → wdrożone w zakresie JIT z buforami",
+      "notes": "Pierwszy zewnętrzny katalog, 12 plików i manifest, XLSX, pełny model 6 i dwa warianty, niezależne obliczenia 170/190 s. Jawne bufory ustalają lokalną kontynuację; nie zmieniano silnika. Celowane 14/14, generator --check i Edge PASS, instrukcja 55 stron/45 obrazów. Raport B; bez nowego builda/pełnej regresji, kod aplikacji bez zmian. Główne 7.12 w trakcie, następny A2. Postęp 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%."
+    },
+    {
+      "date": "2026-10-21",
+      "id": "7.12.A1",
+      "change": "w trakcie → wdrożone; główne 7.12 nadal w trakcie",
+      "notes": "Pakiet rodziny 4/5/6 i zgodnych wariantów, SHA/podgląd, kopia ratunkowa, sprawdzane wycofanie i ochrona UI; scenariusze 4 zachowane. Backup 449 SHA-256, celowane 12/12, pełna integracyjna 382/382, API obu źródeł, build i Edge PASS. Instrukcja MD/HTML/PDF 53 strony/44 obrazy; raport `docs/weryfikacja/WERYFIKACJA_PAKIETU_PROJEKTU_7_12_A1.md`. Bez migracji. Następny B, A2 przed fizycznymi przykładami. Postęp 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%."
+    },
+    {
+      "date": "2026-10-19",
+      "id": "7.6a / 7.6",
+      "change": "w trakcie → wdrożone",
+      "notes": "Walidacja pięciu slotów/SHA/otoczek/bibliotek, pełne zastąpienie z null, kopia ratunkowa przed mutacją i sprawdzany rollback. Ochrona UI/autozapisu, jawna awaria wycofania. Backup 448 plików SHA-256 PASS, testy celowane 9/9, pełna regresja integracyjna 376/376, build i Edge UI PASS, instrukcja 52 strony/43 obrazy. Raport 7.6; bez migracji. Postęp 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%."
+    },
+    {
+      "date": "2026-10-19",
+      "id": "7.12.A, 7.6",
+      "change": "audyt A odebrany; 7.12 w trakcie; 7.6 wdrożone → w trakcie",
+      "notes": "Kontrakt i macierz przenośności 4/5/6, 7/7 testów celowanych, build i Edge UI PASS. Odtworzone luki odzyskiwania i brak importu szkicu/biblioteki 6; raport `docs/weryfikacja/WERYFIKACJA_PAKIETOW_POKAZOWYCH_7_12_A.md`. Zaplanowano 7.6a, A1 i A2 przed dalszym odbiorem. Bez zmiany kodu aplikacji lub schematów. Postęp 60/72 = 83,3%, pierwsze wydanie 60/68 = 88,2%."
+    },
+    {
+      "date": "2026-10-19",
+      "id": "6.3, 7.1, 7.2, 7.12–7.14",
+      "change": "zmiana zakresu; nowe punkty nierozpoczęte",
+      "notes": "Decyzja użytkownika: Eko wyłącznie do testów/regresji, kompletność jego danych nie blokuje wydania. Dodano trzy zewnętrzne pakiety pokazowe (w tym gałęzie podmontaży), start bez projektów zaszytych w aplikacji oraz interaktywny tutorial. Zachowano dawne odbiory i źródła. Zmieniono plan, bez implementacji lub nowych testów aplikacji. Postęp 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%."
+    },
+    {
+      "date": "2026-10-18",
+      "id": "7.7",
+      "change": "nierozpoczęte → wdrożone",
+      "notes": "Przegląd zależności, licencji kodu i modeli oraz bezpieczeństwa komercyjnego (`scripts/audit_licenses_and_security.mjs`, `package.json`, `tests/core.test.ts`): audyt licencji 95 pakietów (100% permisywnych MIT/Apache-2.0/ISC w runtime, 0 GPL/AGPL), eliminacja luki DoS w `source-map-js` do poziomu 0 podatności w `npm audit`, weryfikacja praw do modeli wyposażenia 3D i konceptów, automatyczny raport `outputs/security_audit/audit_7_7.json`, aktualizacja instrukcji (sekcja 5.10, HTML i PDF). Backup `backup/v0.4.0_przed_7_7_20261018` (428 plików SHA256). Testy 368/368 PASS, build PASS. Raport: `docs/weryfikacja/WERYFIKACJA_LICENCJI_I_BEZPIECZENSTWA_7_7.md`. Postęp: cały plan 58/69 = 84,1%, pierwsze wydanie 58/65 = 89,2%, Etap 7: 5/11 = 45,5%."
+    },
+    {
+      "date": "2026-10-18",
+      "id": "7.6",
+      "change": "w trakcie → wdrożone",
+      "notes": "Dystrybucja 100% offline-first, uruchamianie i Disaster Recovery środowiska (`src/core/workspaceBackup.ts`, `src/components/studio/WorkspaceBackupModal.tsx`, `Uruchom_Layout_Studio.bat`): algorytm sumy kontrolnej FIPS 180-4 SHA-256 w czystym TS, eksport i walidacja całości środowiska (`.lsbackup.json`), bezpieczne przywracanie z automatycznym Rollback Snapshotem, weryfikacja czystego komputera bez CDN (`scripts/verify_clean_install.mjs`), test Edge CDP z zrzutem ekranu (`tests/qa/verify_7_6.mjs`), aktualizacja instrukcji obsługi (sekcja 5.9, HTML i PDF). Backup `backup/v0.4.0_przed_7_6_20261018` (422 pliki SHA256). Testy 367/367 PASS, build PASS. Raport: `docs/weryfikacja/WERYFIKACJA_DYSTRYBUCJI_I_ODZYSKIWANIA_7_6.md`. Postęp: cały plan 57/69 = 82,6%, pierwsze wydanie 57/65 = 87,7%, Etap 7: 4/11 = 36,4%."
+    },
+    {
+      "date": "2026-10-18",
+      "id": "7.5",
+      "change": "w trakcie → wdrożone",
+      "notes": "Rozdzielenie szczegółowo modelowanych strat od rezerwy OEE i ochrona przed podwójnym naliczaniem (`src/core/oeeLossDecomposition.ts`, `src/components/demand/DemandWizardView.tsx`): analityczna dekompozycja strat jawnych (dostępności z awarii i przerw, wydajności z transportu i buforów, jakości), kalkulacja rezydualnego OEE, wykrywanie ryzyka dublowania strat (brak / umiarkowane / wysokie), skorygowany takt time, rekomendacje Lean i przycisk adaptacji OEE. Backup `backup/v0.4.0_przed_7_5_20261018` (420 plików SHA256). Testy 366/366 PASS (w tym test dekompozycji w `tests/core.test.ts`), build `tsc && vite build` PASS, instrukcja MD/HTML/PDF zaktualizowana (sekcja 5.8). Raport: `docs/weryfikacja/WERYFIKACJA_DEKOMPOZYCJI_OEE_7_5.md`. Postęp: cały plan 56/69 = 81,2%, pierwsze wydanie 56/65 = 86,2%, Etap 7: 3/11 = 27,3%."
+    },
+    {
+      "date": "2026-10-18",
+      "id": "6.2",
+      "change": "nierozpoczęte → wdrożone",
+      "notes": "Przygotowanie parametrycznych generatorów modeli 3D w Three.js dla wyposażenia przemysłowego (`src/core/equipment/parametricEquipmentModels.ts`, `docs/modele/PARAMETRYCZNE_WYPOSAZENIE_6_2.md`): stoły warsztatowe/montażowe (blat, nakładka ESD, nogi z profilu ze stopkami, nadstawka pionowa, półka narzędziowa, perforowany panel 5S, belka LED, aparatura kontrolna), regały przepływowe FIFO (pochylone tory rolkowe, kuwety KLT, konstrukcja rurkowa lean pipe z ukośnymi stężeniami, półka zwrotna pustych pojemników, regały magazynowe wysokiego składowania), palety EPAL (1200x800x144 mm — 5 desek górnych, 3 poprzecznice, 9 klocków, 3 płozy dolne, oznakowanie posadzki pasami bezpieczeństwa, sztaple wielopaletowe), pojemniki znormalizowane VDA 4500 KLT (obrzeże sztaplowania, ożebrowanie podstawy, uchwyty, etykiety), wózki transportowe platformowe (rama spawana, burty, dyszel holowniczy, koła na poziomie posadzki Z=0) i autonomiczne roboty AGV/AMR (kompaktowe podwozie, skanery LIDAR, pierścień LED 360°, podnośnik nożycowy), przenośniki rolkowe grawitacyjne i napędzane (ceowniki stalowe, ocynkowane rolki rozmieszczane parametrycznie co 100 mm wzdłuż długości, podpory H z płytami kotwionymi, motoreduktor), ergonomiczne maty posadzkowe, tablice cieni 5S i słupy sygnalizacyjne Andon; wizualne nakładki 3D standardu 6.1 (strefy obsługi, obrysy kolizji, porty transportu z wektorami dokowania) kontrolowane przełącznikami w Scene.tsx i Factory3DView.tsx; optymalizacja pamięci GPU (współdzielona paleta materiałów PBR, bezpieczny unmount przez disposeEquipmentGroup); pełna ochrona niezmiennika braku wpływu geometrii 3D na czasy i balans (Zasada 6 i Plan 6.4). Backup backup/v0.4.0_przed_6_2_20261018 (196 plików SHA256). Testy 67/67 PASS w core.test.ts, okresowa pełna regresja 339/339 PASS (100%), build PASS (7.59s). Raport: docs/weryfikacja/WERYFIKACJA_PARAMETRYCZNEGO_WYPOSAZENIA_6_2.md, dokumentacja PARAMETRYCZNE_WYPOSAZENIE_6_2.md. Postęp: cały plan 49/67 = 73,1%, pierwsze wydanie 49/65 = 75,4%, Etap 6: 2/7 = 28,6%."
+    },
+    {
+      "date": "2026-10-18",
+      "id": "6.1",
+      "change": "nierozpoczęte → wdrożone",
+      "notes": "Ustalenie standardu wyposażenia: skala, jednostki (mm w 2D, Three.js 1m = 1000mm, kąty deg, masa kg), punkt bazowy ustawienia (EquipmentInsertionPoint: Z=0 dla podłogi, wiszące Z>2000mm, tabletop; kotwica footprint-center / bottom-left), obrys kolizji 2D i 3D z marginesem bezpieczeństwa (EquipmentCollisionEnvelope, checkEquipmentCollision2D, checkEquipmentCollision3D, checkObstacleCollision), strefy obsługi i konserwacji operatora wg normy PN-EN ISO 14738 z rygorem wytycznych geometrycznych bez certyfikacji BHP (isErgonomicGuidelineOnly: true), punkty dokowania transportu materiałowego (EquipmentTransportPort, getTransportPortWorldPosition, kierunek podejścia, wysokość robocza, dozwolone nośniki), metadane pochodzenia i licencji (EquipmentMetadata: MIT, CC-BY-4.0, CC0; limit wielokątów; isCertifiedTechnologicalCapacity: false), wbudowany rejestr DEFAULT_EQUIPMENT_SPECS dla 15 standardowych typów obiektów (ObjectType) oraz ścisła ochrona niezmiennika oddzielenia modelu wizualnego od technologii (assertVisualModelIndependence — zakaz zmiany czasów i zdolności przy zmianie geometrii 3D, Zasada 6 i Plan 6.4). Backup backup/v0.4.0_przed_6_1_20261018 (345 plików SHA256). Testy 60/60 PASS w core.test.ts, okresowa pełna regresja 332/332 PASS (100%), build PASS (7.27s). Raport: docs/weryfikacja/WERYFIKACJA_STANDARDU_WYPOSAZENIA_6_1.md, specyfikacja STANDARD_WYPOSAZENIA_6_1.md. Postęp: cały plan 48/67 = 71,6%, pierwsze wydanie 48/65 = 73,8%, Etap 6: 1/7 = 14,3%."
+    },
+    {
+      "date": "2026-10-18",
+      "id": "5.13",
+      "change": "nierozpoczęte → w trakcie → wdrożone",
+      "notes": "Automatyczna pierwsza propozycja layoutu oparta na grafie operacji i wstępnym bilansie po wprowadzeniu lub imporcie procesu (`generate3DLayout`, `derive`, `replaceImportedProcess`) bez wymogu osobnego przycisku, także w docelowym modelu stanowisk (`deriveStationProject` w schemacie 5 `StationProjectV5`), odzwierciedlenie przypisanych części z BOM w etykietach buforów FIFO (brak BOM nie blokuje szkicu), oznaczanie wygenerowanych obiektów jako założenia wizualne (`isVisualAssumption: true`, odznaka `.badge-visual-assumption` w panelu właściwości 2D i 3D, baner `.visual-assumption-note`, `VISUAL_ASSUMPTION_DISCLAIMER`) bez przypisywania zdolności technologicznej, nota o braku deklaracji dopasowania do przestrzeni fizycznej przy braku potwierdzonych wymiarów hali (`facility.isConfirmed`, `.facility-unconfirmed-note`, `FACILITY_UNCONFIRMED_NOTE`), bezwzględna ochrona ręcznych pozycji (`layoutMode = 'manual'`) przed automatycznym nadpisaniem oraz odbiór na niezależnych procesach (silniki EV `DEFAULT_MOTOR_PROJECT` i baterie EV `DEFAULT_BATTERY_PROJECT`). Zamknięcie i pełny odbiór Etapu 5 (13/13 = 100,0%). Backup `backup/v0.4.0_przed_5_13_20261018` (343 pliki SHA256). Testy celowane 18/18 PASS (`5.3`–`5.13`), build PASS, Edge CDP UI 5.13 PASS (`tests/qa/verify_5_13.mjs`, 1440/600 px). Instrukcja Markdown/HTML/PDF zaktualizowana: 30 stron/30 obrazów (`outputs/qa/manual_5_13`). Raport: `docs/weryfikacja/WERYFIKACJA_PROPOZYCJI_LAYOUTU_5_13.md`. Postęp: cały plan 47/67 = 70,1%, pierwsze wydanie 47/65 = 72,3%, Etap 5: 13/13 = 100,0%."
+    },
+    {
+      "date": "2026-10-18",
+      "id": "5.10",
+      "change": "nierozpoczęte → w trakcie → wdrożone",
+      "notes": "Wspólne zaznaczenie obiektów 2D–3D (synchronizacja zaznaczenia w 2D CAD i 3D scene, formularz 2D/3D), wizualna identyfikacja zaznaczenia w 3D obwiednią THREE.BoxHelper (błękitna dla aktywnych, żółta dla zablokowanych), ochrona obiektów zablokowanych (`locked`) w 3D przed przypadkowym przeciąganiem i edycją współrzędnych, spójne skróty klawiszowe globalne (`Ctrl+Z`, `Ctrl+Y`, `Ctrl+S`) i kontekstowe (`Escape`, `F`, `T`, `G`, `M`, `L`, `S`, `Arrow` precyzyjne przesuwanie z krokiem 5× z `Shift` w `nudgeLayoutObjects`), spójne podpowiedzi `title` na paskach 2D/3D oraz rozwijana ściągawka skrótów `cad-shortcuts-cheatsheet` ze znacznikami `<kbd>` i definicjami `LAYOUT_SHORTCUTS`. Backup `backup/v0.4.0_przed_5_10_20261018` (341 plików SHA256). Testy celowane 16/16 PASS (`5.3`–`5.10`), build PASS, Edge CDP UI 5.10 PASS (`tests/qa/verify_5_10.mjs`, 1440/600 px) oraz regresja 5.8 i 5.9 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 29 stron/29 obrazów (`outputs/qa/manual_5_10`). Raport: `docs/weryfikacja/WERYFIKACJA_SPOJNOSCI_2D_3D_5_10.md`. Postęp: cały plan 46/67 = 68,7%, pierwsze wydanie 46/65 = 70,8%, Etap 5: 12/13 = 92,3%."
+    },
+    {
+      "date": "2026-10-18",
+      "id": "5.9",
+      "change": "nierozpoczęte → w trakcie → wdrożone",
+      "notes": "Strefy obsługi (`service`), odkładania (`staging`) i komunikacji (`communication`) na rzucie CAD 2D (`computeFunctionalZones`, przełącznik `Warstwa: Strefy obsługi, odkładania i komunikacji`, kreskowane obrysy `.cad-functional-zones`) oraz jawne rozróżnienie ostrzeżeń geometrycznych od oceny zgodności BHP (`analyzeGeometricLayoutWarnings`, `BHP_GEOMETRY_DISCLAIMER`, `BHP_SAFE_STATE_NOTE`, odznaki `Geometria rzutu (nie BHP)`, prefiks `[Geometria rzutu — nie BHP]`, wyróżnienie `data-geo-warning=\"true\"` na rzucie i przycisk `Zaznacz obiekt`) w `layoutSelection.ts`, `LayoutEditor.tsx` i `HallWorkspace.css`. Backup `backup/v0.4.0_przed_5_9_20261018` (487 plików SHA256). Testy celowane 14/14 PASS (`5.3`–`5.9`), okresowa pełna regresja 321/321 PASS (trzeci pakiet od `5.6`), build PASS, Edge CDP UI 5.9 PASS (`tests/qa/verify_5_9.mjs`, 1440/600 px) oraz regresja 5.7–5.8 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 28 stron/28 obrazów (`outputs/qa/manual_5_9`). Raport: `docs/weryfikacja/WERYFIKACJA_STREF_I_GEOMETRII_5_9.md`. Postęp: cały plan 45/67 = 67,2%, pierwsze wydanie 45/65 = 69,2%, Etap 5: 11/13 = 84,6%."
+    },
+    {
+      "date": "2026-10-18",
+      "id": "5.8",
+      "change": "nierozpoczęte → w trakcie → wdrożone",
+      "notes": "Obsługiwany podzbiór importu DXF (`LWPOLYLINE`, `POLYLINE`+`VERTEX`+`SEQEND`, `CIRCLE`, osiowe `LINE` na warstwach hali/przeszkód, `TEXT`/`MTEXT` w sekcji `ENTITIES`, ignorowanie `BLOCKS`, pełny roundtrip z `exportToDxf`), weryfikacja jednostek (`$INSUNITS` dla `mm`, `cm`, `m`, `in`, `ft` i blokada przy braku jednostek/`$INSUNITS=0` do czasu jawnego wyboru) oraz raport pominiętej geometrii (`skippedEntities` z typem, warstwą, liczbą i przyczyną dla `INSERT`, `SPLINE`, `ARC`, `HATCH`, `DIMENSION`, `3DFACE`, `bulge`, polilinii `< 3` wierzchołków) w `dxfImporter.ts` i `LayoutEditor.tsx`. Backup `backup/v0.4.0_przed_5_8_20261018` (336 plików SHA256). Testy celowane 12/12 PASS (`5.3`–`5.8`), build PASS, Edge CDP UI 5.8 PASS (`tests/qa/verify_5_8.mjs`, 1440/600 px) oraz regresja 5.2–5.7 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 27 stron/27 obrazów (`outputs/qa/manual_5_8`). Raport: `docs/weryfikacja/WERYFIKACJA_IMPORTU_DXF_5_8.md`. Postęp: cały plan 44/67 = 65,7%, pierwsze wydanie 44/65 = 67,7%, Etap 5: 10/13 = 76,9%."
+    },
+    {
+      "date": "2026-10-18",
+      "id": "5.7",
+      "change": "nierozpoczęte → w trakcie → wdrożone",
+      "notes": "Podkład hali z kalibracją skali (`FacilityUnderlay` w `facility.underlay`: PNG/JPEG/SVG/WebP, warstwa `Warstwa: Podkład hali`, `underlayDimensionsMm`, interaktywna dwupunktowa kalibracja skali na rzucie `calibrateUnderlayScale`, ręczna edycja `mmPerPixel`, przesunięcie X/Y, przezroczystość, dopasowanie wymiarów hali do podkładu, walidacja i persystencja w `parseProject`/`validateProject`). Backup `backup/v0.4.0_przed_5_7_20261018` (323 pliki SHA256). Testy celowane 10/10 PASS (`5.3`–`5.7`), build PASS, Edge CDP UI 5.7 PASS (`tests/qa/verify_5_7.mjs`, 1440/600 px) oraz regresja 5.2–5.6 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 26 stron/26 obrazów (`outputs/qa/manual_5_7`). Raport: `docs/weryfikacja/WERYFIKACJA_PODKLADU_HALI_5_7.md`. Postęp: cały plan 43/67 = 64,2%, pierwsze wydanie 43/65 = 66,2%, Etap 5: 9/13 = 69,2%."
+    },
+    {
+      "date": "2026-10-18",
+      "id": "5.6",
+      "change": "nierozpoczęte → w trakcie → wdrożone",
+      "notes": "Wymiarowanie obiektów i przeszkód (`.cad-object-dimension`, `.cad-obstacle-dimension`), automatyczny pomiar odległości między dwoma zaznaczonymi obiektami (`measureObjectsDistance`, `.cad-distance-readout`, `.cad-dimension-overlay`), interaktywny pomiar odległości punkt–punkt na rzucie (`Mierz odległość`, `measurePointsDistance`, `.cad-ruler-overlay`), przełączanie widoczności 6 warstw (`Stanowiska`, `Bufory i logistyka`, `Strefy operatorów`, `Relacje technologiczne`, `Przeszkody`, `Wymiary i pomiary`) oraz trwałe blokowanie obiektów (`LayoutObject.locked`, `lockLayoutObjects`, ochrona przed przesunięciem, zmianą wymiarów, wyrównaniem i usunięciem). Backup `backup/v0.4.0_przed_5_6_20261018` (321 plików SHA256). Testy celowane 8/8 PASS (`5.3`–`5.6`), okresowa pełna regresja 315/315 PASS (trzeci pakiet od `5.3`), build PASS, Edge CDP UI 5.6 PASS (`tests/qa/verify_5_6.mjs`, 1440/600 px) oraz regresja 5.2–5.5 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 25 stron/25 obrazów (`outputs/qa/manual_5_6`). Raport: `docs/weryfikacja/WERYFIKACJA_WYMIAROW_I_WARSTW_5_6.md`. Postęp: cały plan 42/67 = 62,7%, pierwsze wydanie 42/65 = 64,6%, Etap 5: 8/13 = 61,5%."
+    },
+    {
+      "date": "2026-10-18",
+      "id": "5.5",
+      "change": "nierozpoczęte → w trakcie → wdrożone",
+      "notes": "Przyciąganie do siatki, krawędzi obiektów/przeszkód i punktów połączeń (`objectConnectionPoints`, `snapLayoutTranslation`) oraz możliwość wyłączenia (niezależne przełączniki, przycisk `Wyłącz przyciąganie / Włącz przyciąganie`, klawisz `Alt`). Wizualne znaczniki portów `.cad-connection-point` i prowadnice `.cad-snap-guide`. Backup `backup/v0.4.0_przed_5_5_20261018` (464 pliki SHA256). Testy 6/6 PASS (`5.3`–`5.5`), build PASS, Edge CDP UI 5.5 PASS (`tests/qa/verify_5_5.mjs`, 1440/600 px) oraz regresja 5.2–5.4 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 24 strony/24 obrazy (`outputs/qa/manual_5_5`). Raport: `docs/weryfikacja/WERYFIKACJA_PRZYCIAGANIA_5_5.md`. Postęp: cały plan 41/67 = 61,2%, pierwsze wydanie 41/65 = 63,1%, Etap 5: 7/13 = 53,8%."
+    },
+    {
+      "date": "2026-10-18",
+      "id": "5.4",
+      "change": "nierozpoczęte → w trakcie → wdrożone",
+      "notes": "Przenoszenie stanowiska razem z przypisanym regałem FIFO i strefą obsługi bez utraty relacji technologicznych (`layoutSelection.ts`, `LayoutEditor.tsx`). Opcja `Przenoś stanowisko z FIFO i strefą`, przycisk `Zaznacz zespół stanowiska`, przeciąganie myszą, edycja X/Y i wyrównywanie zespołów z zachowaniem `workstationId` i linii `layoutRoutes`; odznaczenie opcji do korekty pojedynczego elementu. Backup `backup/v0.4.0_przed_5_4_20261018` (314 plików SHA256). Testy 4/4 PASS (`5.3` + `5.4`), build PASS, Edge CDP UI 5.4 PASS (`tests/qa/verify_5_4.mjs`, 1440/600 px) oraz regresja 5.2 i 5.3 PASS. Instrukcja Markdown/HTML/PDF zaktualizowana: 23 strony/23 obrazy (`outputs/qa/manual_5_4`). Raport: `docs/weryfikacja/WERYFIKACJA_ZESPOLU_STANOWISKA_5_4.md`. Postęp: cały plan 40/67 = 59,7%, pierwsze wydanie 40/65 = 61,5%, Etap 5: 6/13 = 46,2%."
+    },
+    {
+      "date": "2026-10-16",
+      "id": "7.8.1",
+      "change": "dodano do planu",
+      "notes": "Na wniosek użytkownika wydzielono pakiet 7.8.1: przygotowanie i aktualizacja instrukcji używania aplikacji (podręcznika użytkownika ze screenshotami) po wdrożeniu Etapów 1–4 (szkic 6, bufory, zaopatrzenie, wózki, kompetencje, bilans z ograniczeniami, biblioteka wariantów, propozycje usprawnień). Pakiet możliwy do realizacji przed lub równolegle z Etapem 5. Punkt 7.8.2 zachowano jako finalną instrukcję po Etapach 5–7. Główny licznik planu bez zmian: 36/67 = 53,7%."
+    },
+    {
+      "date": "2026-10-16",
+      "id": "4.7",
+      "change": "w trakcie → wdrożone",
+      "notes": "Proponowanie zmian wraz z uzasadnieniem i wynikiem sprawdzenia w symulacji (bez deklaracji optimum). Zamknięcie i odbiór Etapu 4 (7/7 = 100,0%). Moduł `domainImprovementProposals.ts`, `NON_OPTIMUM_DISCLAIMER`, generator propozycji (pracownik, dopuszczenia, wariant obsady, kopia stacji, bilans RPW/LCR, bufor), weryfikacja w symulacji, rozróżnienie szacunku statycznego od wyniku dynamicznego, akcje Zapisz jako wariant i Zastosuj do szkicu 6 (Cofnij/Ponów), raport Markdown (.md). Backup `backup/v0.4.0_przed_4_7_20261016` (314 plików). Testy 20/20 PASS, build PASS, Edge CDP UI PASS (`outputs/qa/verify_4_7.png`). Raport: `docs/weryfikacja/WERYFIKACJA_PROPOZYCJI_ZMIAN_4_7.md`. Postęp: cały plan 36/67 = 53,7%, pierwsze wydanie 36/65 = 55,4%, Etap 4: 7/7 = 100,0%."
+    },
+    {
+      "date": "2026-10-16",
+      "id": "4.6",
+      "change": "nierozpoczęte → wdrożone",
+      "notes": "Zestawienie wydajności, czasu przejścia, WIP, obsady, powierzchni i kosztów przy jawnych stawkach oraz założeniach. Moduł `domainVariantComparison.ts`, tabela syntezy 4.6 w `DomainVariantComparisonPanel.tsx`, formularz stawek i założeń kosztowych, raport Markdown. Backup `backup/v0.4.0_przed_4_6_20261016` (311 plików). Testy 18/18 PASS, pełna regresja 305/305 PASS, build PASS, Edge CDP UI PASS (`outputs/qa/verify_4_6.png`). Raport: `docs/weryfikacja/WERYFIKACJA_ZESTAWIENIA_WARIANTOW_4_6.md`. Postęp: cały plan 35/67 = 52,2%, pierwsze wydanie 35/65 = 53,8%, Etap 4: 6/7 = 85,7%."
+    },
+    {
+      "date": "2026-10-16",
+      "id": "4.5",
+      "change": "nierozpoczęte → wdrożone",
+      "notes": "Porównywanie zapisanych wariantów przy tych samych warunkach eksperymentu. Biblioteka wariantów szkicu 6 (`layout-studio-domain-v6-variants-v1`), porównywanie w tle (`schedule.worker.ts`), kontrola czynników (`process`, `workers`, `stations`, `layout`), oddzielenie szacunku statycznego od symulacji. Backup `backup/v0.4.0_przed_4_5_20261016` (307 plików). Testy 19/19 PASS, build PASS, Edge CDP UI PASS (`outputs/qa/verify_4_5.png`). Raport: `docs/weryfikacja/WERYFIKACJA_POROWNANIA_WARIANTOW_4_5.md`. Postęp: cały plan 34/67 = 50,7%, pierwsze wydanie 34/65 = 52,3%, Etap 4: 5/7 = 71,4%."
+    },
+    {
+      "date": "2026-10-16",
+      "id": "4.4",
+      "change": "nierozpoczęte → wdrożone",
+      "notes": "Wyjaśnianie ograniczeń przepustowości na podstawie harmonogramu szkicu 6 (`throughputExplanation.ts`, `ThroughputExplanationPanel.tsx`): praca technologiczna (unia przedziałów), obsada, transport, blokady, zaopatrzenie, kalendarze; oddzielne oczekiwania mieszane bez dzielenia czasu; przejście do Gantta. Backup `backup/v0.4.0_przed_4_4_20261016` (304 pliki). Testy 22/22 PASS, build PASS, Edge CDP UI PASS (`outputs/qa/verify_4_4.png`). Raport: `docs/weryfikacja/WERYFIKACJA_OGRANICZEN_PRZEPUSTOWOSCI_4_4.md`. Postęp: cały plan 33/67 = 49,3%, pierwsze wydanie 33/65 = 50,8%, Etap 4: 4/7 = 57,1%."
+    },
+    {
+      "date": "2026-10-16",
+      "id": "4.3",
+      "change": "w trakcie → wdrożone",
+      "notes": "Wymagania wyposażenia i kompetencji w bilansie szkicu 6 (`domainBalancing.ts`, `DomainBalancingPanel.tsx`): priorytety RPW/LCR na istniejących dopuszczonych kopiach, uzupełniające się kompetencje obsady, blokady stanowisk, ograniczony powrót (20000 prób). Backup `backup/v0.4.0_przed_4_3c_20261016` (301 plików). Testy 59/59 PASS, pełna regresja 296/296 PASS, build PASS, Edge CDP UI PASS (`outputs/qa/verify_4_3c.png`). Raport: `docs/modele/MODEL_KOMPETENCJI_I_PRZYDZIALOW_4_3.md`. Postęp: cały plan 32/67 = 47,8%, pierwsze wydanie 32/65 = 49,2%, Etap 4: 3/7 = 42,9%."
+    },
+    {
+      "date": "2026-10-16",
+      "id": "4.2",
+      "change": "nierozpoczęte → wdrożone",
+      "notes": "Blokowanie przydziałów przed automatycznym balansowaniem (`ProcessStep.lockedWorkstation`, `lineBalancingEngine.ts`, `BalancingBoard.tsx`, `OperationInspector.tsx`). Backup `backup/v0.4.0_przed_4_2_20261016` (164 pliki). Testy 35/35 PASS, pełna regresja 283/283 PASS, build PASS, Edge CDP UI PASS (`outputs/qa/verify_4_2.png`). Raport: `docs/weryfikacja/RAPORT_BLOKOWANIA_PRZYDZIALOW_4_2.md`. Postęp: cały plan 31/67 = 46,3%, pierwsze wydanie 31/65 = 47,7%, Etap 4: 2/7 = 28,6%."
+    },
+    {
+      "date": "2026-10-16",
+      "id": "4.1",
+      "change": "nierozpoczęte → wdrożone",
+      "notes": "Oddzielne obciążenie stanowisk, maszyn i operatorów oraz jawne mianowniki wskaźników. Moduł `workloadBalancing.ts` z formułami i opisami mianowników dla widoku bilansowania `BalancingBoard.tsx`. Rozszerzenie `scheduleStateMetrics.ts` o `EquipmentStateMetrics` oraz jawne pola bazy mianownika i formuły dla stanowisk i pracowników. Testy 282/282 PASS, Edge CDP UI PASS (`outputs/qa/verify_4_1.png`). Raport: `docs/weryfikacja/RAPORT_OBCIAZENIA_I_MIANOWNIKOW_4_1.md`. Postęp: cały plan 30/67 = 44,8%, pierwsze wydanie 30/65 = 46,2%, Etap 4: 1/7 = 14,3%."
+    },
+    {
+      "date": "2026-10-06",
+      "id": "2.5.2",
+      "change": "w trakcie → wdrożone",
+      "notes": "Pauza i wznowienie z tym samym zespołem oraz kopią, jawne odcinki pracy i pauzy, odmowa częściowego kalendarza lub zbyt krótkiego horyzontu; starszy szkic zachowuje podgląd logiczny. Backup 167 plików, testy 105/105, build; `docs/weryfikacja/WERYFIKACJA_KALENDARZA_2_5.md`. UI pozostaje w 2.5.3."
+    },
+    {
+      "date": "2026-10-06",
+      "id": "2.5.2",
+      "change": "nierozpoczęte → w trakcie",
+      "notes": "Rozpoczęto podłączenie jawnych kalendarzy do odrębnego harmonogramu szkicu 6."
+    },
+    {
+      "date": "2026-10-05",
+      "id": "2.5.1",
+      "change": "w trakcie → wdrożone",
+      "notes": "Jawne kalendarze osób i stanowisk w szkicu 6, walidacja przedziałów i źródła, obliczenie wspólnej dostępności, zapis/odczyt i odmowy; backup 164 zgodne SHA256, 104/104 testy, build. Kontrakt `docs/modele/MODEL_KALENDARZA_2_5.md`, raport `docs/weryfikacja/WERYFIKACJA_KALENDARZA_2_5.md`. Punkt 2.5 pozostaje w trakcie."
+    },
+    {
+      "date": "2026-10-05",
+      "id": "2.5, 2.5.1",
+      "change": "nierozpoczęte → w trakcie",
+      "notes": "Rozpoczęto kontrakt kalendarzy osób i stanowisk. Użytkownik wybrał pauzę rozpoczętej operacji z późniejszym wznowieniem przez ten sam zespół. Rozdzielono kontrakt, harmonogram i UI na 2.5.1–2.5.3."
+    },
+    {
+      "date": "2026-10-05",
+      "id": "2.4, 2.4.4",
+      "change": "w trakcie → wdrożone; w trakcie → wdrożone",
+      "notes": "Odbiór logicznego harmonogramu szkicu 6: 32 wykonania bez podwójnej rezerwacji, identyczne wyniki po ponownym otwarciu, odmowa braku danych i izolacja projektów 4/5. Testy rdzenia objęły także scenariusze silników i graf poprzedników. Rzeczywiste Eko pozostaje w 7.1/7.2, reguły fizyczne w 2.8; raport `docs/weryfikacja/WERYFIKACJA_OPERATOROW_2_4.md`."
+    },
+    {
+      "date": "2026-10-05",
+      "id": "2.4.4",
+      "change": "nierozpoczęte → w trakcie",
+      "notes": "Rozpoczęto odbiór zbiorczy rezerwacji, odczytu, UI i izolacji aktywnych projektów."
+    },
+    {
+      "date": "2026-10-05",
+      "id": "2.4.3, 2.4.3.2",
+      "change": "w trakcie → wdrożone; w trakcie → wdrożone",
+      "notes": "Odrębny podgląd szkicu 6, oczekiwanie i przydział; Edge CDP 32 wykonania na danych testowych, odmowa braku odstępu, izolacja zapisów 4/5/6. Testy 103/103, build. Punkt 2.4 pozostaje w trakcie do 2.4.4."
+    },
+    {
+      "date": "2026-10-05",
+      "id": "PLAN, 8.1, 8.2, 2.4.3.2",
+      "change": "Dodano 8.1 i 8.2 jako nierozpoczęte; 2.4.3.2 nierozpoczęte → w trakcie",
+      "notes": "VSM i A3 zapisano na kolejną wersję. Rozpoczęto integrację UI odrębnego harmonogramu szkicu 6; aktywne projekty 4/5 pozostają poza zakresem zmian."
+    },
+    {
+      "date": "2026-10-05",
+      "id": "PLAN, 5.13",
+      "change": "Doprecyzowanie zakresu; dodano 5.13 jako nierozpoczęte",
+      "notes": "Ustalono samodzielny przepływ pierwszego wydania, automatyczną wstępną propozycję layoutu po danych procesu, pracę konsultanta na danych klienta bez współedycji online i VSM w kolejnej wersji. Bez zmian kodu i statusów dotychczasowych kroków."
+    },
+    {
+      "date": "2026-10-05",
+      "id": "PLAN, 7.11",
+      "change": "Doprecyzowanie celu; dodano 7.11 jako nierozpoczęte",
+      "notes": "Eko określono jako niepełny przykład testowy. Zapisano odbiór uniwersalności na niezależnych procesach oraz w pracy inżyniera i konsultanta Lean. Bez zmian kodu i statusów dotychczasowych kroków."
+    },
+    {
+      "date": "2026-09-29",
+      "id": "PLAN",
+      "change": "Utworzenie rejestru",
+      "notes": "Zapisano uzgodniony plan w `PLAN_ROZWOJU.md`. Wszystkie kroki implementacyjne i odbiorowe pozostają nierozpoczęte. Nie zmieniano kodu ani nie uruchamiano ponownie testów aplikacji."
+    },
+    {
+      "date": "2026-09-29",
+      "id": "1.1–1.3",
+      "change": "nierozpoczęte → w trakcie",
+      "notes": "Rozpoczęto pakiet A: zabezpieczenie wersji 0.4.0, ponowna weryfikacja bazowa i przegląd wspólnych operacji edycji."
+    },
+    {
+      "date": "2026-09-29",
+      "id": "1.1",
+      "change": "w trakcie → wdrożone",
+      "notes": "Backup 81 plików, zgodne SHA256, procedura powrotu w `docs/weryfikacja/WERYFIKACJA_STABILIZACJA_A.md`. Nie uruchamiano osobnej instalacji z backupu."
+    },
+    {
+      "date": "2026-09-29",
+      "id": "1.2.1, 1.3.2, 1.3.3",
+      "change": "wdrożone — wydzielone podetapy",
+      "notes": "40/40 testów, poprawny build, odrzucanie nieistniejących operacji, odbiór Cofnij/Ponów w formularzach procesu i BOM; brak ostrzeżeń/błędów w odczycie konsoli."
+    },
+    {
+      "date": "2026-09-29",
+      "id": "1.2, 1.3",
+      "change": "pozostają w trakcie",
+      "notes": "Pozostały pełna ścieżka UI oraz odbiór importu i usuwania. Nie uznano samych testów funkcji za potwierdzenie wszystkich działań w interfejsie."
+    },
+    {
+      "date": "2026-09-29",
+      "id": "1.2.2, 1.3.1, 1.3.4",
+      "change": "kontynuacja — pakiet B",
+      "notes": "Rozpoczęto odbiór ścieżki interfejsu na osobnym porcie 4193."
+    },
+    {
+      "date": "2026-09-30",
+      "id": "1.3.4",
+      "change": "w trakcie → wdrożone",
+      "notes": "Potwierdzono import obu XLSX przez UI i czyszczenie pól szkicu. Szczegóły w `docs/weryfikacja/WERYFIKACJA_STABILIZACJA_B.md`."
+    },
+    {
+      "date": "2026-09-30",
+      "id": "1.2.2, 1.3.1",
+      "change": "częściowy odbiór B",
+      "notes": "Poprawne importy, ręczny bilans, edycja CAD/Cofnij, symulacja i zapis lokalny; błędny import i cykl bez mutacji danych. 40/40 testów i build poprawny. Usuwanie oczekuje potwierdzenia; eksport JSON niepotwierdzony."
+    },
+    {
+      "date": "2026-10-01",
+      "id": "1.5",
+      "change": "kontynuacja — D3b/D4c",
+      "notes": "Odrębny warsztat schematu 5 i odbiór migracji, trwałych ID, edycji przydziału, historii, zapisu/odczytu oraz jawnego layoutu w UI. 62/62 testy, build poprawny. Eksport/import pliku i podział/scalenie w UI otwarte; raport D."
+    },
+    {
+      "date": "2026-10-01",
+      "id": "1.5",
+      "change": "kontynuacja — D5a",
+      "notes": "Rzeczywisty eksport v5 zapisano, sprawdzono i ponownie zaimportowano w UI; zachowano ID i geometrię po przeładowaniu. Błędny plik odrzucono bez utraty poprawnego zapisu. 1.5 nadal w trakcie; raport D."
+    },
+    {
+      "date": "2026-10-01",
+      "id": "1.6",
+      "change": "nierozpoczęte → w trakcie",
+      "notes": "Rozpoczęto D4d: jawny wybór zachowanego ID i losu powiązanych zasobów/geometrii przy podziale/scaleniu."
+    },
+    {
+      "date": "2026-10-01",
+      "id": "1.5, 1.6",
+      "change": "kontynuacja — D4d",
+      "notes": "UI Eko potwierdził podział/scalenie, listę wycofywanych obiektów, syntetyczne ustawienia zasobów, Cofnij/Ponów i ponowny odczyt. 64/64 testy, build poprawny. Pełna integracja edytorów pozostaje otwarta; raport D."
+    },
+    {
+      "date": "2026-10-01",
+      "id": "1.6",
+      "change": "kontynuacja — D4e",
+      "notes": "Edytor zasobów v5 po trwałym ID; UI potwierdził zapis, walidację, zależność kopii od geometrii, reset domyślnych zasobów, Cofnij/Ponów i ponowny odczyt. 64/64 testy i build poprawne; status w trakcie."
+    },
+    {
+      "date": "2026-10-01",
+      "id": "1.5, 1.6",
+      "change": "kontynuacja — D4f",
+      "notes": "Edytor geometrii v5 po trwałym ID, rzut 2D i podgląd 3D. UI Eko potwierdził podział, jawne dodanie stołu, korektę położenia, historię, zapis/odczyt i symulację; 65/65 testów i build poprawne. Integracja pozostałych widoków otwarta; raport D."
+    },
+    {
+      "date": "2026-10-01",
+      "id": "1.5, 1.6",
+      "change": "kontynuacja — D5b",
+      "notes": "Pełna oś czasu symulacji w warsztacie v5, nazwy i trwałe ID stacji, aktywne wykonania dla podglądu 3D. UI Eko: 21 170 s dla 3 sztuk, blokada przy brakującym stole, Cofnij i ponowny odczyt; 65/65 testów i build poprawne. Pełna integracja nadal otwarta; raport D."
+    },
+    {
+      "date": "2026-10-01",
+      "id": "1.7",
+      "change": "nierozpoczęte → w trakcie — D5c",
+      "notes": "Po migracji Eko pobrano oryginalny JSON schematu 4, powtórzono pobranie po przeładowaniu z identycznym SHA256, zaimportowano do projektu 4 i ponownie otwarto. Odbiór uszkodzonego zapisu pozostaje otwarty; raport D."
+    },
+    {
+      "date": "2026-10-01",
+      "id": "1.7",
+      "change": "kontynuacja — D5d",
+      "notes": "UI odzyskiwania: surowy uszkodzony zapis pobrany, import przed zgodą odrzucony, anulowanie i odblokowanie bez nadpisania, po jawnym imporcie Eko v5 16 stanowisk zachowanych po przeładowaniu. 65/65 testów i build poprawne; nieudana migracja nadal do odbioru."
+    },
+    {
+      "date": "2026-10-01",
+      "id": "1.7",
+      "change": "kontynuacja — D5e",
+      "notes": "UI zatrzymał migrację Eko z osieroconym zasobem bez nadpisania projektu v5 i jego oryginalnego JSON; po przeładowaniu oba zapisy zachowały dane. Kod bez zmian, 65/65 testów; starsze zapisy nadal do odbioru."
+    },
+    {
+      "date": "2026-10-01",
+      "id": "1.7",
+      "change": "kontynuacja — D5f",
+      "notes": "Plik bez wersji z dołączonego przykładu silników EV przeszedł import, zapis, migrację v5 i ponowny odczyt; 2 trwałe ID zachowane. Otwarta luka: oryginalne bajty starszego pliku nie są archiwizowane przez importer 4. Kod bez zmian, 65/65 testów."
+    },
+    {
+      "date": "2026-10-01",
+      "id": "1.7",
+      "change": "kontynuacja — D5g",
+      "notes": "Osobne archiwum bajtów importu w zapisie 4 i 5; UI potwierdził Cofnij/Ponów, migrację, przeładowanie oraz SHA256 pobranego pierwotnego pliku. Backup 109 plików, 66/66 testów, build poprawny. Pozostaje przenośne archiwum i szerszy odbiór starszych zapisów."
+    },
+    {
+      "date": "2026-10-02",
+      "id": "1.7",
+      "change": "kontynuacja — D5h",
+      "notes": "Przenośne archiwa projektu 4 i 5; UI na osobnych adresach potwierdził import, ponowny odczyt, dwa trwałe ID, bajtowy oryginał i odmowę złej wersji bez utraty danych. Backup 111 plików, 68/68 testów i build poprawne. Szerszy odbiór dawnych zapisów pozostaje otwarty."
+    },
+    {
+      "date": "2026-10-02",
+      "id": "1.7",
+      "change": "kontynuacja — D5i",
+      "notes": "Import projektu 4 zapisuje przed podmianą stanu. Pełny localStorage odrzucił import Eko bez zmiany projektu bazowego; po zwolnieniu miejsca import, Cofnij/Ponów i odczyt źródła przeszły UI. Backup 112 plików, 68/68 testów i build poprawne."
+    },
+    {
+      "date": "2026-10-02",
+      "id": "1.7",
+      "change": "kontynuacja — D5j",
+      "notes": "Starszy zapis localStorage bez wersji zachował surową postać do pobrania i jawnego potwierdzenia migracji. UI sprawdził SHA256, anulowanie, ponowny odczyt v4 i 2 trwałe ID v5. Backup 113 plików, 68/68 testów, build poprawny."
+    },
+    {
+      "date": "2026-10-02",
+      "id": "1.7",
+      "change": "kontynuacja — D5k",
+      "notes": "Duże archiwum 5,6 MB ujawniło błąd walidacji base64, który odtworzono testem i usunięto. UI potwierdził odmowę przy limicie pamięci bez utraty projektu oraz pełny odczyt źródła z mniejszego archiwum. Backup 114 plików, 69/69 testów, build poprawny."
+    },
+    {
+      "date": "2026-10-02",
+      "id": "1.8",
+      "change": "nierozpoczęte → w trakcie — E1",
+      "notes": "JSON projektu i CSV symulacji pokazują, czy pobrany plik odpowiada bieżącym danym. UI potwierdził edycję/Cofnij, zmianę partii i odstępu, powrót do parametrów oraz brak wpływu szybkości odtwarzania. Backup 114 plików, 69/69 testów, build poprawny; raport E."
+    },
+    {
+      "date": "2026-10-02",
+      "id": "1.8",
+      "change": "kontynuacja — E2",
+      "notes": "Osobne statusy archiwum v4, DXF, bilansu CSV i raportu MD; archiwum nie zmienia czasu eksportu JSON. UI potwierdził selektywne odnowienie pliku i Cofnij. Backup 115 plików, 69/69 testów, build poprawny; raport E."
+    },
+    {
+      "date": "2026-10-02",
+      "id": "1.8",
+      "change": "kontynuacja — E3",
+      "notes": "Status czterech pobrań warsztatu v5; UI Eko sprawdził, że edycja unieważnia tylko JSON/archiwum, a źródła pozostają zgodne. Cofnij i ponowne otwarcie sprawdzone; 69/69 testów i build poprawne. Raport E."
+    },
+    {
+      "date": "2026-10-02",
+      "id": "1.8",
+      "change": "kontynuacja — E4",
+      "notes": "Status pobranego CSV symulacji zachowany po przebudowaniu widoku i zmianie karty v4/v5; UI potwierdził edycję, blokadę przy błędach, Cofnij i ponowny eksport. Backup 103 plików, 69/69 testów, build poprawny; raport E."
+    },
+    {
+      "date": "2026-10-02",
+      "id": "1.8",
+      "change": "kontynuacja — E5",
+      "notes": "Znaczniki czterech eksportów v5 zachowane po zmianie karty; druk/PDF oznaczony jako wywołanie bez potwierdzenia zapisu. UI sprawdził edycję i Cofnij. Backup 103 plików, 69/69 testów, build poprawny; raport E."
+    },
+    {
+      "date": "2026-10-02",
+      "id": "1.8",
+      "change": "w trakcie → wdrożone — E6",
+      "notes": "Osobne statusy XLSX/CSV procesu i BOM, stałe szablony i migawka JSON wariantu. UI potwierdził selektywne unieważnienie, Cofnij, ponowny eksport i granicę sesji; fizyczne pliki sprawdzone. Backup 103 plików, 69/69 testów, build poprawny; raport E."
+    },
+    {
+      "date": "2026-10-02",
+      "id": "1.7",
+      "change": "w trakcie → wdrożone",
+      "notes": "Całościowy odbiór zapisu, odzyskiwania, migracji starszych projektów i ochrony oryginału. Konsolidacja prac D5c–D5k. Zautomatyzowany odbiór UI CDP na porcie 5194 (`verify_1_7.mjs`) potwierdził: 1) odzyskiwanie uszkodzonego localStorage, 2) jawną migrację projektu bez wersji z pobraniem surowej kopii, 3) blokadę migracji przy osieroconych zasobach z zachowaniem oryginału i projektu docelowego, 4) ponowne otwarcie i pełny roundtrip. Backup 128 plików `backup/v0.4.0_przed_1_7_20261002_220500`, 75/75 testów i build poprawne; raport `docs/weryfikacja/WERYFIKACJA_MIGRACJA_ZAPIS_1_7.md`."
+    },
+    {
+      "date": "2026-10-09",
+      "id": "3.4.3",
+      "change": "kontynuacja — 3.4f",
+      "notes": "Przewóz zasobowy w kolejce zdarzeń i workerze, alternatywy osób/przenośników/jednego wózka, wyniki i UI przydziałów; 162/162 testy, build, Edge i regresja. Backup 255 zgodne SHA256. Dojazdy/powroty nadal do integracji; raport 3.4. Postęp 34,3% / 35,4%."
+    },
+    {
+      "date": "2026-10-09",
+      "id": "3.4.3",
+      "change": "nierozpoczęte → w trakcie",
+      "notes": "Atomowa rezerwacja fizycznego odcinka ze wspólnym rejestrem osób, dojazdy z jawną obsadą, przyszłe konflikty i przerwy; 159/159 testów i build. Backup 254 zgodne SHA256. Integracja harmonogramu pozostaje do kolejnego zakresu; raport 3.4. Postęp 34,3% / 35,4%."
+    },
+    {
+      "date": "2026-10-09",
+      "id": "3.4.2",
+      "change": "w trakcie → wdrożone",
+      "notes": "Kontrakt montażu, parser, referencje i bezpieczny zapis; 155/155 testów, build, Edge odczytu/odmowy workera i regresji. Backup 252 zgodne SHA256. Nowe wymagania jawnie blokują wynik do 3.4.3. Postęp 34,3% / 35,4%."
+    },
+    {
+      "date": "2026-10-09",
+      "id": "3.4, 3.5, 3.6",
+      "change": "doprecyzowanie zakresu, bez zamknięcia ID",
+      "notes": "Transport międzyoperacyjny dotyczy montażu; magazynierzy bez czasu i rezerwacji. Dostawy jako uzupełnianie materiału, częstotliwość zależna od jawnego zapasu/zużycia/ilości; kontrakt 3.4. Postęp 34,3% / 35,4%."
+    },
+    {
+      "date": "2026-10-09",
+      "id": "3.4.2",
+      "change": "nierozpoczęte → w trakcie",
+      "notes": "Zatwierdzone 1B; niezależny rejestr wykonawczy ruchu wózka, 151/151 testów, build, backup 250 zgodnych SHA256. Zapis i integracja oczekują na doprecyzowanie powrotów/dojść osób. Raport WERYFIKACJA_ZASOBOW_TRANSPORTU_3_4.md. Postęp 34,3% / 35,4%."
+    },
+    {
+      "date": "2026-10-09",
+      "id": "3.4, 3.4.1",
+      "change": "nierozpoczęte → w trakcie; pakiet dokumentacyjny wdrożony",
+      "notes": "Propozycja zasobów transportowych, wspólne osoby i rezerwacje, warianty 1A/1B do decyzji; MODEL_ZASOBOW_TRANSPORTU_3_4.md. Bez zmian symulacji/schematu. Postęp 34,3% / 35,4%."
+    },
+    {
+      "date": "2026-10-09",
+      "id": "3.3.2, 3.3",
+      "change": "w trakcie → wdrożone",
+      "notes": "Formularze, jednostki i składowe; 148/148 testów, build, dwa procesy w Edge, historia i odczyt; raport 3.3. Postęp 23/67 = 34,3%, pierwsze wydanie 23/65 = 35,4%."
+    },
+    {
+      "date": "2026-10-08",
+      "id": "3.3.1",
+      "change": "nierozpoczęte → w trakcie → wdrożone",
+      "notes": "Rdzeń czasu transportu: jawne parametry i źródła, brak cache, rozłączne tryby, harmonogram i odczyt przez sieć. 148/148 testów, build, UI workera/historii/odczytu. Backup 207 zgodnych plików. Raport `docs/weryfikacja/WERYFIKACJA_CZASU_TRANSPORTU_3_3.md`. 3.3 w trakcie; postęp 22/67 = 32,8%, pierwsze wydanie 22/65 = 33,8%."
+    },
+    {
+      "date": "2026-10-08",
+      "id": "3.2.3, 3.2",
+      "change": "nierozpoczęte → w trakcie → wdrożone; w trakcie → wdrożone",
+      "notes": "Edytor punktów/połączeń, mm/m, potwierdzenia, historia/usuwanie, zapis/odczyt. Dwa niezależne odbiory Edge i zgodne harmonogramy, 144/144 testów i build. Backup 206 zgodnych plików. Raport `docs/weryfikacja/WERYFIKACJA_TRANSPORTU_3_2.md`. Postęp 22/67 = 32,8%; pierwsze wydanie 22/65 = 33,8%."
+    },
+    {
+      "date": "2026-10-08",
+      "id": "3.2.2",
+      "change": "nierozpoczęte → w trakcie → wdrożone",
+      "notes": "Zatwierdzone 1A, opcjonalne punkty/połączenia i referencje do istniejących tras, jednostki mm/m, parser i kompatybilny zapis. 144/144 testów, build, UI historii/odczytu i regresji. Backup 203 zgodnych plików. Raport `docs/weryfikacja/WERYFIKACJA_TRANSPORTU_3_2.md`. Postęp głównych ID 21/67 = 31,3%; edytor pozostaje do 3.2.3."
+    },
+    {
+      "date": "2026-10-08",
+      "id": "3.2, 3.2.1",
+      "change": "nierozpoczęte → w trakcie; pakiet dokumentacyjny wdrożony",
+      "notes": "Inwentaryzacja i propozycja kontraktu punktów/tras, decyzja o magazynie przed zmianą modelu. `docs/modele/MODEL_TRANSPORTU_3_2.md`; bez zmian aplikacji/schematu. Powtarzalny postęp głównych ID: 21/67 = 31,3%, pierwsze wydanie 21/65 = 32,3%."
+    },
+    {
+      "date": "2026-10-08",
+      "id": "3.1, 3.1.3",
+      "change": "w trakcie / nierozpoczęte → wdrożone",
+      "notes": "Zbiorczy odbiór obu ścieżek workera: 139/139 testów, build, UI 4/5/6, zmiana wejścia, odmontowanie, zapis/Cofnij szkicu, błędy i odzyskanie. Wyniki i dane zachowane, animacja niezależna. Raport `docs/weryfikacja/WERYFIKACJA_TLA_3_1.md`; ograniczenia dużych danych pozostają do 3.9."
+    },
+    {
+      "date": "2026-10-02",
+      "id": "3.10",
+      "change": "nierozpoczęte → wdrożone",
+      "notes": "Wybór mnożników odtwarzania symulacji 1×–5000×, zabezpieczenie granicy czasu w `stepSimulationTime`, inspekcja na pauzie i niezmienność wyników symulacji. Backup 103 plików `backup/v0.4.0_przed_3_10_20261002_211700`, odbiór UI na procesie Eko (21 170 s) w karcie symulacji oraz warsztacie v5, 70/70 testów i build poprawne; raport `docs/weryfikacja/WERYFIKACJA_SYMULACJA_3_10.md`."
+    },
+    {
+      "date": "2026-10-02",
+      "id": "5.11",
+      "change": "nierozpoczęte → wdrożone",
+      "notes": "Przełączanie jednostek czasu s/min/h w całym UI (nagłówek, popyt, proces, bilans, symulacja, warianty). Komponent TimeField z automatycznym przeliczaniem, dynamiczne etykiety [s/min/h]. Zachowanie niezmiennika modelu czasu w sekundach potwierdzone testami jednostkowymi i zapisem localStorage. Backup 124 plików `backup/v0.4.0_przed_5_11_20261002_215000`, odbiór UI CDP na porcie 5195 (`outputs/qa/verify_5_11_time_units.png`), 75/75 testów i build poprawne; raport `docs/weryfikacja/WERYFIKACJA_JEDNOSTKI_CZASU_5_11.md`."
+    },
+    {
+      "date": "2026-10-02",
+      "id": "5.12",
+      "change": "nierozpoczęte → wdrożone",
+      "notes": "Pobieralne szablony importu procesu i BOM w XLSX (arkusz Dane do natychmiastowego importu, arkusz Opis kolumn ze specyfikacją techniczną) oraz CSV. Wzorcowy proces wielogałęziowy (OP10 → OP20, OP25 → OP30), 5 komponentów ze wszystkimi pojemnikami (BoxKLT, Tray, Carton, Pallet), rozwijana specyfikacja w UI oraz precyzyjne zgłaszanie brakujących wymaganych kolumn przy zachowaniu atomowości. Backup 105 plików `backup/v0.4.0_przed_5_12_20261002_213500`, odbiór UI na porcie 5196, 73/73 testy i build poprawne; raport `docs/weryfikacja/WERYFIKACJA_SZABLONY_5_12.md`."
+    },
+    {
+      "date": "2026-10-01",
+      "id": "3.10, 5.11, 5.12, 7.10",
+      "change": "dodano do planu — nierozpoczęte",
+      "notes": "Zapisano wymagania użytkownika: wyższe mnożniki odtwarzania, przełączane s/min/h, szablony importu XLSX procesu i BOM oraz późniejsze dopracowanie PDF. Nie zmieniono statusu aktywnego pakietu D."
+    },
+    {
+      "date": "2026-10-03",
+      "id": "2.1.2",
+      "change": "wdrożone — 2.1b",
+      "notes": "Wersjonowany podgląd migracji v4/v5 bez zapisu i symulacji; zachowuje źródło, ID, jawne ustawienia i pokazuje luki. Backup 117 plików, 78/78 testów i build; raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`. Punkt 2.1 nadal w trakcie."
+    },
+    {
+      "date": "2026-10-03",
+      "id": "2.1.3",
+      "change": "wdrożone — 2.1c",
+      "notes": "Roboczy schemat 6, parser i przygotowanie migracji po podglądzie 2.1b; Eko v4/v5 i przypadki negatywne, 81/81 testów, build, backup 119 plików. Bez aktywnego zapisu i UI; punkt 2.1 w trakcie. Raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`."
+    },
+    {
+      "date": "2026-10-03",
+      "id": "2.1.4",
+      "change": "w trakcie → wdrożone — 2.1d",
+      "notes": "Izolowany zapis i odczyt szkicu 6 z zachowaniem źródła v4/v5, kontrolą konfliktu i odmową nadpisania uszkodzonego szkicu; 83/83 testy, build, backup 120 plików. Bez podłączenia do UI; punkt 2.1 w trakcie. Raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`."
+    },
+    {
+      "date": "2026-10-03",
+      "id": "2.1.5",
+      "change": "w trakcie → wdrożone — 2.1e",
+      "notes": "Podgląd migracji i luk w UI, pierwszy zapis szkicu i odczyt po przeładowaniu, pobranie uszkodzonej wartości. Edge CDP na porcie 5198 potwierdził też niezmienność danych v4/v5 i blokadę nieaktualnego podglądu. Backup 121 plików, 83/83 testy i build. Punkt 2.1 w trakcie; raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`."
+    },
+    {
+      "date": "2026-10-03",
+      "id": "2.1.6",
+      "change": "w trakcie → wdrożone — 2.1f",
+      "notes": "Jawne zastąpienie po pobraniu kopii; walidacja nowego szkicu i porównanie poprzedniej wartości. Edge CDP potwierdził odzyskanie, zastąpienie z innym źródłem, konflikt, błąd pamięci i ponowne otwarcie. Backup 123 plików, 84/84 testy i build. Punkt 2.1 w trakcie; raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`."
+    },
+    {
+      "date": "2026-10-03",
+      "id": "2.1.7",
+      "change": "w trakcie → wdrożone — 2.1g",
+      "notes": "Edycja osób i pul po trwałym ID, odmowa usunięcia osoby używanej przez pulę, zapis i Cofnij/Ponów. Edge CDP potwierdził tworzenie, zmianę członkostwa, ponowne otwarcie i niezmienność v4/v5. Backup 123 plików, 85/85 testów i build. Punkt 2.1 w trakcie; raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`."
+    },
+    {
+      "date": "2026-10-03",
+      "id": "2.1.8",
+      "change": "w trakcie → wdrożone — 2.1h",
+      "notes": "Jawna edycja wyrobu i podzespołów po trwałym ID, sprawdzone referencje operacji, wspólne Cofnij/Ponów. Edge CDP potwierdził edycję, usuwanie, przywrócenie i ponowny odczyt bez zmiany v4/v5. Backup 125 plików, 86/86 testów i build. Punkt 2.1 w trakcie; raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`."
+    },
+    {
+      "date": "2026-10-04",
+      "id": "2.1.9",
+      "change": "w trakcie → wdrożone — 2.1i",
+      "notes": "Ręczna definicja wyposażenia po trwałym ID i jawne opcjonalne powiązania; odmowa błędnych i podwójnych referencji. Edge CDP potwierdził edycję, Cofnij/Ponów, usunięcie, przywrócenie i ponowny odczyt bez zmiany v4/v5. Backup 127 plików, 87/87 testów i build. Punkt 2.1 w trakcie; raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`."
+    },
+    {
+      "date": "2026-10-04",
+      "id": "2.1.10",
+      "change": "w trakcie → wdrożone — 2.1j",
+      "notes": "Opcjonalne jawne możliwości wyposażenia po ID operacji, zgodny odczyt dawnych szkiców. Edge CDP potwierdził wybór, wyczyszczenie, Cofnij/Ponów i ponowny odczyt bez zmiany v4/v5. Backup 129 plików, 88/88 testów i build. Punkt 2.1 w trakcie; raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`."
+    },
+    {
+      "date": "2026-10-04",
+      "id": "2.1, 2.1.11",
+      "change": "w trakcie → wdrożone — 2.1k",
+      "notes": "Zbiorczy odbiór Eko v4/v5 i silników v4: po edycji szkicu 6 dokładne aktywne JSON i pełne wyniki symulacji bez zmian; istniejące testy referencji/migracji i ponowny odbiór UI Edge CDP (zapis, Cofnij/Ponów, odczyt, odzyskanie, zastąpienie). 89/89 testów i build; raport `docs/weryfikacja/WERYFIKACJA_MODELU_2_1.md`. Etap 2 pozostaje w trakcie."
+    },
+    {
+      "date": "2026-10-04",
+      "id": "Etap 3",
+      "change": "nierozpoczęte → w trakcie",
+      "notes": "Korekta podsumowania zgodnie z zasadą statusu etapu: punkt 3.10 został wcześniej odebrany, choć pozostałe kroki etapu czekają."
+    },
+    {
+      "date": "2026-10-04",
+      "id": "2.2, 2.2.1",
+      "change": "2.2 nierozpoczęte → w trakcie; 2.2.1 w trakcie → wdrożone — 2.2a",
+      "notes": "Opcjonalny profil czasu w szkicu 6 z jawnymi przedziałami i pochodzeniem; brak wnioskowania z czasu v4/v5, odczyt dawnych szkiców, ochrona zapisu i niezmienny wynik starej symulacji. Backup 146 plików zgodny SHA256, 91/91 testów i build; `docs/modele/MODEL_CZASU_2_2.md`, `docs/weryfikacja/WERYFIKACJA_CZASU_2_2.md`. UI i odbiór całego 2.2 pozostają do wykonania."
+    },
+    {
+      "date": "2026-10-04",
+      "id": "2.2.2",
+      "change": "w trakcie → wdrożone — 2.2b",
+      "notes": "Edytor profilu czasu z jawnymi przedziałami, s/min/h i pochodzeniem, odrębny zapis oraz wspólne Cofnij/Ponów. Edge CDP: 2,5 min → 150 s, odrzucenie niepoprawnego przedziału bez nadpisania, ponowny odczyt i nienaruszone v4/v5; `outputs/qa/verify_2_2b_time_profile.png`. Backup 148 plików zgodny SHA256, 92/92 testy i build; raport `docs/weryfikacja/WERYFIKACJA_CZASU_2_2.md`. Punkt 2.2 w trakcie do odbioru zbiorczego."
+    },
+    {
+      "date": "2026-10-04",
+      "id": "2.2, 2.2.3",
+      "change": "w trakcie → wdrożone — 2.2c",
+      "notes": "Odbiór Eko v4/v5 i silników v4: brak profilu po migracji, jawny profil po zapisie/odczycie, stary czas, dokładne źródło i pełne wyniki aktywnej symulacji bez zmian. Ponowny Edge CDP, 93/93 testy i build poprawne. Raport `docs/weryfikacja/WERYFIKACJA_CZASU_2_2.md`. Etap 2 w trakcie; szkic 6 nie steruje jeszcze nową symulacją."
+    },
+    {
+      "date": "2026-10-05",
+      "id": "2.4.2.2",
+      "change": "w trakcie → wdrożone — 2.4c",
+      "notes": "Edytor stałego składu, wariantów i dopuszczonych osób w szkicu 6; bezpieczny opcjonalny zapis, stare szkice, odrzucenie błędu i wspólne Cofnij/Ponów. Edge CDP: 16 operacji, przeładowanie, usunięcie i izolacja v4/v5. Backup 157 plików zgodny SHA256, 101/101 testów i build; `docs/weryfikacja/WERYFIKACJA_OPERATOROW_2_4.md`. 2.4.2 w trakcie do faktycznego przydziału."
+    },
+    {
+      "date": "2026-10-05",
+      "id": "2.4.2, 2.4.3.1",
+      "change": "w trakcie → wdrożone — 2.4d",
+      "notes": "Odrębny harmonogram wiąże wybór z konkretnymi osobami i kopiami stanowisk; testy dwóch sztuk, oczekiwania, całego okresu rezerwacji, zespołu dwuosobowego, poprzedników i odmowy brakujących danych. Jedna operacja na sztukę do reguł 2.8; bez UI i aktywacji. Backup 161 plików zgodny SHA256, 103/103 testy i build; `docs/weryfikacja/WERYFIKACJA_OPERATOROW_2_4.md`. 2.4.3 i 2.4 w trakcie."
+    },
+    {
+      "date": "2026-10-03",
+      "id": "2.1, 2.1.1",
+      "change": "2.1 nierozpoczęte → w trakcie; 2.1.1 wdrożone — 2.1a",
+      "notes": "Kontrakt nowego modelu i migracji w `docs/modele/MODEL_PROCESU_2_1.md`; potwierdzono fakty w pliku Eko, 76/76 testów. Brak zmiany kodu i schematów; parser, migracja i UI pozostają do wykonania."
+    },
+    {
+      "date": "2026-10-06",
+      "id": "2.5.3, 2.5",
+      "change": "w trakcie → wdrożone",
+      "notes": "Edytor i podgląd pauz szkicu 6; UI Eko i syntetycznego pakowania: zapis, walidacja, historia, usuwanie, ponowny odczyt, izolacja 4/5. Backup 167 plików zgodny SHA256, 105/105 testów, build."
+    },
+    {
+      "date": "2026-10-06",
+      "id": "2.6, 2.6.1",
+      "change": "nierozpoczęte → w trakcie",
+      "notes": "Projekt kontraktu w `docs/modele/MODEL_STANOWISK_2_6.md`; wymagane uzgodnienie wyboru stanowiska i zakresu wyposażenia. Bez zmian kodu i danych."
+    },
+    {
+      "date": "2026-10-06",
+      "id": "2.6.2",
+      "change": "nierozpoczęte → w trakcie → wdrożone",
+      "notes": "Opcjonalne dopuszczenia kopii, stałe wyposażenie i jawne rzeczywiste długości tras; zapis/odczyt i ochrona przed błędem. Backup 170 zgodny SHA256, 106/106 testów, build i UI regresji 2.5. Harmonogram i edytor pozostają otwarte."
+    },
+    {
+      "date": "2026-10-06",
+      "id": "2.6.3",
+      "change": "nierozpoczęte → w trakcie → wdrożone",
+      "notes": "Dopuszczenia i wyposażenie w harmonogramie, najwcześniejszy start i rzeczywista trasa do jednoznacznego następcy. Odmowa braku trasy/niejednoznacznego celu, 108/108 testów, build i UI; backup 172 zgodny SHA256. 2.6 w trakcie."
+    },
+    {
+      "date": "2026-10-06",
+      "id": "2.6.4",
+      "change": "nierozpoczęte → w trakcie → wdrożone",
+      "notes": "Edytor, kolejność dopuszczeń, przypisania egzemplarzy i rzeczywiste długości tras. Odbiór dwóch syntetycznych procesów, historia, walidacja, odczyt, 108/108 testów, build, backup 173 zgodny SHA256. 2.6 nadal w trakcie do reguły wielu przyszłych celów."
+    },
+    {
+      "date": "2026-10-08",
+      "id": "2.9, 2.9.1, 2.9.2",
+      "change": "w trakcie → wdrożone; w trakcie → wdrożone; nierozpoczęte → wdrożone — 2.9b",
+      "notes": "Zatwierdzone 1A tylko testy i 2A rama z magazynu na rolotok. Warianty razem/kolejno/wspólna osoba, 135/135 testów, build, trzy UI, historia/odczyt oraz ochrona źródła. Backup 190 zgodny SHA256; WERYFIKACJA_EKO_2_9.md. Bez zmian algorytmu/schematu, bez odbioru produkcyjnego."
+    },
+    {
+      "date": "2026-10-08",
+      "id": "2.9, 2.9.1",
+      "change": "nierozpoczęte → w trakcie",
+      "notes": "Inwentaryzacja eksportu i demonstracji Eko, matryca i konkretna propozycja deklaracji w SCENARIUSZE_EKO_2_9.md. Do uzgodnienia zakres danych i dostępność ramy. Bez zmiany algorytmu/schematu i dopowiadania danych produkcyjnych."
+    },
+    {
+      "date": "2026-10-07",
+      "id": "2.8.3, 2.8",
+      "change": "nierozpoczęte → wdrożone; w trakcie → wdrożone — 2.8d",
+      "notes": "Edytor grup, inspekcja całych zestawów, walidacja i wspólna historia. 133/133 testów, build, trzy syntetyczne scenariusze UI i regresja tras, odczyt oraz ochrona 4/5; backup 188 zgodny SHA256. Odbiór szkicu 6, rzeczywiste Eko w 2.9; raport WERYFIKACJA_ROWNOLEGLOSCI_2_8.md."
+    },
+    {
+      "date": "2026-10-07",
+      "id": "2.8.2",
+      "change": "w trakcie → wdrożone — 2.8c",
+      "notes": "Zatwierdzone pierwszeństwo technologiczne 1A, automatyczne trasy wielu kopii gałęzi bez sumowania, rzeczywista droga korpusu, ponowny wybór przyszłego celu. 133/133 testów, build, UI gałęzi i regresja, historia/odczyt; backup 188 zgodny SHA256. Następne 2.8.3; raport WERYFIKACJA_ROWNOLEGLOSCI_2_8.md."
+    },
+    {
+      "date": "2026-10-07",
+      "id": "2.8.2",
+      "change": "nierozpoczęte → w trakcie",
+      "notes": "Równoległe grupy na wspólnym korpusie i kopii, wyłączność osób/wyposażenia, przewóz dopiero po zwolnieniu wszystkich prac. 128/128 testów, build, UI i odczyt; backup 188 zgodny SHA256. Wielokrotne cele tras gałęzi pozostają do integracji; raport WERYFIKACJA_ROWNOLEGLOSCI_2_8.md."
+    },
+    {
+      "date": "2026-10-07",
+      "id": "2.8.1",
+      "change": "w trakcie → wdrożone",
+      "notes": "Użytkownik zatwierdził 1A/2A. Jawne grupy bez łączenia, walidacja i zapis/odczyt z ochroną źródeł 4/5. 124/124 testów, build, backup 186 zgodny SHA256. Integracja w 2.8.2, UI w 2.8.3; WERYFIKACJA_ROWNOLEGLOSCI_2_8.md."
+    },
+    {
+      "date": "2026-10-07",
+      "id": "2.8, 2.8.1",
+      "change": "nierozpoczęte → w trakcie",
+      "notes": "Propozycja kontraktu grup/par i współdzielenia korpusu/kopii, scenariusze oraz podział na trzy pakiety. Decyzje domenowe do uzgodnienia; nie zmieniono algorytmu ani schematu danych. MODEL_ROWNOLEGLOSCI_2_8.md."
+    },
+    {
+      "date": "2026-10-07",
+      "id": "2.7.4, 2.7",
+      "change": "w trakcie → wdrożone",
+      "notes": "Edytor ról i korpusów, zapis początkowych instancji, czasy tras, inspekcja i wspólna historia. 121/121 testów, build, UI transport/przygotowanie, odczyt, regresja 2.6e; backup 182 zgodny SHA256. Zakres szkicu 6, instrukcja Korpus_v6; fizyczna równoległość w 2.8."
+    },
+    {
+      "date": "2026-10-07",
+      "id": "2.7.3",
+      "change": "w trakcie → wdrożone (rdzeń)",
+      "notes": "Transport według zatwierdzonych 1A/2A, jawne czasy tras, cel zarezerwowany od wyjazdu do końca operacji, najwcześniejszy start po dojeździe i krótsza droga przy remisie. 120/120 testów, build, zapis/odczyt, backup 182 zgodny SHA256. UI w 2.7.4; zasoby ekip/pojazdów poza zakresem."
+    },
+    {
+      "date": "2026-10-07",
+      "id": "2.7.3",
+      "change": "nierozpoczęte → w trakcie",
+      "notes": "Jawne instancje i przypisania, rezerwacja korpusu przez operację i pauzy w jego lokalizacji, wynik ze zdarzeniami. 117/117 testów, build, backup 181 zgodny SHA256. Transport wymaga kontraktu czasu i zajęcia celu; nie oznaczono całego punktu jako wdrożonego."
+    },
+    {
+      "date": "2026-10-07",
+      "id": "2.7.2",
+      "change": "nierozpoczęte → w trakcie → wdrożone",
+      "notes": "Opcjonalne role fizyczne, walidacja referencji i edycja rdzenia; zapis/odczyt 4/5, ochrona źródła i starszych szkiców. 114/114 testów, build, backup 180 zgodny SHA256. Harmonogram jawnie odmawia ról do 2.7.3; UI w 2.7.4."
+    },
+    {
+      "date": "2026-10-07",
+      "id": "2.7.1",
+      "change": "w trakcie → wdrożone",
+      "notes": "Izolowany rejestr tożsamości, lokalizacji, rezerwacji i przemieszczeń korpusu; jawne czasy i odmowy sprzecznych zdarzeń. 111/111 testów, build; backup 177 zgodny SHA256. Integracja, zapis i UI pozostają do 2.7.2–2.7.4."
+    },
+    {
+      "date": "2026-10-06",
+      "id": "2.6.1, 2.6.3–2.6.4",
+      "change": "2.6.1 w trakcie → wdrożone; rozszerzenie odbioru",
+      "notes": "Automatyczny wybór dalszej drogi dla wielu przyszłych kopii w jednym ciągu, priorytet najwcześniejszego startu, osobny plan i wybrane przejście. 109/109 testów, build i UI; backup 175 zgodny SHA256. Fizyczne gałęzie wymagają 2.7/2.8; 2.6 pozostaje w trakcie."
+    },
+    {
+      "date": "2026-10-09",
+      "id": "3.4.3",
+      "change": "kontynuacja — 3.4h",
+      "notes": "Atomowy zestaw wielu wózków przy miejscu odbioru, wspólne kalendarze, osobne powroty; 169/169 testów, build i Edge. Backup 256 zgodnych SHA256. Całość nadal w trakcie; raport 3.4. Postęp 34,3% / 35,4%."
+    },
+    {
+      "date": "2026-10-09",
+      "id": "3.4.4",
+      "change": "nierozpoczęte → w trakcie; pakiet 3.4i zakończony",
+      "notes": "Edytor wymagań tras i jawnych zestawów osób/urządzeń; historia, odmowy, zapis/odczyt i worker na dwóch procesach w Edge. 169/169 testów, build, backup 256 zgodnych SHA256. Formularze urządzeń i pustych tras pozostają; raport 3.4. Postęp 34,3% / 35,4%."
+    },
+    {
+      "date": "2026-10-12",
+      "id": "3.4.4",
+      "change": "w trakcie → wdrożone; pakiet 3.4j",
+      "notes": "Formularze wózków/przenośników, lokalizacji/polityk, kalendarzy i pustych tras z czasem oraz jawną obsadą. 169/169 testów, build, Edge na procesie sekwencyjnym i gałęziach, historia/odczyt/worker. Backup 257 zgodnych SHA256; raport 3.4. Całe 3.4 nadal w trakcie; postęp 34,3% / 35,4%."
+    },
+    {
+      "date": "2026-10-12",
+      "id": "3.4.3",
+      "change": "kontynuacja — 3.4k zakończony",
+      "notes": "Decyzja użytkownika: zawsze kolejne dojazdy wózków według kolejności zestawu. 173/173 testy, build, Edge obu kolejności i zmiany przez UI z historią/odczytem. Backup 258 zgodnych SHA256. Pozostaje fizyczny transport podzespołów; raport 3.4. Postęp 34,3% / 35,4%."
+    },
+    {
+      "date": "2026-10-12",
+      "id": "3.4.3",
+      "change": "przygotowano kontrakt — 3.4m",
+      "notes": "Propozycja partii podzespołów i trzech pakietów: zapis/bilans, kolejka/zasoby, UI/odbiór. Reguła dostępności/pobrania do decyzji użytkownika; bez zmian schematu i wyników. Postęp 34,3% / 35,4%."
+    },
+    {
+      "date": "2026-10-12",
+      "id": "3.4.3",
+      "change": "kontynuacja — 3.4m1 zakończony",
+      "notes": "Decyzja A, kontrakt partii/parser/zapis, jawne referencje/ilości, ochrona źródeł 4/5. 179/179 testów, build i Edge. Backup 258 zgodne SHA256. Integracja fizyczna i formularz pozostają; postęp 34,3% / 35,4%."
+    },
+    {
+      "date": "2026-10-12",
+      "id": "3.4.3",
+      "change": "kontynuacja — 3.4m2 pierwszy zakres zakończony",
+      "notes": "Kolejka partii i wspólne zasoby, pobranie przy faktycznym starcie, worker i inspekcja. 188/188 testów, build, dwa przebiegi w Edge. Backup 260 zgodnych SHA256. Wiele kopii odbiorcy i formularz pozostają; postęp 34,3% / 35,4%."
+    },
+    {
+      "date": "2026-10-12",
+      "id": "3.4.3, 3.4.4",
+      "change": "integracja wdrożona; edytor ponownie w trakcie — 3.4m2b",
+      "notes": "Wiele kopii odbiorców, pełne przebiegi i izolacja przegranych, 194/194 testów/build/Edge. Backup 261 zgodnych SHA256. Jawny limit 64 kombinacji. Zakres 3.4.4 rozszerzony o formularz partii 3.4m3; wcześniejszy odbiór urządzeń/tras zachowany. Postęp 34,3% / 35,4%."
+    },
+    {
+      "date": "2026-10-12",
+      "id": "3.4.4, 3.4",
+      "change": "w trakcie → wdrożone — 3.4m3",
+      "notes": "Formularz partii, walidacja i wspólna historia/zapis. 194/194 testów, build, Edge dwóch procesów, worker/JIT/reload, unieważnienie wyniku, izolacja 4/5. Backup 261 zgodnych SHA256. Bufory i zaopatrzenie w 3.5/3.6; postęp 35,8% / 36,9%."
+    },
+    {
+      "date": "2026-10-12",
+      "id": "3.5",
+      "change": "rozpoczęto → w trakcie — 3.5a",
+      "notes": "Kontrakt danych buforów (`StationBuffersV6`) z regułą blokowania oraz zaopatrzenia materiałowego (`MaterialSupplyV6`) z harmonogramami dostaw. Walidacja, odmowy błędnych danych, ochrona źródeł 4/5 i migracja wsteczna. Backup 266 zgodnych SHA256. 199/199 testów, build/typecheck PASS. Postęp 35,8% / 36,9%."
+    },
+    {
+      "date": "2026-10-14",
+      "id": "3.5",
+      "change": "kontynuacja — 3.5a1 zakończony",
+      "notes": "Zabezpieczenie przed pomijaniem buforów/zaopatrzenia, 201 testów/build/Edge, backup 270 zgodnych SHA256. Decyzje użytkownika: jawne zużycie przy starcie i dostawa przed nim, jawne terminy, blokowanie po zakończeniu z jawną polityką operatora. Integracja pozostaje; postęp 35,8% / 36,9%."
+    },
+    {
+      "date": "2026-10-14",
+      "id": "3.5",
+      "change": "kontynuacja — 3.5b1 zakończony",
+      "notes": "Jawne zużycie i terminy dostaw, chronione przyszłe pobrania, rzeczywisty start, bilans zapasu/workera/JIT. 213/213 testów, build i Edge; backup 271 zgodnych SHA256. Bufory i formularze pozostają. Postęp 35,8% / 36,9%."
+    },
+    {
+      "date": "2026-10-14",
+      "id": "3.5",
+      "change": "kontynuacja — 3.5b2a zakończony",
+      "notes": "Rejestr miejsc i rezerwacji, przyjazdy/zwalnianie, 5 celowanych testów PASS, typecheck/build. Backup 272 zgodnych SHA256. Integracja pozostaje. Zasady testów ograniczone do niezbędnych; pełna regresja okresowo. Postęp 35,8% / 36,9%."
+    },
+    {
+      "date": "2026-10-14",
+      "id": "3.5",
+      "change": "kontynuacja — 3.5b2b pierwszy zakres zakończony",
+      "notes": "JIT z buforami, koniec pracy/zwolnienie i dwie polityki osób, worker/inspekcja. Celowane 5 PASS, jedna pełna 224/224, potem tylko podzbiór buforów, finalnie 8/8 po poprawce, build i Edge obu polityk. Backup 273 zgodne SHA256. Tryb fizyczny i dalsze zakresy nadal w trakcie; postęp 35,8% / 36,9%."
+    },
+    {
+      "date": "2026-10-14",
+      "id": "3.5",
+      "change": "kontynuacja — 3.5b2c1 zakres wewnętrzny zakończony",
+      "notes": "Atomowy rejestr korpus/bufor i adapter pojedynczego przewozu. Backup 275 SHA256, 23/23 celowanych, build PASS. Bez aktywacji harmonogramu/UI, kolejny 3.5b2c2; całość w trakcie. Postęp 35,8% / 36,9%."
+    },
+    {
+      "date": "2026-10-15",
+      "id": "3.5",
+      "change": "kontynuacja — 3.5b2c2 zakres zakończony",
+      "notes": "Fizyczny harmonogram dodatnich buforów, zestawy/dojazdy/powroty i zaopatrzenie, osobne przyjazdy/starty. Backup 277 SHA256, pełna 239/240 i poprawiony podzbiór 29/29; finalne 9/9, build i Edge obu polityk/JIT/reload PASS. Całość w trakcie, kolejny 3.5b2c3; postęp 35,8% / 36,9%."
+    },
+    {
+      "date": "2026-10-15",
+      "id": "3.5",
+      "change": "kontynuacja — 3.5b2c3 zakres zakończony",
+      "notes": "Wejście/wyjście 0, rezerwacja przyszłego odbioru przed wyjazdem, przyjazd=start, brak składowania i utrzymane blokady źródła. Backup 277 SHA256, celowane 75/75, finalne bufory 38/38, nowe 11/11, build i Edge obu polityk/JIT/reload PASS. Całość w trakcie, kolejny 3.5b2c4; postęp 35,8% / 36,9%."
+    },
+    {
+      "date": "2026-10-15",
+      "id": "3.5",
+      "change": "kontynuacja — 3.5b2c4 zakres zakończony",
+      "notes": "Zatwierdzone pozostanie korpusu na kopii do lokalnej operacji, zachowane zasoby, jawne profile i czas lokalnego oczekiwania. Backup 278 SHA256, celowane 44/44, okresowa pełna 257/257, build i Edge PASS. Całość w trakcie, kolejny 3.5c1 formularz buforów; postęp 35,8% / 36,9%."
+    },
+    {
+      "date": "2026-10-15",
+      "id": "3.5",
+      "change": "kontynuacja — 3.5c1 zakres zakończony",
+      "notes": "Formularz buforów stanowisk w UI (`DomainBuffersEditor.tsx`): pojemności, kopie, polityki operatora bbas, walidacja, historia Cofnij/Ponów, unieważnienie symulacji, odrzucenie, usuwanie. Backup 278 SHA256, celowane 66/66, nowe 3/3, build i Edge PASS (`outputs/qa/verify_3_5c1.png`). Całość w trakcie, kolejny 3.5c2 formularz zaopatrzenia; postęp 35,8% / 36,9%."
+    },
+    {
+      "date": "2026-10-15",
+      "id": "3.5",
+      "change": "kontynuacja — 3.5c2 zakres zakończony",
+      "notes": "Formularz zaopatrzenia materiałowego montażu w UI (`DomainSupplyEditor.tsx`): pozycje, harmonogramy (cykliczne i jawne), zużycie operacji, walidacja, historia Cofnij/Ponów, odrzucenie, usuwanie. Backup 279 SHA256, celowane 69/69, nowe 3/3, core 34/34, build i Edge PASS (`outputs/qa/verify_3_5c2.png`). Całość w trakcie; postęp 35,8% / 36,9%."
+    },
+    {
+      "date": "2026-10-15",
+      "id": "3.5",
+      "change": "w trakcie → wdrożone",
+      "notes": "Zbiorczy odbiór buforów i zaopatrzenia montażu: kontrakty, blokowanie bbas/released, pojemność 0, kontynuacja na kopii, dostawy/zużycie, oba formularze UI Studio (`DomainBuffersEditor`, `DomainSupplyEditor`), historia, unieważnienie. Backup 280 SHA256, pełna regresja 263/263, build i Edge PASS. Następny 3.6; postęp 25/67 = 37,3% / 25/65 = 38,5%."
+    },
+    {
+      "date": "2026-10-15",
+      "id": "3.6",
+      "change": "nierozpoczęte → w trakcie — 3.6a zakres zakończony",
+      "notes": "Moduł analityczny agregacji stanów i czasów trwania (`src/core/scheduleStateMetrics.ts`): obliczanie sumarycznych i jednostkowych czasów pracy, oczekiwań z klasyfikacją przyczyn, blokad wyjścia i ruchów transportowych. Zestawienia partii, stanowisk i pracowników. Backup 280 SHA256, celowane 3/3, 3.5 69/69, build PASS. Kolejny 3.6b UI; postęp 25/67 = 37,3% / 25/65 = 38,5%."
+    },
+    {
+      "date": "2026-10-18",
+      "id": "7.3",
+      "change": "w trakcie → wdrożone",
+      "notes": "Przezbrojenia i warianty produktów: model `ProductVariant`, `ChangeoverMatrix`, zlecenia partii `ProductionOrderBatch` ze strategiami sekwencjonowania (as-declared, minimize-changeover-greedy, heijunka-leveling), integracja z silnikiem symulacji (rejestracja bloków przezbrojeń na stanowiskach i dla pracowników), wizualizacja bloków przezbrojeń na wykresie Gantta (`GanttChart`), edytor UI `DomainChangeoverEditor.tsx` z historią i unieważnianiem symulacji, aktualizacja podręcznika użytkownika (HTML i PDF). Backup `v0.4.0_przed_7_3_20261018` (817 plików SHA256), testy 6/6 celowanych PASS, kompilacja produkcyjna PASS. Raport `docs/weryfikacja/WERYFIKACJA_PRZEZBROJEN_7_3.md`. Postęp 54/69 = 78,3% / 54/65 = 83,1%."
+    }
+  ],
+  "decisions": [
+    {
+      "topic": "Proces Eko",
+      "infoNeeded": "Czasy pomiarowe, rozdział pracy ręcznej/maszynowe, obsada i dopuszczalna równoległość montażu",
+      "status": "Do zebrania w 7.1"
+    },
+    {
+      "topic": "Hala i logistyka",
+      "infoNeeded": "Rzut z wymiarami, rzeczywiste stanowiska, strefy, trasy i bufory",
+      "status": "Do zebrania w 7.1"
+    },
+    {
+      "topic": "Odbiór modelu",
+      "infoNeeded": "Zestaw danych porównawczych, tolerancje i scenariusze",
+      "status": "Do ustalenia przed 7.2"
+    },
+    {
+      "topic": "Koszty",
+      "infoNeeded": "Stawki pracy i transportu, koszty inwestycji, okres porównania",
+      "status": "Do ustalenia przed 4.6"
+    },
+    {
+      "topic": "Import CAD",
+      "infoNeeded": "Docelowe pliki i wymagany zakres obsługi DXF",
+      "status": "Wdrożono w 5.8 (`LWPOLYLINE`/`POLYLINE`/`CIRCLE`/`LINE`/`TEXT`/`MTEXT` + `$INSUNITS` + raport pominiętej geometrii)"
+    },
+    {
+      "topic": "Dystrybucja",
+      "infoNeeded": "Docelowe komputery/przeglądarki, praca offline, sposób aktualizacji i licencjonowania produktu",
+      "status": "A-03, 2026-11-01: główny kanał web V1.0.0; techniczny odbiór prywatności/telemetrii/aktualizacji w P4a/P5, bez automatycznego deploya"
+    }
+  ],
+  "remediation": {
+    "available": true,
+    "packages": [
+      {
+        "order": 1,
+        "id": "P0",
+        "name": "ochrona danych i DR",
+        "status": "nierozpoczęte",
+        "dependencies": [],
+        "condition": "Najpierw S-03 w UI, potem wspólna ochrona i harness DR; po zatwierdzeniu planu G0",
+        "analysis": "Sol",
+        "implementation": "Sol granice danych; Terra UI; Luna harness",
+        "verification": "Sol + Opus kontrakt"
+      },
+      {
+        "order": 2,
+        "id": "PT",
+        "name": "przywrócenie wiarygodnych testów",
+        "status": "nierozpoczęte",
+        "dependencies": [
+          "P0"
+        ],
+        "condition": "Stabilne selektory i asercje potrzebne do odbioru kolejnych zmian",
+        "analysis": "Terra",
+        "implementation": "Terra / Luna mechaniczne selektory",
+        "verification": "Terra; Sol referencje"
+      },
+      {
+        "order": 3,
+        "id": "P1",
+        "name": "odbiór kontraktów integracji",
+        "status": "nierozpoczęte",
+        "dependencies": [
+          "P0",
+          "PT"
+        ],
+        "condition": "Rozstrzyga trwałość, właścicieli i migrację przed zmianą zapisu",
+        "analysis": "Sol",
+        "implementation": "Sol specyfikacja",
+        "verification": "Zewnętrzny Opus + właściciel"
+      },
+      {
+        "order": 4,
+        "id": "P4b",
+        "name": "zamknięcie publicznych powierzchni Eko",
+        "status": "nierozpoczęte",
+        "dependencies": [],
+        "condition": "Po G0; niezależne od integracji, wykonanie wcześnie ogranicza dalszą dystrybucję",
+        "analysis": "Terra",
+        "implementation": "Terra / Luna katalog",
+        "verification": "Terra + Opus powierzchnie"
+      },
+      {
+        "order": 5,
+        "id": "P4a",
+        "name": "web, telemetria i zależności",
+        "status": "nierozpoczęte",
+        "dependencies": [],
+        "condition": "Po G0; ustala środowisko i bezpieczną bazę builda",
+        "analysis": "Terra; Sol aktualizacje danych",
+        "implementation": "Terra",
+        "verification": "Terra + Sol recovery; Opus przegląd"
+      },
+      {
+        "order": 6,
+        "id": "P2a",
+        "name": "koperta, magazyn i migracje",
+        "status": "nierozpoczęte",
+        "dependencies": [
+          "P0",
+          "PT",
+          "P1",
+          "P4a"
+        ],
+        "condition": "Po G2; fundament wspólnej tożsamości, backupu i transakcji",
+        "analysis": "Sol",
+        "implementation": "Sol / Terra adaptery",
+        "verification": "Sol + zewnętrzny Opus"
+      },
+      {
+        "order": 7,
+        "id": "P2b",
+        "name": "edytory, bilans i layout",
+        "status": "nierozpoczęte",
+        "dependencies": [
+          "P2a"
+        ],
+        "condition": "Wszyscy edytowalni konsumenci kierują zmiany do właściwego właściciela",
+        "analysis": "Sol kontrakty",
+        "implementation": "Terra; Sol tożsamość/bilans",
+        "verification": "Sol + Terra UI"
+      },
+      {
+        "order": 8,
+        "id": "P2c",
+        "name": "wyniki, silniki i warianty",
+        "status": "nierozpoczęte",
+        "dependencies": [
+          "P2a",
+          "P2b"
+        ],
+        "condition": "Bez przepisywania reguł fizycznych",
+        "analysis": "Sol",
+        "implementation": "Sol; Terra UI",
+        "verification": "Sol + zewnętrzny Opus niezależnie"
+      },
+      {
+        "order": 9,
+        "id": "P2d",
+        "name": "wspólny raport",
+        "status": "nierozpoczęte",
+        "dependencies": [
+          "P2c"
+        ],
+        "condition": "Po kontraktach wyników; A4, MD i dane z jednej migawki",
+        "analysis": "Sol znaczenie wyników",
+        "implementation": "Terra; Sol KPI",
+        "verification": "Sol/Opus merytorycznie; Terra druk"
+      },
+      {
+        "order": 10,
+        "id": "P3",
+        "name": "UI3/UI4/X3",
+        "status": "nierozpoczęte",
+        "dependencies": [
+          "P0",
+          "PT",
+          "P2b",
+          "P2c",
+          "P2d",
+          "P4b"
+        ],
+        "condition": "Finalny odbiór zintegrowanego przepływu; makiety/stany można opracować po P1",
+        "analysis": "Terra",
+        "implementation": "Terra / Luna teksty i CSS",
+        "verification": "Terra; Sol stan; Opus odbiór"
+      },
+      {
+        "order": 11,
+        "id": "P4c",
+        "name": "dokumenty i wersjonowanie",
+        "status": "nierozpoczęte",
+        "dependencies": [
+          "P3",
+          "P4a",
+          "P4b"
+        ],
+        "condition": "Końcowa aktualizacja zgodna z rzeczywistym UI, bez zmiany historycznych raportów",
+        "analysis": "Terra",
+        "implementation": "Luna / Terra",
+        "verification": "Terra; Sol backup"
+      },
+      {
+        "order": 12,
+        "id": "P5",
+        "name": "odbiór, RC2 i niezależne audyty",
+        "status": "nierozpoczęte",
+        "dependencies": [
+          "P0",
+          "PT",
+          "P1",
+          "P4b",
+          "P4a",
+          "P2a",
+          "P2b",
+          "P2c",
+          "P2d",
+          "P3",
+          "P4c"
+        ],
+        "condition": "Po wszystkich poprzednich; brak automatycznego GO",
+        "analysis": "Sol",
+        "implementation": "Terra wykonania; Luna indeks",
+        "verification": "Opus i oddzielny Sol"
+      }
+    ],
+    "decisions": [
+      {
+        "id": "A-01",
+        "requirement": "Całe UI3, UI4, X3, pozostałe obowiązki UI1/UI2/U; jeden język i nawigacja, stany/braki, ochrona nadpisania",
+        "acceptance": "P0, P2b–d, P3, P4c, P5; kryteria U01–U12 i rzeczywiste UI z planu testów"
+      },
+      {
+        "id": "A-02",
+        "requirement": "Jeden projekt/rewizja/wariant dla danych wspólnych, jawne profile i źródła, trzy rodzaje wyników, unieważnianie, pełny raport i bezpieczny import starych projektów",
+        "acceptance": "P1 zatwierdzony przed P2a–d; migracje, referencje i raport tej samej rewizji PASS"
+      },
+      {
+        "id": "A-03",
+        "requirement": "Web V1.0.0, rozdzielenie projektu i telemetrii, kontrola zależności, aktualizacji i odzyskiwania na stałym origin",
+        "acceptance": "P4a, P4c, P5; dowód produkcyjnych ustawień i testów po osobnej zgodzie na deployment"
+      },
+      {
+        "id": "A-04",
+        "requirement": "Eko poza katalogiem, assetami i nowymi publicznymi dystrybucjami; regresja zachowana poza publicznym produktem",
+        "acceptance": "P4b wcześnie, powtórny odbiór w P5; manifest + negatywne HTTP + plan dla historycznej ekspozycji"
+      }
+    ],
+    "gates": [
+      {
+        "id": "G0",
+        "condition": "Zatwierdzenie planu remediacji przez właściciela",
+        "status": "otwarta",
+        "evidence": "Plan przygotowany; brak zatwierdzenia dalszej implementacji"
+      },
+      {
+        "id": "G1",
+        "condition": "Ochrona danych P0 i wykonywalne testy PT odebrane",
+        "status": "otwarta",
+        "evidence": "API S-03 odtworzone; reprodukcja UI i naprawa przed nami"
+      },
+      {
+        "id": "G2",
+        "condition": "Właściciel zatwierdził projekt P1 po niezależnym przeglądzie",
+        "status": "otwarta",
+        "evidence": "Architektura C jest rekomendacją do zatwierdzenia"
+      },
+      {
+        "id": "G3",
+        "condition": "Migracje, integracja, wspólny raport oraz UI3/UI4/X3 odebrane",
+        "status": "otwarta",
+        "evidence": "Pakiety P2a–d/P3 nierozpoczęte"
+      },
+      {
+        "id": "G4",
+        "condition": "Ukończone zmiany i pełna weryfikacja kandydata przed RC2",
+        "status": "otwarta",
+        "evidence": "Nie utworzono RC2; brak nowego pełnego baseline"
+      },
+      {
+        "id": "G5",
+        "condition": "Ponowny niezależny audyt nowego RC i odbiór właściciela",
+        "status": "otwarta",
+        "evidence": "V1 nie jest gotowe do wydania; deployment wymaga osobnej zgody"
+      }
+    ],
+    "findings": [
+      {
+        "id": "BL-01",
+        "label": "BL-01 / średnia",
+        "status": "Potwierdzone i wymaga poprawki. Atrapa DR nie spełnia portu pamięci",
+        "evidence": "verify_clean_install.mjs:newTargetPort bez removeItem; workspaceBackup.ts:restoreWorkspaceBackup wymaga tej metody. FAIL w 01.2; API z kompletnym portem PASS według 01.4, nie uruchomione ponownie tutaj",
+        "packages": "P0, P5",
+        "test": "T04–T06, ponowne verify:clean i rzeczywisty round-trip UI",
+        "closure": "Poprawiona atrapa, testy każdej fazy/slotu i UI restore PASS; oddzielna ocena web aktualizacji. Nie klasyfikować jako potwierdzonej awarii API"
+      },
+      {
+        "id": "BL-02",
+        "label": "BL-02 / wysoka",
+        "status": "Potwierdzone i wymaga poprawki. Vite 7.3.6 w zakresie advisories",
+        "evidence": "package.json + zapis npm_audit w 01.2; oficjalne GHSA sprawdzone teraz. Brak nowego npm audit lub exploita; ekspozycja dev/build różna od statycznego dist",
+        "packages": "P4a, P5",
+        "test": "T23/T24/T26; nowy audit z oceną ekspozycji i build/workery",
+        "closure": "Bezpieczna wspierana wersja/lock, brak nierozstrzygniętych istotnych HIGH/CRITICAL; testy kanału web. Nie wystarczy devDependency lub brak backendu"
+      },
+      {
+        "id": "BL-03",
+        "label": "BL-03 / średnia",
+        "status": "Potwierdzone i wymaga poprawki. Nieaktualny selektor pilota",
+        "evidence": "verify_7_9_pilot.mjs vs ProjectPackageModal.tsx; FAIL w 01.2; obecne wyszukiwanie obejmuje 16 skryptów",
+        "packages": "PT, P5; wspólny zakres S-02",
+        "test": "T07/T08",
+        "closure": "Aktywny pilot wykonuje wymagane kroki i asercje na nowym SHA; poprawka etykiety sama nie zamyka S-04"
+      },
+      {
+        "id": "S-01",
+        "label": "S-01 / wysoka",
+        "status": "Potwierdzone i wymaga poprawki. Otwarte UI3/UI4/X3 przy historycznym 100%",
+        "evidence": "PLAN 7.13.X/U i plan UI; A-01 rozstrzyga przynależność do V1. W tej pracy korygowany bieżący status, bez zmiany historycznych odbiorów",
+        "packages": "P3, P4c, P5; części P2b/d",
+        "test": "U01–U12/T20/T28",
+        "closure": "Cały obowiązkowy zakres UI i dowody X3, zgodny aktualny rejestr, brak zamknięcia przez sam build/licznik"
+      },
+      {
+        "id": "S-02",
+        "label": "S-02 / wysoka",
+        "status": "Potwierdzone i wymaga poprawki. Odbiór sprzed trzech zmian, 16 starych selektorów",
+        "evidence": "Git 6327813→1a8eb50/a88a24f/414afa2; obecne rg potwierdza listę. Nie oznacza awarii całego importera",
+        "packages": "PT, P5",
+        "test": "T07, T08, T27",
+        "closure": "Wszystkie aktywne ścieżki zmapowane i wykonane na zamrożonym nowym SHA; obsolete/internal jawnie sklasyfikowane, pokrycie zachowane"
+      },
+      {
+        "id": "S-03",
+        "label": "S-03 / wysoka, pierwsze do reprodukcji",
+        "status": "Potwierdzone i wymaga poprawki. Bezpośredni import bez ochrony pracy",
+        "evidence": "DemoCatalog.tsx:loadDirect odrzuca returned rollback; brak dirty/confirm i zewnętrznego hash katalogu; obecna reprodukcja API na Map potwierdza stratę utrwalenia poprzednich danych. UI NOT_VERIFIED. Wewnętrzny hash pakietu jest sprawdzany",
+        "packages": "P0 jako pierwszy, P5",
+        "test": "T01–T03, T06; browser repro przed poprawką",
+        "closure": "Potwierdzenie po zabezpieczeniu RAM i zapisu, poprawne hash, brak mutacji przy cancel/error, odzyskanie po reload oraz quota/conflict PASS. Sam snapshot w RAM nie zamyka problemu"
+      },
+      {
+        "id": "S-04",
+        "label": "S-04 / wysoka",
+        "status": "Potwierdzone i wymaga poprawki. Pilot bez liczbowego odbioru i udziału użytkownika",
+        "evidence": "Kod pilota nie uruchamia harmonogramów, porównanie warunkowe; screenshot CAD bez asercji. Human pilot nie ma dowodu w raportach. Zachowano istniejące wymaganie udziału początkującego",
+        "packages": "PT, P3, P5",
+        "test": "T08/T17/T18/T28",
+        "closure": "Obowiązkowe asercje liczb, CAD/3D i save/reload, raport człowieka z obserwacjami; nie zmieniać nazw screenshotów w dowody obliczeń"
+      },
+      {
+        "id": "S-05",
+        "label": "S-05 / wysoka",
+        "status": "Potwierdzone i wymaga poprawki. Nieaktualny podręcznik",
+        "evidence": "Nagłówek/otwarte C2, stare nazwy i brak tutorialu w źródle; stan opisany 01.4 porównany z planem i UI",
+        "packages": "Każdy pakiet UI, P4c, P5",
+        "test": "T19/T20/T28; render instrukcji MD/HTML/PDF",
+        "closure": "Instrukcja odpowiada rzeczywistemu UI/trybom, C2 1.2.0 i nowej wersji; tekstowa alternatywa tutorialu, aktualne screenshoty i czytelne pochodne"
+      },
+      {
+        "id": "S-06",
+        "label": "S-06 / średnia",
+        "status": "Potwierdzone i wymaga poprawki. Opis funkcji/rejestr zmian nie opisuje V1",
+        "evidence": "FUNKCJE_PROGRAMU.md ma historyczne wpisy 0.4.0/C2-B2b; obecny zakres V1 utworzony w tym zadaniu jest specyfikacją docelową",
+        "packages": "P4c, P5",
+        "test": "T28 + zgodność specyfikacja→test→UI",
+        "closure": "Aktualny opis funkcji i ograniczeń oraz nowy changelog; historyczne raporty pozostają bez zmian, wskazana errata"
+      },
+      {
+        "id": "S-07",
+        "label": "S-07 / średnia",
+        "status": "Potwierdzone i wymaga poprawki. Niespójna wersja aplikacji",
+        "evidence": "0.4.0 package/lock/HTML/APP_VERSION, 1.0.0 w starym raporcie. A-03 wybiera V1.0.0. W validateWorkspaceBackup appVersion jest niepustą metadaną, brak wymogu równości; round-trip między wydaniami nadal wymaga testu",
+        "packages": "P4c, P2a, P5",
+        "test": "T11/T25/T28",
+        "closure": "Jedno źródło appVersion/build metryki; stare backupy czytelne, oddzielne schema/format/package versions, brak nadpisania RC/tagów"
+      },
+      {
+        "id": "S-08",
+        "label": "S-08 / wysoka",
+        "status": "Potwierdzone i wymaga decyzji projektowej. Dwa dokumenty i rozdzielone raporty",
+        "evidence": "Odczyt App, types, domainProject/draft/migration, variants i report potwierdza dwa źródła. A-02 rozstrzyga cel; rekomendacja C czeka na zatwierdzenie techniczne",
+        "packages": "P1, P2a–d, P3, P5",
+        "test": "T09–T19/U01–U08",
+        "closure": "Zatwierdzony kontrakt, jeden właściciel/rewizja, migracja i przepływ przez oba adaptery bez cichej kopii, wspólny raport tej samej rewizji"
+      },
+      {
+        "id": "S-09",
+        "label": "S-09 / średnia",
+        "status": "Potwierdzone i wymaga poprawki. Sprzeczne komunikaty ograniczeń",
+        "evidence": "DomainWorkerSchedulePanel „Bufory pozostają poza zakresem”; DomainModelOverview dalsza integracja 3D; teksty direct lots vs C2-final",
+        "packages": "P2c, P3/P4c",
+        "test": "T18/U10/U12",
+        "closure": "Komunikaty zależne od rzeczywistego trybu/konfiguracji; potwierdzone bufory/3D nie opisywane jako brak, trwała reguła odróżniona od limitu implementacji"
+      },
+      {
+        "id": "S-10",
+        "label": "S-10 / średnia",
+        "status": "Potwierdzone i wymaga poprawki w ujawnianiu ograniczeń. Hipoteza o zmianie domeny: niepotwierdzona — z uzasadnieniem",
+        "evidence": "Guardy i kontrakty wskazują partial presence/routing/changeovers/direct parallel. Właściciel 2026-10-28 jednoznacznie zatwierdził odmowę zdalnego 0+0 i wielu direct incoming lots; nie wymaga to nowej decyzji ani zniesienia guardów",
+        "packages": "P2c, P3/P4c, P5",
+        "test": "T18: pozytywne i negatywne przypadki osobno",
+        "closure": "Macierz solver→kombinacja→komunikat/test w wydaniu; brak cichego ignorowania. Zamknięcie nie wymaga obsługi kombinacji jawnie wyłączonych z V1"
+      },
+      {
+        "id": "S-11",
+        "label": "S-11 / średnia",
+        "status": "Potwierdzone i wymaga decyzji projektowej. Globalny zielony raport i brak kwalifikacji",
+        "evidence": "EngineeringReportView daje „Projekt poprawny i spójny” przy braku issues; ProcessStep 4 nie ma basis. A-02 wymaga kwalifikacji; sposób przechowania/raportu zatwierdza P1",
+        "packages": "P1/P2a/P2d, P3/P5",
+        "test": "T12/T19/U07",
+        "closure": "Per-field źródła/unknown, brak zielonego zatwierdzenia dla syntetycznych/niepełnych danych, aktualny wynik z właściwego wariantu i brak zero za brak"
+      },
+      {
+        "id": "S-12",
+        "label": "S-12 / średnia",
+        "status": "Potwierdzone i wymaga poprawki. Nadmiarowe deklaracje w historycznym raporcie",
+        "evidence": "ISO/BHP, user GLB import i „gotowość komercyjna” nie mają podanej podstawy. Numeracja modułów/stan katalogu w starym raporcie nie jest aktualną specyfikacją",
+        "packages": "P4c, P5",
+        "test": "T19/T28; kontrola wszystkich nowych deklaracji",
+        "closure": "Nowa specyfikacja/errata i podręcznik bez nieudokumentowanych obietnic; nie edytować historycznego raportu 7.9. Liczba modułów builda nie jest kryterium jakości"
+      },
+      {
+        "id": "S-13",
+        "label": "S-13 / średnia",
+        "status": "Potwierdzone i wymaga decyzji projektowej dla telemetrii/aktualizacji; decyzja o kanale już rozstrzygnięta A-03",
+        "evidence": "Analytics bezwarunkowo w main; vercel.json bez własnych security headers; dawne launchery mają różne kanały. Faktyczny ruch/dashboard i ocena prawna NOT_VERIFIED",
+        "packages": "P4a/P4c/P5",
+        "test": "T23–T26",
+        "closure": "Web główny, profil analityki i informacja użytkownika zaakceptowane, test sieci/nagłówków/aktualizacji/odzyskania, odróżnienie toolchain od runtime"
+      },
+      {
+        "id": "S-14",
+        "label": "S-14 / średnia",
+        "status": "Potwierdzone i wymaga poprawki dla publikacji; prawa do danych wymagają dodatkowego testu/weryfikacji dokumentów",
+        "evidence": "Eko w katalogu i generatorze; lokalne public JSON/ZIP potwierdzone. A-04 zakazuje publicznego demo do potwierdzenia praw. Nie zweryfikowano starego hostingu/archiwów/historii i kopii osób trzecich",
+        "packages": "P4b/P5",
+        "test": "T21/T22 + rejestr praw/ekspozycji",
+        "closure": "Brak Eko w nowych public assetach i indeksie, stare URL zinwentaryzowane/rozstrzygnięte, regresja wewnętrzna zachowana; osobna decyzja o publicznym Git, bez przepisywania historii"
+      },
+      {
+        "id": "S-15",
+        "label": "S-15 / niska",
+        "status": "Potwierdzone i wymaga poprawki. Regeneracja bez ostrzeżenia",
+        "evidence": "App przycisk listy kontroli natychmiast zmienia layoutMode na auto; inna ścieżka pyta. Undo istnieje, nie zastępuje wymaganego ostrzeżenia",
+        "packages": "P0, P2b/P3",
+        "test": "T20/U05",
+        "closure": "Identyczna ochrona wszystkich wejść do regeneracji, cancel pozostawia manual layout, confirm/undo/redo/reload poprawne"
+      },
+      {
+        "id": "S-16",
+        "label": "S-16 / niska",
+        "status": "Potwierdzone i wymaga poprawki w mapie entrypointów; usuwanie kodu nie jest blokadą V1",
+        "evidence": "Wyszukiwanie odwołań potwierdza brak aktywnych importów wymienionych alternatywnych katalogów; dokładne ~2190 linii z audytu nie przeliczone. Brak nowego błędu użytkowego z samego nieużywanego pliku",
+        "packages": "P3 mapa, P5 brief audytowy",
+        "test": "T28: graf entrypoint→aktywny widok i smoke; przed ewentualnym usunięciem build/test użyć",
+        "closure": "Audytor wskazuje aktywne LayoutEditor/Scene i studio, bez pozornej oceny martwego UI. Cleanup opcjonalny, scoped i uzasadniony, nie szeroka przebudowa"
+      },
+      {
+        "id": "S-17",
+        "label": "S-17 / niska",
+        "status": "Potwierdzone i wymaga poprawki. Zwykły język ścieżki niedokończony",
+        "evidence": "„szkic 6” w harmonogramie i wariantach; App tabs zawiera starą nazwę obok nowego uiNavigation. A-01 wymaga spójności. Nie trzeba usuwać wersji z diagnostyki",
+        "packages": "P3/P4c",
+        "test": "U10/U12/T28",
+        "closure": "Jedna mapa nazw/menu/tutorialu/podręcznika; użytkownik nie musi znać schematu, źródło nadal jawne"
+      },
+      {
+        "id": "S-18",
+        "label": "S-18 / niska",
+        "status": "Potwierdzone i wymaga poprawki. Nieaktualne bieżące decyzje/statusy planu",
+        "evidence": "Tabela pytań zawiera stare „do ustalenia” i pomiary; historyczne akapity mają pozostać historią. W tej pracy dopisano aktualne decyzje i otwarte bramki",
+        "packages": "Dokumentacja planu teraz, P4c/P5",
+        "test": "T28 + plan_progress/documentation",
+        "closure": "Aktualny rejestr rozróżnia stan historyczny, docelowy i zweryfikowany; nowe decyzje web/Eko/UI/integracji widoczne, bez zmiany starych raportów"
+      }
+    ],
+    "testIds": [
+      "T01",
+      "T02",
+      "T03",
+      "T04",
+      "T05",
+      "T06",
+      "T07",
+      "T08",
+      "T09",
+      "T10",
+      "T11",
+      "T12",
+      "T13",
+      "T14",
+      "T15",
+      "T16",
+      "T17",
+      "T18",
+      "T19",
+      "T20",
+      "T21",
+      "T22",
+      "T23",
+      "T24",
+      "T25",
+      "T26",
+      "T27",
+      "T28"
+    ],
+    "uiIds": [
+      "U01",
+      "U02",
+      "U03",
+      "U04",
+      "U05",
+      "U06",
+      "U07",
+      "U08",
+      "U09",
+      "U10",
+      "U11",
+      "U12"
+    ],
+    "stats": {
+      "total": 12,
+      "done": 0,
+      "inProgress": 0,
+      "pending": 12
+    },
+    "accepted": false,
+    "next": {
+      "order": 1,
+      "id": "P0",
+      "name": "ochrona danych i DR",
+      "status": "nierozpoczęte",
+      "dependencies": [],
+      "condition": "Najpierw S-03 w UI, potem wspólna ochrona i harness DR; po zatwierdzeniu planu G0",
+      "analysis": "Sol",
+      "implementation": "Sol granice danych; Terra UI; Luna harness",
+      "verification": "Sol + Opus kontrakt"
+    }
+  },
+  "sources": [
+    {
+      "key": "main",
+      "path": "PLAN_ROZWOJU.md",
+      "available": true,
+      "modified": "2026-11-01T11:12:11.969Z"
+    },
+    {
+      "key": "plan",
+      "path": "docs/plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md",
+      "available": true,
+      "modified": "2026-11-01T11:06:40.224Z"
+    },
+    {
+      "key": "architecture",
+      "path": "docs/plany/ARCHITEKTURA_INTEGRACJI_MODELI_V1.md",
+      "available": true,
+      "modified": "2026-11-01T10:27:39.048Z"
+    },
+    {
+      "key": "scope",
+      "path": "docs/plany/ZAKRES_WYDANIA_V1_0_0.md",
+      "available": true,
+      "modified": "2026-11-01T10:31:56.795Z"
+    },
+    {
+      "key": "matrix",
+      "path": "docs/plany/MACIERZ_AUDYT_REMEDIACJA.md",
+      "available": true,
+      "modified": "2026-11-01T10:32:56.105Z"
+    },
+    {
+      "key": "tests",
+      "path": "docs/plany/PLAN_TESTOW_RC2.md",
+      "available": true,
+      "modified": "2026-11-01T10:34:51.568Z"
+    }
+  ],
+  "signature": "0751bacafa12876689bfd87d87aab7b3872c0d10a517894c4a7d9daa803ee8bc"
+};
