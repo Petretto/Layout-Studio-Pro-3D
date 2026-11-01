@@ -1,0 +1,14 @@
+{
+  "finding": "S-03",
+  "level": "API_ONLY",
+  "reproduced": true,
+  "syntheticStorageOnly": true,
+  "changedKeys": [
+    "layout-studio-v3",
+    "layout-studio-domain-v6-draft-v1",
+    "layout-studio-domain-v6-variants-v1"
+  ],
+  "previousDataPersisted": false,
+  "rollbackReturnedButNotPersisted": true,
+  "uiVerified": false
+}

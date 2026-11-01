@@ -1,11 +1,21 @@
 # Plan rozwoju i rejestr postępu aplikacji
 
 Data utworzenia: 2026-09-29  
-Ostatnia aktualizacja: 2026-10-28
+Ostatnia aktualizacja: 2026-11-01
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
 Dane testowe: Eko jest historycznym przypadkiem regresyjnym; docelowe przykłady to trzy zewnętrzne, kompletne pakiety demonstracyjne (7.12).
 
-## Bieżący pakiet — 2026-10-28
+## Bieżący pakiet — 2026-11-01: plan remediacji RC1
+
+**V1 pozostaje nieukończone; poniższe odbiory z 2026-10-28 są historyczne.** Odczytano trzy raporty 01.2/01.3/01.4 dla SHA `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`. Właściciel zatwierdził cele: A-01 — całe UI3/UI4/X3 w V1, A-02 — zintegrowany przepływ 4/6 i wspólny raport, A-03 — web V1.0.0, A-04 — Eko poza publicznym katalogiem i assetami do potwierdzenia praw. Powstał [plan remediacji](docs/plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md) z architekturą, zakresem, macierzą i testami. Projekt techniczny integracji wymaga osobnego zatwierdzenia, a planowanie nie rozpoczyna implementacji.
+
+Aktualne statusy **7.6, 7.7, 7.8, 7.9, 7.10, 7.12 i 7.13: w trakcie**. Przyczyny: niepełny dowód DR i brak odbioru kanału web; podatność Vite; nieaktualne dokumenty; niewystarczający pilot; nowy obowiązek wspólnego raportu; nowy zakres integracji **7.12.I**; otwarte UI/X3 i potwierdzona na API regresja S-03. Nie cofa to historycznych zakresów C2 B1–B3f/A2 i nie zmienia ich reguł domenowych. Model 4 nie jest usuwany ani automatycznie zastępowany 6. Nowy zakres 7.12.I obejmuje P1/P2a–d z planu remediacji, bez dodatkowego głównego ID licznika.
+
+Dowód obecnej analizy: syntetyczna reprodukcja API S-03 w `outputs/qa/plan_remediacji_rc1/`; UI nadal NOT_VERIFIED. Nie wykonano zmian funkcjonalnych, aktualizacji zależności ani deploya. **Następny pakiet po zatwierdzeniu planu: P0 — przeglądarkowa reprodukcja S-03 i ochrona wczytywania/odzyskiwania.** Sol do oceny i granic danych, Terra do wydzielonego UI, niezależny Sol/Claude Opus do odbioru kontraktu. RC2 dopiero po ukończeniu i weryfikacji zmian; gotowość V1 po ponownym audycie.
+
+Postęp po ponownym otwarciu siedmiu głównych ID: cały plan **61/72 = 84,7%**, pierwsze wydanie **61/68 = 89,7%**, Etap 7 **7/14 = 50,0%**. Licznik jest rejestrem głównych statusów, nie estymacją nakładu ani gotowości wydania.
+
+## Historyczny pakiet — 2026-10-28
 
 7.9: **pilotażowy odbiór z użytkownikiem, eliminacja błędów krytycznych i zakres gotowego pierwszego wydania (Etapy 1–7: 68/68 = 100,0%)** — przeprowadzono kompleksowy odbiór pilotażowy w czystym, bezgłowym profilu Edge CDP (`tests/qa/verify_7_9_pilot.mjs`, ALL PASS, 0 wyjątków w konsoli, 0 błędów blokujących): 1. czysty start `newProject()` bez wbudowanych projektów (0 stanowisk, 0 operacji, nota ostrzegawcza); 2. rozwijany katalog 4 pakietów pokazowych z dynamiczną walidacją sum SHA-256; 3. interaktywny tutorial Lean (7.14) — 8 kroków z nawigacją, podświetleniami i fiszkami pojęć Lean; 4. Pakiet 02 wózek warsztatowy — załoga transportowa i weryfikacja czasów partii (460 s / 385 s); 5. Pakiet 03 moduł urządzenia — zbiegające się gałęzie podmontaży, reguła braku wiszenia w powietrzu (C2: `inputCapacity >= 1` po co najmniej jednej stronie), bufory z zatrzymaniem obsady (`bbas`) oraz porównanie wariantów; 6. widok CAD 2D i 3D z modelami Blendera 5.2.1 LTS (w tym regały z wytycznych użytkownika). Suita testów regresji: **495/495 PASS** (110 core + 385 network), build produkcyjny PASS (1993 moduły), zrzuty ekranu w `outputs/qa/7_9_pilot/`. Zdefiniowano i udokumentowano granice pierwszego wydania (VSM, bezpośredni import CAD STEP/SolidWorks przesunięte do Etapu 8 / v2.0; brakujące dane Eko pozostają materiałem regresyjnym bez blokowania wydania komercyjnego). Raport: [Weryfikacja 7.9](docs/weryfikacja/WERYFIKACJA_PILOTAZU_I_ZAKRESU_WYDANIA_7_9.md). **Punkt 7.9 w pełni wdrożony — Etap 7 (14/14 = 100%) oraz Pierwsze Wydanie Komercyjne (Etapy 1–7: 68/68 = 100,0%) ZAMKNIĘTE.** Postęp: cały plan 68/72 = 94,4%, pierwsze wydanie: 68/68 = 100,0%, Etap 7: 14/14 = 100,0%.
 
@@ -74,7 +84,9 @@ Dokument jest ręcznie aktualizowanym źródłem statusu podczas kolejnych prac.
 
 Na prośbę użytkownika po każdym ukończonym pakiecie podajemy procent. Licznik obejmuje wyłącznie główne ID postaci etap.krok (np. 3.2), których status to „wdrożone”; mianownik obejmuje wszystkie główne ID. Podpunkty nie zwiększają licznika ani mianownika, aby nie liczyć pracy podwójnie. „W trakcie” nie otrzymuje umownego udziału. Każdy główny punkt ma równą wagę; wskaźnik nie jest estymacją nakładu ani czasu do wydania.
 
-Aktualnie po odbiorze pilotażowym 7.9 i zamknięciu pierwszego wydania (2026-10-28): cały plan 68/72 = **94,4%**; pierwsze wydanie 68/68 = **100,0%**; Etap 7: 14/14 = **100,0%**; Etap 6: 7/7 = **100,0%**. Weryfikacja: `node scripts/plan_progress.mjs`.
+Aktualnie po decyzjach właściciela i analizie audytu RC1 (2026-11-01): cały plan 61/72 = **84,7%**; pierwsze wydanie 61/68 = **89,7%**; Etap 7: 7/14 = **50,0%**; Etap 6: 7/7 = **100,0%**. Siedem głównych ID ponownie otwarte; plan i projekt techniczny nie są wdrożeniem. Weryfikacja: `node scripts/plan_progress.mjs`.
+
+Stan historyczny deklarowany po odbiorze 7.9 (2026-10-28): cały plan 68/72 = 94,4%; pierwsze wydanie 68/68 = 100,0%; Etap 7 14/14. Ustalenia audytu i aktualne bramki zastępują tę deklarację jako bieżącą ocenę gotowości.
 
 Stan historyczny po wdrożeniu 7.1: cały plan 67/72 = 93,1%; pierwsze wydanie 67/68 = 98,5%; Etap 7: 13/14 = 92,9%.
 
@@ -168,7 +180,7 @@ Istniejące funkcje nie są automatycznie oznaczane poniżej jako „wdrożone�
 | 4 | Balansowanie i porównywanie wariantów | wdrożone | Etapy 2–3 |
 | 5 | Edytor hali i spójny interfejs | wdrożone | Stabilny model danych; podstawowe poprawki UX od etapu 1 |
 | 6 | Biblioteka wyposażenia i 3D | wdrożone | Etapy 3 i 5 |
-| 7 | Walidacja różnych procesów i przygotowanie komercyjne | wdrożone | Etapy 1–6; zbieranie danych od początku |
+| 7 | Walidacja różnych procesów i przygotowanie komercyjne | w trakcie | Etapy 1–6; zbieranie danych od początku |
 | 8 | VSM i A3 w kolejnej wersji | nierozpoczęte | Po odbiorze pierwszego wydania |
 
 ## Bieżący pakiet
@@ -731,17 +743,17 @@ Podstawowe poprawki UX mogą być realizowane wcześniej. Większa reorganizacja
 | 7.3 | Dodać przezbrojenia i warianty produktów, z regułami kolejności oraz czasami przejść. | wdrożone |
 | 7.4 | Dodać zmienność czasów i awarie oraz powtarzalne serie eksperymentów z ziarnem losowym i zakresem niepewności wyników. | wdrożone |
 | 7.5 | Rozdzielić szczegółowo modelowane straty od rezerwy OEE, aby nie naliczać tych samych strat dwukrotnie. | wdrożone |
-| 7.6 | Ustalić sposób dystrybucji i wdrożyć instalację/uruchamianie, aktualizacje oraz kopie i odzyskiwanie projektu; sprawdzić na czystym komputerze. | wdrożone |
-| 7.7 | Przeprowadzić przegląd zależności, licencji kodu i modeli oraz bezpieczeństwa adekwatnego do sposobu dystrybucji. | wdrożone |
-| 7.8 | Zaktualizować edytowalną instrukcję ze screenshotami, pełny opis funkcji, rejestr zmian i znane ograniczenia. | wdrożone |
+| 7.6 | Ustalić sposób dystrybucji i wdrożyć instalację/uruchamianie, aktualizacje oraz kopie i odzyskiwanie projektu; sprawdzić na czystym komputerze. | w trakcie |
+| 7.7 | Przeprowadzić przegląd zależności, licencji kodu i modeli oraz bezpieczeństwa adekwatnego do sposobu dystrybucji. | w trakcie |
+| 7.8 | Zaktualizować edytowalną instrukcję ze screenshotami, pełny opis funkcji, rejestr zmian i znane ograniczenia. | w trakcie |
 | 7.8.1 | Aktualizacja podręcznika użytkownika ze screenshotami po wdrożeniu Etapów 1–4: obsługa szkicu 6, harmonogramu, wykresu Gantta, buforów, zaopatrzenia materiałowego, kompetencji obsady, bilansowania z ograniczeniami, biblioteki wariantów oraz propozycji zmian z weryfikacją symulacyjną. | wdrożone |
-| 7.8.2 | Finalna aktualizacja instrukcji, pełnego opisu funkcji i ograniczeń po zakończeniu Etapów 5–7 (nowy edytor hali, CAD 2D/3D i walidacja komercyjna). | wdrożone |
-| 7.9 | Wykonać pilotażowy odbiór z użytkownikiem na uzgodnionych scenariuszach, usunąć błędy krytyczne i zapisać zakres gotowego wydania. | wdrożone |
-| 7.10 | Dopracować wygląd generowanego raportu PDF: czytelną hierarchię, typografię, tabele i wykresy, podziały stron oraz wersję do druku. Sprawdzić na krótkim i długim projekcie, także pod kątem obciętego tekstu i zgodności liczb z wynikami aplikacji. | wdrożone |
+| 7.8.2 | Finalna aktualizacja instrukcji, pełnego opisu funkcji i ograniczeń po zakończeniu Etapów 5–7 (nowy edytor hali, CAD 2D/3D i walidacja komercyjna). | w trakcie |
+| 7.9 | Wykonać pilotażowy odbiór z użytkownikiem na uzgodnionych scenariuszach, usunąć błędy krytyczne i zapisać zakres gotowego wydania. | w trakcie |
+| 7.10 | Dopracować wygląd generowanego raportu PDF: czytelną hierarchię, typografię, tabele i wykresy, podziały stron oraz wersję do druku. Sprawdzić na krótkim i długim projekcie, także pod kątem obciętego tekstu i zgodności liczb z wynikami aplikacji. | w trakcie |
 | 7.11 | Odebrać uniwersalność na co najmniej dwóch odmiennych procesach niezależnych od Eko, w zadaniach inżyniera procesu i konsultanta Lean: wprowadzenie lub import własnych danych procesu i BOM, wariant bazowy i usprawniony, porównanie, eksport oraz ponowny odczyt projektu. Sprawdzić brak założeń zakodowanych pod Eko, rozdzielenie danych projektów i jawne wskazanie brakujących danych. | wdrożone |
 
-| 7.12 | Przygotować trzy zewnętrzne, kompletne projekty pokazowe o rosnącej złożoności, każdy w osobnym podkatalogu z projektem, operacjami/czasami, BOM, zasobami, warunkami bilansowania i symulacji, wariantami oraz instrukcją i szablonami. Jeden projekt zawiera główną nitkę i co najmniej dwie gałęzie podmontaży łączące się z nią. Dane jawnie syntetyczne; odbiór importu, symulacji, porównania i odtworzenia przez UI. | wdrożone |
-| 7.13 | Usunąć projekty wbudowane na sztywno z produkcyjnego startu i interfejsu; zapewnić pusty projekt, otwarcie własnego pliku oraz pobranie i jawne wczytanie zewnętrznych pakietów 7.12. Zachować zapisane projekty użytkownika i potrzebne fixture testowe. Brak automatycznego ładowania danych demonstracyjnych lub przywracania Eko jako fallback. Zakres obejmuje język interfejsu U i redesign X według `docs/plany/PLAN_WDROZENIA_UI_UX.md`. | wdrożone |
+| 7.12 | Przygotować trzy zewnętrzne, kompletne projekty pokazowe o rosnącej złożoności, każdy w osobnym podkatalogu z projektem, operacjami/czasami, BOM, zasobami, warunkami bilansowania i symulacji, wariantami oraz instrukcją i szablonami. Jeden projekt zawiera główną nitkę i co najmniej dwie gałęzie podmontaży łączące się z nią. Dane jawnie syntetyczne; odbiór importu, symulacji, porównania i odtworzenia przez UI. Uzupełnienie 2026-11-01: 7.12.I — integracja przepływu modeli 4/6 zgodnie z A-02, bez zmiany odebranego kontraktu C2. | w trakcie |
+| 7.13 | Usunąć projekty wbudowane na sztywno z produkcyjnego startu i interfejsu; zapewnić pusty projekt, otwarcie własnego pliku oraz pobranie i jawne wczytanie zewnętrznych pakietów 7.12. Zachować zapisane projekty użytkownika i potrzebne fixture testowe. Brak automatycznego ładowania danych demonstracyjnych lub przywracania Eko jako fallback. Zakres obejmuje język interfejsu U i redesign X według `docs/plany/PLAN_WDROZENIA_UI_UX.md`. | w trakcie |
 | 7.14 | Wdrożyć interaktywny tutorial na zewnętrznym projekcie podstawowym 7.12: import, kontrola danych, bilans, layout, symulacja, zapis wariantu, porównanie i raport. Obsłużyć pomijanie, powrót, wznowienie i zakończenie bez utraty własnej pracy użytkownika; wskazać ograniczenia przykładów. | wdrożone |
 
 **Odbiór etapu:** wyniki mieszczą się w wcześniej uzgodnionych tolerancjach dla zweryfikowanych przypadków 7.2, a scenariusze 7.11 oraz trzy zewnętrzne pakiety 7.12 potwierdzają obsługę różnych procesów. Aplikacja uruchamia się bez zaszytego projektu i umożliwia wczytanie plików oraz przejście tutorialu 7.14. Odbiór funkcjonalny na danych syntetycznych jest oddzielony od porównania z rzeczywistą produkcją; kompletność Eko nie jest bramką wydania. Aplikację można zainstalować, zaktualizować i odzyskać dane na docelowym komputerze. Dostępne są instrukcja, rejestr zmian, jawne ograniczenia i raport odbioru. Testy nie zastępują oceny technologicznej, ergonomicznej ani certyfikacji przemysłowej.
@@ -874,9 +886,11 @@ Braki nie blokują stabilizacji. Nie należy zastępować ich domysłami przedst
 | Odbiór modelu | Zestaw danych porównawczych, tolerancje i scenariusze | Do ustalenia przed 7.2 |
 | Koszty | Stawki pracy i transportu, koszty inwestycji, okres porównania | Do ustalenia przed 4.6 |
 | Import CAD | Docelowe pliki i wymagany zakres obsługi DXF | Wdrożono w 5.8 (`LWPOLYLINE`/`POLYLINE`/`CIRCLE`/`LINE`/`TEXT`/`MTEXT` + `$INSUNITS` + raport pominiętej geometrii) |
-| Dystrybucja | Docelowe komputery/przeglądarki, praca offline, sposób aktualizacji i licencjonowania produktu | Do ustalenia przed 7.6 |
+| Dystrybucja | Docelowe komputery/przeglądarki, praca offline, sposób aktualizacji i licencjonowania produktu | A-03, 2026-11-01: główny kanał web V1.0.0; techniczny odbiór prywatności/telemetrii/aktualizacji w P4a/P5, bez automatycznego deploya |
 
 ## Rejestr wykonanych prac i zmian statusów
+
+2026-11-01 — **plan remediacji RC1 i decyzje A-01–A-04**. Przywrócono „w trakcie” dla 7.6/7.7/7.8/7.9/7.10/7.12/7.13 z przyczyn opisanych w bieżącym pakiecie; wcześniejsze raporty i zakres C2 pozostają historią bez zmian. Dodano pięć dokumentów w `docs/plany/`, macierz BL-01–03/S-01–18, rekomendację architektury C, 12 pakietów i 28 scenariuszy/12 kryteriów UI. API S-03 odtworzone na sztucznej pamięci; brak nowego UI/builda/regresji aplikacji. Kontrola dokumentacji PASS (136 dokumentów, 103 lokalne odnośniki), kompletność macierzy/ID PASS, git diff --check PASS; dowody w `outputs/qa/plan_remediacji_rc1/`. Nie rozpoczęto implementacji, nie utworzono RC2 i nie ogłoszono gotowości V1. Postęp z plan_progress: 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%.
 
 2026-10-23 — **7.13.X1: rozpoczęto analizę/projektowanie**, przegląd specyfikacji Stitch, DESIGN.md oraz czterech par HTML/PNG. Powstał `docs/plany/PLAN_WDROZENIA_UI_UX.md`: sześć obszarów, cztery pakiety UI1–UI4, mapowanie komponentów, kryteria odbioru, ochrona zapisów/modeli i podział na rzeczywiste funkcje oraz demonstracyjną treść makiet. Ustalono, że UI1 może rozpocząć się przed ukończeniem A2 bez pozornego scalenia danych. Wdrożenie UI nierozpoczęte, X1 nieodebrany do pomiarów/prototypów. Tylko dokumentacja, bez testów/builda/PDF; źródła użytkownika pozostawiono bez zmian. Główne liczniki 61/72 i 61/68 bez zmiany.
 

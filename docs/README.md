@@ -14,6 +14,12 @@ Główny rejestr statusu pozostaje w [PLAN_ROZWOJU.md](../PLAN_ROZWOJU.md). Zasa
 
 Pozostałe materiały:
 
+- [Plan remediacji po audycie RC1](plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md) — decyzje A-01–A-04, pakiety, zależności, modele i bramki; plan do zatwierdzenia, bez wdrożenia.
+- [Architektura integracji modeli V1](plany/ARCHITEKTURA_INTEGRACJI_MODELI_V1.md) — trzy opcje, rekomendowani właściciele danych, migracje i wspólny raport; projekt do zatwierdzenia.
+- [Zakres wydania V1.0.0](plany/ZAKRES_WYDANIA_V1_0_0.md) — docelowy zakres, UI3/UI4/X3, web, prywatność, Eko i ograniczenia.
+- [Macierz audyt → remediacja](plany/MACIERZ_AUDYT_REMEDIACJA.md) — BL-01–03, S-01–18, luki dowodowe i warunki zamknięcia.
+- [Plan testów RC2](plany/PLAN_TESTOW_RC2.md) — scenariusze referencyjne, migracje, ochrona danych, UI/web i warunki utworzenia przyszłego RC.
+
 - [Plan audytu przedwydaniowego V1](plany/audit_plan.md) — zakres, kolejność i zasady niezależnego audytu.
 
 - [Przekazanie C2-B3-UI dla Terra](plany/PRZEKAZANIE_C2_B3_UI_TERRA.md) — formularz istniejących buforów podmontaży i kryteria odbioru; integracja harmonogramu pozostaje osobnym pakietem Sol.
@@ -30,7 +36,7 @@ Pozostałe materiały:
 - [Weryfikacja 7.14](weryfikacja/WERYFIKACJA_TUTORIALU_7_14.md) — interaktywny tutorial krok po kroku oparty na pakiecie zestawu montażowego, 8 etapów Lean, persystencja i ochrona środowiska.
 - [Weryfikacja 6.3](weryfikacja/WERYFIKACJA_MODELI_WYPOSAZENIA_6_3.md) — 10 autorskich modeli wyposażenia, regałów i wyrobów w Blenderze (5.2.1 LTS), weryfikacja GLB, budżet $\le 5000$ trójkątów i integracja wizualna.
 - [Weryfikacja 7.1](weryfikacja/WERYFIKACJA_KWALIFIKACJI_DANYCH_7_1.md) — uporządkowanie pochodzenia i kwalifikacji danych walidacyjnych (pomiary rzeczywiste, pakiety syntetyczne, fixtures testowe) i zautomatyzowany audyt.
-- [Weryfikacja 7.9](weryfikacja/WERYFIKACJA_PILOTAZU_I_ZAKRESU_WYDANIA_7_9.md) — pilotażowy odbiór z użytkownikiem, eliminacja błędów krytycznych i zakres gotowego pierwszego wydania (zamknięcie etapu 7 i całego pierwszego wydania 68/68).
+- [Historyczny raport 7.9](weryfikacja/WERYFIKACJA_PILOTAZU_I_ZAKRESU_WYDANIA_7_9.md) — deklarowany odbiór z 2026-10-28; zakres dowodów zakwestionowany w audycie RC1. Bieżące bramki i otwarte statusy określają plan remediacji oraz PLAN_ROZWOJU.md, bez zmiany treści raportu historycznego.
 
 - [Instrukcja użytkownika](../Instrukcja/Podrecznik_Uzytkownika.md) — źródło MD oraz wersje HTML/PDF w `Instrukcja/`.
 - [Projekty graficzne](../design/) — pliki `.pen`.
