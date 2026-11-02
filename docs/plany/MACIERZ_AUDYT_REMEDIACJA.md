@@ -4,6 +4,8 @@ Data: 2026-11-01. Baza: `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`. Źródła: `
 
 Status określa **rozstrzygnięcie ustalenia**, a nie ukończenie implementacji. „Potwierdzone” może wynikać z jednoznacznego kodu/dokumentów; kolumna dowodowa rozróżnia to od uruchomienia. Testy T/U są projektowanymi odbiorami z [planu testów](PLAN_TESTOW_RC2.md). Pakiety określa [plan remediacji](PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md).
 
+**Reweryfikacja aktualnego main — 2026-11-02:** po `git fetch origin` SHA `origin/main` to `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`, równy RC1 oraz podstawie utworzenia `codex/v1-audit-remediation`. Porównanie całego drzewa i obiektów plików przypisanych do każdego ustalenia nie wykazało zmian. Żadne BL/S nie jest zamknięte jako „już poprawione na main”. Poniższe statusy zachowują ważność w swoich granicach dowodowych; nowe testy runtime, UI i rejestru bezpieczeństwa nie były tu wykonywane. Zmiany planu i monitora istnieją wyłącznie na gałęzi roboczej, więc nie należy przypisywać ich aktualnemu main.
+
 ## 1. Pełna macierz BL-01–03 i S-01–18
 
 | ID / waga | Ustalenie i status weryfikacji | Dowód i luka | Pakiet | Test potwierdzający | Kryterium zamknięcia |
@@ -51,3 +53,33 @@ Nie ma podstaw do uznania BL/S ogólnie za nieaktualne tylko dlatego, że domyś
 ## 3. Reguła aktualizacji i zamknięcia
 
 Przy wykonaniu pakietu dopisać nowy SHA, test/log i datę do bieżącej macierzy. Stan „zamknięte” wymaga spełnienia kryterium w ostatniej kolumnie; samo zatwierdzenie celu A-01–A-04 nie zamyka usterki. Zmiana testu ma osobno wyjaśnione selektory i niezmienione liczby referencyjne. Nowy błąd algorytmu wymaga niezależnego uzasadnienia przed aktualizacją wzorca. Brakujące środowisko/dane/potwierdzenie praw pozostają NOT_VERIFIED i odpowiednia bramka otwarta.
+
+## 4. Rozstrzygnięcie na pobranym origin/main
+
+Metoda: tożsamość SHA i całego drzewa potwierdza brak późniejszych zmian, a porównanie blobów zapewnia punkt odniesienia per ustalenie. Dodatkowo odczytano bieżący package.json, ścieżkę importu katalogu, main.tsx i katalog demonstracji oraz wyszukano stare selektory. Pełna lista plików/hash i referencji: `outputs/qa/plan_remediacji_rc1/reconciliation_main_20261102.json`. Nie zastępuje to wykonania testów wymienionych w kolumnie „Pozostaje do sprawdzenia”.
+
+| Ustalenie | Aktualny main względem RC1 | Pozostaje do sprawdzenia / działanie |
+|---|---|---|
+| BL-01 | Nadal obecne: identyczny niekompletny port harnessu | DR w Node i rzeczywisty round-trip UI po poprawce; nie przypisywać awarii całemu API |
+| BL-02 | Nadal obecne: package/lock z Vite 7.3.6 niezmienione | Nowy skan advisories i ekspozycji w P4a; stary raport skanera nie jest wynikiem dzisiejszego skanu |
+| BL-03 | Nadal obecne: pilot i modal niezmienione | Wykonywalny import i asercje, nie tylko zmiana selektora |
+| S-01 | Nadal obecne: main deklaruje zamknięcie przy otwartym UI | Bieżące statusy skorygowano już w planie roboczym; UI3/UI4/X3 nadal wymagają odbioru |
+| S-02 | Nadal obecne: 16 plików QA ze starymi etykietami | Testy nowych kontrolek na SHA pakietu; obecny main nie zawiera ich napraw |
+| S-03 | Nadal obecne w identycznej ścieżce kodu katalogu | Pierwszy browser repro P0; wcześniejszy dowód API zachowuje datę i poziom, nie jest nowym UI PASS |
+| S-04 | Nadal obecne: pilot nie uzyskał nowych asercji | Wzmocnienie pilota i rzeczywisty początkujący użytkownik |
+| S-05 | Nadal obecne: podręcznik main bez zmian | Aktualizacja instrukcji w pakietach i P4c, sprawdzenie pochodnych |
+| S-06 | Nadal obecne: opis produktu/changelog main bez zmian | Zakres docelowy jest już w planie roboczym; aktualny opis produktu dopiero po implementacji |
+| S-07 | Nadal obecne: 0.4.0 w metadanych main i stara deklaracja V1 | Rozdział app/schema/package versions i rzeczywisty test backupów |
+| S-08 | Nadal obecne: modele, edytory i raporty main nie zostały zintegrowane | Odbiór architektury C w P1; implementacja i migracje P2a–d po zatwierdzeniu |
+| S-09 | Nadal obecne: identyczne przestarzałe komunikaty | Komunikaty zgodne z faktycznym solverem/konfiguracją i UI |
+| S-10 | Nadal obecna luka opisu ograniczeń; hipoteza uchylenia reguł nadal niepotwierdzona | Macierz guardów/testów; decyzja właściciela o direct 0+0 i wielu direct lots pozostaje wiążąca |
+| S-11 | Nadal obecne: raport i model pochodzenia main bez zmian | Źródła per pole i brak mylącego zatwierdzenia; wspólny raport po P1/P2d |
+| S-12 | Nadal obecne w niezmienionym historycznym raporcie | Aktualny zakres/errata w dokumentacji roboczej, bez przepisywania historycznego raportu |
+| S-13 | Nadal obecne: Analytics, Vercel config i launchery main bez zmian | Polityka i pomiar transmisji/aktualizacji; A-03 rozstrzyga web, nie samą telemetrię |
+| S-14 | Nadal obecne: 04_eko w katalogu main, generator bez usuwania nadmiarowych assetów | Prawa i stare publiczne powierzchnie wymagają weryfikacji; brak nowego testu produkcji |
+| S-15 | Nadal obecne: wejście regeneracji w App niezmienione | Ostrzeżenie/anulowanie/undo/reload we wszystkich wejściach |
+| S-16 | Mapa entrypointów bez zmiany; brak nowej naprawy w main | Aktualna mapa aktywnego UI dla audytora; cleanup pozostaje opcjonalny |
+| S-17 | Nadal obecne: nazwy techniczne w zwykłej ścieżce main | Terminologia UI/tutorial/instrukcja w P3/P4c |
+| S-18 | Nadal obecne w starym planie na main | Plan roboczy skorygowany, główne ID nadal otwarte; nie uznawać poprawek dokumentacji za wdrożenie funkcji |
+
+Gdy kolejny fetch ujawni nowszy main, nie wolno kopiować tej tabeli jako potwierdzenia nowej wersji. Wskazać zmienione ścieżki, powtórzyć odpowiednie odczyty/testy i podać commit każdej faktycznej poprawki; brak dowodu oznacza ponowną weryfikację, nie automatyczne zamknięcie ustalenia.

@@ -4,6 +4,16 @@ Data: 2026-11-01. Status: **projekt testów; RC2 nie istnieje i nie jest tworzon
 
 Powiązania: [pakiety](PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md), [architektura](ARCHITEKTURA_INTEGRACJI_MODELI_V1.md), [zakres i ograniczenia](ZAKRES_WYDANIA_V1_0_0.md), [ustalenia](MACIERZ_AUDYT_REMEDIACJA.md).
 
+**Reweryfikacja bazy — 2026-11-02:** RC1, pobrany `origin/main` i podstawa utworzenia `codex/v1-audit-remediation` wskazują `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`. Brak różnic kodu nie zamyka żadnego testu T/U. Bieżący kod aplikacji nie otrzymał nowych wykonań baseline/UI w tej aktualizacji planu.
+
+### Procedura przed testem i przed nowym kandydatem
+
+Przed P0 pobrać main, zapisać jego pełny SHA, HEAD gałęzi roboczej i wymagane poprzedniki oraz porównać main z RC1 i ostatnim punktem weryfikacji. T01 odtwarza S-03 w **aktualnym kodzie roboczym opartym na tym main**, nie w zamrożonym checkout RC1. Jeśli błąd został wcześniej poprawiony, zastąpić reprodukcję usterki udokumentowanym testem regresji i wskazać commit naprawy; nie zmieniać historycznego wyniku RC1.
+
+Dla każdego ustalenia BL/S i testu wskazać aktualny status, badany SHA, źródło expected i rzeczywisty zakres wykonania. Po zmianach main ponawiać testy dotkniętych ścieżek; nie przenosić PASS między różnymi implementacjami automatycznie. Dotyczy to również migracji, kwalifikacji raportu i publicznych assetów, nawet gdy główny interfejs wygląda tak samo.
+
+Nowy RC2 powstaje dopiero po ukończeniu i weryfikacji wymaganych pakietów na konkretnym nowym SHA. W metryce końcowej podać historyczny SHA RC1, aktualny pobrany SHA main, bazę gałęzi implementacyjnej i końcowy SHA RC2. Nowe niezależne audyty wykonują read-only na tym samym RC2; gałęzie `main` i `release/v1-audit-rc1` pozostają nienaruszone w zadaniu planistycznym.
+
 ## 1. Metoda, środowisko i niezależność
 
 Testować w izolowanym checkout/profilu z syntetycznymi projektami. Nigdy nie otwierać aktywnego profilu klienta, nie czyścić jego localStorage/IndexedDB i nie przenosić klientowskich plików do logów. Zewnętrzne środowisko audytora zapisuje dokładny SHA, wersję modelu, OS/Node/npm/przeglądarki, polecenia, stdout/stderr, exit code, sumy fixture i artefaktów. Wyniki: PASS, FAIL, NOT_VERIFIED, NOT_APPLICABLE z przyczyną; brak asercji lub warunkowo pominięty obowiązek nie daje PASS.

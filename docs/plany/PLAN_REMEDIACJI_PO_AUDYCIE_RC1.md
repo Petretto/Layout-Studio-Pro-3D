@@ -2,6 +2,8 @@
 
 Data: 2026-11-01. Status: **plan do zatwierdzenia**. Nie rozpoczęto implementacji pakietów. Nie utworzono RC2; V1 nie jest gotowe do wydania. Decyzje biznesowe A-01–A-04 są zatwierdzone; projekt techniczny integracji wymaga odrębnego odbioru.
 
+Aktualizacja procedury: **2026-11-02 — podstawą rozwoju jest pobrany i zweryfikowany `origin/main`, RC1 pozostaje historycznym materiałem audytu**. Reweryfikacja nie wykazała różnic main względem RC1, dlatego zakres i kolejność pakietów pozostają bez zmian. Nie wykonano nowych poprawek funkcjonalnych; zachowano wcześniej ukończony osobny monitor.
+
 ## 1. Executive Summary
 
 Najpilniejszy jest S-03: bezpośrednie wczytanie przykładu pomija ochronę aktywnej pracy. Reprodukcja na sztucznej pamięci potwierdziła zastąpienie trzech obszarów bez trwałego zachowania poprzednich danych. Test przeglądarkowy pozostaje do wykonania jako pierwsze działanie P0. Nie należy utożsamiać tego z BL-01, który jest błędem atrapy testowej DR.
@@ -12,10 +14,28 @@ Kanałem V1 jest web. Kod osadza Vercel Analytics bez warunku, więc deklaracja 
 
 ## 2. Baza, źródła i granice dowodów
 
-- Repo: `Petretto/Layout-Studio-Pro-3D`; początkowa gałąź `codex/model-process-2-1`.
-- Przed utworzeniem gałęzi: brak zmian śledzonych, liczne zastane pliki nieśledzone pozostawione bez zmian. Wybrany i przedstawiony właścicielowi SHA: `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`.
-- Gałąź planu: `codex/plan-remediacji-rc1`, utworzona od bieżącej gałęzi roboczej. Lokalny i zdalny `main`, gałąź robocza oraz `release/v1-audit-rc1` wskazywały ten sam SHA (`git ls-remote` podczas analizy). Nie znaleziono nowszego wierzchołka tych gałęzi; zgodność z RC jest wynikiem sprawdzenia, nie wyborem historycznej bazy z góry.
-- Nie zmieniono gałęzi RC1, kodu aplikacji, zależności ani danych przeglądarki. Nie wykonywano deploya ani przepisywania Git. Raporty historyczne i źródłowe audyty pozostają nienaruszone.
+- Repo: `Petretto/Layout-Studio-Pro-3D`. Historyczna pierwsza gałąź planu: `codex/plan-remediacji-rc1`; bieżąca: **`codex/v1-audit-remediation`**.
+- Po wznowieniu 2026-11-02 wykonano `git fetch origin`. Przed zmianą gałęzi HEAD wynosił `4b9d30be3cf176ab26e3c97248298b3a0e2be305`; jedyna zmiana śledzona dotyczyła daty wygenerowania `progress-dashboard/data.js`. Zachowano ją, jej kopię i zastane pliki nieśledzone.
+- Nowa nazwa gałęzi nie istniała. Utworzono ją poleceniem `git branch --no-track codex/v1-audit-remediation origin/main`; reflog potwierdza bazę. Następnie lokalnym fast-forward zachowano istniejące commity `69497e8` (plan) i `4b9d30b` (wcześniej zamówiony monitor), bez ponownej implementacji, force push lub zmiany poprzedniej gałęzi. Nowa gałąź nie śledzi main jako celu push.
+- Nie zmieniono `main` ani `release/v1-audit-rc1`. Raporty źródłowe i historyczne odbiory pozostają nienaruszone. Porównanie kodu aplikacji głównej i zależności między pobranym main a zachowanymi commitami jest puste.
+
+| Wersja / punkt odniesienia | Pełny SHA, zweryfikowany 2026-11-02 |
+|---|---|
+| Historyczny RC1 — `release/v1-audit-rc1` | `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb` |
+| Aktualny `origin/main` po fetch | `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb` |
+| Podstawa utworzenia `codex/v1-audit-remediation` | `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb` |
+
+`git rev-list --left-right --count RC1...origin/main`: **0 / 0**; `git diff RC1 origin/main`: **brak różnic w całym drzewie**. Żadne ustalenie nie zostało naprawione na main od RC1. Wszystkie 21 pozycji podlega nadal ocenom z macierzy, z zachowaniem luk UI, bezpieczeństwa i audytów niezależnych. Równość kodu nie jest nowym wykonaniem testów. Dowód: `outputs/qa/plan_remediacji_rc1/reconciliation_main_20261102.json` — referencje, obiekty plików dla każdego ustalenia, 16 skryptów ze starymi selektorami oraz sumy raportów.
+
+### Obowiązująca procedura wyboru bazy i reweryfikacji
+
+1. Przed analizą i przed każdym przyszłym pakietem zapisać aktualną gałąź, HEAD i status, zabezpieczyć lokalne zmiany, pobrać `origin` i zapisać pełny SHA `origin/main`. Nie opierać się wyłącznie na starym lokalnym wskaźniku lub nazwie gałęzi.
+2. Porównać ten main z zamrożonym RC1 i z poprzednią bazą oceny: historia commitów, pliki i istotne ścieżki wykonania. Dla każdego BL/S rozstrzygnąć: nadal występuje, poprawione z dowodem, wymaga ponownego testu albo niepotwierdzone/nieaktualne. Historyczny raport nie przesądza aktualnego statusu.
+3. Ponownie odnieść A-01–A-04 do aktualnych edytorów, właścicieli danych, migracji, raportów, kanału web i publicznych powierzchni Eko. Jeśli zmiana main narusza przyjęty kontrakt, zaktualizować projekt i jego odbiór przed implementacją zależnego pakietu; nie przenosić w ciemno projektu z RC1.
+4. Planowanie prowadzić na `codex/v1-audit-remediation`, utworzonej od zweryfikowanego main. Jeśli nazwa już istnieje, sprawdzić jej bazę i zmiany; nie resetować, nie wymuszać przesunięcia ani nie nadpisywać gałęzi. Niezgodność wymaga bezpiecznego uzgodnienia dalszej gałęzi, bez utraty dotychczasowej pracy.
+5. Każdą przyszłą implementację prowadzić jako osobny, spójny pakiet na gałęzi roboczej. Bazą jest zweryfikowany main oraz wyłącznie jawnie wskazane, wymagane i odebrane poprzedniki; jeśli nie są jeszcze w main, zapisać ich SHA. Nie zaczynać od historycznego RC1 ani nie włączać przypadkowych lokalnych zmian.
+6. Test reprodukcji przed naprawą, focused regresja i odpowiednie UI/migracje po niej. Dokumenty planistyczne ani aktualizacja snapshotu monitora nie stanowią wykonania P0–P5. Zmiana main wymaga ponownej oceny dotkniętych dowodów, nie automatycznej zmiany expected ani pełnej suity bez uzasadnienia.
+7. Dopiero po ukończeniu i weryfikacji wszystkich wymaganych pakietów przygotować nowy RC2 z konkretnym SHA, zapisać jego relację do pobranego main i uruchomić ponowny niezależny audyt. Nie przesuwać RC1 i nie deklarować gotowości V1 wcześniej. Push/deployment pozostają odrębnymi działaniami z zachowaniem zakazu automatycznego wdrożenia.
 
 Odnaleziono i odczytano **trzy raporty** w `C:\AI\Layout Gen\audit-v1-6aa84d8\reports`:
 
@@ -29,13 +49,15 @@ Są to baseline, inwentaryzacja i przegląd zakresu; **nie** trzy zakończone ni
 
 Odczytano obowiązkowe dokumenty: `PLAN_ROZWOJU.md`, `AGENTS.md`, `docs/plany/audit_plan.md`, `PLAN_WDROZENIA_UI_UX.md`, `docs/README.md`, `FUNKCJE_PROGRAMU.md` i trzy raporty. Kontrakty domenowe oraz mapa kodu są wymienione w [architekturze](ARCHITEKTURA_INTEGRACJI_MODELI_V1.md). Zakres X3 odtworzono z planu głównego; nie jest synonimem samego zakończenia stylowania UI4.
 
-### Sprawdzenia wykonane teraz
+### Sprawdzenia pierwszej wersji planu — 2026-11-01
 
 1. Odczyt Git i porównanie zdalnych wierzchołków; analiza wskazanych ścieżek kodu i dokumentów.
 2. S-03: `node outputs/qa/plan_remediacji_rc1/reproduce_s03.mjs`, Node 24.14.0, esbuild z lokalnej instalacji. Wynik w `outputs/qa/plan_remediacji_rc1/reproduce_s03.result.json`: `reproduced=true`, zmienione v4Project/domainDraft/domainVariants, poprzedni projekt nieobecny w pamięci. Migawka zwracana przez API, lecz nie zapisywana w sekwencji katalogu. Wyłącznie syntetyczna Map, bez localStorage użytkownika. Początkowe uruchomienie pomocniczego harnessu wymagało ustawienia loadera TS; po korekcie asercje przeszły. Nie zmieniono kodu importera.
 3. W kodzie `parseProjectPackage` sprawdza wewnętrzną sumę pakietu. Bezpośrednia ścieżka nie sprawdza **zewnętrznej** `packageSha256` z katalogu; nie opisywać jej jako całkowitego braku kontroli SHA.
 4. Wyszukiwanie starych etykiet potwierdziło 16 skryptów QA. Generator katalogu zapisuje aktualne pliki, lecz nie usuwa nadmiarowych. Lokalnie istnieją wygenerowane `public/demo-projects/04_eko.project.json` i `04_eko.zip` (ignorowane przez Git).
 5. Przegląd aktualnych oficjalnych źródeł Vercel/GHSA/SheetJS — odnośniki i zakres w [zakresie wydania](ZAKRES_WYDANIA_V1_0_0.md). Nie wykonano nowego npm audit, aktualizacji, pełnej regresji, builda, testu przeglądarkowego ani testu produkcji w tej analizie. Kontrole dokumentacji i postępu wykonuje się przy zamknięciu niniejszego pakietu.
+
+Reweryfikacja 2026-11-02 obejmuje fetch i porównanie całego drzewa oraz obiektów źródłowych powiązanych z 21 ustaleniami. Nie powtarzano historycznego baseline, npm audit ani testów UI produktu. Ich faktyczne wykonanie pozostaje warunkiem właściwych pakietów i nowego RC.
 
 ## 3. Decyzje → wymagania i bramki
 
@@ -258,10 +280,16 @@ Powstały: niniejszy plan, [architektura](ARCHITEKTURA_INTEGRACJI_MODELI_V1.md),
 
 **Pierwszy pakiet po zatwierdzeniu planu: P0 — przeglądarkowa reprodukcja S-03, następnie zabezpieczenie wczytywania i odzyskiwania.** Zakończenie planowania nie upoważnia do rozpoczęcia P0. Nie wykonano zmian funkcjonalnych, aktualizacji zależności ani publikacji produktu.
 
-### Weryfikacja dokumentów przy odbiorze planowania
+### Weryfikacja dokumentów przy pierwszym odbiorze planowania — 2026-11-01
 
 - `node scripts/verify_documentation.mjs`: PASS, 136 dokumentów, 103 lokalne odnośniki, bez nowych raportów w katalogu głównym.
 - `node scripts/plan_progress.mjs`: cały plan 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%, Etap 7 7/14 = 50,0%. Ponownie otwarto siedem głównych ID; podpakiety nie zwiększają mianownika.
 - Kontrola kompletności: 12 unikalnych pakietów, 21 wierszy BL/S, 28 scenariuszy T i 12 kryteriów U; wynik w `outputs/qa/plan_remediacji_rc1/planning_checks.json`. To kontrola dokumentacji, nie wykonanie tych 40 testów.
 - `git diff --check`: PASS; RC1 i sumy trzech raportów wejściowych niezmienione; brak różnic funkcjonalnych w src/scripts/tests/public i konfiguracji. Bieżące testy aplikacji/build/UI nie były uruchamiane; wykonano wyłącznie opisany test reprodukcji API oraz kontrole planowania.
 - Brak dowodu, że push nowej gałęzi nie uruchomi automatycznego Vercel preview/deploy. Zgodnie z zakazem automatycznego wdrożenia pakiet można zachować lokalnym commitem; publikacja gałęzi wymaga najpierw potwierdzonej blokady integracji lub osobnej zgody na wywołane wdrożenie.
+
+### Odbiór aktualizacji procedury — 2026-11-02
+
+Fetch origin i reweryfikacja RC1→main: ten sam SHA i całe drzewo, bez poprawek w main. Gałąź `codex/v1-audit-remediation` ma zweryfikowaną bazę main i zachowuje istniejący plan/monitor. Zmieniono pięć planów, procedurę audytu, główny rejestr i indeks; odświeżono wyłącznie pochodne dane monitora, bez zmian jego logiki. Zakres i kolejność 12 pakietów oraz rekomendacja C pozostają bez zmian.
+
+Wykonano `verify_documentation` (PASS: 137 dokumentów, 107 lokalnych odnośników), `plan_progress` (61/72 = 84,7%; V1 61/68 = 89,7%) i focused testy odczytu źródeł monitora (7/7 PASS). Log: `outputs/qa/plan_remediacji_rc1/monitor_source_check_20261102.txt`; dowód wersji i plików: `reconciliation_main_20261102.json` w tym samym katalogu. Nie wykonano nowego baseline produktu, UI produktu, skanu podatności ani deploymentu. P0 i RC2 nadal nierozpoczęte; następny pakiet wymaga zatwierdzenia planu oraz ponownej kontroli aktualności main.

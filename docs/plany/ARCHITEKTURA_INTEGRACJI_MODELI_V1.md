@@ -4,6 +4,10 @@ Data: 2026-11-01. Status: **projekt do zatwierdzenia, bez implementacji**. Decyz
 
 Dokument określa rekomendację techniczną, nie zatwierdza nowego formatu ani zmiany reguł procesu. Kolejność i bramki opisuje [plan remediacji](PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md), a odbiór [plan testów](PLAN_TESTOW_RC2.md).
 
+**Reweryfikacja 2026-11-02:** aktualny `origin/main` po `git fetch origin`, historyczny RC1 i podstawa gałęzi `codex/v1-audit-remediation` mają SHA `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`. Drzewo kodu i kontraktów nie różni się od RC1, dlatego porównanie trzech opcji oraz rekomendacja C pozostają aktualnym projektem, a nie założeniem przeniesionym z audytu. Nie zatwierdza to architektury ani nie usuwa luk dowodowych.
+
+W P1 trzeba ponownie pobrać main, porównać zmienione od tej bazy źródła modeli, edytorów, migracji, wariantów i raportów oraz potwierdzić właścicieli danych. Jeśli pojawiły się istotne zmiany, aktualizuje się macierz opcji, strategię migracji i testy **przed** odbiorem G2. Każdy późniejszy pakiet ma jawny bazowy SHA main oraz wymagane SHA odebranych poprzedników; RC1 jest materiałem porównawczym, nie domyślną bazą implementacji. Pełna procedura i metryka są w sekcji 2 planu remediacji.
+
 ## 1. Rzeczywisty stan kodu
 
 | Obszar | Właściciel i obecne zachowanie | Konsekwencja integracji |

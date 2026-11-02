@@ -14,7 +14,7 @@ Główny rejestr statusu pozostaje w [PLAN_ROZWOJU.md](../PLAN_ROZWOJU.md). Zasa
 
 Pozostałe materiały:
 
-- [Plan remediacji po audycie RC1](plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md) — decyzje A-01–A-04, pakiety, zależności, modele i bramki; plan do zatwierdzenia, bez wdrożenia.
+- [Plan remediacji po audycie RC1](plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md) — decyzje A-01–A-04, pakiety, zależności, modele i bramki; po pobraniu i ponownej weryfikacji aktualnego main 2026-11-02, z metryką RC1/main/bazy gałęzi. Plan do zatwierdzenia, bez wdrożenia poprawek.
 - [Architektura integracji modeli V1](plany/ARCHITEKTURA_INTEGRACJI_MODELI_V1.md) — trzy opcje, rekomendowani właściciele danych, migracje i wspólny raport; projekt do zatwierdzenia.
 - [Zakres wydania V1.0.0](plany/ZAKRES_WYDANIA_V1_0_0.md) — docelowy zakres, UI3/UI4/X3, web, prywatność, Eko i ograniczenia.
 - [Macierz audyt → remediacja](plany/MACIERZ_AUDYT_REMEDIACJA.md) — BL-01–03, S-01–18, luki dowodowe i warunki zamknięcia.

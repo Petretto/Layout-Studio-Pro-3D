@@ -4,6 +4,10 @@ Data: 2026-11-01. Status: **docelowy zakres zatwierdzony biznesowo, realizacja i
 
 Powiązania: [plan remediacji](PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md), [architektura](ARCHITEKTURA_INTEGRACJI_MODELI_V1.md), [testy](PLAN_TESTOW_RC2.md), [macierz audytu](MACIERZ_AUDYT_REMEDIACJA.md).
 
+**Aktualizacja 2026-11-02:** zakres oceniono względem pobranego `origin/main`, SHA `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`, identycznego z RC1 i podstawą utworzenia `codex/v1-audit-remediation`. Opis „stan w kodzie RC1” w tabelach pozostaje także stanem aktualnego main, potwierdzonym pustym diffem; nie stanowi nowego odbioru runtime/UI. A-01 nadal wymaga UI3/UI4/X3, A-02 integracji i wspólnego raportu, A-03 ustaleń web/telemetrii, a A-04 wyłączenia Eko z publicznych assetów. Nie znaleziono w main poprawek zamykających te obowiązki.
+
+Przy następnej zmianie main należy ponownie ocenić zgodność zakresu z jego kodem według procedury planu remediacji. Zachować cele biznesowe właściciela; nie uznawać nowej implementacji za odebraną bez odpowiedniego dowodu. Poniższe źródła internetowe i wyniki baseline mają daty pierwszej analizy — nie wykonano ich nowego skanu w reweryfikacji wersji.
+
 ## 1. Produkt i główny przepływ
 
 Pierwsze wydanie komercyjne jest aplikacją **webową** do projektowania i analizy linii, lokalnie przechowującą projekty w przeglądarce. Podstawowy przebieg: nowy/importowany projekt → proces i BOM → popyt/takt → bilans → layout 2D/3D → wybrany rodzaj symulacji → warianty i porównanie → wspólny raport → zapis, przenośny eksport i ponowne otwarcie. Wszędzie użytkownik widzi aktywny projekt, wariant i aktualność wyników.

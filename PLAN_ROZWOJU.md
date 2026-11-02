@@ -1,11 +1,13 @@
 # Plan rozwoju i rejestr postępu aplikacji
 
 Data utworzenia: 2026-09-29  
-Ostatnia aktualizacja: 2026-11-01
+Ostatnia aktualizacja: 2026-11-02
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
 Dane testowe: Eko jest historycznym przypadkiem regresyjnym; docelowe przykłady to trzy zewnętrzne, kompletne pakiety demonstracyjne (7.12).
 
-## Bieżący pakiet — 2026-11-01: plan remediacji RC1
+## Bieżący pakiet — 2026-11-02: plan remediacji po reweryfikacji origin/main
+
+**Wybór wersji po doprecyzowaniu właściciela:** wykonano `git fetch origin` i porównano pobrany main z historycznym RC1. SHA RC1, aktualnego `origin/main` i podstawy utworzenia `codex/v1-audit-remediation` to `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`; różnica 0/0 commitów i brak różnic drzewa. Żadne ustalenie nie zostało poprawione na main od RC1; luki UI/runtime pozostają otwarte. Szczegóły i reweryfikacja 21 pozycji w planie remediacji/macierzy. Zachowano wcześniejsze commity planu oraz monitora; nie zmieniono `main`, RC1 ani kodu aplikacji. Aktualizacja obejmuje wyłącznie dokumentację/architekturę i pochodny snapshot monitora. Przed każdym przyszłym pakietem ponowny fetch i ocena aktualności; RC1 nie jest domyślną bazą rozwoju. Zakres, kolejność pakietów i rekomendacja C pozostają bez zmian, P0 nadal nierozpoczęte.
 
 **V1 pozostaje nieukończone; poniższe odbiory z 2026-10-28 są historyczne.** Odczytano trzy raporty 01.2/01.3/01.4 dla SHA `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`. Właściciel zatwierdził cele: A-01 — całe UI3/UI4/X3 w V1, A-02 — zintegrowany przepływ 4/6 i wspólny raport, A-03 — web V1.0.0, A-04 — Eko poza publicznym katalogiem i assetami do potwierdzenia praw. Powstał [plan remediacji](docs/plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md) z architekturą, zakresem, macierzą i testami. Projekt techniczny integracji wymaga osobnego zatwierdzenia, a planowanie nie rozpoczyna implementacji.
 
@@ -891,6 +893,8 @@ Braki nie blokują stabilizacji. Nie należy zastępować ich domysłami przedst
 | Dystrybucja | Docelowe komputery/przeglądarki, praca offline, sposób aktualizacji i licencjonowania produktu | A-03, 2026-11-01: główny kanał web V1.0.0; techniczny odbiór prywatności/telemetrii/aktualizacji w P4a/P5, bez automatycznego deploya |
 
 ## Rejestr wykonanych prac i zmian statusów
+
+2026-11-02 — **dostosowanie procedury do najnowszego origin/main**. Fetch i porównanie z RC1: ten sam pełny SHA `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`, 0/0 commitów i puste drzewo różnic. Utworzono `codex/v1-audit-remediation` od main i zachowano wcześniejsze commity planu/monitora przez fast-forward. Zaktualizowano pięć planów, procedurę audytu i metrykę; osobno wskazano aktualność kodu oraz niewykonane testy. Dowód: `outputs/qa/plan_remediacji_rc1/reconciliation_main_20261102.json`. Nie rozpoczęto poprawek funkcjonalnych ani RC2; główne ID i liczniki bez zmian: 61/72 = 84,7%, V1 61/68 = 89,7%.
 
 2026-11-01 — **aktualizacja osobnego programu monitorującego postęp** na życzenie właściciela. `progress-dashboard/` pokazuje bieżący plan, remediację, decyzje, modele, zależności i bramki oraz jawne braki dowodowe. Backup sześciu plików SHA-256, focused 7/7, Edge 10 scenariuszy i kontrola wizualna PASS; raport `docs/weryfikacja/WERYFIKACJA_PULPITU_POSTEPU_RC1.md`. Uzupełniono rejestr statusów pakietów/bramek w planie remediacji; żaden pakiet remediacji nie został rozpoczęty. Aplikacja główna i RC1 bez zmian; cały plan 61/72 = 84,7%, pierwsze wydanie 61/68 = 89,7%.
 

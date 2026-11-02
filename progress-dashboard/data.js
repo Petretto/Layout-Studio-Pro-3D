@@ -3,11 +3,11 @@ window.PLAN_DATA = {
   "meta": {
     "title": "Layout Studio Pro — Plan Rozwoju i Postęp",
     "createdAt": "2026-09-29",
-    "lastUpdated": "2026-11-01",
+    "lastUpdated": "2026-11-02",
     "baseVersion": "Layout Studio Pro 3D 0.4.0",
     "hostingUrl": "https://layout-studio-pro-3d.vercel.app/",
     "repoUrl": "https://github.com/Petretto/Layout-Studio-Pro-3D",
-    "extractedAt": "2026-11-01T11:12:12.943Z"
+    "extractedAt": "2026-11-02T20:29:20.051Z"
   },
   "overall": {
     "total": 72,
@@ -1297,9 +1297,9 @@ window.PLAN_DATA = {
   "packages": [
     {
       "tag": "Bieżący pakiet",
-      "date": "2026-11-01",
+      "date": "2026-11-02",
       "historical": false,
-      "summary": "**V1 pozostaje nieukończone; poniższe odbiory z 2026-10-28 są historyczne.** Odczytano trzy raporty 01.2/01.3/01.4 dla SHA `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`. Właściciel zatwierdził cele: A-01 — całe UI3/UI4/X3 w V1, A-02 — zintegrowany przepływ 4/6 i wspólny raport, A-03 — web V1.0.0, A-04 — Eko poza publicznym katalogiem i assetami do potwierdzenia praw. Powstał [plan remediacji](docs/plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md) z architekturą, zakresem, macierzą i testami. Projekt techniczny integracji wymaga osobnego zatwierdzenia, a planowanie nie rozpoczyna implementacji.\n\nAktualne statusy **7.6, 7.7, 7.8, 7.9, 7.10, 7.12 i 7.13: w trakcie**. Przyczyny: niepełny dowód DR i brak odbioru kanału web; podatność Vite; nieaktualne dokumenty; niewystarczający pilot; nowy obowiązek wspólnego raportu; nowy zakres integracji **7.12.I**; otwarte UI/X3 i potwierdzona na API regresja S-03. Nie cofa to historycznych zakresów C2 B1–B3f/A2 i nie zmienia ich reguł domenowych. Model 4 nie jest usuwany ani automatycznie zastępowany 6. Nowy zakres 7.12.I obejmuje P1/P2a–d z planu remediacji, bez dodatkowego głównego ID licznika.\n\nDowód obecnej analizy: syntetyczna reprodukcja API S-03 w `outputs/qa/plan_remediacji_rc1/`; UI nadal NOT_VERIFIED. Nie wykonano zmian funkcjonalnych, aktualizacji zależności ani deploya. **Następny pakiet po zatwierdzeniu planu: P0 — przeglądarkowa reprodukcja S-03 i ochrona wczytywania/odzyskiwania.** Sol do oceny i granic danych, Terra do wydzielonego UI, niezależny Sol/Claude Opus do odbioru kontraktu. RC2 dopiero po ukończeniu i weryfikacji zmian; gotowość V1 po ponownym audycie.\n\nPostęp po ponownym otwarciu siedmiu głównych ID: cały plan **61/72 = 84,7%**, pierwsze wydanie **61/68 = 89,7%**, Etap 7 **7/14 = 50,0%**. Licznik jest rejestrem głównych statusów, nie estymacją nakładu ani gotowości wydania.\n\n**Dodatkowy pakiet pomocniczy — pulpit postępu, 2026-11-01:** zaktualizowano osobny `progress-dashboard/` o decyzje A-01–A-04, 12 pakietów z zależnościami/modelami, sześć otwartych bramek i macierz 21 ustaleń. Jeden parser oraz LIVE z sześciu dokumentów, bez stałego PASS i bez mieszania samego importowanego MD ze starszą remediacją. Testy monitora 7/7 PASS, rzeczywisty Edge 10 scenariuszy PASS i oględziny desktop/mobile; [raport](docs/weryfikacja/WERYFIKACJA_PULPITU_POSTEPU_RC1.md). Nie rozpoczęto P0 ani zmian funkcjonalnych aplikacji głównej. Liczniki 61/72 i 61/68 bez zmiany."
+      "summary": "**Wybór wersji po doprecyzowaniu właściciela:** wykonano `git fetch origin` i porównano pobrany main z historycznym RC1. SHA RC1, aktualnego `origin/main` i podstawy utworzenia `codex/v1-audit-remediation` to `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`; różnica 0/0 commitów i brak różnic drzewa. Żadne ustalenie nie zostało poprawione na main od RC1; luki UI/runtime pozostają otwarte. Szczegóły i reweryfikacja 21 pozycji w planie remediacji/macierzy. Zachowano wcześniejsze commity planu oraz monitora; nie zmieniono `main`, RC1 ani kodu aplikacji. Aktualizacja obejmuje wyłącznie dokumentację/architekturę i pochodny snapshot monitora. Przed każdym przyszłym pakietem ponowny fetch i ocena aktualności; RC1 nie jest domyślną bazą rozwoju. Zakres, kolejność pakietów i rekomendacja C pozostają bez zmian, P0 nadal nierozpoczęte.\n\n**V1 pozostaje nieukończone; poniższe odbiory z 2026-10-28 są historyczne.** Odczytano trzy raporty 01.2/01.3/01.4 dla SHA `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`. Właściciel zatwierdził cele: A-01 — całe UI3/UI4/X3 w V1, A-02 — zintegrowany przepływ 4/6 i wspólny raport, A-03 — web V1.0.0, A-04 — Eko poza publicznym katalogiem i assetami do potwierdzenia praw. Powstał [plan remediacji](docs/plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md) z architekturą, zakresem, macierzą i testami. Projekt techniczny integracji wymaga osobnego zatwierdzenia, a planowanie nie rozpoczyna implementacji.\n\nAktualne statusy **7.6, 7.7, 7.8, 7.9, 7.10, 7.12 i 7.13: w trakcie**. Przyczyny: niepełny dowód DR i brak odbioru kanału web; podatność Vite; nieaktualne dokumenty; niewystarczający pilot; nowy obowiązek wspólnego raportu; nowy zakres integracji **7.12.I**; otwarte UI/X3 i potwierdzona na API regresja S-03. Nie cofa to historycznych zakresów C2 B1–B3f/A2 i nie zmienia ich reguł domenowych. Model 4 nie jest usuwany ani automatycznie zastępowany 6. Nowy zakres 7.12.I obejmuje P1/P2a–d z planu remediacji, bez dodatkowego głównego ID licznika.\n\nDowód obecnej analizy: syntetyczna reprodukcja API S-03 w `outputs/qa/plan_remediacji_rc1/`; UI nadal NOT_VERIFIED. Nie wykonano zmian funkcjonalnych, aktualizacji zależności ani deploya. **Następny pakiet po zatwierdzeniu planu: P0 — przeglądarkowa reprodukcja S-03 i ochrona wczytywania/odzyskiwania.** Sol do oceny i granic danych, Terra do wydzielonego UI, niezależny Sol/Claude Opus do odbioru kontraktu. RC2 dopiero po ukończeniu i weryfikacji zmian; gotowość V1 po ponownym audycie.\n\nPostęp po ponownym otwarciu siedmiu głównych ID: cały plan **61/72 = 84,7%**, pierwsze wydanie **61/68 = 89,7%**, Etap 7 **7/14 = 50,0%**. Licznik jest rejestrem głównych statusów, nie estymacją nakładu ani gotowości wydania.\n\n**Dodatkowy pakiet pomocniczy — pulpit postępu, 2026-11-01:** zaktualizowano osobny `progress-dashboard/` o decyzje A-01–A-04, 12 pakietów z zależnościami/modelami, sześć otwartych bramek i macierz 21 ustaleń. Jeden parser oraz LIVE z sześciu dokumentów, bez stałego PASS i bez mieszania samego importowanego MD ze starszą remediacją. Testy monitora 7/7 PASS, rzeczywisty Edge 10 scenariuszy PASS i oględziny desktop/mobile; [raport](docs/weryfikacja/WERYFIKACJA_PULPITU_POSTEPU_RC1.md). Nie rozpoczęto P0 ani zmian funkcjonalnych aplikacji głównej. Liczniki 61/72 i 61/68 bez zmiany."
     },
     {
       "tag": "7.9",
@@ -3703,38 +3703,38 @@ window.PLAN_DATA = {
       "key": "main",
       "path": "PLAN_ROZWOJU.md",
       "available": true,
-      "modified": "2026-11-01T11:12:11.969Z"
+      "modified": "2026-11-02T20:28:02.887Z"
     },
     {
       "key": "plan",
       "path": "docs/plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md",
       "available": true,
-      "modified": "2026-11-01T11:06:40.224Z"
+      "modified": "2026-11-02T20:29:19.270Z"
     },
     {
       "key": "architecture",
       "path": "docs/plany/ARCHITEKTURA_INTEGRACJI_MODELI_V1.md",
       "available": true,
-      "modified": "2026-11-01T10:27:39.048Z"
+      "modified": "2026-11-02T20:27:21.974Z"
     },
     {
       "key": "scope",
       "path": "docs/plany/ZAKRES_WYDANIA_V1_0_0.md",
       "available": true,
-      "modified": "2026-11-01T10:31:56.795Z"
+      "modified": "2026-11-02T20:27:22.372Z"
     },
     {
       "key": "matrix",
       "path": "docs/plany/MACIERZ_AUDYT_REMEDIACJA.md",
       "available": true,
-      "modified": "2026-11-01T10:32:56.105Z"
+      "modified": "2026-11-02T20:28:02.222Z"
     },
     {
       "key": "tests",
       "path": "docs/plany/PLAN_TESTOW_RC2.md",
       "available": true,
-      "modified": "2026-11-01T10:34:51.568Z"
+      "modified": "2026-11-02T20:27:22.784Z"
     }
   ],
-  "signature": "0751bacafa12876689bfd87d87aab7b3872c0d10a517894c4a7d9daa803ee8bc"
+  "signature": "88c3a0225d80d6d3bac22e7539830b6e65628fc79767eea23cb77213f3fbc6b7"
 };

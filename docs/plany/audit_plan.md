@@ -1,5 +1,9 @@
 # Layout Studio Pro 3D — plan audytu przedwydaniowego V1
 
+**Aktualizacja procedury 2026-11-02 — wybór wersji i gałęzi:** raporty 01.2/01.3/01.4 dotyczą zamrożonego RC1 `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`. Prace planistyczne i późniejszy rozwój odnoszą się do najnowszego **pobranego i zweryfikowanego `origin/main`**, po porównaniu z RC1 i reweryfikacji każdego ustalenia. Gałąź planistyczna: `codex/v1-audit-remediation`, utworzona od tego main, bez nadpisywania istniejącej gałęzi. Metryka i szczegółowa procedura: [plan remediacji, sekcja 2](PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md). Fetch z 2026-11-02 potwierdził, że main nadal ma SHA RC1; nie ma różnic kodu ani poprawek od RC1. Ten wynik nie zastępuje brakujących testów.
+
+W zadaniu aktualizacji planu zmienia się wyłącznie dokumentację/architekturę oraz pochodny snapshot monitora. Istniejący monitor pozostaje zachowany; nie wdraża się nowych poprawek funkcjonalnych. Każda przyszła implementacja to osobny pakiet na gałęzi roboczej z testami/regresją. Po ukończeniu i weryfikacji pakietów powstaje RC2 z konkretnym SHA i nowy niezależny audyt. `main` i `release/v1-audit-rc1` nie są modyfikowane; wcześniejsze prompty/metryki poniżej są historyczną procedurą audytu RC, a nie zgodą na rozpoczynanie rozwoju od RC1. Zasada read-only nadal dotyczy audytu konkretnego zamrożonego kandydata.
+
 **Status:** plan do wykonania, nie raport z przeprowadzonego audytu  
 **Repozytorium:** https://github.com/Petretto/Layout-Studio-Pro-3D  
 **Widoczność zweryfikowana 2026-10-30:** `public`  
