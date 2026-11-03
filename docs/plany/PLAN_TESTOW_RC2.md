@@ -6,6 +6,8 @@ Powiązania: [pakiety](PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md), [architektura](ARCHIT
 
 **Reweryfikacja bazy — 2026-11-02:** RC1, pobrany `origin/main` i podstawa utworzenia `codex/v1-audit-remediation` wskazują `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`. Brak różnic kodu nie zamyka żadnego testu T/U. Bieżący kod aplikacji nie otrzymał nowych wykonań baseline/UI w tej aktualizacji planu.
 
+**Wykonanie P0 — 2026-11-03:** 24/24 focused, 507/507 pełne, 17/17 scenariuszy rzeczywistego UI, build i verify:clean PASS. Zakres T01–T03/T06/T20 i część round-trip/zgodności T04/T05; nie cały plan RC2. Szczegółowe mapowanie, metryka i braki w [raporcie P0](../weryfikacja/WERYFIKACJA_REMEDIACJI_P0_BEZPIECZENSTWO_DANYCH.md). Niezależne potwierdzenie nowego kandydata pozostaje wymagane; RC2 nie istnieje.
+
 ### Procedura przed testem i przed nowym kandydatem
 
 Przed P0 pobrać main, zapisać jego pełny SHA, HEAD gałęzi roboczej i wymagane poprzedniki oraz porównać main z RC1 i ostatnim punktem weryfikacji. T01 odtwarza S-03 w **aktualnym kodzie roboczym opartym na tym main**, nie w zamrożonym checkout RC1. Jeśli błąd został wcześniej poprawiony, zastąpić reprodukcję usterki udokumentowanym testem regresji i wskazać commit naprawy; nie zmieniać historycznego wyniku RC1.

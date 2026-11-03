@@ -1,0 +1,10 @@
+{
+  "result": "PASS",
+  "scope": "embedded snapshot in actual browser",
+  "completedRemediationPackages": 1,
+  "next": "PT",
+  "G1": "otwarta",
+  "G2": "otwarta",
+  "productReady": false,
+  "errors": []
+}

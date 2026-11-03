@@ -1,0 +1,17 @@
+PASS catalog preview and cancel preserve all project slots
+PASS confirmed import preserves exact previous v4/v6 family in durable rescue
+PASS rescue selected through UI restores v4/v6 after reload
+PASS pending process form blocks replacement; cancel navigation preserves form
+PASS stale approval refuses changed workspace without mutation
+PASS quota prevents replacement before first legacy-slot write
+PASS failed rollback persists lock across reload; UI recovery restores original family
+PASS domain pending form blocks sibling commit/backup; own commit persists
+PASS catalog external hash mismatch refuses preview/import
+PASS tutorial uses same rescue/confirmation workflow
+PASS tutorial exit previews original backup and explicitly restores
+PASS pending main autosave is flushed and suspended during package preview
+PASS another-tab active project survives stale preview cancellation and subsequent autosave
+PASS stale domain save preserves both external stored data and local pending form
+PASS S-15 regenerate manual layout requires confirmation and supports cancel/undo/redo/reload
+PASS cancel slow catalog download aborts without changes or reopening
+PASS actual browser downloads contain parseable rescue payloads

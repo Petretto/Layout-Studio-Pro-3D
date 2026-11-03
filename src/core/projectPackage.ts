@@ -104,7 +104,7 @@ export function makeProjectPackage(storage:Pick<StoragePort,'getItem'>,
 }
 
 /** Four family slots replace; the independent v4 scenario library is preserved byte-for-byte. */
-export function importProjectPackage(storage:StoragePort,pkg:ProjectPackage,expectedCurrentSnapshot:string){
+export function importProjectPackage(storage:StoragePort,pkg:ProjectPackage,expectedCurrentSnapshot:string,options:{beforeWrite?:(snapshot:string)=>void}={}){
   const checked=parseProjectPackage(JSON.stringify(pkg)),{data}=checked;
   const at=new Date().toISOString();
   const target=new Map<string,string>([[STORAGE_KEYS.v4Project,JSON.stringify({project:parseProject(data.source4Json),at,
@@ -113,5 +113,5 @@ export function importProjectPackage(storage:StoragePort,pkg:ProjectPackage,expe
   if(data.source5Json!==null)target.set(STORAGE_KEYS.v5Stations,JSON.stringify({project:parseStationProjectV5(data.source5Json),originalJson:data.source4Json,at,importSourceBase64:''}));
   if(data.variantsRaw!==null)target.set(DOMAIN_VARIANTS_STORAGE_KEY,data.variantsRaw);
   const payload=createWorkspaceBackup({getItem:key=>target.get(key)??null});
-  return restoreWorkspaceBackup(storage,payload,{expectedCurrentSnapshot,preserveV4ScenarioLibrary:true});
+  return restoreWorkspaceBackup(storage,payload,{expectedCurrentSnapshot,preserveV4ScenarioLibrary:true,beforeWrite:options.beforeWrite});
 }

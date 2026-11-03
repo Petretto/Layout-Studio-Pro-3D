@@ -15,11 +15,12 @@ test('Główne liczniki odpowiadają plan_progress; pakiety nie są dodatkowymi 
   assert.deepEqual([d.overall.done,d.overall.total,d.overall.inProgress],[61,72,7]);
   assert.deepEqual([d.firstRelease.done,d.firstRelease.total],[61,68]);
   assert.equal(d.stages[6].status,'w trakcie');
-  assert.equal(d.remediation.stats.total,12);assert.equal(d.remediation.stats.done,0);
+  const registryRows=input.plan.split(/\r?\n/).filter(line=>/^\| \d+ \|/.test(line)).map(line=>line.split('|').map(cell=>cell.trim()));
+  assert.equal(d.remediation.stats.total,12);assert.equal(d.remediation.stats.done,registryRows.filter(row=>row[3]==='wdrożone').length);
   assert.equal(d.remediation.findings.length,21);assert.equal(d.remediation.decisions.length,4);
   assert.equal(d.remediation.testIds.length,28);assert.equal(d.remediation.uiIds.length,12);
   assert.equal(d.remediation.gates.length,6);assert.equal(d.remediation.accepted,false);
-  assert.equal(d.remediation.next.id,'P0');assert.equal(d.packages[0].historical,false);
+  assert.equal(d.remediation.next.id,registryRows.find(row=>row[3]!=='wdrożone')[2].split(' — ')[0]);assert.equal(d.packages[0].historical,false);
   assert.ok(!d.packages[0].summary.includes('7.9 w pełni wdrożony'));
 });
 test('Nieaktualne podsumowanie wdrożone nie zamyka otwartych zadań etapu',()=>{
@@ -37,7 +38,7 @@ test('Zamknięcie bramek bez ukończenia pakietów nadal nie odbiera V1',()=>{
   assert.equal(parseRemediation(source).accepted,false);
 });
 test('Status, zależności i modele pochodzą z rejestru, nie ze snapshotu',()=>{
-  const source={...input,plan:input.plan.replace('| nierozpoczęte | — | Najpierw S-03','| w trakcie | — | Najpierw S-03')};
+  const source={...input,plan:input.plan.replace(/^(\| 1 \| P0 [^|]+\| )[^|]+/m,'$1w trakcie ')};
   const r=parseRemediation(source);assert.equal(r.packages[0].status,'w trakcie');
   assert.equal(r.stats.inProgress,1);assert.ok(r.packages[5].dependencies.includes('P1'));
   assert.match(r.packages[0].analysis,/Sol/);assert.match(r.packages[0].verification,/Opus/);

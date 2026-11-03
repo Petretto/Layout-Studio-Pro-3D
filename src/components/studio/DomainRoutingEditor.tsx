@@ -1,3 +1,4 @@
+import {usePendingDraft} from './workspaceDrafts';
 import {TransportTimingEditor} from './TransportTimingEditor';
 import {useState} from 'react';
 import {parseDomainProjectV6, type DomainProjectV6} from '../../core/domainProject';
@@ -14,6 +15,7 @@ export function DomainRoutingEditor({project, onApply, onUndo, onRedo, canUndo, 
   const [operationId, setOperationId] = useState('');
   const [error, setError] = useState('');
   const [dirty, setDirty] = useState(false);
+  usePendingDraft('DomainRoutingEditor',dirty);
   const update = (next: StationRoutingV6) => {setRouting(next); setDirty(true); setError('');};
   const emptyRef = (): StationCopyRef => ({stationId: '', copy: NaN});
   const refFields = (label: string, value: StationCopyRef, change: (value: StationCopyRef) => void) => <>

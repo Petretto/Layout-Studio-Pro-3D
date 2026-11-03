@@ -1,3 +1,4 @@
+import {usePendingDraft} from './workspaceDrafts';
 import {useState} from 'react';
 import type {DomainProjectV6} from '../../core/domainProject';
 import type {DomainPeopleChange} from '../../core/domainPeopleEditing';
@@ -18,6 +19,9 @@ export function DomainPeopleEditor({project, onApply, onUndo, onRedo, canUndo, c
   const [poolName, setPoolName] = useState('');
   const [members, setMembers] = useState<string[]>([]);
 
+  const savedWorker=project.workers.find(w=>w.id===selectedWorker),savedPool=project.workerPools.find(p=>p.id===selectedPool);
+  usePendingDraft('DomainPeopleEditor:worker',JSON.stringify([workerId,workerName])!==JSON.stringify([savedWorker?.id??'',savedWorker?.name??'']));
+  usePendingDraft('DomainPeopleEditor:pool',JSON.stringify([poolId,poolName,members])!==JSON.stringify([savedPool?.id??'',savedPool?.name??'',savedPool?.workerIds??[]]));
   const chooseWorker = (id: string) => {
     setSelectedWorker(id);
     setWorkerId(id);

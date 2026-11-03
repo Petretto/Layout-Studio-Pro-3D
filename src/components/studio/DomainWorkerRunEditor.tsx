@@ -1,3 +1,4 @@
+import {useInitialPendingDraft} from './workspaceDrafts';
 import {useState} from 'react';
 import type {DomainProjectV6} from '../../core/domainProject';
 import type {DomainWorkerRunChange} from '../../core/domainWorkerRunEditing';
@@ -20,6 +21,7 @@ export function DomainWorkerRunEditor({project, onApply, onUndo, onRedo, canUndo
       return [operation.id, {workerCount: saved ? String(saved.workerCount) : '',
         eligibleWorkerIds: [...(saved?.eligibleWorkerIds ?? [])]}];
     })));
+  useInitialPendingDraft('DomainWorkerRunEditor',{team,choices});
   const [error, setError] = useState('');
   const saved = project.workerRunSelection;
   const changed = !!saved && (JSON.stringify(team) !== JSON.stringify(saved.teamWorkerIds) ||

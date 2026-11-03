@@ -1,3 +1,4 @@
+import {usePendingDraft} from './workspaceDrafts';
 import {useState} from 'react';
 import type {DomainProjectV6} from '../../core/domainProject';
 import {validatePhysicalConcurrency, type PhysicalConcurrency, type PhysicalConcurrencyGroup} from '../../core/physicalConcurrency';
@@ -9,6 +10,7 @@ export function DomainConcurrencyEditor({project, onApply, onUndo, onRedo, canUn
   const [groups, setGroups] = useState<PhysicalConcurrencyGroup[]>(() =>
     project.physicalConcurrency?.groups.map(group => ({...group, operationIds: [...group.operationIds]})) ?? []);
   const [error, setError] = useState('');
+  usePendingDraft('DomainConcurrencyEditor',JSON.stringify(groups)!==JSON.stringify(project.physicalConcurrency?.groups??[]));
   const change = (index: number, group: PhysicalConcurrencyGroup) => {
     setGroups(groups.map((old, i) => i === index ? group : old));setError('');
   };

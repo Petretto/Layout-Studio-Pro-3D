@@ -24,7 +24,7 @@ Nie wymaga się usunięcia modeli 4/5/6. Ich dotychczasowe formaty muszą pozost
 | Bufory, materiały, korpusy, podmontaże, Gantt i diagnostyka | C2 B1–B3f wdrożone w określonym kontrakcie | Aktualne komunikaty i macierz kombinacji; brak obietnicy dowolnej konfiguracji |
 | Warianty/porównanie, koszty, przezbrojenia, MC i OEE | Istnieją w odrębnych ścieżkach | Snapshot całego wariantu, spójne warunki, źródła i ograniczenia, bez podwójnego naliczania strat |
 | A4/druk do PDF, MD, eksporty danych | Istnieją rozdzielne raporty, A4 statyczny | Jeden model raportu z wynikami i kwalifikacją tej samej rewizji |
-| Kopie/odzyskiwanie/migracje | Istnieją API i UI; BL-01 harness FAIL, S-03 niechroniona ścieżka | P0 oraz rozszerzenie backupów o nowy magazyn; testy obu formatów |
+| Kopie/odzyskiwanie/migracje | P0 lokalnie sprawdzone 2026-11-03: kopia/confirm/dirty/restore po reload i BL-01 PASS; niezależny odbiór otwarty | P0 oraz rozszerzenie backupów o nowy magazyn; testy obu formatów |
 | Pusty start, katalog i tutorial | Istnieją; katalog czterech pakietów, tutorial 8 kroków | Katalog tylko trzech dozwolonych pakietów, bezpieczny import, aktualny tutorial i pilot z człowiekiem |
 
 ## 2. UI3, UI4 i X3 — odtworzony zakres

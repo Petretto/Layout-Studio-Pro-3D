@@ -3,11 +3,11 @@ window.PLAN_DATA = {
   "meta": {
     "title": "Layout Studio Pro — Plan Rozwoju i Postęp",
     "createdAt": "2026-09-29",
-    "lastUpdated": "2026-11-02",
+    "lastUpdated": "2026-11-03",
     "baseVersion": "Layout Studio Pro 3D 0.4.0",
     "hostingUrl": "https://layout-studio-pro-3d.vercel.app/",
     "repoUrl": "https://github.com/Petretto/Layout-Studio-Pro-3D",
-    "extractedAt": "2026-11-02T20:29:20.051Z"
+    "extractedAt": "2026-11-03T16:20:28.575Z"
   },
   "overall": {
     "total": 72,
@@ -1297,8 +1297,14 @@ window.PLAN_DATA = {
   "packages": [
     {
       "tag": "Bieżący pakiet",
-      "date": "2026-11-02",
+      "date": "2026-11-03",
       "historical": false,
+      "summary": "**P0 wdrożone lokalnie** na `codex/v1-p0-data-safety`: S-03 odtworzone w odizolowanym Edge przed poprawką; wspólny podgląd katalogu/pliku/tutorialu, ochrona formularzy i autosave, trwałe kopie sprzed zastąpienia oraz blokada niepotwierdzonego odzyskiwania po reload. Naprawiono atrapę BL-01 i ostrzeżenie regeneracji S-15. Formaty 4/5/6 i reguły obliczeń pozostają zgodne; nie wprowadzono integracji P2. [Raport P0](docs/weryfikacja/WERYFIKACJA_REMEDIACJI_P0_BEZPIECZENSTWO_DANYCH.md) zawiera dowody i ograniczenia.\n\nWeryfikacja końcowa: focused **24/24**, pełna regresja **507/507**, build i `verify:clean` PASS; rzeczywisty UI **17/17** scenariuszy, odzyskiwanie po reload i pobrane pliki. Instrukcja MD/HTML/PDF i snapshot osobnego pulpitu aktualizowane. Niezależny przegląd kontraktu odzyskiwania **NOT_VERIFIED**; G1 otwarta do PT i niezależnego odbioru. G2 nadal otwarta — architektura integracji wymaga osobnego zatwierdzenia.\n\nMetryka: RC1 i pobrany przed P0 `origin/main` = `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`; baza P0 = `f1ae9cbb8cffb9a72a244bab35e995063853e52f` (main + zatwierdzony plan/monitor). Main/RC1 nie zmieniono; brak deploymentu, aktualizacji zależności i RC2.\n\n**Następny pakiet: PT — wiarygodne E2E.** Ocena/implementacja Terra, mechaniczne poprawki Luna po ustaleniu kontraktu; weryfikacja Terra, liczby referencyjne Sol i zewnętrzny Opus do niezależnego świadectwa pilota. Przed PT pobrać ponownie main i sprawdzić jego zmiany. Postęp głównych ID pozostaje **61/72 = 84,7%**, V1 **61/68 = 89,7%**, Etap 7 **7/14 = 50,0%**. Nie oznacza to gotowości wydania."
+    },
+    {
+      "tag": "**Wybór wersji po doprecyzowaniu właściciela",
+      "date": "2026-11-02",
+      "historical": true,
       "summary": "**Wybór wersji po doprecyzowaniu właściciela:** wykonano `git fetch origin` i porównano pobrany main z historycznym RC1. SHA RC1, aktualnego `origin/main` i podstawy utworzenia `codex/v1-audit-remediation` to `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`; różnica 0/0 commitów i brak różnic drzewa. Żadne ustalenie nie zostało poprawione na main od RC1; luki UI/runtime pozostają otwarte. Szczegóły i reweryfikacja 21 pozycji w planie remediacji/macierzy. Zachowano wcześniejsze commity planu oraz monitora; nie zmieniono `main`, RC1 ani kodu aplikacji. Aktualizacja obejmuje wyłącznie dokumentację/architekturę i pochodny snapshot monitora. Przed każdym przyszłym pakietem ponowny fetch i ocena aktualności; RC1 nie jest domyślną bazą rozwoju. Zakres, kolejność pakietów i rekomendacja C pozostają bez zmian, P0 nadal nierozpoczęte.\n\n**V1 pozostaje nieukończone; poniższe odbiory z 2026-10-28 są historyczne.** Odczytano trzy raporty 01.2/01.3/01.4 dla SHA `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`. Właściciel zatwierdził cele: A-01 — całe UI3/UI4/X3 w V1, A-02 — zintegrowany przepływ 4/6 i wspólny raport, A-03 — web V1.0.0, A-04 — Eko poza publicznym katalogiem i assetami do potwierdzenia praw. Powstał [plan remediacji](docs/plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md) z architekturą, zakresem, macierzą i testami. Projekt techniczny integracji wymaga osobnego zatwierdzenia, a planowanie nie rozpoczyna implementacji.\n\nAktualne statusy **7.6, 7.7, 7.8, 7.9, 7.10, 7.12 i 7.13: w trakcie**. Przyczyny: niepełny dowód DR i brak odbioru kanału web; podatność Vite; nieaktualne dokumenty; niewystarczający pilot; nowy obowiązek wspólnego raportu; nowy zakres integracji **7.12.I**; otwarte UI/X3 i potwierdzona na API regresja S-03. Nie cofa to historycznych zakresów C2 B1–B3f/A2 i nie zmienia ich reguł domenowych. Model 4 nie jest usuwany ani automatycznie zastępowany 6. Nowy zakres 7.12.I obejmuje P1/P2a–d z planu remediacji, bez dodatkowego głównego ID licznika.\n\nDowód obecnej analizy: syntetyczna reprodukcja API S-03 w `outputs/qa/plan_remediacji_rc1/`; UI nadal NOT_VERIFIED. Nie wykonano zmian funkcjonalnych, aktualizacji zależności ani deploya. **Następny pakiet po zatwierdzeniu planu: P0 — przeglądarkowa reprodukcja S-03 i ochrona wczytywania/odzyskiwania.** Sol do oceny i granic danych, Terra do wydzielonego UI, niezależny Sol/Claude Opus do odbioru kontraktu. RC2 dopiero po ukończeniu i weryfikacji zmian; gotowość V1 po ponownym audycie.\n\nPostęp po ponownym otwarciu siedmiu głównych ID: cały plan **61/72 = 84,7%**, pierwsze wydanie **61/68 = 89,7%**, Etap 7 **7/14 = 50,0%**. Licznik jest rejestrem głównych statusów, nie estymacją nakładu ani gotowości wydania.\n\n**Dodatkowy pakiet pomocniczy — pulpit postępu, 2026-11-01:** zaktualizowano osobny `progress-dashboard/` o decyzje A-01–A-04, 12 pakietów z zależnościami/modelami, sześć otwartych bramek i macierz 21 ustaleń. Jeden parser oraz LIVE z sześciu dokumentów, bez stałego PASS i bez mieszania samego importowanego MD ze starszą remediacją. Testy monitora 7/7 PASS, rzeczywisty Edge 10 scenariuszy PASS i oględziny desktop/mobile; [raport](docs/weryfikacja/WERYFIKACJA_PULPITU_POSTEPU_RC1.md). Nie rozpoczęto P0 ani zmian funkcjonalnych aplikacji głównej. Liczniki 61/72 i 61/68 bez zmiany."
     },
     {
@@ -3215,9 +3221,9 @@ window.PLAN_DATA = {
         "order": 1,
         "id": "P0",
         "name": "ochrona danych i DR",
-        "status": "nierozpoczęte",
+        "status": "wdrożone",
         "dependencies": [],
-        "condition": "Najpierw S-03 w UI, potem wspólna ochrona i harness DR; po zatwierdzeniu planu G0",
+        "condition": "Lokalnie 2026-11-03: 24/24 focused, 507/507 pełne, UI 17/17, build i DR PASS; niezależny przegląd kontraktu do odbioru G1",
         "analysis": "Sol",
         "implementation": "Sol granice danych; Terra UI; Luna harness",
         "verification": "Sol + Opus kontrakt"
@@ -3410,14 +3416,14 @@ window.PLAN_DATA = {
       {
         "id": "G0",
         "condition": "Zatwierdzenie planu remediacji przez właściciela",
-        "status": "otwarta",
-        "evidence": "Plan przygotowany; brak zatwierdzenia dalszej implementacji"
+        "status": "zamknięta",
+        "evidence": "2026-11-02: właściciel polecił działać zgodnie z planem; G2 pozostaje osobnym odbiorem architektury"
       },
       {
         "id": "G1",
         "condition": "Ochrona danych P0 i wykonywalne testy PT odebrane",
         "status": "otwarta",
-        "evidence": "API S-03 odtworzone; reprodukcja UI i naprawa przed nami"
+        "evidence": "P0 lokalnie wdrożone i sprawdzone; PT oraz niezależny odbiór kontraktu odzyskiwania pozostają otwarte"
       },
       {
         "id": "G2",
@@ -3448,11 +3454,11 @@ window.PLAN_DATA = {
       {
         "id": "BL-01",
         "label": "BL-01 / średnia",
-        "status": "Potwierdzone i wymaga poprawki. Atrapa DR nie spełnia portu pamięci",
-        "evidence": "verify_clean_install.mjs:newTargetPort bez removeItem; workspaceBackup.ts:restoreWorkspaceBackup wymaga tej metody. FAIL w 01.2; API z kompletnym portem PASS według 01.4, nie uruchomione ponownie tutaj",
-        "packages": "P0, P5",
-        "test": "T04–T06, ponowne verify:clean i rzeczywisty round-trip UI",
-        "closure": "Poprawiona atrapa, testy każdej fazy/slotu i UI restore PASS; oddzielna ocena web aktualizacji. Nie klasyfikować jako potwierdzonej awarii API"
+        "status": "Nieaktualne w gałęzi P0 — poprawione i zweryfikowane. Historyczny FAIL RC1 pozostaje ważnym dowodem",
+        "evidence": "Dodano wymagane removeItem do atrapy; verify:clean DR round-trip PASS, core 24/24 i UI restore po reload PASS; raport P0. Nie jest to nowy odbiór web ani poprawka na main",
+        "packages": "P0 lokalnie wdrożone; P5 nowy kandydat",
+        "test": "T04–T06, verify-clean.txt i regression-ui.result.json",
+        "closure": "Atrapa i lokalny round-trip zamknięte; regresja na przyszłym zamrożonym kandydacie nadal wymagana"
       },
       {
         "id": "BL-02",
@@ -3492,12 +3498,12 @@ window.PLAN_DATA = {
       },
       {
         "id": "S-03",
-        "label": "S-03 / wysoka, pierwsze do reprodukcji",
-        "status": "Potwierdzone i wymaga poprawki. Bezpośredni import bez ochrony pracy",
-        "evidence": "DemoCatalog.tsx:loadDirect odrzuca returned rollback; brak dirty/confirm i zewnętrznego hash katalogu; obecna reprodukcja API na Map potwierdza stratę utrwalenia poprzednich danych. UI NOT_VERIFIED. Wewnętrzny hash pakietu jest sprawdzany",
-        "packages": "P0 jako pierwszy, P5",
-        "test": "T01–T03, T06; browser repro przed poprawką",
-        "closure": "Potwierdzenie po zabezpieczeniu RAM i zapisu, poprawne hash, brak mutacji przy cancel/error, odzyskanie po reload oraz quota/conflict PASS. Sam snapshot w RAM nie zamyka problemu"
+        "label": "S-03 / wysoka, odtworzone jako pierwsze",
+        "status": "Wymaga dodatkowego testu niezależnego. Poprawka P0 lokalnie wdrożona; historyczny błąd RC1 potwierdzony w Edge",
+        "evidence": "Przed poprawką brak kopii poprzedniej pracy; po poprawce podgląd/hash/dirty, kopia trwała, blokada po failed rollback i odzyskanie po reload. UI 17/17, core 24/24, pełne 507/507 PASS; zewnętrzny przegląd kontraktu NOT_VERIFIED",
+        "packages": "P0 lokalnie wdrożone; G1/P5 niezależny odbiór",
+        "test": "T01–T03/T06; raport P0 i surowe dowody w p0_data_safety",
+        "closure": "Brak nadpisania przed kopią/potwierdzeniem, cancel/quota/conflict bez utraty pracy, restore po reload PASS; niezależny odbiór i regresja nowego kandydata przed zamknięciem wydania"
       },
       {
         "id": "S-04",
@@ -3601,11 +3607,11 @@ window.PLAN_DATA = {
       {
         "id": "S-15",
         "label": "S-15 / niska",
-        "status": "Potwierdzone i wymaga poprawki. Regeneracja bez ostrzeżenia",
-        "evidence": "App przycisk listy kontroli natychmiast zmienia layoutMode na auto; inna ścieżka pyta. Undo istnieje, nie zastępuje wymaganego ostrzeżenia",
-        "packages": "P0, P2b/P3",
-        "test": "T20/U05",
-        "closure": "Identyczna ochrona wszystkich wejść do regeneracji, cancel pozostawia manual layout, confirm/undo/redo/reload poprawne"
+        "status": "Nieaktualne w gałęzi P0 — poprawione i zweryfikowane lokalnie. Historycznie regeneracja pomijała ostrzeżenie",
+        "evidence": "Przycisk listy kontroli wymaga potwierdzenia; Edge: cancel zachowuje manual raw, confirm/undo/redo/reload PASS; raport P0. Pozostały całościowy UX P3 i ponowny kandydat",
+        "packages": "P0 lokalnie wdrożone; P2b/P3/P5",
+        "test": "T20/U05, scenariusz S-15 w regression-ui.result.json",
+        "closure": "Lokalna ścieżka odebrana; zachować ochronę po integracji i powtórzyć na nowym kandydacie"
       },
       {
         "id": "S-16",
@@ -3681,21 +3687,23 @@ window.PLAN_DATA = {
     ],
     "stats": {
       "total": 12,
-      "done": 0,
+      "done": 1,
       "inProgress": 0,
-      "pending": 12
+      "pending": 11
     },
     "accepted": false,
     "next": {
-      "order": 1,
-      "id": "P0",
-      "name": "ochrona danych i DR",
+      "order": 2,
+      "id": "PT",
+      "name": "przywrócenie wiarygodnych testów",
       "status": "nierozpoczęte",
-      "dependencies": [],
-      "condition": "Najpierw S-03 w UI, potem wspólna ochrona i harness DR; po zatwierdzeniu planu G0",
-      "analysis": "Sol",
-      "implementation": "Sol granice danych; Terra UI; Luna harness",
-      "verification": "Sol + Opus kontrakt"
+      "dependencies": [
+        "P0"
+      ],
+      "condition": "Stabilne selektory i asercje potrzebne do odbioru kolejnych zmian",
+      "analysis": "Terra",
+      "implementation": "Terra / Luna mechaniczne selektory",
+      "verification": "Terra; Sol referencje"
     }
   },
   "sources": [
@@ -3703,13 +3711,13 @@ window.PLAN_DATA = {
       "key": "main",
       "path": "PLAN_ROZWOJU.md",
       "available": true,
-      "modified": "2026-11-02T20:28:02.887Z"
+      "modified": "2026-11-03T16:20:28.517Z"
     },
     {
       "key": "plan",
       "path": "docs/plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md",
       "available": true,
-      "modified": "2026-11-02T20:29:19.270Z"
+      "modified": "2026-11-03T16:17:29.379Z"
     },
     {
       "key": "architecture",
@@ -3721,20 +3729,20 @@ window.PLAN_DATA = {
       "key": "scope",
       "path": "docs/plany/ZAKRES_WYDANIA_V1_0_0.md",
       "available": true,
-      "modified": "2026-11-02T20:27:22.372Z"
+      "modified": "2026-11-03T16:18:06.242Z"
     },
     {
       "key": "matrix",
       "path": "docs/plany/MACIERZ_AUDYT_REMEDIACJA.md",
       "available": true,
-      "modified": "2026-11-02T20:28:02.222Z"
+      "modified": "2026-11-03T16:18:06.242Z"
     },
     {
       "key": "tests",
       "path": "docs/plany/PLAN_TESTOW_RC2.md",
       "available": true,
-      "modified": "2026-11-02T20:27:22.784Z"
+      "modified": "2026-11-03T16:17:38.087Z"
     }
   ],
-  "signature": "88c3a0225d80d6d3bac22e7539830b6e65628fc79767eea23cb77213f3fbc6b7"
+  "signature": "3df0cafde75b3ae2ce9a03d510347b991bca592690c434f3041440dc2e9ca8e6"
 };

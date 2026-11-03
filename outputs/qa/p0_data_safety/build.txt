@@ -1,0 +1,29 @@
+
+> layout-generator-pro-3d-v2@0.4.0 prebuild
+> node scripts/prepare_demo_catalog.mjs
+
+Prepared external demo catalog: 4 projects, 9 assets; source manifests verified
+
+> layout-generator-pro-3d-v2@0.4.0 build
+> tsc && vite build
+
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 2002 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                        0.66 kB │ gzip:   0.42 kB
+dist/assets/network.worker-BwNqyDQp.js                 4.61 kB
+dist/assets/schedule.worker-DwnE5iPW.js              193.47 kB
+dist/assets/index-DUOeSWIi.css                       117.40 kB │ gzip:  21.17 kB
+dist/assets/DomainPlayback3D-B3UO596n.js               4.05 kB │ gzip:   2.01 kB
+dist/assets/Scene-CBm2Xe14.js                         53.48 kB │ gzip:  16.10 kB
+dist/assets/spreadsheets-BZe_PqlR.js                 491.83 kB │ gzip: 160.48 kB
+dist/assets/index-DqwqGVJu.js                      1,007.39 kB │ gzip: 291.19 kB
+dist/assets/parametricEquipmentModels-BVMUcXRn.js  1,710.14 kB │ gzip: 222.42 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 9.98s

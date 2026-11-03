@@ -1,4 +1,5 @@
 import React,{useState,useRef,useEffect} from 'react';
+import {usePendingDraft} from './workspaceDrafts';
 import { ProjectData,ProcessStep,BOMComponent } from '../../core/models/types';
 import { processErrors,topologicalSort,validateProject } from '../../core/validation';
 import { importProcess,importBOM,processRows,bomRows,spreadsheet,exportTemplate,PROCESS_COLUMN_DOCS,BOM_COLUMN_DOCS } from '../../core/export/excelImporter';
@@ -14,6 +15,10 @@ export function DataEditor({project:p,change,notify,confirm,kind,onExport,export
   const isProcess=kind==='process',file=useRef<HTMLInputElement>(null);
   const [step,setStep]=useState(blankStep),[bom,setBom]=useState(blankBom),[editing,setEditing]=useState<string|null>(null),[diagram,setDiagram]=useState(false),[error,setError]=useState(''),[report,setReport]=useState('');
   const [pred,setPred]=useState(''),[succ,setSucc]=useState('');
+  const savedStep=editing?p.processSteps.find(s=>s.id===editing):undefined;
+  const savedBom=editing?p.bom.find(b=>b.id===editing):undefined;
+  const bomValues=(item:BOMComponent)=>[item.partNumber,item.name,item.quantityPerUnit,item.container,item.packageQuantity,item.associatedProcessStepId,item.unitCost];
+  usePendingDraft('DataEditor',isProcess?JSON.stringify([step,pred,succ])!==JSON.stringify([savedStep??blankStep(),savedStep?.predecessorIds.join(', ')??'',savedStep?successorsOf(p.processSteps,savedStep.id).join(', '):'']):JSON.stringify(bomValues(bom))!==JSON.stringify(bomValues(savedBom??blankBom())),'main');
   const resetEditor=()=>{setEditing(null);setStep(blankStep());setBom(blankBom());setPred('');setSucc('');setError('');};
   // Undo/redo and diagram changes must not leave a stale form able to overwrite the restored data.
   useEffect(()=>{

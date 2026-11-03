@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {useInitialPendingDraft} from './workspaceDrafts';
 import type {LayoutObject} from '../../core/models/types';
 import type {StationProjectV5} from '../../core/stationMigration';
 import {corners} from '../../core/algorithms/layoutEngine';
@@ -22,6 +23,7 @@ function GeometryForm({stationId, object, apply, cancel}: {
     heightMm: String(object?.heightMm ?? ''), rotationDeg: String(object?.rotationDeg ?? ''),
   });
   const [error, setError] = useState('');
+  useInitialPendingDraft('StationGeometryEditor',{type,name,values},'main');
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     if (!name.trim() || Object.values(values).some(value => !value.trim())) {

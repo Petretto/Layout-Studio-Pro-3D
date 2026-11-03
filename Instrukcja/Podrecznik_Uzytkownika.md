@@ -1,7 +1,7 @@
 # Layout Studio Pro 3D — Podręcznik Użytkownika
 
 Wersja aplikacji: **0.4.0**
-Aktualizacja podręcznika: **28.10.2026 — C2-B3f: bezpośrednie wejście podmontażu (0) ze skończonymi/zerowymi buforami korpusów, odbiorca bezpośredni z zatrzymaniem obsady (bbas) i lokalne przekazanie 0/0; C2-B2a–B3e oraz odtwarzanie A2b2b.**
+Aktualizacja podręcznika: **03.11.2026 — P0: ochrona wczytywania, formularzy i odzyskiwania; wcześniej C2-B3f: bezpośrednie wejście podmontażu (0) ze skończonymi/zerowymi buforami korpusów, odbiorca bezpośredni z zatrzymaniem obsady (bbas) i lokalne przekazanie 0/0; C2-B2a–B3e oraz odtwarzanie A2b2b.**
 Przeznaczenie: **Inżynieria procesów produkcyjnych, bilansowanie linii, projektowanie layoutu 2D/3D oraz symulacja przepływu partii**.
 
 Źródłem edytowalnym tego podręcznika jest plik Markdown. HTML i PDF są wersjami do czytania i wydruku. Starszy dokument Word oznaczony v0.2 pozostaje materiałem historycznym. Screeny nowych funkcji pochodzą z lokalnych odbiorów UI; pokazują dane syntetyczne i nie są pomiarami produkcji klienta. Etapy 5–7 nie są jeszcze odebrane w całości.
@@ -59,7 +59,7 @@ Na Pulpicie rozwiń **Przykłady do pobrania**. Katalog zawiera trzy projekty o 
 
 1. Wybierz **Pobierz projekt JSON**, aby otrzymać jeden plik do importera pakietów. **Pobierz komplet ZIP** zawiera cały osobny katalog: 12 plików, w tym arkusze procesu/BOM, warianty, referencje, instrukcję i manifest SHA-256.
 2. Komunikat potwierdza sprawdzenie SHA-256 i przekazanie pliku do pobrania. Sprawdź jego zapis w pobranych plikach przeglądarki. Pobranie nie zmienia aktywnego projektu.
-3. Wybierz **Wczytaj pobrany pakiet**, wskaż pobrany plik `.project.json`, sprawdź podgląd, pobierz kopię ratunkową i potwierdź zastąpienie danych. Z kompletu ZIP najpierw rozpakuj katalog i wybierz `projekt-pokazowy.json`. Zamknięcie importera przed zatwierdzeniem zachowuje pracę.
+3. Wybierz **Wczytaj ten projekt**, aby otworzyć sprawdzony podgląd bez zastąpienia pracy, albo otwórz **Otwórz zaawansowany kreator pakietu z pliku** i wskaż pobrany plik `.project.json`. Sprawdź podgląd, pobierz kopię ratunkową, potwierdź jej zapisanie i wybierz **Wczytaj projekt i zastosuj**. Z kompletu ZIP najpierw rozpakuj katalog i wybierz `projekt-pokazowy.json`. Zamknięcie importera przed zatwierdzeniem zachowuje pracę.
 
 Katalog i pliki są częścią dystrybucji: lokalny serwer aplikacji udostępnia je bez internetu. Wersja hostowana wymaga połączenia do pobrania — nie zapewnia automatycznej pamięci offline. Zachowaj ZIP oraz kopie projektów lokalnie. Przy błędzie katalogu wybierz **Ponów odczyt katalogu**; przy błędzie lub niezgodnej sumie pliku ponów pobieranie po sprawdzeniu połączenia. Błąd nie zastępuje bieżącej pracy.
 
@@ -632,6 +632,10 @@ Wersja produkcyjna Layout Studio Pro 3D została zoptymalizowana pod kątem peł
 5. Kliknij **Przywróć stan z kopii i zrestartuj**. Jeśli stan pamięci zmienił się po przygotowaniu kopii ratunkowej, aplikacja nie nadpisze go — pobierz świeżą kopię i potwierdź ponownie. Po powodzeniu aplikacja od razu się przeładowuje.
 6. Przy błędzie zapisu aplikacja próbuje odtworzyć dokładny poprzedni stan i sprawdza wynik. Dostępny jest **Pobierz stan sprzed błędu**. Jeśli wycofanie nie jest potwierdzone, dalsza edycja i zamknięcie okna są zablokowane; zachowaj plik i przywróć poprawną kopię przed powrotem do pracy. Trwała awaria pamięci może uniemożliwić także wycofanie — nie ma gwarancji transakcji obejmującej wszystkie klucze przeglądarki.
 
+Przed zastosowaniem pakietu lub pełnej kopii aplikacja zapisuje także oddzielną kopię poprzedniego środowiska w tej przeglądarce i sprawdza odczyt. Brak miejsca blokuje zastąpienie. W **Kopie i odzyskiwanie → Kopie sprzed zastąpienia danych** możesz pobrać kopię na dysk lub wybrać poprawną kopię do przywrócenia. Wybór kopii nie zmienia danych; nadal wymagane są kopia bieżącego stanu i potwierdzenie. Kopie nie są automatycznie kasowane. Wyczerpanie limitu pamięci może wymagać zachowania kopii na dysku i świadomego uporządkowania danych witryny; wyczyszczenie pamięci przeglądarki usuwa również te lokalne kopie.
+
+Niepotwierdzony rollback pozostawia trwałą blokadę odzyskiwania. Po ponownym otwarciu automatyczny zapis pozostaje zatrzymany, a aplikacja otwiera odzyskiwanie. Nie usuwa automatycznie blokady po kolejnym nieudanym odtworzeniu. Uszkodzoną surową kopię można pobrać do naprawy, lecz nie jest oferowana jako poprawna kopia do automatycznego odtworzenia. Przeglądarka nie zapewnia atomowej transakcji wielu kluczy; zachowuj plik także poza przeglądarką.
+
 Kopia ratunkowa zachowuje również surowe uszkodzone zapisy, jeżeli takie były przed odzyskiwaniem. Jest wtedy materiałem do naprawy, a nie plikiem gwarantującym poprawne wczytanie. Nie ma osobnego przycisku cofającego całe odzyskiwanie jednym kliknięciem; poprawną kopię ratunkową wczytuje się tą samą ścieżką.
 
 ![Przywracanie wymaga pobrania kopii ratunkowej i potwierdzenia — dane syntetyczne](../outputs/qa/7_6a_ui/copy_and_confirmation_required.png)
@@ -725,13 +729,17 @@ Aby wyeksportować rodzinę projektu:
 Aby wczytać pakiet:
 
 1. Otwórz **Pakiet projektu** i wybierz **Plik pakietu** (JSON do 25 MB). Sprawdź podgląd nazwy, ID, liczników i pochodzenia oraz komunikat o integralności SHA-256. Nie używaj dotychczasowego importu JSON 4 do tego formatu.
-2. Import zastąpi **projekt 4, warsztat 5, szkic 6 i warianty 6**. Brak źródła 5 usuwa poprzedni warsztat; brak biblioteki 6 usuwa poprzednie warianty 6. Wspólna biblioteka scenariuszy 4 pozostaje zachowana. Przed importem zachowaj niezapisane zmiany przez zapis lub aktualny eksport JSON.
-3. Kliknij **Pobierz kopię ratunkową przed importem**, sprawdź zapisany plik i zaznacz potwierdzenie. Następnie wybierz **Wczytaj pakiet i przeładuj**. Zamknięcie okna przed tą czynnością anuluje import.
+2. Import zastąpi **projekt 4, warsztat 5, szkic 6 i warianty 6**. Brak źródła 5 usuwa poprzedni warsztat; brak biblioteki 6 usuwa poprzednie warianty 6. Wspólna biblioteka scenariuszy 4 pozostaje zachowana. Przed importem zastosuj zmiany formularzy. Niezastosowane formularze procesu/BOM, warsztatu, geometrii i szkicu 6 blokują otwarcie importera. Zmiana obszaru pozwala je jawnie odrzucić, a Anuluj pozostawia formularz. Zapis jednego edytora szkicu nie może skasować roboczej edycji innego. Błąd zapisu pozostawia lokalny formularz do zachowania lub korekty. Zastosowane zmiany projektu głównego są zapisywane przed otwarciem importera; autosave jest następnie wstrzymany.
+3. Kliknij **Pobierz kopię ratunkową przed wczytaniem**, sprawdź zapisany plik i zaznacz potwierdzenie. Następnie wybierz **Wczytaj projekt i zastosuj**. Zamknięcie okna przed tą czynnością anuluje import.
 4. Po przeładowaniu znajdziesz projekt źródłowy w głównych zakładkach, a pełny szkic i warianty w **Stanowiska v5**. Sprawdź dane przed uruchomieniem obliczeń. Ustaw jawnie liczbę sztuk, odstęp przybyć, tryb transportu/JIT i inne ustawienia eksperymentu sesji zgodnie z opisem projektu — pakiet ich automatycznie nie odtwarza.
 
-![Podgląd pakietu ze źródłem 5, szkicem 6 i jednym wariantem — syntetyczna próba formatu, nie kompletny proces](../outputs/qa/7_12a1_ui/preview_source5.png)
+![Wspólny podgląd katalogu i pliku wymaga kopii oraz potwierdzenia - dane syntetyczne](../outputs/qa/p0_data_safety/02_preview.png)
 
 Jeżeli dane zmieniły się od pobrania kopii, import zatrzyma się przed zapisem; pobierz nową kopię i ponownie sprawdź zakres. Błąd pamięci wywołuje wycofanie do poprzedniego stanu. Gdy wycofanie nie jest potwierdzone, edycja i zamknięcie okna pozostają zablokowane. **Pobierz stan sprzed błędu** zachowuje snapshot, a **Odtwórz pełną kopię ratunkową** otwiera odzyskiwanie całego środowiska. Po usunięciu przyczyny można też wczytać poprawny pakiet. Cofnij nie odwraca importu po przeładowaniu; użyj kopii ratunkowej.
+
+Tutorial zaczyna się tą samą ścieżką podglądu, kopii i potwierdzenia, również gdy bieżący projekt ma nazwę przykładu. Zakończenie tutorialu otwiera podgląd poprzedniej kopii; odtworzenie wymaga osobnego potwierdzenia. Anulowanie pozostawia bieżący stan.
+
+Zmiana aktywnego zapisu przez inne okno blokuje zapis z nieaktualnego okna. Zachowaj jego bieżącą pracę przez Eksport JSON przed przeładowaniem. To wykrywanie konfliktów, a nie tryb równoczesnej współpracy wielu osób.
 
 Poprawny import nie oznacza kompletności danych do symulacji. Główne widoki, animacja i raport 4 oraz obliczenia szkicu 6 pozostają odrębnymi ścieżkami; ich integracja jest osobnym punktem A2. Pierwszy projekt pokazowy B opisano poniżej; pozostałe powstaną w C. Pliki prób odbiorowych A/A1 nie zastępują tych przykładów.
 

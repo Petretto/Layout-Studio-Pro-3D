@@ -1,3 +1,4 @@
+import {usePendingDraft} from './workspaceDrafts';
 import {useState} from 'react';
 import {TransportResourceFields} from './TransportResourceFields';
 import type {DomainProjectV6} from '../../core/domainProject';
@@ -10,6 +11,7 @@ export function DomainTransportEditor({project,onApply,onUndo,onRedo,canUndo,can
   const [transport,setTransport]=useState<AssemblyTransport>(()=>structuredClone(project.assemblyTransport??{
     scope:'assembly-only',carts:[],conveyors:[],emptyRoutes:[],routes:[]}));
   const [dirty,setDirty]=useState(false),[error,setError]=useState('');
+  usePendingDraft('DomainTransportEditor',dirty);
   const initialChoices=()=>Object.fromEntries((project.assemblyTransport?.routes??[]).flatMap((r,i)=>r.alternatives.flatMap((a,j)=>[
     [`${i}:${j}:people`,a.workerIds.length===0],[`${i}:${j}:devices`,a.equipmentIds.length===0]])));
   const [emptyChoices,setEmptyChoices]=useState<Record<string,boolean>>(initialChoices);

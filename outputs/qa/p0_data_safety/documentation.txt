@@ -1,0 +1,1 @@
+PASS: 113 przeniesionych plików, 138 dokumentów, 112 lokalnych odnośników; katalog główny bez modeli i raportów.

@@ -1,10 +1,12 @@
 import React,{useEffect,useRef,useState} from 'react';
 import {download} from '../../core/project';
-import {describeProjectPackage,importProjectPackage,makeProjectPackage,parseProjectPackage,MAX_PROJECT_PACKAGE_BYTES,type PackageOrigin,type ProjectPackage} from '../../core/projectPackage';
+import {describeProjectPackage,makeProjectPackage,parseProjectPackage,MAX_PROJECT_PACKAGE_BYTES,type PackageOrigin,type ProjectPackage} from '../../core/projectPackage';
+import {protectedImportProjectPackage} from '../../core/workspaceReplacement';
 import {createWorkspaceBackup,WorkspaceRestoreError} from '../../core/workspaceBackup';
 import {WorkspaceBackupModal} from './WorkspaceBackupModal';
 
-export function ProjectPackageModal({isOpen,onClose,onImported,unsavedChanges=false}:{isOpen:boolean;onClose:()=>void;onImported:()=>void;unsavedChanges?:boolean}){
+export type CatalogPackageSource={url:string;sha256:string;title?:string}|{catalogId:string};
+export function ProjectPackageModal({isOpen,onClose,onImported,unsavedChanges=false,source}:{isOpen:boolean;onClose:()=>void;onImported:(snapshot:string)=>void;unsavedChanges?:boolean;source?:CatalogPackageSource}){
   const [origin,setOrigin]=useState<PackageOrigin>('unspecified'),[source4,setSource4]=useState<string>();
   const [pkg,setPkg]=useState<ProjectPackage|null>(null),[message,setMessage]=useState('');
   const [snapshot,setSnapshot]=useState<string|null>(null),[confirmed,setConfirmed]=useState(false);
@@ -13,11 +15,25 @@ export function ProjectPackageModal({isOpen,onClose,onImported,unsavedChanges=fa
   const readId=useRef(0),sourceId=useRef(0),dialog=useRef<HTMLDivElement>(null);
   useEffect(()=>{
     readId.current++;sourceId.current++;
-    if(isOpen){setOrigin('unspecified');setSource4(undefined);setPkg(null);setMessage('');setSnapshot(null);setConfirmed(false);setRecovery(null);setLocked(false);setBusy(false);setRecoveryMode(false);dialog.current?.focus();}
-    return()=>{readId.current++;sourceId.current++;};
-  },[isOpen]);
+    const controller=new AbortController();
+    if(isOpen){setOrigin('unspecified');setSource4(undefined);setPkg(null);setMessage('');setSnapshot(null);setConfirmed(false);setRecovery(null);setLocked(false);setBusy(false);setRecoveryMode(false);dialog.current?.focus();
+      if(source){const token=readId.current;setBusy(true);setMessage('Pobieranie i sprawdzanie projektu z katalogu…');
+        void(async()=>{try{
+          let selected=source;
+          if('catalogId' in selected){const catalogId=selected.catalogId;const response=await fetch(`${import.meta.env.BASE_URL}demo-projects/index.json`,{signal:controller.signal});if(!response.ok)throw new Error('Nie odczytano katalogu.');const catalog=await response.json();const entry=catalog.projects?.find((p:{id:string})=>p.id===catalogId);if(!entry||!/^[0-9]{2}_[a-z0-9_]+\.project\.json$/.test(entry.packagePath))throw new Error('Brak poprawnego projektu tutorialu w katalogu.');selected={url:`${import.meta.env.BASE_URL}demo-projects/${entry.packagePath}`,sha256:entry.packageSha256};}
+          const response=await fetch(selected.url,{signal:controller.signal});if(!response.ok)throw new Error('Nie odczytano pliku projektu.');
+          const bytes=await response.arrayBuffer();if(bytes.byteLength>MAX_PROJECT_PACKAGE_BYTES)throw new Error('Plik przekracza 25 MB.');
+          const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');
+          if(hash!==selected.sha256)throw new Error('Niezgodna suma SHA-256 katalogu. Bieżące dane zachowano.');
+          const checked=parseProjectPackage(new TextDecoder().decode(bytes));if(token!==readId.current)return;
+          setPkg(checked);setMessage('Projekt sprawdzony: suma katalogu i wewnętrzna suma pakietu zgodne. Pobierz kopię przed zastąpieniem.');
+        }catch(error){if(token===readId.current&&!controller.signal.aborted)setMessage((error as Error).message);}finally{if(token===readId.current)setBusy(false);}})();
+      }
+    }
+    return()=>{controller.abort();readId.current++;sourceId.current++;};
+  },[isOpen,source]);
   if(!isOpen)return null;
-  if(recoveryMode)return <WorkspaceBackupModal isOpen onClose={()=>setRecoveryMode(false)} onRestored={onImported}/>;
+  if(recoveryMode)return <WorkspaceBackupModal isOpen recoveryRequired unsavedChanges={unsavedChanges} onClose={()=>setRecoveryMode(false)} onRestored={()=>onImported('')}/>;
   const fail=(e:unknown)=>setMessage((e as Error).message);
   const read=async(event:React.ChangeEvent<HTMLInputElement>,original=false)=>{
     const file=event.target.files?.[0];event.target.value='';
@@ -45,7 +61,7 @@ export function ProjectPackageModal({isOpen,onClose,onImported,unsavedChanges=fa
   const accept=()=>{
     if(!pkg||!snapshot||!confirmed||busy||unsavedChanges)return;
     setBusy(true);
-    try{importProjectPackage(localStorage,pkg,snapshot);onImported();window.location.reload();}
+    try{protectedImportProjectPackage(localStorage,pkg,{snapshot,confirmed,unsavedChanges,rescueId:crypto.randomUUID()});onImported(snapshot);window.location.reload();}
     catch(e){if(e instanceof WorkspaceRestoreError){setRecovery(e.rollbackSnapshot);if(e.rollbackErrors.length)setLocked(true);}setSnapshot(null);setConfirmed(false);setBusy(false);fail(e);}
   };
   const info=pkg?describeProjectPackage(pkg):null;
@@ -65,10 +81,10 @@ export function ProjectPackageModal({isOpen,onClose,onImported,unsavedChanges=fa
         <label className="block text-sm">Plik pakietu (do 25 MB)<input aria-label="Plik pakietu projektu" type="file" accept=".json,.project.json" disabled={busy} onChange={e=>void read(e)}/></label>
         {info&&pkg&&<div className="space-y-3 bg-slate-800/60 p-3 rounded-lg border border-slate-700">
           <p className="text-sm"><strong>{info.name}</strong> · ID: {info.id}<br/>Operacje: {info.operations} · Stanowiska: {info.stations} · Obsada: {info.workers} os. · Warianty: {info.variants}<br/>Kwalifikacja danych: {info.dataOrigin}</p>
-          <p className="text-amber-300 text-xs">Wczytanie pakietu zastąpi bieżący projekt, stanowiska oraz warianty. Przed wczytaniem zostanie utworzona automatyczna kopia ratunkowa.</p>
-          <button disabled={busy} onClick={rescue}>Pobierz kopię ratunkową przed wczytaniem</button>
+          <p className="text-amber-300 text-xs">Wczytanie zastąpi bieżący projekt, stanowiska oraz warianty. Najpierw pobierz i sprawdź kopię. Po potwierdzeniu zapiszemy dodatkową kopię w tej przeglądarce; brak miejsca zablokuje wczytanie.</p>
+          <button data-testid="package-rescue" disabled={busy||unsavedChanges} onClick={rescue}>Pobierz kopię ratunkową przed wczytaniem</button>
           <label className="flex gap-2 text-xs items-center"><input type="checkbox" checked={confirmed} disabled={!snapshot||busy} onChange={e=>setConfirmed(e.target.checked)}/>Potwierdzam pobranie kopii i wczytanie wybranego pakietu.</label>
-          <button className="primary" style={{backgroundColor:'#2563eb',color:'#ffffff',fontWeight:600}} disabled={!snapshot||!confirmed||busy||unsavedChanges} onClick={accept}>Wczytaj projekt i zastosuj</button>
+          <button data-testid="package-apply" className="primary" style={{backgroundColor:'#2563eb',color:'#ffffff',fontWeight:600}} disabled={!snapshot||!confirmed||busy||unsavedChanges} onClick={accept}>Wczytaj projekt i zastosuj</button>
         </div>}
       </section>
 
@@ -82,7 +98,7 @@ export function ProjectPackageModal({isOpen,onClose,onImported,unsavedChanges=fa
       </section>
 
       <div className="pt-2 border-t border-slate-700 flex justify-end">
-        <button disabled={locked||busy} onClick={onClose}>Zamknij okno</button>
+        <button disabled={locked||(busy&&!!pkg)} onClick={onClose}>Zamknij okno</button>
       </div>
     </div>
   </div>;

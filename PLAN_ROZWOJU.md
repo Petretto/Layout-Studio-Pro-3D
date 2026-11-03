@@ -1,11 +1,21 @@
 # Plan rozwoju i rejestr postępu aplikacji
 
 Data utworzenia: 2026-09-29  
-Ostatnia aktualizacja: 2026-11-02
+Ostatnia aktualizacja: 2026-11-03
 Wersja bazowa: Layout Studio Pro 3D 0.4.0  
 Dane testowe: Eko jest historycznym przypadkiem regresyjnym; docelowe przykłady to trzy zewnętrzne, kompletne pakiety demonstracyjne (7.12).
 
-## Bieżący pakiet — 2026-11-02: plan remediacji po reweryfikacji origin/main
+## Bieżący pakiet — 2026-11-03: P0, ochrona wczytywania i odzyskiwania
+
+**P0 wdrożone lokalnie** na `codex/v1-p0-data-safety`: S-03 odtworzone w odizolowanym Edge przed poprawką; wspólny podgląd katalogu/pliku/tutorialu, ochrona formularzy i autosave, trwałe kopie sprzed zastąpienia oraz blokada niepotwierdzonego odzyskiwania po reload. Naprawiono atrapę BL-01 i ostrzeżenie regeneracji S-15. Formaty 4/5/6 i reguły obliczeń pozostają zgodne; nie wprowadzono integracji P2. [Raport P0](docs/weryfikacja/WERYFIKACJA_REMEDIACJI_P0_BEZPIECZENSTWO_DANYCH.md) zawiera dowody i ograniczenia.
+
+Weryfikacja końcowa: focused **24/24**, pełna regresja **507/507**, build i `verify:clean` PASS; rzeczywisty UI **17/17** scenariuszy, odzyskiwanie po reload i pobrane pliki. Instrukcja MD/HTML/PDF i snapshot osobnego pulpitu aktualizowane. Niezależny przegląd kontraktu odzyskiwania **NOT_VERIFIED**; G1 otwarta do PT i niezależnego odbioru. G2 nadal otwarta — architektura integracji wymaga osobnego zatwierdzenia.
+
+Metryka: RC1 i pobrany przed P0 `origin/main` = `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`; baza P0 = `f1ae9cbb8cffb9a72a244bab35e995063853e52f` (main + zatwierdzony plan/monitor). Main/RC1 nie zmieniono; brak deploymentu, aktualizacji zależności i RC2.
+
+**Następny pakiet: PT — wiarygodne E2E.** Ocena/implementacja Terra, mechaniczne poprawki Luna po ustaleniu kontraktu; weryfikacja Terra, liczby referencyjne Sol i zewnętrzny Opus do niezależnego świadectwa pilota. Przed PT pobrać ponownie main i sprawdzić jego zmiany. Postęp głównych ID pozostaje **61/72 = 84,7%**, V1 **61/68 = 89,7%**, Etap 7 **7/14 = 50,0%**. Nie oznacza to gotowości wydania.
+
+## Historyczny pakiet planistyczny — 2026-11-02: plan remediacji po reweryfikacji origin/main
 
 **Wybór wersji po doprecyzowaniu właściciela:** wykonano `git fetch origin` i porównano pobrany main z historycznym RC1. SHA RC1, aktualnego `origin/main` i podstawy utworzenia `codex/v1-audit-remediation` to `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`; różnica 0/0 commitów i brak różnic drzewa. Żadne ustalenie nie zostało poprawione na main od RC1; luki UI/runtime pozostają otwarte. Szczegóły i reweryfikacja 21 pozycji w planie remediacji/macierzy. Zachowano wcześniejsze commity planu oraz monitora; nie zmieniono `main`, RC1 ani kodu aplikacji. Aktualizacja obejmuje wyłącznie dokumentację/architekturę i pochodny snapshot monitora. Przed każdym przyszłym pakietem ponowny fetch i ocena aktualności; RC1 nie jest domyślną bazą rozwoju. Zakres, kolejność pakietów i rekomendacja C pozostają bez zmian, P0 nadal nierozpoczęte.
 

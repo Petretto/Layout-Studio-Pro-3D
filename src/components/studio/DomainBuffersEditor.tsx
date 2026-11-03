@@ -1,3 +1,4 @@
+import {usePendingDraft} from './workspaceDrafts';
 import {useState} from 'react';
 import type {DomainProjectV6} from '../../core/domainProject';
 import {validateStationBuffers, type StationBuffersV6, type StationBufferConfig, type BlockingPolicy} from '../../core/stationBuffers';
@@ -13,6 +14,7 @@ export function DomainBuffersEditor({project, onApply, onUndo, onRedo, canUndo, 
   const initial = () => structuredClone(project.stationBuffers?.buffers ?? []);
   const [buffers, setBuffers] = useState<StationBufferConfig[]>(initial);
   const [dirty, setDirty] = useState(false);
+  usePendingDraft('DomainBuffersEditor',dirty);
   const [error, setError] = useState('');
 
   const change = (next: StationBufferConfig[]) => {

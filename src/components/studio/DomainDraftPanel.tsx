@@ -1,3 +1,5 @@
+import {useRef} from 'react';
+import {getPendingDrafts} from './workspaceDrafts';
 import {useState} from 'react';
 import type {ProjectData} from '../../core/models/types';
 import type {StationProjectV5} from '../../core/stationMigration';
@@ -56,6 +58,7 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
   legacyProject: ProjectData; stationProject: StationProjectV5 | null;
 }) {
   const [draft, setDraft] = useState(() => readDomainDraft(localStorage));
+  const activeEditor=useRef('');
   const [preview, setPreview] = useState<DomainMigrationPreview | null>(null);
   const [reviewed, setReviewed] = useState(false);
   const [message, setMessage] = useState('');
@@ -98,6 +101,7 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
   };
 
   const replace = () => {
+    if(getPendingDrafts('domain').length){setMessage('Najpierw zastosuj lub anuluj edycję formularzy szkicu.');return;}
     if (!preview || stale || !reviewed || !confirmReplace ||
         (draft.status !== 'valid' && draft.status !== 'corrupt') || downloadedRaw !== draft.raw) return;
     try {
@@ -119,8 +123,10 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
     }
   };
 
-  const applyDraftChange = (edit: (project: DomainProjectV6) => DomainProjectV6, successMessage: string): boolean => {
+  const applyDraftChange = (edit: (project: DomainProjectV6) => DomainProjectV6, successMessage: string, editor=activeEditor.current): boolean => {
     if (draft.status !== 'valid') return false;
+    const pending=getPendingDrafts('domain');
+    if(pending.length>1||pending.length>0&&(!editor||pending.some(item=>item.label!==editor))){setMessage('Zapis zatrzymany: inny formularz ma niezastosowane zmiany. Zapisz lub anuluj jego edycję przed zmianą danych szkicu.');return false;}
     let next: DomainProjectV6;
     try { next = edit(draft.saved.project); }
     catch (error) {
@@ -135,25 +141,24 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
       setMessage(successMessage);
       return true;
     } catch (error) {
-      setDraft(readDomainDraft(localStorage));
-      setPast([]); setFuture([]);
-      setMessage(`Nie zmieniono danych szkicu: ${(error as Error).message}`);
+      setMessage(`Nie zmieniono danych szkicu: ${(error as Error).message} Formularz pozostawiono do zachowania lub korekty.`);
       return false;
     }
   };
 
   const applyPeople = (change: DomainPeopleChange) => applyDraftChange(
-    project => editDomainPeople(project, change), 'Zapisano dane osób i pul w szkicu 6.');
+    project => editDomainPeople(project, change), 'Zapisano dane osób i pul w szkicu 6.',`DomainPeopleEditor:${change.kind.includes('worker')?'worker':'pool'}`);
   const applyProduct = (change: DomainProductChange) => applyDraftChange(
-    project => editDomainProduct(project, change), 'Zapisano wyrób lub podzespół w szkicu 6.');
+    project => editDomainProduct(project, change), 'Zapisano wyrób lub podzespół w szkicu 6.',`DomainProductEditor:${change.kind.includes('product')?'product':'assembly'}`);
   const applyEquipment = (change: DomainEquipmentChange) => applyDraftChange(
     project => editDomainEquipment(project, change), 'Zapisano wyposażenie w szkicu 6.');
   const applyTime = (change: DomainTimeChange) => applyDraftChange(
-    project => editDomainTime(project, change), 'Zapisano profil czasu operacji w szkicu 6.');
+    project => editDomainTime(project, change), 'Zapisano profil czasu operacji w szkicu 6.',`DomainTimeEditor:${change.kind==='set-required-workers'?'staffing':'profile'}`);
   const applyWorkerRun = (change: DomainWorkerRunChange) => applyDraftChange(
     project => editDomainWorkerRun(project, change), 'Zapisano wybór zespołu przebiegu w szkicu 6.');
 
   const navigateDraftHistory = (direction: 'undo' | 'redo') => {
+    if(getPendingDrafts('domain').length){setMessage('Najpierw zastosuj lub anuluj edycję formularzy szkicu.');return;}
     if (draft.status !== 'valid') return;
     const source = direction === 'undo' ? past : future;
     const target = source[source.length - 1];
@@ -170,13 +175,11 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
       setDraft({status: 'valid', ...written});
       setMessage(direction === 'undo' ? 'Cofnięto zmianę danych szkicu.' : 'Ponowiono zmianę danych szkicu.');
     } catch (error) {
-      setDraft(readDomainDraft(localStorage));
-      setPast([]); setFuture([]);
-      setMessage(`Nie zmieniono danych szkicu: ${(error as Error).message}`);
+      setMessage(`Nie zmieniono danych szkicu: ${(error as Error).message} Formularz pozostawiono do zachowania lub korekty.`);
     }
   };
 
-  return <section className="panel" aria-label="Podgląd modelu procesu v6">
+  return <section className="panel" aria-label="Podgląd modelu procesu v6" onClickCapture={event=>{activeEditor.current=(event.target as HTMLElement).closest<HTMLElement>('[data-domain-editor]')?.dataset.domainEditor??'';}}>
     <h2>Model procesu — szkic schematu 6</h2>
     <p className="muted">Przydziały, rzut i raport statyczny poniżej pokazują aktywny szkic 6, z osobnym harmonogramem zespołu. Status szkicu pozostaje niekompletny; brakujące dane trzeba uzupełnić przed symulacją. Główne widoki projektów 4/5 pozostają oddzielne. Zapis szkicu ma osobny klucz przeglądarki.</p>
     <div className="toolbar">
@@ -187,65 +190,65 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
     {draft.status === 'unavailable' && <p className="error" role="alert">Pamięć przeglądarki jest niedostępna: {draft.error}. Nie można zapisać szkicu.</p>}
     {draft.status === 'corrupt' && <div className="notice" role="alert"><p>Istniejący szkic jest uszkodzony: {draft.error}. Zachowano go bez zmian; zastąpienie wymaga pobrania surowej kopii i potwierdzenia.</p><button onClick={() => {download(draft.raw, 'Odzyskiwanie_szkicu_v6.json', 'application/json'); setDownloadedRaw(draft.raw);}}>Pobierz surową kopię szkicu</button></div>}
     {draft.status === 'valid' && <div className="notice"><p>Zapisany szkic: {draft.saved.project.name} · źródło v{draft.saved.sourceSchemaVersion} · {draft.saved.project.operations.length} operacji · {draft.saved.project.stations.length} stanowisk · {new Date(draft.saved.at).toLocaleString('pl-PL')}. Status: niekompletny.</p><div className="toolbar"><button onClick={() => {download(draft.raw, 'Szkic_modelu_v6_z_oryginalem.json', 'application/json'); setDownloadedRaw(draft.raw);}}>Pobierz szkic z oryginałem</button><button onClick={() => download(draft.saved.originalJson, `Oryginalny_projekt_v${draft.saved.sourceSchemaVersion}.json`, 'application/json')}>Pobierz źródło</button></div></div>}
-    {draft.status === 'valid' && <DomainModelOverview project={draft.saved.project}/>}
-    {draft.status === 'valid' && <DomainPeopleEditor key={`people-${draft.raw}`} project={draft.saved.project} onApply={applyPeople}
+    {draft.status === 'valid' && <div data-domain-editor="DomainModelOverview"><DomainModelOverview project={draft.saved.project}/></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainPeopleEditor"><DomainPeopleEditor key={`people-${draft.raw}`} project={draft.saved.project} onApply={applyPeople}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainCompetencyEditor key={`competencies-${draft.raw}`} project={draft.saved.project}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainCompetencyEditor"><DomainCompetencyEditor key={`competencies-${draft.raw}`} project={draft.saved.project}
       onApply={value => applyDraftChange(project => editDomainCompetencies(project, value), 'Zapisano zmianę kompetencji obsady.')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainProductEditor key={`product-${draft.raw}`} project={draft.saved.project} onApply={applyProduct}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainProductEditor"><DomainProductEditor key={`product-${draft.raw}`} project={draft.saved.project} onApply={applyProduct}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainEquipmentEditor key={`equipment-${draft.raw}`} project={draft.saved.project} onApply={applyEquipment}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainEquipmentEditor"><DomainEquipmentEditor key={`equipment-${draft.raw}`} project={draft.saved.project} onApply={applyEquipment}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainTimeEditor project={draft.saved.project} onApply={applyTime}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainTimeEditor"><DomainTimeEditor project={draft.saved.project} onApply={applyTime}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainWorkerRunEditor key={`run-${draft.raw}`} project={draft.saved.project} onApply={applyWorkerRun}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainWorkerRunEditor"><DomainWorkerRunEditor key={`run-${draft.raw}`} project={draft.saved.project} onApply={applyWorkerRun}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainCalendarEditor key={`calendar-${draft.raw}`} project={draft.saved.project}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainCalendarEditor"><DomainCalendarEditor key={`calendar-${draft.raw}`} project={draft.saved.project}
       onApply={calendars => applyDraftChange(project => {
         const {resourceCalendars: _old, ...rest} = project;
         return calendars === undefined ? rest : {...rest, resourceCalendars: calendars};
       }, 'Zapisano zmianę kalendarzy w szkicu 6.')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainRoutingEditor key={`routing-${draft.raw}`} project={draft.saved.project}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainRoutingEditor"><DomainRoutingEditor key={`routing-${draft.raw}`} project={draft.saved.project}
       onApply={routing => applyDraftChange(project => {
         const {stationRouting: _old, ...rest} = project;
         return routing === undefined ? rest : {...rest, stationRouting: routing};
       }, 'Zapisano zmianę dopuszczeń i tras w szkicu 6.')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainMaterialEditor key={`material-${draft.raw}`} project={draft.saved.project}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainMaterialEditor"><DomainMaterialEditor key={`material-${draft.raw}`} project={draft.saved.project}
       onApply={network => applyDraftChange(project => editDomainMaterialNetwork(project,network), 'Zapisano zmianę sieci materiałowej.')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainTransportEditor key={`transport-${draft.raw}`} project={draft.saved.project}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainTransportEditor"><DomainTransportEditor key={`transport-${draft.raw}`} project={draft.saved.project}
       onApply={transport => applyDraftChange(project => editDomainAssemblyTransport(project,transport), 'Zapisano wymagania transportu montażu.')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainSubassemblyEditor key={`lots-${draft.raw}`} project={draft.saved.project}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainSubassemblyEditor"><DomainSubassemblyEditor key={`lots-${draft.raw}`} project={draft.saved.project}
       onApply={flow => applyDraftChange(project => editDomainSubassemblyFlow(project,flow), 'Zapisano konfigurację partii podzespołów.')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainBuffersEditor key={`buffers-${draft.raw}`} project={draft.saved.project}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainBuffersEditor"><DomainBuffersEditor key={`buffers-${draft.raw}`} project={draft.saved.project}
       onApply={buffers => applyDraftChange(project => editDomainStationBuffers(project, buffers), 'Zapisano konfigurację buforów stanowisk w szkicu 6.')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainSubassemblyBuffersEditor key={`subassembly-buffers-${draft.raw}`} project={draft.saved.project}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainSubassemblyBuffersEditor"><DomainSubassemblyBuffersEditor key={`subassembly-buffers-${draft.raw}`} project={draft.saved.project}
       onApply={buffers => applyDraftChange(project => editDomainSubassemblyBuffers(project, buffers), 'Zapisano konfigurację buforów podmontaży w szkicu 6.')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainSupplyEditor key={`supply-${draft.raw}`} project={draft.saved.project}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainSupplyEditor"><DomainSupplyEditor key={`supply-${draft.raw}`} project={draft.saved.project}
       onApply={supply => applyDraftChange(project => editDomainMaterialSupply(project, supply), 'Zapisano zaopatrzenie materiałowe w szkicu 6.')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainChangeoverEditor key={`changeover-${draft.raw}`} project={draft.saved.project}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainChangeoverEditor"><DomainChangeoverEditor key={`changeover-${draft.raw}`} project={draft.saved.project}
       onApply={payload => applyDraftChange(project => {
         const {changeoverMatrix: _oldMatrix, productionOrders: _oldOrders, ...rest} = project;
         return {
@@ -255,40 +258,40 @@ export function DomainDraftPanel({legacyProject, stationProject}: {
         };
       }, 'Zapisano warianty wyrobów, przezbrojenia i zlecenia partii (Plan 7.3).')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainBodyEditor key={`body-${draft.raw}`} project={draft.saved.project}
-      onRole={(id, role) => applyDraftChange(project => editDomainPhysicalRole(project, id, role), 'Zapisano rolę fizyczną operacji.')}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainBodyEditor"><DomainBodyEditor key={`body-${draft.raw}`} project={draft.saved.project}
+      onRole={(id, role) => applyDraftChange(project => editDomainPhysicalRole(project, id, role), 'Zapisano rolę fizyczną operacji.', 'DomainBodyEditor role')}
       onInput={input => applyDraftChange(project => {
         const {bodyRunInput: _old, ...rest} = project;
         return input === undefined ? rest : {...rest, bodyRunInput: input};
-      }, 'Zapisano zmianę korpusów przebiegu.')}
+      }, 'Zapisano zmianę korpusów przebiegu.', 'DomainBodyEditor rows')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainConcurrencyEditor key={`concurrency-${draft.raw}`} project={draft.saved.project}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainConcurrencyEditor"><DomainConcurrencyEditor key={`concurrency-${draft.raw}`} project={draft.saved.project}
       onApply={policy => applyDraftChange(project => {
         const {physicalConcurrency: _old, ...rest} = project;
         return policy === undefined ? rest : {...rest, physicalConcurrency: policy};
       }, 'Zapisano zmianę grup równoległości.')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainBalancingPanel key={`balance-${draft.raw}`} project={draft.saved.project}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainBalancingPanel"><DomainBalancingPanel key={`balance-${draft.raw}`} project={draft.saved.project}
       onApply={next => applyDraftChange(() => next, 'Zapisano zatwierdzone przydziały bilansu i dopuszczenia kopii.')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainWorkerSchedulePanel key={`schedule-${draft.raw}`} project={draft.saved.project} />}
-    {draft.status === 'valid' && <DomainStochasticSimulationPanel key={`stochastic-${draft.raw}`}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainWorkerSchedulePanel"><DomainWorkerSchedulePanel key={`schedule-${draft.raw}`} project={draft.saved.project} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainStochasticSimulationPanel"><DomainStochasticSimulationPanel key={`stochastic-${draft.raw}`}
       project={draft.saved.project}
       onApply={config => applyDraftChange(project => {
         const {stochasticConfig: _old, ...rest} = project;
         return config === undefined ? rest : {...rest, stochasticConfig: config};
       }, 'Zapisano konfigurację symulacji stochastycznej w szkicu 6 (Plan 7.4).')}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
-    {draft.status === 'valid' && <DomainVariantComparisonPanel key={`variants-${draft.saved.originalJson}`}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
+    {draft.status === 'valid' && <div data-domain-editor="DomainVariantComparisonPanel"><DomainVariantComparisonPanel key={`variants-${draft.saved.originalJson}`}
       project={draft.saved.project} originalJson={draft.saved.originalJson}
       onRestoreVariant={(next, name) => applyDraftChange(() => next, `Wczytano wariant „${name}” do szkicu 6.`)}
       onUndo={() => navigateDraftHistory('undo')} onRedo={() => navigateDraftHistory('redo')}
-      canUndo={past.length > 0} canRedo={future.length > 0} />}
+      canUndo={past.length > 0} canRedo={future.length > 0} /></div>}
     {preview && <div className="panel">
       <h3>Podgląd źródła v{preview.sourceSchemaVersion}</h3>
       <p>{preview.stationProject.processSteps.length} operacji · {preview.stationProject.stations.length} stanowisk · {preview.stationProject.bom.length} pozycji BOM · {preview.visualBindings.length} obiektów geometrii.</p>

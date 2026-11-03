@@ -16,7 +16,7 @@
     }
     const open=r.gates.filter(g=>g.status!=='zamknięta');
     banner.textContent=r.accepted?'Bramki odbioru zamknięte według rejestru. Deployment wymaga osobnej zgody właściciela.':
-      `V1 nie jest odebrane — otwarte bramki: ${open.map(g=>g.id).join(', ')||'brak; pozostają nieukończone pakiety'}. Plan nie rozpoczyna implementacji; RC2 i wydanie wymagają odbioru.`;
+      `V1 nie jest odebrane — otwarte bramki: ${open.map(g=>g.id).join(', ')||'brak; pozostają nieukończone pakiety'}. RC2 i wydanie wymagają ukończenia pakietów i niezależnego odbioru.`;
     document.getElementById('kpiCurrentPackage').textContent=r.next?.id??'Pakiety wykonane';
     document.getElementById('kpiPackageDesc').textContent=r.next?`${r.next.name} — ${r.next.status}`:'Sprawdź bramki odbioru wydania.';
     content.append(el('h3','Plan remediacji RC1 → V1.0.0'));

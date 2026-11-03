@@ -1,3 +1,4 @@
+import {usePendingDraft} from './workspaceDrafts';
 import {useState} from 'react';
 import type {DomainProjectV6} from '../../core/domainProject';
 import type {DomainProductChange} from '../../core/domainProductEditing';
@@ -18,6 +19,9 @@ export function DomainProductEditor({project, onApply, onUndo, onRedo, canUndo, 
   const [producer, setProducer] = useState('');
   const [consumers, setConsumers] = useState<string[]>([]);
 
+  const savedAssembly=project.subassemblies.find(item=>item.id===selectedAssembly);
+  usePendingDraft('DomainProductEditor:product',JSON.stringify([productId,productName])!==JSON.stringify([project.product?.id??'',project.product?.name??'']));
+  usePendingDraft('DomainProductEditor:assembly',JSON.stringify([assemblyId,assemblyName,producer,consumers])!==JSON.stringify([savedAssembly?.id??'',savedAssembly?.name??'',savedAssembly?.producerOperationId??'',savedAssembly?.consumerOperationIds??[]]));
   const chooseAssembly = (id: string) => {
     const assembly = project.subassemblies.find(item => item.id === id);
     setSelectedAssembly(id);

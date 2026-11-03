@@ -1,3 +1,4 @@
+import {usePendingDraft} from './workspaceDrafts';
 import {TransportTimingEditor} from './TransportTimingEditor';
 import {useState} from 'react';
 import type {DomainProjectV6} from '../../core/domainProject';
@@ -12,6 +13,7 @@ export function DomainMaterialEditor({project,onApply,onUndo,onRedo,canUndo,canR
   const [units,setUnits]=useState<DistanceUnit[]>(network.routes.map(()=>'mm'));
   const [confirmed,setConfirmed]=useState(network.routes.map(()=>true));
   const [error,setError]=useState(''),[dirty,setDirty]=useState(false);
+  usePendingDraft('DomainMaterialEditor',dirty);
   const change=(next:MaterialNetworkV6)=>{setNetwork(next);setDirty(true);setError('');};
   const pointChange=(index:number,point:MaterialPoint)=>change({...network,points:network.points.map((p,i)=>i===index?point:p)});
   const routeChange=(index:number,route:MaterialRoute)=>{

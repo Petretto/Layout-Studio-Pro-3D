@@ -29,7 +29,7 @@ with pdfplumber.open(pdf_path) as document:
     joined = '\n'.join(texts)
     absent = [item for item in required if item not in joined]
     blank = [i + 1 for i, text in enumerate(texts) if not text.strip()]
-terms = ['Tryb uproszczony', 'Popout', 'osobnym oknie', 'Zdolność Produkcyjna', 'Wymagane tempo', 'Zapisz wariant', 'Eksport JSON', 'Pakiet projektu', 'Wczytaj pakiet i przeładuj']
+terms = ['Tryb uproszczony', 'Popout', 'osobnym oknie', 'Zdolność Produkcyjna', 'Wymagane tempo', 'Zapisz wariant', 'Eksport JSON', 'Pakiet projektu', 'Wczytaj projekt i zastosuj']
 formats = {'md': manual.read_text(encoding='utf-8'),
            'html': html.unescape(re.sub(r'<[^>]+>', ' ', manual.with_suffix('.html').read_text(encoding='utf-8'))),
            'pdf': joined}

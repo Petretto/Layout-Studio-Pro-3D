@@ -1,3 +1,4 @@
+import {usePendingDraft} from './workspaceDrafts';
 import {useState} from 'react';
 import type {DomainProjectV6} from '../../core/domainProject';
 import {validateSubassemblyBuffers, type SubassemblyBuffers, type SubassemblyBufferConfig} from '../../core/subassemblyBuffers';
@@ -28,6 +29,7 @@ export function DomainSubassemblyBuffersEditor({project,onApply,onUndo,onRedo,ca
   const initial = () => (project.subassemblyBuffers?.buffers ?? []).map(toRow);
   const [rows,setRows] = useState<Row[]>(initial);
   const [dirty,setDirty] = useState(false);
+  usePendingDraft('DomainSubassemblyBuffersEditor',dirty);
   const [error,setError] = useState('');
   const change = (next:Row[]) => {setRows(next); setDirty(true); setError('');};
   const update = (index:number, patch:Partial<Row>) => change(rows.map((row,i)=>i===index ? {...row,...patch} : row));

@@ -1,3 +1,4 @@
+import {usePendingDraft} from './workspaceDrafts';
 import {useState} from 'react';
 import type {DomainProjectV6} from '../../core/domainProject';
 import {validateSubassemblyFlow, type SubassemblyFlow, type SubassemblyLot} from '../../core/subassemblyFlow';
@@ -9,6 +10,7 @@ export function DomainSubassemblyEditor({project,onApply,onUndo,onRedo,canUndo,c
   const initial=()=>structuredClone(project.subassemblyFlow?.lots??[]);
   const [lots,setLots]=useState<SubassemblyLot[]>(initial);
   const [dirty,setDirty]=useState(false),[error,setError]=useState('');
+  usePendingDraft('DomainSubassemblyEditor',dirty);
   const change=(next:SubassemblyLot[])=>{setLots(next);setDirty(true);setError('');};
   const update=(index:number,next:SubassemblyLot)=>change(lots.map((lot,i)=>i===index?next:lot));
   const text=(label:string,value:string,onChange:(value:string)=>void)=><label className="field">{label}

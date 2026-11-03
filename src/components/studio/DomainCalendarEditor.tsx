@@ -1,3 +1,4 @@
+import {usePendingDraft} from './workspaceDrafts';
 import {useState} from 'react';
 import {parseDomainProjectV6, type DomainProjectV6} from '../../core/domainProject';
 import type {DeclaredCalendarWindow, ResourceCalendarsV6} from '../../core/resourceCalendar';
@@ -11,6 +12,8 @@ export function DomainCalendarEditor({project, onApply, onUndo, onRedo, canUndo,
   const [shifts, setShifts] = useState<DeclaredCalendarWindow[]>([]);
   const [breaks, setBreaks] = useState<DeclaredCalendarWindow[]>([]);
   const [error, setError] = useState('');
+  const savedCalendar=project.resourceCalendars?.[kind][id];
+  usePendingDraft('DomainCalendarEditor',JSON.stringify([shifts,breaks])!==JSON.stringify([savedCalendar?.shifts??[],savedCalendar?.breaks??[]]));
   const resources = kind === 'workers' ? project.workers : project.stations;
   const select = (nextKind: typeof kind, nextId: string) => {
     setKind(nextKind); setId(nextId); setError('');

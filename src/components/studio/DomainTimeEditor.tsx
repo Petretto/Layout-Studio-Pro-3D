@@ -1,4 +1,5 @@
 import {useEffect, useState} from 'react';
+import {usePendingDraft} from './workspaceDrafts';
 import type {TimeUnit} from '../../core/models/types';
 import type {DomainProjectV6, DomainTimeBasis, DomainTimeInterval, DomainTimeProfile} from '../../core/domainProject';
 import type {DomainTimeChange} from '../../core/domainTimeEditing';
@@ -53,6 +54,8 @@ export function DomainTimeEditor({project, onApply, onUndo, onRedo, canUndo, can
   }, [project, selected, target, variantCount]);
 
   const existingVariant = operation?.staffing?.timeVariants.find(item => String(item.workerCount) === variantCount);
+  usePendingDraft('DomainTimeEditor:profile',JSON.stringify(form)!==JSON.stringify(editable(target==='reference'?operation?.timeProfile:existingVariant?.timeProfile)));
+  usePendingDraft('DomainTimeEditor:staffing',requiredWorkers!==(operation?.staffing?String(operation.staffing.requiredWorkers):''));
 
   const numeric = (value: string) => value.trim() === '' || !Number.isFinite(Number(value))
     ? undefined : toSeconds(Number(value), unit);

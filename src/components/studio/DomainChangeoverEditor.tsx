@@ -1,3 +1,4 @@
+import {usePendingDraft} from './workspaceDrafts';
 import {useState} from 'react';
 import type {DomainProjectV6} from '../../core/domainProject';
 import {
@@ -44,6 +45,7 @@ export function DomainChangeoverEditor({
   const [strategy, setStrategy] = useState<BatchSequenceStrategy>('as-declared');
 
   const [dirty, setDirty] = useState(false);
+  usePendingDraft('DomainChangeoverEditor',dirty);
   const [error, setError] = useState('');
 
   const markDirty = () => {

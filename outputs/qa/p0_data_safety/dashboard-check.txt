@@ -1,0 +1,15 @@
+✔ Główne liczniki odpowiadają plan_progress; pakiety nie są dodatkowymi ID (65.3132ms)
+✔ Nieaktualne podsumowanie wdrożone nie zamyka otwartych zadań etapu (5.0863ms)
+✔ Brakujące i uszkodzone źródła nie dają gotowości wydania (2.9779ms)
+✔ Zamknięcie bramek bez ukończenia pakietów nadal nie odbiera V1 (0.8182ms)
+✔ Status, zależności i modele pochodzą z rejestru, nie ze snapshotu (0.4703ms)
+✔ Przeglądarka i Node używają tego samego parsera, także po imporcie MD (7.4566ms)
+✔ HTTP reaguje na zmianę dodatkowego dokumentu i brak źródła; linki są ograniczone do dokumentów (246.8968ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 416.6801

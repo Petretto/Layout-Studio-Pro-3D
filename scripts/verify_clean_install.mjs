@@ -54,7 +54,7 @@ async function run() {
     const cdnPatterns = ['unpkg.com', 'cdnjs.cloudflare.com', 'cdn.jsdelivr.net', 'googleapis.com'];
     const hasCdn = cdnPatterns.some(cdn => htmlContent.includes(cdn));
     if (!hasCdn) {
-      logPass('Brak zewnętrznych zależności CDN w index.html — aplikacja w 100% przystosowana do pracy offline.');
+      logPass('Brak wskazanych CDN w index.html. Test nie dowodzi pełnej pracy offline ani braku telemetrii.');
     } else {
       logFail('Wykryto zewnętrzne odwołania CDN w dist/index.html!');
     }
@@ -184,6 +184,7 @@ async function run() {
     const newTargetPort = {
       getItem: (k) => newTargetStore[k] ?? null,
       setItem: (k, v) => { newTargetStore[k] = v; },
+      removeItem: (k) => { delete newTargetStore[k]; },
     };
 
     const restoreRes = restoreWorkspaceBackup(newTargetPort, fullVal.payload);
@@ -199,7 +200,7 @@ async function run() {
   console.log('\\n================================================================');
   if (errors === 0) {
     console.log('PODSUMOWANIE: Wszystkie testy czystej instalacji i odzyskiwania ZALICZONE.');
-    console.log('Aplikacja jest gotowa do dystrybucji na komputerze klienta i w chmurze.');
+    console.log('Potwierdzono wyłącznie zakres tego skryptu. Odbiór wydania, UI i wdrożenia wymaga osobnych dowodów.');
     console.log('================================================================');
     process.exit(0);
   } else {

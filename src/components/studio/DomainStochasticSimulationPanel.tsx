@@ -1,3 +1,4 @@
+import {usePendingDraft} from './workspaceDrafts';
 import {useState} from 'react';
 import type {DomainProjectV6} from '../../core/domainProject';
 import {
@@ -50,6 +51,7 @@ export function DomainStochasticSimulationPanel({
   );
 
   const [dirty, setDirty] = useState(false);
+  usePendingDraft('DomainStochasticSimulationPanel',dirty);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 

@@ -1,4 +1,5 @@
 import {lazy, Suspense, useMemo, useRef, useState} from 'react';
+import {useInitialPendingDraft,usePendingDraft} from './workspaceDrafts';
 import type {ProjectData, Workstation} from '../../core/models/types';
 import type {StationProjectV5} from '../../core/stationMigration';
 import {previewStationMigration, prepareStationMigration} from '../../core/stationMigration';
@@ -40,6 +41,7 @@ function StationResourceEditor({station, settings, tableCount, onApply, onRemove
   const [copies, setCopies] = useState(String(settings?.parallelStations ?? 1));
   const [cycle, setCycle] = useState(String(settings?.assistedCycleSeconds ?? ''));
   const [error, setError] = useState('');
+  useInitialPendingDraft('StationResourceEditor',{operators,copies,cycle},'main');
   const saveSettings = () => {
     const nextOperators = Number(operators), nextCopies = Number(copies);
     const explicitCycle = cycle.trim() ? Number(cycle) : undefined;
@@ -100,6 +102,7 @@ export function StationWorkspace({legacyProject, legacyImportSourceBase64, simul
   const [mergeKeepId, setMergeKeepId] = useState('');
   const [mergeRetireId, setMergeRetireId] = useState('');
   const [mergeApproved, setMergeApproved] = useState(false);
+  usePendingDraft('StationWorkspace revision',!!splitName||!!splitMoved.length||mergeApproved,'main');
   const [resourceId, setResourceId] = useState('');
   const [showGeometry3D, setShowGeometry3D] = useState(false);
   const [activeRuns, setActiveRuns] = useState<OperationRun[]>([]);

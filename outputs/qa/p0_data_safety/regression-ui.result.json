@@ -1,0 +1,99 @@
+{
+  "syntheticProfile": true,
+  "environment": {
+    "node": "v24.14.0",
+    "platform": "win32",
+    "browser": {
+      "protocolVersion": "1.3",
+      "product": "Edg/156.0.4314.58",
+      "revision": "@7806b68d20d1c1273d5b07b4f4de18e8f5852581",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0",
+      "jsVersion": "15.6.12.10"
+    },
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    }
+  },
+  "results": [
+    {
+      "name": "catalog preview and cancel preserve all project slots",
+      "status": "PASS"
+    },
+    {
+      "name": "confirmed import preserves exact previous v4/v6 family in durable rescue",
+      "status": "PASS"
+    },
+    {
+      "name": "rescue selected through UI restores v4/v6 after reload",
+      "status": "PASS"
+    },
+    {
+      "name": "pending process form blocks replacement; cancel navigation preserves form",
+      "status": "PASS"
+    },
+    {
+      "name": "stale approval refuses changed workspace without mutation",
+      "status": "PASS"
+    },
+    {
+      "name": "quota prevents replacement before first legacy-slot write",
+      "status": "PASS"
+    },
+    {
+      "name": "failed rollback persists lock across reload; UI recovery restores original family",
+      "status": "PASS"
+    },
+    {
+      "name": "domain pending form blocks sibling commit/backup; own commit persists",
+      "status": "PASS"
+    },
+    {
+      "name": "catalog external hash mismatch refuses preview/import",
+      "status": "PASS"
+    },
+    {
+      "name": "tutorial uses same rescue/confirmation workflow",
+      "status": "PASS"
+    },
+    {
+      "name": "tutorial exit previews original backup and explicitly restores",
+      "status": "PASS"
+    },
+    {
+      "name": "pending main autosave is flushed and suspended during package preview",
+      "status": "PASS"
+    },
+    {
+      "name": "another-tab active project survives stale preview cancellation and subsequent autosave",
+      "status": "PASS"
+    },
+    {
+      "name": "stale domain save preserves both external stored data and local pending form",
+      "status": "PASS"
+    },
+    {
+      "name": "S-15 regenerate manual layout requires confirmation and supports cancel/undo/redo/reload",
+      "status": "PASS"
+    },
+    {
+      "name": "cancel slow catalog download aborts without changes or reopening",
+      "status": "PASS"
+    },
+    {
+      "name": "actual browser downloads contain parseable rescue payloads",
+      "status": "PASS"
+    }
+  ],
+  "errors": [],
+  "dialogs": [
+    {
+      "type": "beforeunload",
+      "message": ""
+    },
+    {
+      "type": "beforeunload",
+      "message": ""
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+✔ P0: unconfirmed and unsaved changes refuse replacement without writes (6.4869ms)
+✔ P0: verified immutable rescue precedes all legacy writes; older copies survive (1.5955ms)
+✔ P0: quota before rescue does not replace user data (0.7436ms)
+✔ P0: rescue readback mismatch prevents all legacy writes (0.5673ms)
+✔ P0: failed recovery-lock readback prevents all legacy writes (0.4826ms)
+✔ P0: stale approval and duplicate rescue id never overwrite earlier data (1.1858ms)
+✔ P0: attributable write failure rolls back original slots and preserves rescue (0.6879ms)
+✔ P0: unconfirmed rollback stays locked across reload; explicit recovery clears lock (1.3172ms)
+✔ P0: journal completion failure does not claim success or lose recovery data (1.1309ms)
+✔ P0: failed explicit recovery preserves the previous unresolved lock (0.8542ms)
+✔ P0: removing the lock and then throwing reestablishes durable recovery (0.5407ms)
+✔ P0: protected package import retains the old workspace and unrelated scenario library (26.6016ms)
+✔ 7.6: tworzenie, walidacja integralności SHA-256 i odzyskiwanie pełnej kopii środowiska (Disaster Recovery) (2.2098ms)
+✔ 7.12.A1: pakiet źródła 4 zachowuje dokładny szkic, warianty i oryginał, niezależnie od aktywnego 4 (12.694ms)
+✔ 7.12.A1: import zastępuje tylko rodzinę projektu, usuwa brakujące 5/6, zachowuje obce i nawet uszkodzone scenariusze 4 (11.0069ms)
+✔ 7.12.A1: źródło 5 wymaga jawnego oryginału 4 i zachowuje oba źródła po ponownym imporcie (12.7259ms)
+✔ 7.12.A1: odrzuca sumę, wersje, niekompletność, obce źródła i biblioteki bez mutacji (64.3884ms)
+✔ 7.12.A1: nie odrzuca po cichu obcej biblioteki i nie eksportuje projektu bez szkicu (8.4684ms)
+✔ 7.12.A1: nieaktualna kopia ratunkowa blokuje zapis, każda awaria zapisu wycofuje cztery obszary (35.2706ms)
+✔ 7.6a: walidacja wszystkich slotów, sumy, otoczek i bibliotek; podsumowanie pochodzi z danych (49.7035ms)
+✔ 7.6a: poprawne stare kopie v1 i niezależne źródła obszarów pozostają obsługiwane (10.3487ms)
+✔ 7.6a: pełne odtworzenie usuwa null, zachowuje obce klucze, ponownie waliduje i chroni przed nieaktualną kopią ratunkową (16.0804ms)
+✔ 7.6a: błąd każdego zapisu i usunięcia wycofuje dokładny poprzedni stan, także po częściowej mutacji (20.1334ms)
+✔ 7.6a: awaria wycofania jest jawna i nadal udostępnia kopię ratunkową (4.9971ms)
+ℹ tests 24
+ℹ suites 0
+ℹ pass 24
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1173.7916

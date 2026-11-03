@@ -1,3 +1,4 @@
+import {usePendingDraft} from './workspaceDrafts';
 import {useState} from 'react';
 import type {DomainProjectV6} from '../../core/domainProject';
 import {assertCompetentTeamExists, validateCompetencyRequirements, type CompetencyRequirements} from '../../core/competencies';
@@ -8,6 +9,7 @@ export function DomainCompetencyEditor({project, onApply, onUndo, onRedo, canUnd
 }) {
   const initial = (): CompetencyRequirements => structuredClone(project.competencyRequirements ?? {competencies: [], workers: [], operations: []});
   const [rules, setRules] = useState(initial), [dirty, setDirty] = useState(false), [error, setError] = useState('');
+  usePendingDraft('DomainCompetencyEditor',dirty);
   const change = (next: CompetencyRequirements) => {setRules(next); setDirty(true); setError('');};
   const toggle = (ids: string[], id: string) => ids.includes(id) ? ids.filter(item => item !== id) : [...ids, id];
   const save = () => {

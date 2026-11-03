@@ -1,4 +1,92 @@
 import { strict as assert } from 'node:assert';
+import {protectedRestoreWorkspaceBackup as p0Restore,protectedImportProjectPackage as p0Import,WORKSPACE_RECOVERY_LOCK as p0Lock,WORKSPACE_RESCUE_PREFIX as p0Prefix} from '../src/core/workspaceReplacement';
+import {createWorkspaceBackup as p0Backup,STORAGE_KEYS as p0Keys} from '../src/core/workspaceBackup';
+import {newProject as p0NewProject} from '../src/core/project';
+import {parseProjectPackage as p0ParsePackage} from '../src/core/projectPackage';
+import {readFileSync as p0ReadFile} from 'node:fs';
+
+function p0Fixture(){
+  const old=JSON.stringify({project:{...p0NewProject(),name:'P0_SYNTHETIC_USER'},at:'2026-11-02T10:00:00Z',importSourceBase64:''});
+  const next=JSON.stringify({project:{...p0NewProject(),name:'P0_SYNTHETIC_TARGET'},at:'2026-11-02T10:00:00Z',importSourceBase64:''});
+  const values=new Map<string,string>([[p0Keys.v4Project,old]]),writes:string[]=[];
+  let fault:(key:string,value?:string)=>void=()=>{};
+  const storage={getItem:(key:string)=>values.get(key)??null,setItem:(key:string,value:string)=>{fault(key,value);writes.push(key);values.set(key,value);},removeItem:(key:string)=>{fault(key);writes.push(key);values.delete(key);}};
+  const target=p0Backup({getItem:key=>key===p0Keys.v4Project?next:key===p0Keys.v4Scenarios?'[]':null});
+  const approval=()=>({snapshot:JSON.stringify(p0Backup(storage)),confirmed:true,unsavedChanges:false,rescueId:'test-1'});
+  return {values,writes,storage,target,approval,old,next,setFault:(value:typeof fault)=>{fault=value;}};
+}
+test('P0: unconfirmed and unsaved changes refuse replacement without writes',()=>{
+  for(const extra of [{confirmed:false},{unsavedChanges:true}]){const f=p0Fixture();assert.throws(()=>p0Restore(f.storage,f.target,{...f.approval(),...extra}));assert.equal(f.writes.length,0);assert.equal(f.values.get(p0Keys.v4Project),f.old);}
+});
+test('P0: verified immutable rescue precedes all legacy writes; older copies survive',()=>{
+  const f=p0Fixture();f.values.set(p0Prefix+'older','old-rescue');
+  p0Restore(f.storage,f.target,f.approval());
+  const copy=JSON.parse(f.values.get(p0Prefix+'test-1')!);assert.equal(copy.storage.v4ProjectRaw,f.old);
+  assert.ok(f.writes.indexOf(p0Prefix+'test-1')<f.writes.indexOf(p0Keys.v4Project));
+  assert.equal(f.values.get(p0Prefix+'older'),'old-rescue');assert.equal(f.storage.getItem(p0Lock),null);
+  assert.equal(f.values.get(p0Keys.v4Project),f.next);
+});
+test('P0: quota before rescue does not replace user data',()=>{
+  const f=p0Fixture();f.setFault(key=>{if(key.startsWith(p0Prefix))throw new Error('quota');});
+  assert.throws(()=>p0Restore(f.storage,f.target,f.approval()),/quota/);assert.equal(f.values.get(p0Keys.v4Project),f.old);
+  assert.ok(!f.writes.includes(p0Keys.v4Project));
+});
+test('P0: rescue readback mismatch prevents all legacy writes',()=>{
+  const f=p0Fixture();
+  const storage={...f.storage,setItem:(key:string,value:string)=>{if(!key.startsWith(p0Prefix))f.storage.setItem(key,value);}};
+  assert.throws(()=>p0Restore(storage,f.target,f.approval()),/trwałego zapisu kopii/);
+  assert.equal(f.values.get(p0Keys.v4Project),f.old);assert.equal(f.writes.length,0);
+});
+test('P0: failed recovery-lock readback prevents all legacy writes',()=>{
+  const f=p0Fixture();
+  const storage={...f.storage,setItem:(key:string,value:string)=>{if(key!==p0Lock)f.storage.setItem(key,value);}};
+  assert.throws(()=>p0Restore(storage,f.target,f.approval()),/blokady odzyskiwania/);
+  assert.equal(f.values.get(p0Keys.v4Project),f.old);assert.ok(f.values.has(p0Prefix+'test-1'));
+  assert.ok(!f.writes.includes(p0Keys.v4Project));
+});
+test('P0: stale approval and duplicate rescue id never overwrite earlier data',()=>{
+  const f=p0Fixture(),approval=f.approval();f.values.set(p0Keys.v4Scenarios,'[]');
+  assert.throws(()=>p0Restore(f.storage,f.target,approval),/zmienił/);assert.equal(f.writes.length,0);
+  f.values.set(p0Prefix+'test-1','previous');assert.throws(()=>p0Restore(f.storage,f.target,f.approval()));
+  assert.equal(f.values.get(p0Prefix+'test-1'),'previous');assert.equal(f.values.get(p0Keys.v4Project),f.old);
+});
+test('P0: attributable write failure rolls back original slots and preserves rescue',()=>{
+  const f=p0Fixture();let failed=false;f.setFault(key=>{if(key===p0Keys.v4Scenarios&&!failed){failed=true;throw new Error('write-failure');}});
+  assert.throws(()=>p0Restore(f.storage,f.target,f.approval()),/write-failure/);
+  assert.equal(f.values.get(p0Keys.v4Project),f.old);assert.equal(f.storage.getItem(p0Keys.v4Scenarios),null);
+  assert.equal(f.storage.getItem(p0Lock),null);assert.ok(f.values.has(p0Prefix+'test-1'));
+});
+test('P0: unconfirmed rollback stays locked across reload; explicit recovery clears lock',()=>{
+  const f=p0Fixture();let first=false;f.setFault((key,value)=>{if(key===p0Keys.v4Scenarios&&!first){first=true;throw new Error('write');}if(first&&key===p0Keys.v4Project&&value===f.old)throw new Error('rollback');});
+  assert.throws(()=>p0Restore(f.storage,f.target,f.approval()));assert.equal(f.storage.getItem(p0Lock),p0Prefix+'test-1');
+  f.setFault(()=>{});assert.throws(()=>p0Restore(f.storage,f.target,{...f.approval(),rescueId:'blocked'}),/odzyskiwanie/);
+  const source=JSON.parse(f.values.get(p0Prefix+'test-1')!);
+  p0Restore(f.storage,source,{...f.approval(),rescueId:'recovery',allowRecovery:true});assert.equal(f.storage.getItem(p0Lock),null);assert.equal(f.values.get(p0Keys.v4Project),f.old);
+});
+test('P0: journal completion failure does not claim success or lose recovery data',()=>{
+  const f=p0Fixture();f.setFault((key,value)=>{if(key===p0Lock&&value===undefined)throw new Error('remove lock');});
+  assert.throws(()=>p0Restore(f.storage,f.target,f.approval()),/zakończenia odzyskiwania/);
+  assert.equal(f.storage.getItem(p0Lock),p0Prefix+'test-1');assert.ok(f.values.has(p0Prefix+'test-1'));
+});
+test('P0: failed explicit recovery preserves the previous unresolved lock',()=>{
+  const f=p0Fixture();f.values.set(p0Lock,p0Prefix+'original');
+  let failed=false;f.setFault(key=>{if(key===p0Keys.v4Scenarios&&!failed){failed=true;throw new Error('recovery-write');}});
+  assert.throws(()=>p0Restore(f.storage,f.target,{...f.approval(),allowRecovery:true}));
+  assert.equal(f.storage.getItem(p0Lock),p0Prefix+'original');
+  assert.equal(f.storage.getItem(p0Keys.v4Project),f.old);
+});
+test('P0: removing the lock and then throwing reestablishes durable recovery',()=>{
+  const f=p0Fixture();const storage={...f.storage,removeItem:(key:string)=>{f.storage.removeItem(key);if(key===p0Lock)throw new Error('after removal');}};
+  assert.throws(()=>p0Restore(storage,f.target,f.approval()),/zakończenia odzyskiwania/);
+  assert.equal(f.storage.getItem(p0Lock),p0Prefix+'test-1');
+  assert.ok(f.values.has(p0Prefix+'test-1'));
+});
+test('P0: protected package import retains the old workspace and unrelated scenario library',()=>{
+  const f=p0Fixture();f.values.set(p0Keys.v4Scenarios,'[]');
+  const pkg=p0ParsePackage(p0ReadFile('przyklady/01_zestaw_montazowy/projekt-pokazowy.json','utf8'));
+  p0Import(f.storage,pkg,f.approval());assert.equal(f.storage.getItem(p0Keys.v4Scenarios),'[]');
+  assert.equal(JSON.parse(f.values.get(p0Prefix+'test-1')!).storage.v4ProjectRaw,f.old);
+});
 import {APP_AREAS,areaForView,areaDestination} from '../src/core/uiNavigation';
 
 test('UI1: sześć obszarów zachowuje wszystkie dziesięć istniejących widoków bez duplikowania',()=>{

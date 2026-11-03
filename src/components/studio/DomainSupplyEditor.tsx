@@ -1,3 +1,4 @@
+import {usePendingDraft} from './workspaceDrafts';
 import {useState} from 'react';
 import type {DomainProjectV6} from '../../core/domainProject';
 import {
@@ -31,6 +32,7 @@ export function DomainSupplyEditor({
   const [items, setItems] = useState<MaterialSupplyItem[]>(initialItems);
   const [consumptions, setConsumptions] = useState<NonNullable<MaterialSupplyV6['consumptions']>>(initialConsumptions);
   const [dirty, setDirty] = useState(false);
+  usePendingDraft('DomainSupplyEditor',dirty);
   const [error, setError] = useState('');
 
   const changeItems = (next: MaterialSupplyItem[]) => {

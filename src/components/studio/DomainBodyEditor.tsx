@@ -1,4 +1,5 @@
 import {useState} from 'react';
+import {useInitialPendingDraft,usePendingDraft} from './workspaceDrafts';
 import type {DomainProjectV6, DomainPhysicalRole} from '../../core/domainProject';
 import {validateBodyRunInput, type BodyRunInput} from '../../core/bodyRunInput';
 
@@ -18,6 +19,9 @@ export function DomainBodyEditor({project, onRole, onInput, onUndo, onRedo, canU
       stationId: location.kind === 'station' ? location.stationId : '', copy: location.kind === 'station' ? location.copy : NaN};
   }) ?? []);
   const [error, setError] = useState('');
+  useInitialPendingDraft('DomainBodyEditor rows',rows);
+  const savedRole=project.operations.find(item=>item.id===operationId)?.physicalRole;
+  usePendingDraft('DomainBodyEditor role',kind!==(savedRole?.kind??'')||JSON.stringify(parts)!==JSON.stringify(savedRole?.kind==='subassembly-preparation'?savedRole.subassemblyIds:[]));
   const attempt = (action: () => void) => {setError(''); try {action();} catch (failure) {setError((failure as Error).message);}};
   const changeRow = (index: number, change: Partial<Row>) => {setRows(rows.map((row, i) => i === index ? {...row, ...change} : row)); setError('');};
   return <div className="panel" aria-label="Korpus i role szkicu 6">

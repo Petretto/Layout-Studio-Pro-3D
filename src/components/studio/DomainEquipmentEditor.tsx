@@ -1,3 +1,4 @@
+import {usePendingDraft} from './workspaceDrafts';
 import {useState} from 'react';
 import type {DomainProjectV6} from '../../core/domainProject';
 import type {DomainEquipmentChange} from '../../core/domainEquipmentEditing';
@@ -17,6 +18,8 @@ export function DomainEquipmentEditor({project, onApply, onUndo, onRedo, canUndo
   const [layoutObjectId, setLayoutObjectId] = useState('');
   const [capabilities, setCapabilities] = useState<string[]>([]);
 
+  const savedEquipment=project.equipment.find(item=>item.id===selected);
+  usePendingDraft('DomainEquipmentEditor',JSON.stringify([id,name,stationId,layoutObjectId,capabilities])!==JSON.stringify([savedEquipment?.id??'',savedEquipment?.name??'',savedEquipment?.stationId??'',savedEquipment?.layoutObjectId??'',savedEquipment?.capableOperationIds??[]]));
   const chooseEquipment = (value: string) => {
     const item = project.equipment.find(equipment => equipment.id === value);
     setSelected(value);

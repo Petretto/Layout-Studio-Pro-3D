@@ -4,6 +4,7 @@ import {EquipmentAppearanceEditor} from './EquipmentAppearanceEditor';
 import {sceneContentBounds} from '../../core/equipment/sceneFraming';
 import {applyEquipmentAppearance} from '../../core/equipment/equipmentAppearance';
 import React,{useEffect,useRef,useState} from 'react';
+import {usePendingDraft} from './workspaceDrafts';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls.js';
@@ -57,6 +58,7 @@ export function Scene({
   const sceneWorkspace=useRef<HTMLDivElement>(null);
   const host=useRef<HTMLDivElement>(null),fit=useRef<()=>void>(()=>{}),[error,setError]=useState('');
   const [editing,setEditing]=useState(false),[snap,setSnap]=useState(true),[draft,setDraft]=useState<LayoutObject|null>(null);
+  usePendingDraft('Scene properties',!!draft&&JSON.stringify(draft)!==JSON.stringify(p.layoutObjects.find(item=>item.id===draft.id)),'main');
   const [showZones,setShowZones]=useState(false),[showEnvelopes,setShowEnvelopes]=useState(false);
   const [gizmoMode,setGizmoMode]=useState<TransformGizmoMode>('translate');
   const [layers3D,setLayers3D]=useState<Layout3DLayersState>(DEFAULT_3D_LAYERS);

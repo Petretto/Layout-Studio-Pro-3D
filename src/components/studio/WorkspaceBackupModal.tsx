@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   createWorkspaceBackup,
   validateWorkspaceBackup,
-  restoreWorkspaceBackup,
   inspectWorkspaceStorage,
   APP_VERSION,
   WorkspaceRestoreError,
@@ -11,6 +10,7 @@ import {
   type BackupValidationResult,
 } from '../../core/workspaceBackup';
 import { download } from '../../core/project';
+import {protectedRestoreWorkspaceBackup,readWorkspaceRescues} from '../../core/workspaceReplacement';
 import {
   ShieldCheck,
   Download,
@@ -29,6 +29,8 @@ interface WorkspaceBackupModalProps {
   onClose: () => void;
   onRestored: () => void;
   unsavedChanges?: boolean;
+  initialBackup?: WorkspaceBackupPayload;
+  recoveryRequired?: boolean;
 }
 
 export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
@@ -36,6 +38,8 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
   onClose,
   onRestored,
   unsavedChanges = false,
+  initialBackup,
+  recoveryRequired = false,
 }) => {
   const [summary, setSummary] = useState<WorkspaceBackupSummary | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -48,6 +52,7 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
   const [confirmedBackup, setConfirmedBackup] = useState(false);
   const [recoverySnapshot, setRecoverySnapshot] = useState<string | null>(null);
   const [unrecovered, setUnrecovered] = useState(false);
+  const [rescueCopies,setRescueCopies]=useState<ReturnType<typeof readWorkspaceRescues>>([]);
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Refresh summary upon opening
@@ -60,11 +65,13 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
       setRollbackSnapshot(null); setConfirmedBackup(false); setRecoverySnapshot(null);
       setRestoreInProgress(false);
       setUnrecovered(false);
+      try{setRescueCopies(readWorkspaceRescues(localStorage));}catch{setRescueCopies([]);}
+      if(initialBackup)setValidationResult(validateWorkspaceBackup(JSON.stringify(initialBackup)));
       modalRef.current?.focus();
     }
     readId.current++;
     return () => { readId.current++; };
-  }, [isOpen]);
+  }, [isOpen,initialBackup]);
 
   const refreshSummary = () => {
     try {
@@ -87,7 +94,7 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
       const filename = `Layout_Studio_Backup_${stamp}.lsbackup.json`;
       download(json, filename, 'application/json');
       setRestoreMessage({
-        text: `Utworzono i pobrano kompletną kopię środowiska (${filename}). Suma SHA-256: ${backup.checksumSha256.substring(0, 16)}...`,
+        text: `Przekazano pełną kopię środowiska do pobrania (${filename}). Sprawdź zapisany plik. Suma SHA-256: ${backup.checksumSha256.substring(0, 16)}...`,
         type: 'success',
       });
       refreshSummary();
@@ -136,7 +143,7 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
         !rollbackSnapshot || !confirmedBackup || unsavedChanges || restoreInProgress) return;
     setRestoreInProgress(true);
     try {
-      const res = restoreWorkspaceBackup(window.localStorage, validationResult.payload, {expectedCurrentSnapshot: rollbackSnapshot});
+      const res = protectedRestoreWorkspaceBackup(window.localStorage, validationResult.payload, {snapshot:rollbackSnapshot,confirmed:confirmedBackup,unsavedChanges,rescueId:crypto.randomUUID(),allowRecovery:true});
       setRestoreMessage({text: `Przywrócono stan środowiska (${res.restoredKeys.length} zmienionych obszarów). Przeładowywanie aplikacji...`, type: 'success'});
       onRestored();
       window.location.reload();
@@ -175,7 +182,7 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
             </div>
           </div>
           <button
-            disabled={restoreInProgress || unrecovered}
+            disabled={restoreInProgress || unrecovered || recoveryRequired}
             onClick={onClose}
             aria-label="Zamknij okno kopii i odzyskiwania"
             className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
@@ -189,7 +196,8 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
           <p className="text-xs text-amber-300">Pełne przywrócenie zastępuje pięć obszarów: projekt 4, warianty 4, warsztat 5, szkic 6 i warianty 6. Brak obszaru (null) w kopii usuwa poprzednie dane tego obszaru. Pozostałe klucze przeglądarki nie są zmieniane.</p>
           {unsavedChanges && <p role="alert" className="text-amber-300">Masz niezapisane zmiany. Zamknij okno i zachowaj je przez zapis lub eksport JSON przed przywróceniem. Kopia środowiska obejmuje zapisane dane przeglądarki.</p>}
           {recoverySnapshot && <button onClick={() => download(recoverySnapshot, 'Ratunkowy_stan_przed_bledem.lsbackup.json', 'application/json')}>Pobierz stan sprzed błędu</button>}
-          {unrecovered && <p role="alert" className="text-red-300">Wycofanie nie zostało potwierdzone. Edycja pozostaje zablokowana. Zachowaj stan sprzed błędu i przywróć sprawdzoną kopię przed powrotem do pracy.</p>}
+          {(unrecovered || recoveryRequired) && <p role="alert" className="text-red-300">Zakończenie zastępowania danych nie zostało potwierdzone. Edycja i automatyczny zapis pozostają zablokowane także po przeładowaniu. Zachowaj kopię sprzed zastąpienia i przywróć sprawdzony stan przed powrotem do pracy.</p>}
+          {rescueCopies.length>0&&<details><summary>Kopie sprzed zastąpienia danych ({rescueCopies.length})</summary><p>Kopie są zapisane oddzielnie w tej przeglądarce. Pobierz je także na dysk — wyczyszczenie pamięci przeglądarki usunie lokalne kopie.</p>{rescueCopies.map(copy=><div key={copy.key} className="panel" style={{display:'flex',flexDirection:'column',alignItems:'flex-start',gap:'0.5rem'}}><strong>{copy.name}</strong><button onClick={()=>download(copy.raw,`${copy.key.replace(':','_')}.lsbackup.json`,'application/json')}>Pobierz kopię sprzed zastąpienia</button><button disabled={!copy.valid} onClick={()=>{setValidationResult(validateWorkspaceBackup(copy.raw));setRollbackSnapshot(null);setConfirmedBackup(false);}}>Wybierz tę kopię do przywrócenia</button>{!copy.valid&&<p>Surowy stan do odzyskiwania — pobierz bez nadpisywania.</p>}</div>)}</details>}
           {/* Notifications */}
           {restoreMessage && (
             <div
@@ -344,7 +352,7 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
                     </div>
 
                     <div className="pt-2 space-y-2">
-                      <button disabled={restoreInProgress} onClick={downloadRollback}>Pobierz kopię ratunkową przed przywróceniem</button>
+                      <button disabled={restoreInProgress||unsavedChanges} onClick={downloadRollback}>Pobierz kopię ratunkową przed przywróceniem</button>
                       <label className="flex items-center gap-2"><input type="checkbox" disabled={!rollbackSnapshot || restoreInProgress}
                         checked={confirmedBackup} onChange={event => setConfirmedBackup(event.target.checked)} />
                         Potwierdzam zapisanie kopii ratunkowej i zastąpienie pięciu obszarów danych.</label>
@@ -408,7 +416,7 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
         <div className="px-6 py-3 border-t border-slate-800 bg-slate-800/30 flex justify-end">
           <button
             type="button"
-            disabled={restoreInProgress || unrecovered}
+            disabled={restoreInProgress || unrecovered || recoveryRequired}
             onClick={onClose}
             className="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded-xl transition"
           >

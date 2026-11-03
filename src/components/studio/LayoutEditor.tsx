@@ -1,5 +1,6 @@
 import {Maximize2,Minimize2,ZoomIn,ZoomOut,Scan,Hand,MousePointer2} from 'lucide-react';
 import {EquipmentAppearanceEditor} from './EquipmentAppearanceEditor';
+import {usePendingDraft} from './workspaceDrafts';
 import {applyEquipmentAppearance} from '../../core/equipment/equipmentAppearance';
 import React,{useEffect,useRef,useState} from 'react';
 import { FacilityUnderlay,ProjectData,LayoutObject,Obstacle } from '../../core/models/types';
@@ -19,6 +20,7 @@ export function LayoutEditor({project:p,change,confirm,simulation,selectedIds:pr
   const [calibrateMode,setCalibrateMode]=useState(false),[calStart,setCalStart]=useState<{x:number;y:number}|null>(null),[calEnd,setCalEnd]=useState<{x:number;y:number}|null>(null),[calLocked,setCalLocked]=useState(false),[calDistanceMm,setCalDistanceMm]=useState<number>(5000),[underlayError,setUnderlayError]=useState('');
   const [dxfText,setDxfText]=useState(''),[dxfName,setDxfName]=useState(''),[dxfUnit,setDxfUnit]=useState<DxfUnitSelection>('auto'),[dxfScope,setDxfScope]=useState<DxfImportScope>('facility-and-obstacles'),[dxfReplaceObstacles,setDxfReplaceObstacles]=useState(false),[dxfError,setDxfError]=useState('');
   const [focused,setFocused]=useState(false);
+  usePendingDraft('LayoutEditor',!!draft&&JSON.stringify(draft)!==JSON.stringify(p.layoutObjects.find(item=>item.id===draft.id))||!!obs&&JSON.stringify(obs)!==JSON.stringify(p.obstacles.find(item=>item.id===obs.id)),'main');
   const focusToggle=useRef<HTMLButtonElement|null>(null);
   const [panel,setPanel]=useState<'tree'|'hall'|'properties'|null>(null);
   const [internalSelectedIds,setInternalSelectedIds]=useState<string[]>([]);

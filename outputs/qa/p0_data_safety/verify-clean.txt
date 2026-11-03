@@ -1,0 +1,36 @@
+
+> layout-generator-pro-3d-v2@0.4.0 verify:clean
+> node scripts/verify_clean_install.mjs
+
+================================================================
+Layout Studio Pro 3D — Weryfikacja czystej instalacji (Plan 7.6)
+================================================================
+
+1. Środowisko uruchomieniowe Node.js: v24.14.0
+[PASS] Wersja Node.js v24.14.0 spełnia wymagania produkcyjne (>= 20.19.0).
+
+2. Weryfikacja artefaktów dystrybucyjnych (dist/):
+[PASS] Plik dist/index.html istnieje.
+[PASS] Brak wskazanych CDN w index.html. Test nie dowodzi pełnej pracy offline ani braku telemetrii.
+[PASS] Wykryto 3 głównych zasobów zbundlowanych w index.html.
+[PASS] Asset lokalny dostępny: dist/assets/index-DqwqGVJu.js
+[PASS] Asset lokalny dostępny: dist/assets/spreadsheets-BZe_PqlR.js
+[PASS] Asset lokalny dostępny: dist/assets/index-DUOeSWIi.css
+[PASS] Web Worker dostępny lokalnie w dist/assets/: schedule.worker
+[PASS] Web Worker dostępny lokalnie w dist/assets/: network.worker
+
+3. Test uruchomienia lokalnego serwera HTTP (port 4185):
+[PASS] Serwer lokalny pomyślnie uruchomiony na http://127.0.0.1:4185
+[PASS] Odpowiedź HTTP 200 OK z serwera lokalnego.
+[PASS] Nagłówki bezpieczeństwa Content-Security-Policy obecne.
+[PASS] Serwer lokalny pomyślnie zatrzymany po teście.
+
+4. Test mechanizmu Disaster Recovery na czystym środowisku:
+[PASS] Czyste środowisko tworzy i waliduje poprawny pusty backup z sumą SHA-256.
+[PASS] Backup projektu przemysłowego zwalidowany poprawnie z SHA-256.
+[PASS] Projekt pomyślnie przywrócony na nowym środowisku z zachowaniem tożsamości i sumy integralności.
+
+================================================================
+PODSUMOWANIE: Wszystkie testy czystej instalacji i odzyskiwania ZALICZONE.
+Potwierdzono wyłącznie zakres tego skryptu. Odbiór wydania, UI i wdrożenia wymaga osobnych dowodów.
+================================================================

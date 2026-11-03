@@ -4,6 +4,10 @@ Data: 2026-11-01. Status: **plan do zatwierdzenia**. Nie rozpoczęto implementac
 
 Aktualizacja procedury: **2026-11-02 — podstawą rozwoju jest pobrany i zweryfikowany `origin/main`, RC1 pozostaje historycznym materiałem audytu**. Reweryfikacja nie wykazała różnic main względem RC1, dlatego zakres i kolejność pakietów pozostają bez zmian. Nie wykonano nowych poprawek funkcjonalnych; zachowano wcześniej ukończony osobny monitor.
 
+## Aktualizacja wykonania — 2026-11-03
+
+Właściciel polecił realizację planu; G0 zamknięta. P0 wdrożone lokalnie na `codex/v1-p0-data-safety`, z bazą `f1ae9cbb8cffb9a72a244bab35e995063853e52f` (zweryfikowany main i wcześniejszy plan/monitor). S-03 odtworzono w rzeczywistym UI przed naprawą; końcowe 24/24 focused, 507/507 pełne, UI 17/17, build i verify:clean PASS. [Raport P0](../weryfikacja/WERYFIKACJA_REMEDIACJI_P0_BEZPIECZENSTWO_DANYCH.md). Niezależny przegląd kontraktu odzyskiwania pozostaje NOT_VERIFIED. G1 otwarta do PT i niezależnego odbioru; G2 wymaga oddzielnego zatwierdzenia projektu P1. Następny pakiet PT. Historyczne opisy stanu z 1–2 listopada poniżej/wyżej dokumentują etap planowania i nie są bieżącym statusem. Nie utworzono RC2 i nie wykonano deploya.
+
 ## 1. Executive Summary
 
 Najpilniejszy jest S-03: bezpośrednie wczytanie przykładu pomija ochronę aktywnej pracy. Reprodukcja na sztucznej pamięci potwierdziła zastąpienie trzech obszarów bez trwałego zachowania poprzednich danych. Test przeglądarkowy pozostaje do wykonania jako pierwsze działanie P0. Nie należy utożsamiać tego z BL-01, który jest błędem atrapy testowej DR.
@@ -76,8 +80,8 @@ Statusy poniżej są źródłem dla osobnego `progress-dashboard`. Zmiana status
 
 | Bramka | Warunek | Status | Dowód |
 |---|---|---|---|
-| G0 | Zatwierdzenie planu remediacji przez właściciela | otwarta | Plan przygotowany; brak zatwierdzenia dalszej implementacji |
-| G1 | Ochrona danych P0 i wykonywalne testy PT odebrane | otwarta | API S-03 odtworzone; reprodukcja UI i naprawa przed nami |
+| G0 | Zatwierdzenie planu remediacji przez właściciela | zamknięta | 2026-11-02: właściciel polecił działać zgodnie z planem; G2 pozostaje osobnym odbiorem architektury |
+| G1 | Ochrona danych P0 i wykonywalne testy PT odebrane | otwarta | P0 lokalnie wdrożone i sprawdzone; PT oraz niezależny odbiór kontraktu odzyskiwania pozostają otwarte |
 | G2 | Właściciel zatwierdził projekt P1 po niezależnym przeglądzie | otwarta | Architektura C jest rekomendacją do zatwierdzenia |
 | G3 | Migracje, integracja, wspólny raport oraz UI3/UI4/X3 odebrane | otwarta | Pakiety P2a–d/P3 nierozpoczęte |
 | G4 | Ukończone zmiany i pełna weryfikacja kandydata przed RC2 | otwarta | Nie utworzono RC2; brak nowego pełnego baseline |
@@ -87,7 +91,7 @@ Statusy poniżej są źródłem dla osobnego `progress-dashboard`. Zmiana status
 
 | Kolejność | Pakiet | Status | Zależności | Warunek i uzasadnienie |
 |---|---|---|---|---|
-| 1 | P0 — ochrona danych i DR | nierozpoczęte | — | Najpierw S-03 w UI, potem wspólna ochrona i harness DR; po zatwierdzeniu planu G0 |
+| 1 | P0 — ochrona danych i DR | wdrożone | — | Lokalnie 2026-11-03: 24/24 focused, 507/507 pełne, UI 17/17, build i DR PASS; niezależny przegląd kontraktu do odbioru G1 |
 | 2 | PT — przywrócenie wiarygodnych testów | nierozpoczęte | P0 | Stabilne selektory i asercje potrzebne do odbioru kolejnych zmian |
 | 3 | P1 — odbiór kontraktów integracji | nierozpoczęte | P0, PT | Rozstrzyga trwałość, właścicieli i migrację przed zmianą zapisu |
 | 4 | P4b — zamknięcie publicznych powierzchni Eko | nierozpoczęte | — | Po G0; niezależne od integracji, wykonanie wcześnie ogranicza dalszą dystrybucję |
