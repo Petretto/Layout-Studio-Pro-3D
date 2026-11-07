@@ -8,7 +8,7 @@ import {strictEqual,deepStrictEqual,ok} from 'node:assert';
 const port=5301,cdp=9401,sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const edge=['C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe','C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe'].find(existsSync);
 if(!edge)throw new Error('Edge not found');
-const out=resolve('outputs/qa/7_12a2b1_ui');mkdirSync(out,{recursive:true});
+const out=resolve('outputs/qa/pt_e2e/7_12a2b1_ui');mkdirSync(out,{recursive:true});
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(port)},stdio:'ignore',windowsHide:true});
 const browser=spawn(edge,[`--remote-debugging-port=${cdp}`,`--user-data-dir=${mkdtempSync(join(tmpdir(),'edge-7-12a2b1-'))}`,'--headless=new','--no-first-run','--use-angle=swiftshader','--enable-unsafe-swiftshader','--window-size=1440,1100','--force-device-scale-factor=1','about:blank'],{stdio:'ignore',windowsHide:true});
 let ws;
@@ -22,13 +22,13 @@ try{
   const send=(method,params={})=>new Promise((resolve,reject)=>{const next=++id,timer=setTimeout(()=>{pending.delete(next);reject(new Error('Timeout '+method+' '+(params.expression??'').slice(0,250)));},15000);pending.set(next,{resolve:r=>{clearTimeout(timer);resolve(r);},reject:e=>{clearTimeout(timer);reject(e);}});ws.send(JSON.stringify({id:next,method,params}));});
   const evaluate=async expression=>{const r=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw new Error(r.exceptionDetails.exception?.description??r.exceptionDetails.text);return r.result.value;};
   const until=async expression=>{for(let i=0;i<100;i++){if(await evaluate(expression))return;await sleep(100);}throw new Error('Timeout '+expression);};
-  const click=async(text,scope='document')=>{await evaluate(`(()=>{const b=[...${scope}.querySelectorAll('button')].find(b=>b.textContent.trim()===${JSON.stringify(text)});if(!b||b.disabled)throw new Error('Missing '+${JSON.stringify(text)});b.click()})()`);await sleep(100);};
-  const nav=async text=>{await evaluate(`[...document.querySelectorAll('.studio-nav button')].find(b=>b.textContent.includes(${JSON.stringify(text)})).click()`);await sleep(120);};
+  const click=async(text,scope='document')=>{if(text==='Pakiet projektu'){await evaluate(`document.querySelector('[aria-label="Menu projektu"]').click()`);await sleep(80);}await evaluate(`(()=>{const b=[...${scope}.querySelectorAll('button')].find(b=>b.textContent.trim()===${JSON.stringify(text)});if(!b||b.disabled)throw new Error('Missing '+${JSON.stringify(text)});b.click()})()`);await sleep(100);};
+  const nav=async text=>{const map={'Stanowiska v5':['Proces i stanowiska','stations'],'1 Popyt':['Popyt i materiały','demand'],'3 BOM':['Popyt i materiały','bom'],'2 Proces':['Proces i stanowiska','process'],'4 Bilans':['Bilansowanie','balance'],'5 Hala':['Hala i symulacja','layout']};const [area,view]=map[text]??[text,''];await evaluate(`(()=>{const b=[...document.querySelectorAll('.studio-nav button')].find(x=>x.textContent.includes(${JSON.stringify(area)}));if(!b)throw Error('Missing navigation');b.click()})()`);await sleep(120);if(view&&view!=='demand'&&view!=='process'&&view!=='balance'&&view!=='layout')await evaluate(`(()=>{const b=document.querySelector('[data-view='+${JSON.stringify(view)}+']');if(!b)throw Error('Missing subview');b.click()})()`);await sleep(120);};
   const setElement=(value)=>`const proto=e.tagName==='SELECT'?HTMLSelectElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(proto,'value').set.call(e,${JSON.stringify(value)});e.dispatchEvent(new Event(e.tagName==='SELECT'?'change':'input',{bubbles:true}));`;
   const field=async(selector,value)=>{await evaluate(`(()=>{const e=document.querySelector(${JSON.stringify(selector)});if(!e)throw new Error('Missing field');${setElement(value)}})()`);await sleep(80);};
   const upload=async(selector,file)=>{const {root}=await send('DOM.getDocument');const {nodeId}=await send('DOM.querySelector',{nodeId:root.nodeId,selector});ok(nodeId,'File input must exist');await send('DOM.setFileInputFiles',{nodeId,files:[resolve(file)]});};
   const snap=async name=>{
-    await evaluate(`new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))`);await sleep(500);
+    await sleep(500);
     writeFileSync(join(out,name+'.png'),Buffer.from((await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false})).data,'base64'));
   };
   await send('Page.enable');await send('Runtime.enable');
@@ -39,7 +39,7 @@ try{
   const downloads=mkdtempSync(join(out,'downloads_'));await send('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:downloads});
   const downloaded=async action=>{const destination=mkdtempSync(join(downloads,'action_'));await send('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:destination});await action();for(let i=0;i<100;i++){const name=readdirSync(destination).find(n=>n.endsWith('.json'));if(name)return join(destination,name);await sleep(100);}throw new Error('Download incomplete');};
   const ready=async()=>{await sleep(900);await until(`!!document.querySelector('.studio-nav')&&!document.querySelector('[aria-label="Pakiet projektu"]')`);};
-  await click('Pakiet projektu');await upload('[aria-label="Plik pakietu projektu"]','przyklady/01_zestaw_montazowy/projekt-pokazowy.json');await until(`document.body.textContent.includes('Pakiet poprawny.')`);await downloaded(()=>click('Pobierz kopię ratunkową przed importem'));await evaluate(`document.querySelector('[aria-label="Pakiet projektu"] input[type=checkbox]').click()`);await click('Wczytaj pakiet i przeładuj');await ready();
+  await click('Pakiet projektu');await upload('[aria-label="Plik pakietu projektu"]','przyklady/01_zestaw_montazowy/projekt-pokazowy.json');await until(`document.body.textContent.includes('Pakiet poprawny.')`);await downloaded(()=>click('Pobierz kopię ratunkową przed wczytaniem'));await evaluate(`document.querySelector('[aria-label="Pakiet projektu"] input[type=checkbox]').click()`);await click('Wczytaj projekt i zastosuj');await ready();
   const source4=await evaluate(`JSON.parse(localStorage.getItem('layout-studio-v3')).project`);
   await nav('Stanowiska v5');
   const player=`document.querySelector('[aria-label="Odtwarzanie operacji projektu 3D"]')`;

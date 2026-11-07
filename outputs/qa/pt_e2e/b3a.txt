@@ -1,0 +1,1 @@
+PASS C2-B3a UI: protected import, 170 s, buffered 60–70, direct 90–100, residual 2, held operator to 90, reload and package export.

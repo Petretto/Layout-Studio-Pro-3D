@@ -5,7 +5,7 @@ import {resolve,join} from 'node:path';
 import {createHash} from 'node:crypto';
 import {strict as assert} from 'node:assert';
 
-const out=resolve('outputs/qa/7_12c2_b2a'),port=5316,cdp=9416;
+const out=resolve('outputs/qa/pt_e2e/7_12c2_b2a'),port=5316,cdp=9416;
 mkdirSync(out,{recursive:true});
 const pkg=JSON.parse(readFileSync('przyklady/03_modul_urzadzenia/projekt-pokazowy.json','utf8'));
 const draft=JSON.parse(pkg.data.draftRaw),project=draft.project;
@@ -58,8 +58,8 @@ try{
   await send('Page.enable');await send('Runtime.enable');await send('Page.navigate',{url:`http://127.0.0.1:${port}/`});await until(`!!document.querySelector('.studio')`);
   await menu();const {root}=await send('DOM.getDocument'),{nodeId}=await send('DOM.querySelector',{nodeId:root.nodeId,selector:'[aria-label="Plik pakietu projektu"]'});
   await send('DOM.setFileInputFiles',{nodeId,files:[fixture]});await until(`document.body.textContent.includes('Pakiet poprawny.')`);
-  await downloaded(()=>click('Pobierz kopię ratunkową przed importem'));
-  await evaluate(`document.querySelector('[aria-label="Pakiet projektu"] input[type=checkbox]').click()`);await click('Wczytaj pakiet i przeładuj');
+  await downloaded(()=>click('Pobierz kopię ratunkową przed wczytaniem'));
+  await evaluate(`document.querySelector('[aria-label="Pakiet projektu"] input[type=checkbox]').click()`);await click('Wczytaj projekt i zastosuj');
   await sleep(1000);await until(`!!document.querySelector('.studio')&&!document.querySelector('[aria-label="Pakiet projektu"]')`);
   const data=await calculate();await sleep(300);
   writeFileSync(join(out,'buffers_stock.png'),Buffer.from((await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false})).data,'base64'));
@@ -68,7 +68,7 @@ try{
   await send('Page.reload');await sleep(1000);await until(`!!document.querySelector('.studio')`);
   assert.equal(await evaluate(`localStorage.getItem('layout-studio-domain-v6-draft-v1')`),raw);
   assert.deepEqual(await calculate(),data);
-  await menu();const exportPath=await downloaded(()=>click('Pobierz pakiet projektu'));
+  await menu();const exportPath=await downloaded(()=>click('Pobierz pakiet projektu (.project.json)'));
   const exported=JSON.parse(readFileSync(exportPath,'utf8'));assert.deepEqual(JSON.parse(exported.data.draftRaw).project.subassemblyBuffers,project.subassemblyBuffers);
   assert.equal(exported.data.source4Json,pkg.data.source4Json);assert.deepEqual(errors,[]);
   writeFileSync(join(out,'ui.json'),JSON.stringify({result:'PASS',makespanSeconds:2210,rows:data.rows,residualStock:data.stock,reload:true,exportRoundTrip:true,sourceUnchanged:true,runtimeErrors:errors},null,2));

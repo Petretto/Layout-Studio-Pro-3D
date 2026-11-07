@@ -1,0 +1,1 @@
+PASS C2-B3c UI: protected import, 630 s, local wait 40–100, operator ends 40, no intermediate deposit, residual 2+2, reload and export.

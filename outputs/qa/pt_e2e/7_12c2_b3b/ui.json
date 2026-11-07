@@ -1,0 +1,232 @@
+{
+  "result": "PASS",
+  "makespanSeconds": 840,
+  "blockedBody": [
+    140,
+    500
+  ],
+  "releasedOperator": [
+    100,
+    140
+  ],
+  "transportRows": [
+    [
+      "Przewóz korpusu",
+      "MU-R-M1-INT",
+      "80–90",
+      "MU-W3",
+      "MU-CART-M1-INT"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-M1-INT",
+      "90–100",
+      "MU-W3",
+      "MU-CART-M1-INT"
+    ],
+    [
+      "Przewóz podzespołu · partia LOT-PWR-1",
+      "MU-R-PWR-INT",
+      "100–110",
+      "MU-W1",
+      "MU-CART-PWR-INT"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-PWR-INT",
+      "110–120",
+      "MU-W1",
+      "MU-CART-PWR-INT"
+    ],
+    [
+      "Przewóz podzespołu · partia LOT-DRV-1",
+      "MU-R-DRV-INT",
+      "120–130",
+      "MU-W2",
+      "MU-CART-DRV-INT"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-DRV-INT",
+      "130–140",
+      "MU-W2",
+      "MU-CART-DRV-INT"
+    ],
+    [
+      "Przewóz korpusu",
+      "MU-R-M1-INT",
+      "500–510",
+      "MU-W3",
+      "MU-CART-M1-INT"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-M1-INT",
+      "510–520",
+      "MU-W3",
+      "MU-CART-M1-INT"
+    ],
+    [
+      "Przewóz podzespołu · partia LOT-PWR-2",
+      "MU-R-PWR-INT",
+      "510–520",
+      "MU-W1",
+      "MU-CART-PWR-INT"
+    ],
+    [
+      "Przewóz podzespołu · partia LOT-DRV-2",
+      "MU-R-DRV-INT",
+      "510–520",
+      "MU-W2",
+      "MU-CART-DRV-INT"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-PWR-INT",
+      "520–530",
+      "MU-W1",
+      "MU-CART-PWR-INT"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-DRV-INT",
+      "520–530",
+      "MU-W2",
+      "MU-CART-DRV-INT"
+    ],
+    [
+      "Przewóz korpusu",
+      "MU-R-M1-INT",
+      "570–580",
+      "MU-W3",
+      "MU-CART-M1-INT"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-M1-INT",
+      "580–590",
+      "MU-W3",
+      "MU-CART-M1-INT"
+    ],
+    [
+      "Przewóz podzespołu · partia LOT-PWR-3",
+      "MU-R-PWR-INT",
+      "580–590",
+      "MU-W1",
+      "MU-CART-PWR-INT"
+    ],
+    [
+      "Przewóz podzespołu · partia LOT-DRV-3",
+      "MU-R-DRV-INT",
+      "580–590",
+      "MU-W2",
+      "MU-CART-DRV-INT"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-PWR-INT",
+      "590–600",
+      "MU-W1",
+      "MU-CART-PWR-INT"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-DRV-INT",
+      "590–600",
+      "MU-W2",
+      "MU-CART-DRV-INT"
+    ],
+    [
+      "Przewóz korpusu",
+      "MU-R-INT-TEST",
+      "640–650",
+      "MU-W4",
+      "MU-CART-INT-TEST"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-INT-TEST",
+      "650–660",
+      "MU-W4",
+      "MU-CART-INT-TEST"
+    ],
+    [
+      "Przewóz korpusu",
+      "MU-R-INT-TEST",
+      "730–740",
+      "MU-W4",
+      "MU-CART-INT-TEST"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-INT-TEST",
+      "740–750",
+      "MU-W4",
+      "MU-CART-INT-TEST"
+    ],
+    [
+      "Przewóz korpusu",
+      "MU-R-INT-TEST",
+      "750–760",
+      "MU-W4",
+      "MU-CART-INT-TEST"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-INT-TEST",
+      "760–770",
+      "MU-W4",
+      "MU-CART-INT-TEST"
+    ]
+  ],
+  "rows": [
+    [
+      "SUB-PWR / szt.",
+      "ST-MU-PWR / 1",
+      "Wyjście",
+      "5",
+      "0",
+      "0",
+      "Zwolniony"
+    ],
+    [
+      "SUB-PWR / szt.",
+      "ST-MU-MAIN2 / 1",
+      "Wejście",
+      "20",
+      "6",
+      "0",
+      "—"
+    ],
+    [
+      "SUB-DRV / szt.",
+      "ST-MU-DRV / 1",
+      "Wyjście",
+      "5",
+      "0",
+      "0",
+      "Zwolniony"
+    ],
+    [
+      "SUB-DRV / szt.",
+      "ST-MU-MAIN2 / 1",
+      "Wejście",
+      "20",
+      "6",
+      "0",
+      "—"
+    ]
+  ],
+  "residualStock": [
+    "LOT-PWR-1 · SUB-PWR · zapas 2 szt. · ST-MU-MAIN2 / 1 · wejście odbiorcy",
+    "LOT-PWR-2 · SUB-PWR · zapas 2 szt. · ST-MU-MAIN2 / 1 · wejście odbiorcy",
+    "LOT-PWR-3 · SUB-PWR · zapas 2 szt. · ST-MU-MAIN2 / 1 · wejście odbiorcy",
+    "LOT-DRV-1 · SUB-DRV · zapas 2 szt. · ST-MU-MAIN2 / 1 · wejście odbiorcy",
+    "LOT-DRV-2 · SUB-DRV · zapas 2 szt. · ST-MU-MAIN2 / 1 · wejście odbiorcy",
+    "LOT-DRV-3 · SUB-DRV · zapas 2 szt. · ST-MU-MAIN2 / 1 · wejście odbiorcy"
+  ],
+  "reload": true,
+  "exportRoundTrip": true,
+  "sourceUnchanged": true,
+  "runtimeErrors": []
+}

@@ -4,7 +4,7 @@ import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
 import {strict as assert} from 'node:assert';
 
-const out=resolve('outputs/qa/7_12c2_b3_ui'),port=5320,cdp=9420;
+const out=resolve('outputs/qa/pt_e2e/7_12c2_b3_ui'),port=5320,cdp=9420;
 mkdirSync(out,{recursive:true});
 const fixture=resolve('przyklady/03_modul_urzadzenia/projekt-pokazowy.json');
 const original=JSON.parse(readFileSync(fixture,'utf8'));
@@ -29,7 +29,7 @@ try{
   const field=async(label,value)=>{await evaluate(`(()=>{const e=document.querySelector('[aria-label='+${JSON.stringify(JSON.stringify(label))}+']');if(!e)throw new Error('Missing field '+${JSON.stringify(label)});const proto=e.tagName==='SELECT'?HTMLSelectElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(proto,'value').set.call(e,${JSON.stringify(value)});e.dispatchEvent(new Event(e.tagName==='SELECT'?'change':'input',{bubbles:true}));})()`);await sleep(70);};
   const menu=async()=>{await evaluate(`document.querySelector('button[aria-label="Menu projektu"]').click()`);await click('Pakiet projektu');await until(`!!document.querySelector('[aria-label="Pakiet projektu"]')`);};
   const downloaded=async action=>{const dir=mkdtempSync(join(out,'download_'));await send('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:dir});await action();for(let i=0;i<100;i++){const name=readdirSync(dir).find(name=>name.endsWith('.json'));if(name)return join(dir,name);await sleep(100);}throw new Error('Missing download');};
-  const upload=async file=>{const {root}=await send('DOM.getDocument'),{nodeId}=await send('DOM.querySelector',{nodeId:root.nodeId,selector:'[aria-label="Plik pakietu projektu"]'});await send('DOM.setFileInputFiles',{nodeId,files:[file]});await until(`document.body.textContent.includes('Pakiet poprawny.')`);await downloaded(()=>click('Pobierz kopię ratunkową przed importem'));await evaluate(`document.querySelector('[aria-label="Pakiet projektu"] input[type=checkbox]').click()`);await click('Wczytaj pakiet i przeładuj');await sleep(1000);await until(`!!document.querySelector('.studio')&&!document.querySelector('[aria-label="Pakiet projektu"]')`);};
+  const upload=async file=>{const {root}=await send('DOM.getDocument'),{nodeId}=await send('DOM.querySelector',{nodeId:root.nodeId,selector:'[aria-label="Plik pakietu projektu"]'});await send('DOM.setFileInputFiles',{nodeId,files:[file]});await until(`document.body.textContent.includes('Pakiet poprawny.')`);await downloaded(()=>click('Pobierz kopię ratunkową przed wczytaniem'));await evaluate(`document.querySelector('[aria-label="Pakiet projektu"] input[type=checkbox]').click()`);await click('Wczytaj projekt i zastosuj');await sleep(1000);await until(`!!document.querySelector('.studio')&&!document.querySelector('[aria-label="Pakiet projektu"]')`);};
   const nav=async()=>{await evaluate(`([...document.querySelectorAll('.studio-nav button,.shell-nav button,.shell-subnav button')].find(b=>b.textContent.includes('Proces i stanowiska'))).click()`);await sleep(150);await evaluate(`(document.querySelector('button[data-view="stations"]')||[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Stanowiska i zasoby'))).click()`);await until(`!!document.querySelector('[aria-label="Bufory podmontaży szkicu 6"]')`);};
   const raw=()=>evaluate(`localStorage.getItem('layout-studio-domain-v6-draft-v1')`);
   const form=`document.querySelector('[aria-label="Bufory podmontaży szkicu 6"]')`;
@@ -49,7 +49,7 @@ try{
   await click('Usuń konfigurację buforów podmontaży',form);assert.equal(JSON.parse(await raw()).project.subassemblyBuffers,undefined);await click('Cofnij dane szkicu',form);const final=await raw();assert.deepEqual(JSON.parse(final).project,redone.project);assert.equal(JSON.parse(final).originalJson,parsed.originalJson);
   await evaluate(`${form}.scrollIntoView({block:'start'})`);await sleep(200);writeFileSync(join(out,'formularz.png'),Buffer.from((await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false})).data,'base64'));
   await send('Page.reload');await sleep(1000);await until(`!!document.querySelector('.studio')`);assert.equal(await raw(),final);
-  await menu();const exportedPath=await downloaded(()=>click('Pobierz pakiet projektu'));const exported=JSON.parse(readFileSync(exportedPath,'utf8'));assert.equal(exported.data.draftRaw,final);assert.equal(exported.data.source4Json,original.data.source4Json);
+  await menu();const exportedPath=await downloaded(()=>click('Pobierz pakiet projektu (.project.json)'));const exported=JSON.parse(readFileSync(exportedPath,'utf8'));assert.equal(exported.data.draftRaw,final);assert.equal(exported.data.source4Json,original.data.source4Json);
   await upload(exportedPath);assert.equal(await raw(),final);assert.deepEqual(errors,[]);
   writeFileSync(join(out,'ui.json'),JSON.stringify({result:'PASS',twoComponents:true,invalidAndOverlap:true,editDiscardDelete:true,undoRedo:true,reload:true,exportImport:true,originalAndOtherFieldsUnchanged:true,runtimeErrors:errors},null,2));
   console.log('PASS C2-B3-UI: two components, invalid/overlap, edit/delete/discard, undo/redo, reload, export/import, original preserved.');

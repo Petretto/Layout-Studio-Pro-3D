@@ -1,4 +1,5 @@
-import {spawn} from 'node:child_process';
+import {spawn,spawnSync} from 'node:child_process';
+import {importProjectPackageUi} from './packageImport.mjs';
 import {existsSync,mkdirSync,writeFileSync,mkdtempSync,readdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
@@ -8,7 +9,7 @@ import {strictEqual,ok} from 'node:assert';
 const port=5297,cdp=9397,sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const edge=['C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe','C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe'].find(existsSync);
 if(!edge)throw new Error('Edge not found');
-const out=resolve('outputs/qa/7_9_pilot');mkdirSync(out,{recursive:true});
+const out=resolve('outputs/qa/pt_e2e/pilot');mkdirSync(out,{recursive:true});
 const downloads=join(out,`downloads_${Math.random().toString(36).slice(2,8)}`);mkdirSync(downloads,{recursive:true});
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(port)},stdio:'ignore',windowsHide:true});
 const browser=spawn(edge,[`--remote-debugging-port=${cdp}`,`--user-data-dir=${mkdtempSync(join(tmpdir(),'edge-7-9-'))}`,'--headless=new','--no-first-run','--disable-gpu','--window-size=1440,1100','--force-device-scale-factor=1','about:blank'],{stdio:'ignore',windowsHide:true});
@@ -100,6 +101,10 @@ try{
 
   console.log('3. Uruchomienie interaktywnego tutorialu 7.14 na projekcie bazowym...');
   await evaluate(`document.querySelector('.tutorial-action-card').click()`);
+  await until(`!!document.querySelector('[data-testid="package-apply"]')`);
+  await downloaded(()=>click('[data-testid="package-rescue"]'));
+  await click('[aria-label="Pakiet projektu"] input[type=checkbox]');
+  await click('[data-testid="package-apply"]');
   await until(`!!document.querySelector('.tutorial-dock')`);
   await snap('03_tutorial_dock_welcome');
 
@@ -110,12 +115,9 @@ try{
   await snap('04_tutorial_step_8_report');
   await click('Zamknij tutorial');
   await sleep(300);
-  // Obsłuż ewentualny modal potwierdzenia wyjścia z tutorialu
-  const modalConfirm = await evaluate(`!!document.querySelector('.tutorial-modal-actions button.primary')`);
-  if(modalConfirm){
-    await evaluate(`document.querySelector('.tutorial-modal-actions button.primary').click()`);
-    await sleep(300);
-  }
+  // Exiting tutorial opens the protected restore preview. Cancel to retain the tutorial project.
+  await until(`!!document.querySelector('[aria-label="Kopie i odzyskiwanie środowiska"]')`);
+  await click('[aria-label="Zamknij okno kopii i odzyskiwania"]');
 
   const reloadReady=async()=>{
     await sleep(1200);
@@ -136,22 +138,14 @@ try{
     await until(`!!document.querySelector('[aria-label="Pakiet projektu"]')`);
   };
 
-  const importPackage=async path=>{
-    await openPackageModal();
-    await upload('[aria-label="Plik pakietu projektu"]',path);
-    await until(`document.body.textContent.includes('Pakiet poprawny.')`);
-    await downloaded(()=>click('Pobierz kopię ratunkową przed importem'));
-    await evaluate(`document.querySelector('[aria-label="Pakiet projektu"] input[type=checkbox]').click()`);
-    await click('Wczytaj pakiet i przeładuj');
-    await reloadReady();
-  };
+  const importPackage=path=>importProjectPackageUi({open:openPackageModal,upload,until,downloaded,click,evaluate,reload:reloadReady},path);
 
   const goToStations=async()=>{
     await nav('Proces i stanowiska');
     await sleep(150);
     await evaluate(`(()=>{
       const b=document.querySelector('button[data-view="stations"]') || [...document.querySelectorAll('button')].find(b=>b.textContent.includes('Stanowiska i zasoby'));
-      if(b)b.click();
+      if(!b)throw new Error('Missing station navigation');b.click();
     })()`);
     await sleep(250);
   };
@@ -174,6 +168,7 @@ try{
 
   console.log('6. Weryfikacja porównania wariantów reorganizacji w UI...');
   const compBtn = await evaluate(`!![...document.querySelectorAll('button')].find(b=>b.textContent.includes('Porównaj warianty'))`);
+  if(!compBtn) throw new Error('NOT_VERIFIED: brak obowiązkowej kontroli porównania wariantów');
   if(compBtn){
     await click('Porównaj warianty');
     await sleep(400);
@@ -183,12 +178,18 @@ try{
   console.log('7. Weryfikacja rzutu CAD hali 2D i widoku 3D...');
   await goToHall();
   await sleep(500);
+  ok(await evaluate(`!!document.querySelector('svg[aria-label="Rzut hali i wyposażenia"]')`),'Widoczny rzut CAD');
   await snap('08_hall_cad_layout');
+  await click('[data-view="simulation"]');
+  await until(`!!document.querySelector('.simulation-workspace canvas')`);
+  ok(await evaluate(`document.querySelector('.simulation-workspace canvas').getBoundingClientRect().width>0`),'Widoczny widok 3D');
 
   console.log('8. Sprawdzenie błędów JavaScript w konsoli...');
   strictEqual(errors.length, 0, 'Brak błędów w konsoli Edge: ' + JSON.stringify(errors));
 
-  console.log('PASS: Pilotaż 7.9 zakończony pełnym sukcesem (0 błędów krytycznych, kompletne ścieżki użytkownika).');
+  const acceptance=spawnSync(process.execPath,['tests/qa/verify_7_12d.mjs'],{stdio:'inherit',windowsHide:true,timeout:120000});
+  if(acceptance.error||acceptance.status!==0)throw new Error('NOT_VERIFIED: wymagany test obliczeń, wariantów i save/reopen nie przeszedł.');
+  console.log('PASS automatyczny pilot: tutorial, CAD/3D oraz wymagany test 7.12.D. Udział człowieka i niezależny odbiór pozostają otwarte.');
 }finally{
   try{if(ws)ws.close();}catch{}
   try{browser.kill();}catch{}

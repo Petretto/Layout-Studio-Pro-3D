@@ -1,0 +1,1 @@
+PASS C2-B3b UI: protected import, 840 s, blocked body 140–500, released operator, separate 6+6 residual stock, reload and export.

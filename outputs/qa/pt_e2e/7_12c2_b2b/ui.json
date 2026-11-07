@@ -1,0 +1,62 @@
+{
+  "result": "PASS",
+  "makespanSeconds": 170,
+  "blockedSeconds": 40,
+  "operatorReservation": [
+    0,
+    90
+  ],
+  "transfer": [
+    90,
+    100
+  ],
+  "recipient": [
+    100,
+    170
+  ],
+  "return": [
+    170,
+    180
+  ],
+  "transportRows": [
+    [
+      "Przewóz podzespołu · partia LOT-PWR-1",
+      "MU-R-PWR-INT",
+      "90–100",
+      "MU-W1",
+      "MU-CART-PWR-INT"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-PWR-INT",
+      "170–180",
+      "MU-W1",
+      "MU-CART-PWR-INT"
+    ]
+  ],
+  "rows": [
+    [
+      "SUB-PWR / szt.",
+      "ST-MU-PWR / 1",
+      "Wyjście",
+      "0",
+      "0",
+      "0",
+      "Zatrzymany"
+    ],
+    [
+      "SUB-PWR / szt.",
+      "ST-MU-MAIN2 / 1",
+      "Wejście",
+      "0",
+      "0",
+      "0",
+      "—"
+    ]
+  ],
+  "residualStock": [],
+  "reload": true,
+  "exportRoundTrip": true,
+  "sourceUnchanged": true,
+  "runtimeErrors": []
+}

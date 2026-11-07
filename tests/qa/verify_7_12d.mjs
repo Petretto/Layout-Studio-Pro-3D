@@ -1,3 +1,5 @@
+import {assertScheduleResult,assertReopenedDraft} from './scheduleAssertions.mjs';
+import {importProjectPackageUi,assertComparisonRows} from './packageImport.mjs';
 import {spawn} from 'node:child_process';
 import {existsSync,mkdirSync,readFileSync,writeFileSync,mkdtempSync,readdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
@@ -9,7 +11,7 @@ import {strictEqual,deepStrictEqual,ok} from 'node:assert';
 const port=5298,cdp=9398,sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const edge=['C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe','C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe'].find(existsSync);
 if(!edge)throw new Error('Edge not found');
-const out=resolve('outputs/qa/7_12d_ui');mkdirSync(out,{recursive:true});
+const out=resolve('outputs/qa/pt_e2e/7_12d');mkdirSync(out,{recursive:true});
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(port)},stdio:'ignore',windowsHide:true});
 const browser=spawn(edge,[`--remote-debugging-port=${cdp}`,`--user-data-dir=${mkdtempSync(join(tmpdir(),'edge-7-12d-'))}`,'--headless=new','--no-first-run','--disable-gpu','--window-size=1440,1100','--force-device-scale-factor=1','about:blank'],{stdio:'ignore',windowsHide:true});
 
@@ -64,7 +66,7 @@ try{
     await send('DOM.setFileInputFiles',{nodeId,files:[resolve(file)]});
   };
   const snap=async name=>{
-    await evaluate(`new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))`);await sleep(400);
+    await sleep(400);
     writeFileSync(join(out,name+'.png'),Buffer.from((await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false})).data,'base64'));
   };
 
@@ -106,24 +108,17 @@ try{
     await until(`!!document.querySelector('[aria-label="Pakiet projektu"]')`);
   };
 
-  const importPackage=async path=>{
-    await openPackageModal();
-    await upload('[aria-label="Plik pakietu projektu"]',path);
-    await until(`document.body.textContent.includes('Pakiet poprawny.')`);
-    await downloaded(()=>click('Pobierz kopię ratunkową przed importem'));
-    await evaluate(`document.querySelector('[aria-label="Pakiet projektu"] input[type=checkbox]').click()`);
-    await click('Wczytaj pakiet i przeładuj');
-    await reloadReady();
-  };
+  const importPackage=path=>importProjectPackageUi({open:openPackageModal,upload,until,downloaded,click,evaluate,reload:reloadReady},path);
 
   const draft=()=>evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
   const comparisonScope=`document.querySelector('[aria-label="Porównanie wariantów szkicu 6"]')`;
+  const verifyRows=async(expected)=>{const rows=await evaluate(`[...document.querySelectorAll('[aria-label="Tabela syntezy wskaźników 4.6"] tbody tr')].map(row=>({name:row.querySelector('td strong')?.textContent,baseline:row.querySelector('td')?.textContent.includes('BAZA'),visible:!!row.getClientRects().length,makespan:[...row.querySelectorAll('td:nth-child(2) div')].find(div=>div.textContent.startsWith('Makespan:'))?.querySelector('strong')?.textContent}))`);assertComparisonRows(rows,expected);};
 
   const goToStations=async()=>{
     await nav('Proces i stanowiska');
     await evaluate(`(()=>{
       const b=document.querySelector('button[data-view="stations"]') || [...document.querySelectorAll('button')].find(b=>b.textContent.includes('Stanowiska i zasoby'));
-      if(b) b.click();
+      if(!b)throw new Error('Missing station navigation');b.click();
     })()`);
     await sleep(200);
   };
@@ -142,7 +137,7 @@ try{
   await evaluate(`(()=>{const e=document.querySelector('[aria-label="Symulacja bez transportu — just in time"]');if(!e.checked)e.click();})()`);
   await click('Oblicz harmonogram szkicu 6');
   await until(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`);
-  ok(await evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]').textContent.includes('170 s')`),'Makespan 170s for Package 01 Base');
+  assertScheduleResult(await evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]').textContent`),170);
   await snap('demo01_schedule');
 
   console.log('1b. Package 01: Variant comparison (170 s vs 190 s)...');
@@ -154,6 +149,7 @@ try{
   await until(`!!document.querySelector('[aria-label="Wynik porównania wariantów szkicu 6"]')`);
   const cmp01=await evaluate(`document.querySelector('[aria-label="Wynik porównania wariantów szkicu 6"]').textContent`);
   ok(cmp01.includes('170')&&cmp01.includes('190'),'Comparison includes 170s and 190s');
+  {const variants=JSON.parse(JSON.parse(readFileSync('przyklady/01_zestaw_montazowy/projekt-pokazowy.json','utf8')).data.variantsRaw).variants;await verifyRows([{name:variants[0].name,baseline:true,seconds:170},{name:variants[1].name,baseline:false,seconds:190}]);}
   await snap('demo01_comparison');
   const rep01Path=await downloaded(()=>click('Pobierz raport porównania (.md)'));
   ok(readFileSync(rep01Path,'utf8').includes('170')&&readFileSync(rep01Path,'utf8').includes('190'));
@@ -173,14 +169,14 @@ try{
   await evaluate(`(()=>{const e=document.querySelector('[aria-label="Symulacja bez transportu — just in time"]');if(!e.checked)e.click();})()`);
   await click('Oblicz harmonogram szkicu 6');
   await until(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`);
-  ok(await evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]').textContent.includes('390 s')`),'Makespan 390s for Package 02 Base JIT');
+  assertScheduleResult(await evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]').textContent`),390);
   await snap('demo02_schedule');
 
   console.log('2b. Package 02: Configured physical simulation (460 s)...');
   await evaluate(`(()=>{const e=document.querySelector('[aria-label="Symulacja bez transportu — just in time"]');if(e.checked)e.click();})()`);
   await click('Oblicz harmonogram szkicu 6');
   await until(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`);
-  ok(await evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]').textContent.includes('460 s')`),'Makespan 460s for Package 02 Base Configured');
+  assertScheduleResult(await evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]').textContent`),460);
   await snap('demo02_configured_schedule');
 
   console.log('2c. Package 02: Variant comparison (390 s vs 315 s)...');
@@ -192,6 +188,7 @@ try{
   await until(`!!document.querySelector('[aria-label="Wynik porównania wariantów szkicu 6"]')`);
   const cmp02=await evaluate(`document.querySelector('[aria-label="Wynik porównania wariantów szkicu 6"]').textContent`);
   ok(cmp02.includes('390')&&cmp02.includes('315'),'Comparison includes 390s and 315s');
+  {const variants=JSON.parse(JSON.parse(readFileSync('przyklady/02_wozek_warsztatowy/projekt-pokazowy.json','utf8')).data.variantsRaw).variants;await verifyRows([{name:variants[0].name,baseline:true,seconds:390},{name:variants[1].name,baseline:false,seconds:315}]);}
   await snap('demo02_comparison');
   const rep02Path=await downloaded(()=>click('Pobierz raport porównania (.md)'));
   ok(readFileSync(rep02Path,'utf8').includes('390')&&readFileSync(rep02Path,'utf8').includes('315'));
@@ -213,7 +210,7 @@ try{
   await evaluate(`(()=>{const e=document.querySelector('[aria-label="Symulacja bez transportu — just in time"]');if(!e.checked)e.click();})()`);
   await click('Oblicz harmonogram szkicu 6');
   await until(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')`);
-  ok(await evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]').textContent.includes('320 s')`),'Makespan 320s for Package 03 Base JIT');
+  assertScheduleResult(await evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]').textContent`),320);
   await snap('demo03_schedule');
 
   console.log('3b. Package 03: Configured physical simulation (2210 s with 1000s interval)...');
@@ -223,7 +220,7 @@ try{
   await until(`!!document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]') || !!document.querySelector('.process-stall-diagnostic') || !!document.querySelector('[role="alert"]')`);
   const text3b=await evaluate(`document.querySelector('[aria-label="Wynik harmonogramu szkicu 6"]')?.textContent ?? document.querySelector('.process-stall-diagnostic')?.textContent ?? document.querySelector('[role="alert"]')?.textContent ?? ''`);
   console.log('Actual 3b text (1000s interval):', text3b.slice(0, 150));
-  ok(text3b.includes('2210 s'),'Makespan 2210s for Package 03 Base Configured');
+  assertScheduleResult(text3b,2210);
   await snap('demo03_configured_schedule');
 
   console.log('3c. Package 03: Variant comparison (320 s vs 270 s)...');
@@ -235,6 +232,7 @@ try{
   await until(`!!document.querySelector('[aria-label="Wynik porównania wariantów szkicu 6"]')`);
   const cmp03=await evaluate(`document.querySelector('[aria-label="Wynik porównania wariantów szkicu 6"]').textContent`);
   ok(cmp03.includes('320')&&cmp03.includes('270'),'Comparison includes 320s and 270s');
+  {const variants=JSON.parse(JSON.parse(readFileSync('przyklady/03_modul_urzadzenia/projekt-pokazowy.json','utf8')).data.variantsRaw).variants;await verifyRows([{name:variants[0].name,baseline:true,seconds:320},{name:variants[1].name,baseline:false,seconds:270}]);}
   await snap('demo03_comparison');
   const rep03Path=await downloaded(()=>click('Pobierz raport porównania (.md)'));
   ok(readFileSync(rep03Path,'utf8').includes('320')&&readFileSync(rep03Path,'utf8').includes('270'));
@@ -242,17 +240,17 @@ try{
   console.log('4. Testing Export Round-Trip on Package 03...');
   await openPackageModal();
   await field('[aria-label="Pochodzenie danych"]','synthetic');
-  const exportedPath=await downloaded(()=>click('Pobierz pakiet projektu'));
+  const exportedPath=await downloaded(()=>click('Pobierz pakiet projektu (.project.json)'));
   const exportedPkg=JSON.parse(readFileSync(exportedPath,'utf8'));
   strictEqual(exportedPkg.format,'layout-studio-project-package');
   strictEqual(exportedPkg.data.dataOrigin,'synthetic');
   const exportedDraft=JSON.parse(exportedPkg.data.draftRaw).project;
   strictEqual(exportedDraft.id,'DEMO-MODUL-URZADZENIA-1');
-  await click('Zamknij pakiet projektu');
+  await click('Zamknij okno');
 
   console.log('5. Re-importing exported package to verify complete round-trip...');
   await importPackage(exportedPath);
-  deepStrictEqual(await draft(),exportedDraft);
+  assertReopenedDraft(await draft(),exportedDraft);
 
   ok(!errors.length,'Zero runtime exceptions expected: '+errors.join('; '));
 

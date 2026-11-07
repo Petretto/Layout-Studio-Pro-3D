@@ -14,6 +14,8 @@ Główny rejestr statusu pozostaje w [PLAN_ROZWOJU.md](../PLAN_ROZWOJU.md). Zasa
 
 Pozostałe materiały:
 
+- [Weryfikacja PT — testy E2E](weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md) — mapa skryptów, rzeczywiste próby UI i zadania do niezależnej kontroli Sol.
+
 - [Weryfikacja remediacji P0 — bezpieczeństwo danych](weryfikacja/WERYFIKACJA_REMEDIACJI_P0_BEZPIECZENSTWO_DANYCH.md) — reprodukcja S-03, trwała kopia/odzyskanie, formularze/autosave, BL-01 i S-15, wykonane testy i otwarty niezależny odbiór.
 
 - [Plan remediacji po audycie RC1](plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md) — decyzje A-01–A-04, pakiety, zależności, modele i bramki; po pobraniu i ponownej weryfikacji aktualnego main 2026-11-02, z metryką RC1/main/bazy gałęzi. G0 zatwierdzona; P0 wdrożone lokalnie 2026-11-03, pozostałe bramki otwarte.

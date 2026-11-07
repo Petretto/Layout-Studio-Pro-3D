@@ -8,7 +8,7 @@ import {strictEqual,ok} from 'node:assert';
 const port=5297,cdp=9397,sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const edge=['C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe','C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe'].find(existsSync);
 if(!edge)throw new Error('Edge not found');
-const out=resolve('outputs/qa/7_13_eko_ui');mkdirSync(out,{recursive:true});
+const out=resolve('outputs/qa/pt_e2e/internal_eko');mkdirSync(out,{recursive:true});
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(port)},stdio:'ignore',windowsHide:true});
 const browser=spawn(edge,[`--remote-debugging-port=${cdp}`,`--user-data-dir=${mkdtempSync(join(tmpdir(),'edge-7-13-eko-'))}`,'--headless=new','--no-first-run','--disable-gpu','--window-size=1440,1100','--force-device-scale-factor=1','about:blank'],{stdio:'ignore',windowsHide:true});
 
@@ -64,7 +64,7 @@ try{
     await send('DOM.setFileInputFiles',{nodeId,files:[resolve(file)]});
   };
   const snap=async name=>{
-    await evaluate(`new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))`);await sleep(400);
+    await sleep(400);
     writeFileSync(join(out,name+'.png'),Buffer.from((await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false})).data,'base64'));
   };
 
@@ -109,9 +109,9 @@ try{
   await openPackageModal();
   await upload('[aria-label="Plik pakietu projektu"]','przyklady/04_eko/projekt-pokazowy.json');
   await until(`document.body.textContent.includes('Pakiet poprawny.')`);
-  await downloaded(()=>click('Pobierz kopię ratunkową przed importem'));
+  await downloaded(()=>click('Pobierz kopię ratunkową przed wczytaniem'));
   await evaluate(`document.querySelector('[aria-label="Pakiet projektu"] input[type=checkbox]').click()`);
-  await click('Wczytaj pakiet i przeładuj');
+  await click('Wczytaj projekt i zastosuj');
   await reloadReady();
 
   console.log('2. Verifying loaded Eko project data...');
@@ -123,7 +123,7 @@ try{
   await nav('Proces i stanowiska');
   await evaluate(`(()=>{
     const b=document.querySelector('button[data-view="stations"]') || [...document.querySelectorAll('button')].find(b=>b.textContent.includes('Stanowiska i zasoby'));
-    if(b) b.click();
+    if(!b)throw Error('Missing station navigation');b.click();
   })()`);
   await until(`!!document.querySelector('[aria-label="Harmonogram zespołu szkicu 6"]')`);
   await snap('eko_loaded_stations');
@@ -143,7 +143,7 @@ try{
   writeFileSync(join(out,'report.json'),JSON.stringify({
     at: new Date().toISOString(),
     result: 'PASS',
-    scope: '7.13 Eko external demo package loaded and verified in browser',
+    scope: '7.13 Eko internal regression fixture loaded in browser; publication rights not established',
     operations: 16,
     bomItems: 60,
     runtimeErrors: errors

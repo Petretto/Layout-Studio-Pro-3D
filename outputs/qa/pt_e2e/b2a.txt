@@ -1,0 +1,1 @@
+PASS C2-B2a UI: protected import, 2210 s, separate capacities, six residual stocks, reload and package export.

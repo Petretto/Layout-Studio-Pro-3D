@@ -94,6 +94,9 @@ export function ProjectPackageModal({isOpen,onClose,onImported,unsavedChanges=fa
         <label className="block text-sm">Kwalifikacja danych <select aria-label="Pochodzenie danych" value={origin} onChange={e=>setOrigin(e.target.value as PackageOrigin)}>
           <option value="unspecified">Nieokreślone</option><option value="synthetic">Syntetyczne / pokazowe</option><option value="user">Dane użytkownika / pomiary</option><option value="mixed">Mieszane</option>
         </select></label>
+        <label className="block text-sm">Oryginalny plik projektu 4 (opcjonalny)
+          <input aria-label="Oryginał 4 do pakietu" type="file" accept=".json" disabled={busy||locked} onChange={e=>void read(e,true)}/>
+        </label>
         <button disabled={busy||locked} onClick={exportPackage}>Pobierz pakiet projektu (.project.json)</button>
       </section>
 

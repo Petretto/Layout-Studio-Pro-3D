@@ -1,0 +1,100 @@
+{
+  "result": "PASS",
+  "makespanSeconds": 170,
+  "blockedSeconds": 40,
+  "operatorReservation": [
+    0,
+    90
+  ],
+  "directTransfer": [
+    90,
+    100
+  ],
+  "bufferedTransfer": [
+    60,
+    70
+  ],
+  "recipient": [
+    100,
+    170
+  ],
+  "return": [
+    170,
+    180
+  ],
+  "transportRows": [
+    [
+      "Przewóz podzespołu · partia LOT-DRV-1",
+      "MU-R-DRV-INT",
+      "60–70",
+      "MU-W2",
+      "MU-CART-DRV-INT"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-DRV-INT",
+      "70–80",
+      "MU-W2",
+      "MU-CART-DRV-INT"
+    ],
+    [
+      "Przewóz podzespołu · partia LOT-PWR-1",
+      "MU-R-PWR-INT",
+      "90–100",
+      "MU-W1",
+      "MU-CART-PWR-INT"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-PWR-INT",
+      "170–180",
+      "MU-W1",
+      "MU-CART-PWR-INT"
+    ]
+  ],
+  "rows": [
+    [
+      "SUB-PWR / szt.",
+      "ST-MU-PWR / 1",
+      "Wyjście",
+      "0",
+      "0",
+      "0",
+      "Zatrzymany"
+    ],
+    [
+      "SUB-PWR / szt.",
+      "ST-MU-MAIN2 / 1",
+      "Wejście",
+      "0",
+      "0",
+      "0",
+      "—"
+    ],
+    [
+      "SUB-DRV / szt.",
+      "ST-MU-DRV / 1",
+      "Wyjście",
+      "5",
+      "0",
+      "0",
+      "Zatrzymany"
+    ],
+    [
+      "SUB-DRV / szt.",
+      "ST-MU-MAIN2 / 1",
+      "Wejście",
+      "5",
+      "2",
+      "0",
+      "—"
+    ]
+  ],
+  "residualStock": [
+    "LOT-DRV-1 · SUB-DRV · zapas 2 szt. · ST-MU-MAIN2 / 1 · wejście odbiorcy"
+  ],
+  "reload": true,
+  "exportRoundTrip": true,
+  "sourceUnchanged": true,
+  "runtimeErrors": []
+}

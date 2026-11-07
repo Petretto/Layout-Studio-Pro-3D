@@ -1,0 +1,1 @@
+PASS C2-B3-UI: two components, invalid/overlap, edit/delete/discard, undo/redo, reload, export/import, original preserved.

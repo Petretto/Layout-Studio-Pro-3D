@@ -40,7 +40,7 @@ test('Zamknięcie bramek bez ukończenia pakietów nadal nie odbiera V1',()=>{
 test('Status, zależności i modele pochodzą z rejestru, nie ze snapshotu',()=>{
   const source={...input,plan:input.plan.replace(/^(\| 1 \| P0 [^|]+\| )[^|]+/m,'$1w trakcie ')};
   const r=parseRemediation(source);assert.equal(r.packages[0].status,'w trakcie');
-  assert.equal(r.stats.inProgress,1);assert.ok(r.packages[5].dependencies.includes('P1'));
+  assert.equal(r.stats.inProgress,parseRemediation(input).stats.inProgress + (parseRemediation(input).packages[0].status === 'w trakcie' ? 0 : 1));assert.ok(r.packages[5].dependencies.includes('P1'));
   assert.match(r.packages[0].analysis,/Sol/);assert.match(r.packages[0].verification,/Opus/);
 });
 test('Przeglądarka i Node używają tego samego parsera, także po imporcie MD',()=>{

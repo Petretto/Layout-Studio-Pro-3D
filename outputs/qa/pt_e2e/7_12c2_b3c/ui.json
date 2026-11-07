@@ -1,0 +1,116 @@
+{
+  "result": "PASS",
+  "makespanSeconds": 630,
+  "localWaiting": [
+    40,
+    100
+  ],
+  "releasedOperator": [
+    0,
+    40
+  ],
+  "transportRows": [
+    [
+      "Przewóz korpusu",
+      "MU-R-M1-INT",
+      "140–150",
+      "MU-W3",
+      "MU-CART-M1-INT"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-M1-INT",
+      "150–160",
+      "MU-W3",
+      "MU-CART-M1-INT"
+    ],
+    [
+      "Przewóz podzespołu · partia LOT-PWR-1",
+      "MU-R-PWR-INT",
+      "150–160",
+      "MU-W1",
+      "MU-CART-PWR-INT"
+    ],
+    [
+      "Przewóz podzespołu · partia LOT-DRV-1",
+      "MU-R-DRV-INT",
+      "150–160",
+      "MU-W2",
+      "MU-CART-DRV-INT"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-PWR-INT",
+      "160–170",
+      "MU-W1",
+      "MU-CART-PWR-INT"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-DRV-INT",
+      "160–170",
+      "MU-W2",
+      "MU-CART-DRV-INT"
+    ],
+    [
+      "Przewóz korpusu",
+      "MU-R-INT-TEST",
+      "570–580",
+      "MU-W4",
+      "MU-CART-INT-TEST"
+    ],
+    [
+      "Powrót bez ładunku",
+      "MU-RETURN-INT-TEST",
+      "580–590",
+      "MU-W4",
+      "MU-CART-INT-TEST"
+    ]
+  ],
+  "rows": [
+    [
+      "SUB-PWR / szt.",
+      "ST-MU-PWR / 1",
+      "Wyjście",
+      "5",
+      "0",
+      "0",
+      "Zwolniony"
+    ],
+    [
+      "SUB-PWR / szt.",
+      "ST-MU-MAIN2 / 1",
+      "Wejście",
+      "20",
+      "2",
+      "0",
+      "—"
+    ],
+    [
+      "SUB-DRV / szt.",
+      "ST-MU-DRV / 1",
+      "Wyjście",
+      "5",
+      "0",
+      "0",
+      "Zwolniony"
+    ],
+    [
+      "SUB-DRV / szt.",
+      "ST-MU-MAIN2 / 1",
+      "Wejście",
+      "20",
+      "2",
+      "0",
+      "—"
+    ]
+  ],
+  "residualStock": [
+    "LOT-PWR-1 · SUB-PWR · zapas 2 szt. · ST-MU-MAIN2 / 1 · wejście odbiorcy",
+    "LOT-DRV-1 · SUB-DRV · zapas 2 szt. · ST-MU-MAIN2 / 1 · wejście odbiorcy"
+  ],
+  "reload": true,
+  "exportRoundTrip": true,
+  "sourceUnchanged": true,
+  "runtimeErrors": []
+}

@@ -1,0 +1,1 @@
+PASS C2-B2b UI: protected import, 170 s, 40 s blockage, held operator to 90, zero buffers, reload and package export.
