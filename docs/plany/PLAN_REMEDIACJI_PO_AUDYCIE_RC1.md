@@ -92,7 +92,7 @@ Statusy poniżej są źródłem dla osobnego `progress-dashboard`. Zmiana status
 | Kolejność | Pakiet | Status | Zależności | Warunek i uzasadnienie |
 |---|---|---|---|---|
 | 1 | P0 — ochrona danych i DR | wdrożone | — | Lokalnie 2026-11-03: 24/24 focused, 507/507 pełne, UI 17/17, build i DR PASS; niezależny przegląd kontraktu do odbioru G1 |
-| 2 | PT — przywrócenie wiarygodnych testów | w trakcie | P0 | 16 skryptów wykonano lokalnie; pilot ma asercje obliczeń i round-trip, helpery wymagają konsolidacji, wzorce niezależnej kontroli Sol |
+| 2 | PT — przywrócenie wiarygodnych testów | w trakcie | P0 | 16 skryptów wykonano lokalnie. Sol sprawdził wzorce R01–R05/R09, w tym fizyczne porównania w Edge. Otwarte pozostają helpery, uzupełnienie T08 i niezależny odbiór |
 | 3 | P1 — odbiór kontraktów integracji | nierozpoczęte | P0, PT | Rozstrzyga trwałość, właścicieli i migrację przed zmianą zapisu |
 | 4 | P4b — zamknięcie publicznych powierzchni Eko | nierozpoczęte | — | Po G0; niezależne od integracji, wykonanie wcześnie ogranicza dalszą dystrybucję |
 | 5 | P4a — web, telemetria i zależności | nierozpoczęte | — | Po G0; ustala środowisko i bezpieczną bazę builda |

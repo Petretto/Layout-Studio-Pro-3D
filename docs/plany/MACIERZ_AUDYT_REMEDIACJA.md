@@ -10,6 +10,8 @@ Status określa **rozstrzygnięcie ustalenia**, a nie ukończenie implementacji.
 
 ## 1. Pełna macierz BL-01–03 i S-01–18
 
+**Stan roboczy PT — 2026-11-07:** naprawiono selektory BL-03/S-02 w 16 skryptach, z Eko jako lokalnym fixture. W S-04 pilot automatyczny wymaga obliczeń, porównania i round-trip. Sol potwierdził R01–R05 i R09 w zakresie opisanym w raporcie. Nadal potrzebne są wspólne helpery, edycja CAD z Cofnij w pilocie, próby awarii pełnego przepływu oraz zewnętrzny odbiór i udział człowieka. Wiersze poniżej zachowują ustalenia historycznego RC1 i kryteria zamknięcia. [Raport PT](../weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md).
+
 | ID / waga | Ustalenie i status weryfikacji | Dowód i luka | Pakiet | Test potwierdzający | Kryterium zamknięcia |
 |---|---|---|---|---|---|
 | BL-01 / średnia | **Nieaktualne w gałęzi P0 — poprawione i zweryfikowane.** Historyczny FAIL RC1 pozostaje ważnym dowodem | Dodano wymagane removeItem do atrapy; verify:clean DR round-trip PASS, core 24/24 i UI restore po reload PASS; raport P0. Nie jest to nowy odbiór web ani poprawka na main | P0 lokalnie wdrożone; P5 nowy kandydat | T04–T06, verify-clean.txt i regression-ui.result.json | Atrapa i lokalny round-trip zamknięte; regresja na przyszłym zamrożonym kandydacie nadal wymagana |

@@ -1,0 +1,121 @@
+{
+  "method": "Independent recurrences from operation durations, precedence, explicit transport returns, local continuation and isolated arrivals. No scheduler imports.",
+  "result": "PASS",
+  "observed": [
+    {
+      "refId": "R01",
+      "variants": [
+        {
+          "variantId": "BASIC-BASE",
+          "completionSeconds": [
+            90,
+            130,
+            170
+          ],
+          "windowsChecked": 9
+        },
+        {
+          "variantId": "BASIC-CONSOLIDATED",
+          "completionSeconds": [
+            90,
+            140,
+            190
+          ],
+          "windowsChecked": 9
+        }
+      ]
+    },
+    {
+      "refId": "R02",
+      "variants": [
+        {
+          "variantId": "INTERMEDIATE-BASE",
+          "completionSeconds": [
+            260,
+            360,
+            460
+          ],
+          "windowsChecked": 12
+        },
+        {
+          "variantId": "INTERMEDIATE-BALANCED",
+          "completionSeconds": [
+            225,
+            305,
+            385
+          ],
+          "windowsChecked": 12
+        }
+      ]
+    },
+    {
+      "refId": "R03",
+      "variants": [
+        {
+          "variantId": "INTERMEDIATE-BASE",
+          "completionSeconds": [
+            230,
+            310,
+            390
+          ],
+          "windowsChecked": 12
+        },
+        {
+          "variantId": "INTERMEDIATE-BALANCED",
+          "completionSeconds": [
+            195,
+            255,
+            315
+          ],
+          "windowsChecked": 12
+        }
+      ]
+    },
+    {
+      "refId": "R04",
+      "variants": [
+        {
+          "variantId": "ADVANCED-BASE",
+          "completionSeconds": [
+            210,
+            1210,
+            2210
+          ],
+          "windowsChecked": 15
+        },
+        {
+          "variantId": "ADVANCED-BALANCED",
+          "completionSeconds": [
+            180,
+            1180,
+            2180
+          ],
+          "windowsChecked": 15
+        }
+      ]
+    },
+    {
+      "refId": "R05",
+      "variants": [
+        {
+          "variantId": "ADVANCED-BASE",
+          "completionSeconds": [
+            180,
+            250,
+            320
+          ],
+          "windowsChecked": 15
+        },
+        {
+          "variantId": "ADVANCED-BALANCED",
+          "completionSeconds": [
+            150,
+            210,
+            270
+          ],
+          "windowsChecked": 15
+        }
+      ]
+    }
+  ]
+}

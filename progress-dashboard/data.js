@@ -7,7 +7,7 @@ window.PLAN_DATA = {
     "baseVersion": "Layout Studio Pro 3D 0.4.0",
     "hostingUrl": "https://layout-studio-pro-3d.vercel.app/",
     "repoUrl": "https://github.com/Petretto/Layout-Studio-Pro-3D",
-    "extractedAt": "2026-11-07T20:03:03.373Z"
+    "extractedAt": "2026-11-07T20:18:06.973Z"
   },
   "overall": {
     "total": 72,
@@ -1299,7 +1299,7 @@ window.PLAN_DATA = {
       "tag": "Bieżący pakiet",
       "date": "2026-11-03",
       "historical": false,
-      "summary": "**P0 wdrożone lokalnie** na `codex/v1-p0-data-safety`: S-03 odtworzone w odizolowanym Edge przed poprawką; wspólny podgląd katalogu/pliku/tutorialu, ochrona formularzy i autosave, trwałe kopie sprzed zastąpienia oraz blokada niepotwierdzonego odzyskiwania po reload. Naprawiono atrapę BL-01 i ostrzeżenie regeneracji S-15. Formaty 4/5/6 i reguły obliczeń pozostają zgodne; nie wprowadzono integracji P2. [Raport P0](docs/weryfikacja/WERYFIKACJA_REMEDIACJI_P0_BEZPIECZENSTWO_DANYCH.md) zawiera dowody i ograniczenia.\n\nWeryfikacja końcowa: focused **24/24**, pełna regresja **507/507**, build i `verify:clean` PASS; rzeczywisty UI **17/17** scenariuszy, odzyskiwanie po reload i pobrane pliki. Instrukcja MD/HTML/PDF i snapshot osobnego pulpitu aktualizowane. Niezależny przegląd kontraktu odzyskiwania **NOT_VERIFIED**; G1 otwarta do PT i niezależnego odbioru. G2 nadal otwarta — architektura integracji wymaga osobnego zatwierdzenia.\n\nMetryka: RC1 i pobrany przed P0 `origin/main` = `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`; baza P0 = `f1ae9cbb8cffb9a72a244bab35e995063853e52f` (main + zatwierdzony plan/monitor). Main/RC1 nie zmieniono; brak deploymentu, aktualizacji zależności i RC2.\n\n**Bieżący pakiet: PT — wiarygodne E2E, w trakcie.** [Raport prób i przekazanie do Sol](docs/weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md). Pilot dostosowano częściowo do potwierdzenia P0; nie może zgłosić PASS bez asercji liczbowych, porównania i save/reopen. Pozostałe selektory i 16 skryptów wymagają odbioru. Ocena/implementacja Terra, mechaniczne poprawki Luna po ustaleniu kontraktu; weryfikacja Terra, liczby referencyjne Sol i zewnętrzny Opus do niezależnego świadectwa pilota. Przed PT pobrać ponownie main i sprawdzić jego zmiany. Postęp głównych ID pozostaje **61/72 = 84,7%**, V1 **61/68 = 89,7%**, Etap 7 **7/14 = 50,0%**. Nie oznacza to gotowości wydania."
+      "summary": "**P0 wdrożone lokalnie** na `codex/v1-p0-data-safety`: S-03 odtworzone w odizolowanym Edge przed poprawką; wspólny podgląd katalogu/pliku/tutorialu, ochrona formularzy i autosave, trwałe kopie sprzed zastąpienia oraz blokada niepotwierdzonego odzyskiwania po reload. Naprawiono atrapę BL-01 i ostrzeżenie regeneracji S-15. Formaty 4/5/6 i reguły obliczeń pozostają zgodne; nie wprowadzono integracji P2. [Raport P0](docs/weryfikacja/WERYFIKACJA_REMEDIACJI_P0_BEZPIECZENSTWO_DANYCH.md) zawiera dowody i ograniczenia.\n\nWeryfikacja końcowa: focused **24/24**, pełna regresja **507/507**, build i `verify:clean` PASS; rzeczywisty UI **17/17** scenariuszy, odzyskiwanie po reload i pobrane pliki. Instrukcja MD/HTML/PDF i snapshot osobnego pulpitu aktualizowane. Niezależny przegląd kontraktu odzyskiwania **NOT_VERIFIED**; G1 otwarta do PT i niezależnego odbioru. G2 nadal otwarta — architektura integracji wymaga osobnego zatwierdzenia.\n\nMetryka: RC1 i pobrany przed P0 `origin/main` = `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`; baza P0 = `f1ae9cbb8cffb9a72a244bab35e995063853e52f` (main + zatwierdzony plan/monitor). Main/RC1 nie zmieniono; brak deploymentu, aktualizacji zależności i RC2.\n\n**Bieżący pakiet: PT — wiarygodne E2E, w trakcie.** [Raport prób i kontroli wzorców Sol](docs/weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md). R01–R05 potwierdzone rachunkiem oraz w Edge, R09 z dokładnym `EKO-PARALLEL` w configured. Dalsze prace Terra obejmują wspólne helpery i pełniejsze próby T08. Pilot dostosowano częściowo do potwierdzenia P0; nie może zgłosić PASS bez asercji liczbowych, porównania i save/reopen. Pozostałe selektory i 16 skryptów wymagają odbioru. Ocena/implementacja Terra, mechaniczne poprawki Luna po ustaleniu kontraktu; weryfikacja Terra, liczby referencyjne Sol i zewnętrzny Opus do niezależnego świadectwa pilota. Przed PT pobrać ponownie main i sprawdzić jego zmiany. Postęp głównych ID pozostaje **61/72 = 84,7%**, V1 **61/68 = 89,7%**, Etap 7 **7/14 = 50,0%**. Nie oznacza to gotowości wydania."
     },
     {
       "tag": "**Wybór wersji po doprecyzowaniu właściciela",
@@ -3236,7 +3236,7 @@ window.PLAN_DATA = {
         "dependencies": [
           "P0"
         ],
-        "condition": "16 skryptów wykonano lokalnie; pilot ma asercje obliczeń i round-trip, helpery wymagają konsolidacji, wzorce niezależnej kontroli Sol",
+        "condition": "16 skryptów wykonano lokalnie. Sol sprawdził wzorce R01–R05/R09, w tym fizyczne porównania w Edge. Otwarte pozostają helpery, uzupełnienie T08 i niezależny odbiór",
         "analysis": "Terra",
         "implementation": "Terra / Luna mechaniczne selektory",
         "verification": "Terra; Sol referencje"
@@ -3700,7 +3700,7 @@ window.PLAN_DATA = {
       "dependencies": [
         "P0"
       ],
-      "condition": "16 skryptów wykonano lokalnie; pilot ma asercje obliczeń i round-trip, helpery wymagają konsolidacji, wzorce niezależnej kontroli Sol",
+      "condition": "16 skryptów wykonano lokalnie. Sol sprawdził wzorce R01–R05/R09, w tym fizyczne porównania w Edge. Otwarte pozostają helpery, uzupełnienie T08 i niezależny odbiór",
       "analysis": "Terra",
       "implementation": "Terra / Luna mechaniczne selektory",
       "verification": "Terra; Sol referencje"
@@ -3711,13 +3711,13 @@ window.PLAN_DATA = {
       "key": "main",
       "path": "PLAN_ROZWOJU.md",
       "available": true,
-      "modified": "2026-11-07T20:03:03.227Z"
+      "modified": "2026-11-07T20:16:48.206Z"
     },
     {
       "key": "plan",
       "path": "docs/plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md",
       "available": true,
-      "modified": "2026-11-07T20:03:03.229Z"
+      "modified": "2026-11-07T20:16:48.200Z"
     },
     {
       "key": "architecture",
@@ -3735,7 +3735,7 @@ window.PLAN_DATA = {
       "key": "matrix",
       "path": "docs/plany/MACIERZ_AUDYT_REMEDIACJA.md",
       "available": true,
-      "modified": "2026-11-03T16:18:06.242Z"
+      "modified": "2026-11-07T20:18:06.836Z"
     },
     {
       "key": "tests",
@@ -3744,5 +3744,5 @@ window.PLAN_DATA = {
       "modified": "2026-11-03T16:17:38.087Z"
     }
   ],
-  "signature": "95b8d260c2b3a2d1af9ae29c7dd294ebd038da1632a3cbb94c1fbb2776dacdbe"
+  "signature": "2455334875ef75eaca02d5f7d4f5560553b0d2b979652ce808965f35319414f1"
 };

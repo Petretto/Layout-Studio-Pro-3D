@@ -1,0 +1,553 @@
+{
+  "at": "2026-11-07T20:14:33.818Z",
+  "result": "PASS",
+  "scope": "7.12.D E2E browser acceptance across all three demo packages",
+  "scenarios": [
+    {
+      "refId": "R01",
+      "conditions": {
+        "batch": 3,
+        "arrivalIntervalSeconds": 1,
+        "transportMode": "just-in-time"
+      },
+      "baselineId": "BASIC-BASE",
+      "candidateId": "BASIC-CONSOLIDATED",
+      "observedBaselineCompletion": [
+        90,
+        130,
+        170
+      ],
+      "baselineWindows": [
+        [
+          1,
+          "ZM-OP10",
+          0,
+          20
+        ],
+        [
+          2,
+          "ZM-OP10",
+          20,
+          40
+        ],
+        [
+          1,
+          "ZM-OP20",
+          20,
+          50
+        ],
+        [
+          3,
+          "ZM-OP10",
+          40,
+          60
+        ],
+        [
+          2,
+          "ZM-OP20",
+          50,
+          80
+        ],
+        [
+          1,
+          "ZM-OP30",
+          50,
+          90
+        ],
+        [
+          3,
+          "ZM-OP20",
+          80,
+          110
+        ],
+        [
+          2,
+          "ZM-OP30",
+          90,
+          130
+        ],
+        [
+          3,
+          "ZM-OP30",
+          130,
+          170
+        ]
+      ],
+      "comparison": [
+        {
+          "name": "Baza — 3 stanowiska / 3 osoby",
+          "baseline": true,
+          "visible": true,
+          "makespan": "170 s"
+        },
+        {
+          "name": "Konsolidacja — 2 aktywne stanowiska / 2 osoby",
+          "baseline": false,
+          "visible": true,
+          "makespan": "190 s"
+        }
+      ]
+    },
+    {
+      "refId": "R03",
+      "conditions": {
+        "batch": 3,
+        "arrivalIntervalSeconds": 1,
+        "transportMode": "just-in-time"
+      },
+      "baselineId": "INTERMEDIATE-BASE",
+      "candidateId": "INTERMEDIATE-BALANCED",
+      "observedBaselineCompletion": [
+        230,
+        310,
+        390
+      ],
+      "baselineWindows": [
+        [
+          1,
+          "WW-OP10",
+          0,
+          60
+        ],
+        [
+          2,
+          "WW-OP10",
+          60,
+          120
+        ],
+        [
+          1,
+          "WW-OP20",
+          60,
+          140
+        ],
+        [
+          3,
+          "WW-OP10",
+          120,
+          180
+        ],
+        [
+          2,
+          "WW-OP20",
+          140,
+          220
+        ],
+        [
+          1,
+          "WW-OP30",
+          140,
+          190
+        ],
+        [
+          1,
+          "WW-OP40",
+          190,
+          230
+        ],
+        [
+          3,
+          "WW-OP20",
+          220,
+          300
+        ],
+        [
+          2,
+          "WW-OP30",
+          220,
+          270
+        ],
+        [
+          2,
+          "WW-OP40",
+          270,
+          310
+        ],
+        [
+          3,
+          "WW-OP30",
+          300,
+          350
+        ],
+        [
+          3,
+          "WW-OP40",
+          350,
+          390
+        ]
+      ],
+      "comparison": [
+        {
+          "name": "Baza — 4 stanowiska / 4 osoby / wąskie gardło OP20 (80s)",
+          "baseline": true,
+          "visible": true,
+          "makespan": "390 s"
+        },
+        {
+          "name": "Zbalansowany — wsparcie OP20 2-osobowe (45s) / takt 60s",
+          "baseline": false,
+          "visible": true,
+          "makespan": "315 s"
+        }
+      ]
+    },
+    {
+      "refId": "R02",
+      "conditions": {
+        "batch": 3,
+        "arrivalIntervalSeconds": 1,
+        "transportMode": "configured"
+      },
+      "baselineId": "INTERMEDIATE-BASE",
+      "candidateId": "INTERMEDIATE-BALANCED",
+      "observedBaselineCompletion": [
+        260,
+        360,
+        460
+      ],
+      "baselineWindows": [
+        [
+          1,
+          "WW-OP10",
+          0,
+          60
+        ],
+        [
+          1,
+          "WW-OP20",
+          70,
+          150
+        ],
+        [
+          2,
+          "WW-OP10",
+          80,
+          140
+        ],
+        [
+          3,
+          "WW-OP10",
+          160,
+          220
+        ],
+        [
+          1,
+          "WW-OP30",
+          160,
+          210
+        ],
+        [
+          2,
+          "WW-OP20",
+          170,
+          250
+        ],
+        [
+          1,
+          "WW-OP40",
+          220,
+          260
+        ],
+        [
+          2,
+          "WW-OP30",
+          260,
+          310
+        ],
+        [
+          3,
+          "WW-OP20",
+          270,
+          350
+        ],
+        [
+          2,
+          "WW-OP40",
+          320,
+          360
+        ],
+        [
+          3,
+          "WW-OP30",
+          360,
+          410
+        ],
+        [
+          3,
+          "WW-OP40",
+          420,
+          460
+        ]
+      ],
+      "comparison": [
+        {
+          "name": "Baza — 4 stanowiska / 4 osoby / wąskie gardło OP20 (80s)",
+          "baseline": true,
+          "visible": true,
+          "makespan": "460 s"
+        },
+        {
+          "name": "Zbalansowany — wsparcie OP20 2-osobowe (45s) / takt 60s",
+          "baseline": false,
+          "visible": true,
+          "makespan": "385 s"
+        }
+      ]
+    },
+    {
+      "refId": "R05",
+      "conditions": {
+        "batch": 3,
+        "arrivalIntervalSeconds": 1,
+        "transportMode": "just-in-time"
+      },
+      "baselineId": "ADVANCED-BASE",
+      "candidateId": "ADVANCED-BALANCED",
+      "observedBaselineCompletion": [
+        180,
+        250,
+        320
+      ],
+      "baselineWindows": [
+        [
+          1,
+          "MU-OP10-A",
+          0,
+          50
+        ],
+        [
+          1,
+          "MU-OP10-B",
+          0,
+          60
+        ],
+        [
+          1,
+          "MU-OP10-M",
+          0,
+          40
+        ],
+        [
+          2,
+          "MU-OP10-M",
+          40,
+          80
+        ],
+        [
+          2,
+          "MU-OP10-A",
+          50,
+          100
+        ],
+        [
+          2,
+          "MU-OP10-B",
+          60,
+          120
+        ],
+        [
+          1,
+          "MU-OP20-M",
+          60,
+          130
+        ],
+        [
+          3,
+          "MU-OP10-M",
+          80,
+          120
+        ],
+        [
+          3,
+          "MU-OP10-A",
+          100,
+          150
+        ],
+        [
+          3,
+          "MU-OP10-B",
+          120,
+          180
+        ],
+        [
+          2,
+          "MU-OP20-M",
+          130,
+          200
+        ],
+        [
+          1,
+          "MU-OP30-M",
+          130,
+          180
+        ],
+        [
+          3,
+          "MU-OP20-M",
+          200,
+          270
+        ],
+        [
+          2,
+          "MU-OP30-M",
+          200,
+          250
+        ],
+        [
+          3,
+          "MU-OP30-M",
+          270,
+          320
+        ]
+      ],
+      "comparison": [
+        {
+          "name": "Baza — 2 gałęzie podmontaży + montaż główny (wąskie gardło OP20-M: 70s)",
+          "baseline": true,
+          "visible": true,
+          "makespan": "320 s"
+        },
+        {
+          "name": "Zbalansowany — integracja OP20-M 2-osobowa (40s) / odstęp 60s",
+          "baseline": false,
+          "visible": true,
+          "makespan": "270 s"
+        }
+      ]
+    },
+    {
+      "refId": "R04",
+      "conditions": {
+        "batch": 3,
+        "arrivalIntervalSeconds": 1000,
+        "transportMode": "configured"
+      },
+      "baselineId": "ADVANCED-BASE",
+      "candidateId": "ADVANCED-BALANCED",
+      "observedBaselineCompletion": [
+        210,
+        1210,
+        2210
+      ],
+      "baselineWindows": [
+        [
+          1,
+          "MU-OP10-A",
+          0,
+          50
+        ],
+        [
+          1,
+          "MU-OP10-B",
+          0,
+          60
+        ],
+        [
+          1,
+          "MU-OP10-M",
+          0,
+          40
+        ],
+        [
+          1,
+          "MU-OP20-M",
+          80,
+          150
+        ],
+        [
+          1,
+          "MU-OP30-M",
+          160,
+          210
+        ],
+        [
+          2,
+          "MU-OP10-A",
+          1000,
+          1050
+        ],
+        [
+          2,
+          "MU-OP10-B",
+          1000,
+          1060
+        ],
+        [
+          2,
+          "MU-OP10-M",
+          1000,
+          1040
+        ],
+        [
+          2,
+          "MU-OP20-M",
+          1080,
+          1150
+        ],
+        [
+          2,
+          "MU-OP30-M",
+          1160,
+          1210
+        ],
+        [
+          3,
+          "MU-OP10-A",
+          2000,
+          2050
+        ],
+        [
+          3,
+          "MU-OP10-B",
+          2000,
+          2060
+        ],
+        [
+          3,
+          "MU-OP10-M",
+          2000,
+          2040
+        ],
+        [
+          3,
+          "MU-OP20-M",
+          2080,
+          2150
+        ],
+        [
+          3,
+          "MU-OP30-M",
+          2160,
+          2210
+        ]
+      ],
+      "comparison": [
+        {
+          "name": "Baza — 2 gałęzie podmontaży + montaż główny (wąskie gardło OP20-M: 70s)",
+          "baseline": true,
+          "visible": true,
+          "makespan": "2210 s"
+        },
+        {
+          "name": "Zbalansowany — integracja OP20-M 2-osobowa (40s) / odstęp 60s",
+          "baseline": false,
+          "visible": true,
+          "makespan": "2180 s"
+        }
+      ]
+    }
+  ],
+  "checks": {
+    "package01ImportedAndScheduled": true,
+    "package01VariantComparisonVerified": true,
+    "package02ImportedAndScheduled": true,
+    "package02ConfiguredScheduled": true,
+    "package02VariantComparisonVerified": true,
+    "package03ImportedAndScheduled": true,
+    "package03ConfiguredScheduled": true,
+    "package03VariantComparisonVerified": true,
+    "dataIsolationPreserved": true,
+    "exportRoundTripVerified": true,
+    "runtimeErrors": []
+  }
+}

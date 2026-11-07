@@ -1,8 +1,29 @@
 import {spawn} from 'node:child_process';
-import {existsSync,mkdtempSync,writeFileSync} from 'node:fs';
+import {existsSync,mkdtempSync,readFileSync,writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 export const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+// Edge launched with port 0 writes the actual debug port to its isolated profile.
+export async function openEdgeDebugPage(browser, profile) {
+  const activePortFile = join(profile, 'DevToolsActivePort');
+  for (let attempt=0; attempt<80 && browser.exitCode===null; attempt++) {
+    if (existsSync(activePortFile)) {
+      const port = Number(readFileSync(activePortFile, 'utf8').split(/\r?\n/)[0]);
+      if (port > 0) {
+        const response = await fetch(`http://127.0.0.1:${port}/json/new?about%3Ablank`, {
+          method:'PUT', signal:AbortSignal.timeout(2000),
+        });
+        if (!response.ok) throw new Error(`CDP new page: HTTP ${response.status}`);
+        const page = await response.json();
+        if (page.type !== 'page' || !page.webSocketDebuggerUrl) throw new Error('CDP page unavailable');
+        return page;
+      }
+    }
+    await sleep(100);
+  }
+  throw new Error('Edge did not open its debug port');
+}
 export async function withBrowser(run,{port=5301,cdp=9401}={}) {
   const edge=['C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe','C:/Program Files/Microsoft/Edge/Application/msedge.exe'].find(existsSync);
   if(!edge)throw new Error('Edge unavailable');
