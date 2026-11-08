@@ -1,24 +1,27 @@
 import {spawn,spawnSync} from 'node:child_process';
 import {importProjectPackageUi} from './packageImport.mjs';
+import {openEdgeDebugPage} from './browserHarness.mjs';
 import {existsSync,mkdirSync,writeFileSync,mkdtempSync,readdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
-import {strictEqual,ok} from 'node:assert';
+import {strictEqual,deepStrictEqual,ok} from 'node:assert';
 
 // 7.9: Pilot acceptance across agreed scenarios, clean profile, 0 critical errors.
-const port=5297,cdp=9397,sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const port=5557,sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const edge=['C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe','C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe'].find(existsSync);
 if(!edge)throw new Error('Edge not found');
-const out=resolve('outputs/qa/pt_e2e/pilot');mkdirSync(out,{recursive:true});
+const evidenceRoot=resolve('outputs/qa/pt_e2e/pilot_runs');mkdirSync(evidenceRoot,{recursive:true});
+const out=mkdtempSync(join(evidenceRoot,'run_'));console.log('Evidence:',out);
 const downloads=join(out,`downloads_${Math.random().toString(36).slice(2,8)}`);mkdirSync(downloads,{recursive:true});
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(port)},stdio:'ignore',windowsHide:true});
-const browser=spawn(edge,[`--remote-debugging-port=${cdp}`,`--user-data-dir=${mkdtempSync(join(tmpdir(),'edge-7-9-'))}`,'--headless=new','--no-first-run','--disable-gpu','--window-size=1440,1100','--force-device-scale-factor=1','about:blank'],{stdio:'ignore',windowsHide:true});
+const profile=mkdtempSync(join(tmpdir(),'edge-7-9-'));
+const browser=spawn(edge,['--remote-debugging-port=0',`--user-data-dir=${profile}`,'--headless=new','--no-first-run','--no-default-browser-check','--disable-extensions','--disable-gpu','--window-size=1440,1100','--force-device-scale-factor=1','about:blank'],{stdio:['ignore','ignore','pipe'],windowsHide:true});
+let browserDiagnostic='';
+browser.stderr.on('data', chunk=>{browserDiagnostic=(browserDiagnostic+chunk).slice(-2000);});
 
 let ws;
 try{
-  let target;
-  for(let i=0;i<50;i++){try{target=(await(await fetch(`http://127.0.0.1:${cdp}/json/list`,{signal:AbortSignal.timeout(1000)})).json()).find(t=>t.type==='page');if(target)break;}catch{}await sleep(200);}
-  if(!target)throw new Error('Missing CDP target');
+  const target=await openEdgeDebugPage(browser,profile).catch(error=>{throw new Error(`${error.message} (exit ${browser.exitCode}): ${browserDiagnostic.trim()}`,{cause:error});});
   ws=new WebSocket(target.webSocketDebuggerUrl);await new Promise((res,rej)=>{ws.onopen=res;ws.onerror=rej;});
   let id=0;const pending=new Map(),errors=[];
   ws.onmessage=e=>{
@@ -180,6 +183,27 @@ try{
   await sleep(500);
   ok(await evaluate(`!!document.querySelector('svg[aria-label="Rzut hali i wyposażenia"]')`),'Widoczny rzut CAD');
   await snap('08_hall_cad_layout');
+  const initialLayout = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-v3')).project.layoutObjects`);
+  const selectedObject = initialLayout.find(item => !item.locked && !item.visualGroupId);
+  ok(selectedObject, 'Przykład ma niezablokowany obiekt CAD poza grupą');
+  await click('Biblioteka i drzewo');
+  await evaluate(`((index)=>{const b=document.querySelectorAll('.hall-tree')[0]?.querySelectorAll('li > button')[index];if(!b)throw Error('Brak obiektu w drzewie');b.click()})(${initialLayout.indexOf(selectedObject)})`);
+  await until(`!![...document.querySelectorAll('.hall-workspace label')].find(item=>item.textContent==='X [mm]')`);
+  await evaluate(`(() => {
+    const label = [...document.querySelectorAll('.hall-workspace label')].find(item => item.textContent === 'X [mm]');
+    const input = label?.querySelector('input');
+    if (!input) throw Error('Brak współrzędnej X obiektu CAD');
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, String(Number(input.value) + 100));
+    input.dispatchEvent(new Event('input', {bubbles:true}));
+  })()`);
+  await click('Zapisz obiekt');
+  await click('[aria-label="Zapisz lokalnie"]');
+  const editedLayout = await evaluate(`JSON.parse(localStorage.getItem('layout-studio-v3')).project.layoutObjects`);
+  strictEqual(editedLayout.find(item => item.id === selectedObject.id)?.xMm, selectedObject.xMm + 100, 'Zapisana edycja CAD');
+  await click('[aria-label="Cofnij"]');
+  await click('[aria-label="Zapisz lokalnie"]');
+  deepStrictEqual(await evaluate(`JSON.parse(localStorage.getItem('layout-studio-v3')).project.layoutObjects`), initialLayout, 'Cofnij przywraca zapisany layout');
+
   await click('[data-view="simulation"]');
   await until(`!!document.querySelector('.simulation-workspace canvas')`);
   ok(await evaluate(`document.querySelector('.simulation-workspace canvas').getBoundingClientRect().width>0`),'Widoczny widok 3D');

@@ -7,7 +7,7 @@ export const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 // Edge launched with port 0 writes the actual debug port to its isolated profile.
 export async function openEdgeDebugPage(browser, profile) {
   const activePortFile = join(profile, 'DevToolsActivePort');
-  for (let attempt=0; attempt<80 && browser.exitCode===null; attempt++) {
+  for (let attempt=0; attempt<80; attempt++) {
     if (existsSync(activePortFile)) {
       const port = Number(readFileSync(activePortFile, 'utf8').split(/\r?\n/)[0]);
       if (port > 0) {
