@@ -1,4 +1,5 @@
 import {spawn} from 'node:child_process';
+import {importProjectPackageUi} from './packageImport.mjs';
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,writeFileSync,readdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
@@ -7,7 +8,9 @@ import {strict as assert} from 'node:assert';
 import {build} from 'esbuild';
 import {createRequire} from 'node:module';
 
-const out=resolve('outputs/qa/pt_e2e/7_12c2_b2b'),port=5318,cdp=9418;
+const evidenceRoot=resolve('outputs/qa/pt_e2e/7_12c2_b2b');mkdirSync(evidenceRoot,{recursive:true});
+const out=mkdtempSync(join(evidenceRoot,'run_'));console.log('Evidence:',out);
+const port=5318,cdp=9418;
 mkdirSync(out,{recursive:true});
 const pkg=JSON.parse(readFileSync('przyklady/03_modul_urzadzenia/projekt-pokazowy.json','utf8'));
 const fixtureModule=join(out,'fixture.cjs');
@@ -60,11 +63,9 @@ try{
     return data;
   };
   await send('Page.enable');await send('Runtime.enable');await send('Page.navigate',{url:`http://127.0.0.1:${port}/`});await until(`!!document.querySelector('.studio')`);
-  await menu();const {root}=await send('DOM.getDocument'),{nodeId}=await send('DOM.querySelector',{nodeId:root.nodeId,selector:'[aria-label="Plik pakietu projektu"]'});
-  await send('DOM.setFileInputFiles',{nodeId,files:[fixture]});await until(`document.body.textContent.includes('Pakiet poprawny.')`);
-  await downloaded(()=>click('Pobierz kopię ratunkową przed wczytaniem'));
-  await evaluate(`document.querySelector('[aria-label="Pakiet projektu"] input[type=checkbox]').click()`);await click('Wczytaj projekt i zastosuj');
-  await sleep(1000);await until(`!!document.querySelector('.studio')&&!document.querySelector('[aria-label="Pakiet projektu"]')`);
+  const upload=async(selector,file)=>{const {root}=await send('DOM.getDocument');const {nodeId}=await send('DOM.querySelector',{nodeId:root.nodeId,selector});assert.ok(nodeId,'Brak pola importu');await send('DOM.setFileInputFiles',{nodeId,files:[file]});};
+  const reload=async()=>{await sleep(1000);await until(`!!document.querySelector('.studio')&&!document.querySelector('[aria-label="Pakiet projektu"]')`);};
+  await importProjectPackageUi({open:menu,upload,until,downloaded,click,evaluate,reload},fixture);
   const data=await calculate();await sleep(300);
   writeFileSync(join(out,'direct_zero.png'),Buffer.from((await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false})).data,'base64'));
   const raw=await evaluate(`localStorage.getItem('layout-studio-domain-v6-draft-v1')`);

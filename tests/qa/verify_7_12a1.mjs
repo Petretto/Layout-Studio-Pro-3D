@@ -1,4 +1,5 @@
 import {spawn} from 'node:child_process';
+import {prepareProjectImportUi} from './packageImport.mjs';
 import {existsSync,mkdirSync,readFileSync,writeFileSync,mkdtempSync,readdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
@@ -8,7 +9,8 @@ import {strictEqual,deepStrictEqual,ok} from 'node:assert';
 const port=5298,cdp=9398,sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const edge=['C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe','C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe'].find(existsSync);
 if(!edge)throw new Error('Edge not found');
-const out=resolve('outputs/qa/pt_e2e/7_12a1');mkdirSync(out,{recursive:true});
+const evidenceRoot=resolve('outputs/qa/pt_e2e/7_12a1');mkdirSync(evidenceRoot,{recursive:true});
+const out=mkdtempSync(join(evidenceRoot,'run_'));console.log('Evidence:',out);
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(port)},stdio:'ignore',windowsHide:true});
 const browser=spawn(edge,[`--remote-debugging-port=${cdp}`,`--user-data-dir=${mkdtempSync(join(tmpdir(),'edge-7-12a1-'))}`,'--headless=new','--no-first-run','--disable-gpu','--window-size=1440,1100','--force-device-scale-factor=1','about:blank'],{stdio:'ignore',windowsHide:true});
 let ws;
@@ -47,7 +49,7 @@ try{
   const ready=async()=>{await sleep(800);await until(`!!document.querySelector('.studio-nav')&&!document.querySelector('[role=dialog][aria-modal=true]')`);};
   const packageInput='input[aria-label="Plik pakietu projektu"]';
   const load=async name=>{await upload(packageInput,`outputs/qa/7_12a1/${name}.project.json`);await until(`document.body.textContent.includes('Pakiet poprawny.')`);};
-  const prepare=async()=>{const path=await downloaded(()=>click('Pobierz kopię ratunkową przed wczytaniem'));await evaluate(`document.querySelector('[aria-label="Pakiet projektu"] input[type=checkbox]').click()`);return path;};
+  const prepare=()=>prepareProjectImportUi({downloaded,click,evaluate});
   // First import in a fresh profile, with no domain draft or variant library installed.
   await click('Pakiet projektu');await click('Pobierz pakiet projektu (.project.json)');await until(`document.body.textContent.includes('Najpierw zapisz poprawny szkic 6')`);
   await load('source4');await prepare();await click('Wczytaj projekt i zastosuj');await ready();

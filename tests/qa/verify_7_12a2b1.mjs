@@ -1,4 +1,5 @@
 import {spawn} from 'node:child_process';
+import {importProjectPackageUi} from './packageImport.mjs';
 import {existsSync,mkdirSync,readFileSync,writeFileSync,mkdtempSync,readdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
@@ -8,7 +9,8 @@ import {strictEqual,deepStrictEqual,ok} from 'node:assert';
 const port=5301,cdp=9401,sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const edge=['C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe','C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe'].find(existsSync);
 if(!edge)throw new Error('Edge not found');
-const out=resolve('outputs/qa/pt_e2e/7_12a2b1_ui');mkdirSync(out,{recursive:true});
+const evidenceRoot=resolve('outputs/qa/pt_e2e/7_12a2b1_ui');mkdirSync(evidenceRoot,{recursive:true});
+const out=mkdtempSync(join(evidenceRoot,'run_'));console.log('Evidence:',out);
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(port)},stdio:'ignore',windowsHide:true});
 const browser=spawn(edge,[`--remote-debugging-port=${cdp}`,`--user-data-dir=${mkdtempSync(join(tmpdir(),'edge-7-12a2b1-'))}`,'--headless=new','--no-first-run','--use-angle=swiftshader','--enable-unsafe-swiftshader','--window-size=1440,1100','--force-device-scale-factor=1','about:blank'],{stdio:'ignore',windowsHide:true});
 let ws;
@@ -39,7 +41,7 @@ try{
   const downloads=mkdtempSync(join(out,'downloads_'));await send('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:downloads});
   const downloaded=async action=>{const destination=mkdtempSync(join(downloads,'action_'));await send('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:destination});await action();for(let i=0;i<100;i++){const name=readdirSync(destination).find(n=>n.endsWith('.json'));if(name)return join(destination,name);await sleep(100);}throw new Error('Download incomplete');};
   const ready=async()=>{await sleep(900);await until(`!!document.querySelector('.studio-nav')&&!document.querySelector('[aria-label="Pakiet projektu"]')`);};
-  await click('Pakiet projektu');await upload('[aria-label="Plik pakietu projektu"]','przyklady/01_zestaw_montazowy/projekt-pokazowy.json');await until(`document.body.textContent.includes('Pakiet poprawny.')`);await downloaded(()=>click('Pobierz kopię ratunkową przed wczytaniem'));await evaluate(`document.querySelector('[aria-label="Pakiet projektu"] input[type=checkbox]').click()`);await click('Wczytaj projekt i zastosuj');await ready();
+  await importProjectPackageUi({open:()=>click('Pakiet projektu'),upload,until,downloaded,click,evaluate,reload:ready},'przyklady/01_zestaw_montazowy/projekt-pokazowy.json');
   const source4=await evaluate(`JSON.parse(localStorage.getItem('layout-studio-v3')).project`);
   await nav('Stanowiska v5');
   const player=`document.querySelector('[aria-label="Odtwarzanie operacji projektu 3D"]')`;

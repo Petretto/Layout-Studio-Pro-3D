@@ -1,10 +1,12 @@
 import {spawn} from 'node:child_process';
+import {importProjectPackageUi} from './packageImport.mjs';
 import {existsSync,mkdirSync,mkdtempSync,readFileSync,writeFileSync,readdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
 import {strict as assert} from 'node:assert';
 
-const out=resolve('outputs/qa/pt_e2e/7_12c2_b3_ui'),port=5320,cdp=9420;
+const evidenceRoot=resolve('outputs/qa/pt_e2e/7_12c2_b3_ui');mkdirSync(evidenceRoot,{recursive:true});
+const out=mkdtempSync(join(evidenceRoot,'run_')),port=5320,cdp=9420;console.log('Evidence:',out);
 mkdirSync(out,{recursive:true});
 const fixture=resolve('przyklady/03_modul_urzadzenia/projekt-pokazowy.json');
 const original=JSON.parse(readFileSync(fixture,'utf8'));
@@ -29,12 +31,13 @@ try{
   const field=async(label,value)=>{await evaluate(`(()=>{const e=document.querySelector('[aria-label='+${JSON.stringify(JSON.stringify(label))}+']');if(!e)throw new Error('Missing field '+${JSON.stringify(label)});const proto=e.tagName==='SELECT'?HTMLSelectElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(proto,'value').set.call(e,${JSON.stringify(value)});e.dispatchEvent(new Event(e.tagName==='SELECT'?'change':'input',{bubbles:true}));})()`);await sleep(70);};
   const menu=async()=>{await evaluate(`document.querySelector('button[aria-label="Menu projektu"]').click()`);await click('Pakiet projektu');await until(`!!document.querySelector('[aria-label="Pakiet projektu"]')`);};
   const downloaded=async action=>{const dir=mkdtempSync(join(out,'download_'));await send('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:dir});await action();for(let i=0;i<100;i++){const name=readdirSync(dir).find(name=>name.endsWith('.json'));if(name)return join(dir,name);await sleep(100);}throw new Error('Missing download');};
-  const upload=async file=>{const {root}=await send('DOM.getDocument'),{nodeId}=await send('DOM.querySelector',{nodeId:root.nodeId,selector:'[aria-label="Plik pakietu projektu"]'});await send('DOM.setFileInputFiles',{nodeId,files:[file]});await until(`document.body.textContent.includes('Pakiet poprawny.')`);await downloaded(()=>click('Pobierz kopię ratunkową przed wczytaniem'));await evaluate(`document.querySelector('[aria-label="Pakiet projektu"] input[type=checkbox]').click()`);await click('Wczytaj projekt i zastosuj');await sleep(1000);await until(`!!document.querySelector('.studio')&&!document.querySelector('[aria-label="Pakiet projektu"]')`);};
+  const upload=async(selector,file)=>{const {root}=await send('DOM.getDocument'),{nodeId}=await send('DOM.querySelector',{nodeId:root.nodeId,selector});assert.ok(nodeId,'Brak pola importu');await send('DOM.setFileInputFiles',{nodeId,files:[file]});};
+  const reload=async()=>{await sleep(1000);await until(`!!document.querySelector('.studio')&&!document.querySelector('[aria-label="Pakiet projektu"]')`);};
   const nav=async()=>{await evaluate(`([...document.querySelectorAll('.studio-nav button,.shell-nav button,.shell-subnav button')].find(b=>b.textContent.includes('Proces i stanowiska'))).click()`);await sleep(150);await evaluate(`(document.querySelector('button[data-view="stations"]')||[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Stanowiska i zasoby'))).click()`);await until(`!!document.querySelector('[aria-label="Bufory podmontaży szkicu 6"]')`);};
   const raw=()=>evaluate(`localStorage.getItem('layout-studio-domain-v6-draft-v1')`);
   const form=`document.querySelector('[aria-label="Bufory podmontaży szkicu 6"]')`;
   const fill=async(n,sub,capacity,copy='all')=>{const label=`Bufor podmontażu ${n}`;await field(`${label} podzespół`,sub);await field(`${label} jednostka`,'szt.');await field(`${label} stanowisko`,'ST-MU-MAIN2');await field(`${label} kopia`,copy);await field(`${label} pojemność wejściowa rodzaj`,'limited');await field(`${label} pojemność wejściowa`,String(capacity));await field(`${label} pojemność wyjściowa rodzaj`,'unlimited');await field(`${label} polityka operatora`,'bbas-worker-released');};
-  await send('Page.enable');await send('Runtime.enable');await send('Page.navigate',{url:`http://127.0.0.1:${port}/`});await until(`!!document.querySelector('.studio')`);await menu();await upload(fixture);await nav();
+  await send('Page.enable');await send('Runtime.enable');await send('Page.navigate',{url:`http://127.0.0.1:${port}/`});await until(`!!document.querySelector('.studio')`);await importProjectPackageUi({open:menu,upload,until,downloaded,click,evaluate,reload},fixture);await nav();
   const before=await raw();assert.equal(JSON.parse(before).project.subassemblyBuffers,undefined);
   await click('Dodaj bufor podmontażu',form);await click('Zapisz bufory podmontaży',form);assert.equal(await raw(),before);assert.ok(await evaluate(`${form}.querySelector('[role="alert"]')!==null`));
   await fill(1,'SUB-PWR',5);await click('Dodaj bufor podmontażu',form);await fill(2,'SUB-DRV',7);await click('Zapisz bufory podmontaży',form);
@@ -50,7 +53,7 @@ try{
   await evaluate(`${form}.scrollIntoView({block:'start'})`);await sleep(200);writeFileSync(join(out,'formularz.png'),Buffer.from((await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false})).data,'base64'));
   await send('Page.reload');await sleep(1000);await until(`!!document.querySelector('.studio')`);assert.equal(await raw(),final);
   await menu();const exportedPath=await downloaded(()=>click('Pobierz pakiet projektu (.project.json)'));const exported=JSON.parse(readFileSync(exportedPath,'utf8'));assert.equal(exported.data.draftRaw,final);assert.equal(exported.data.source4Json,original.data.source4Json);
-  await upload(exportedPath);assert.equal(await raw(),final);assert.deepEqual(errors,[]);
+  await importProjectPackageUi({open:async()=>{},upload,until,downloaded,click,evaluate,reload},exportedPath);assert.equal(await raw(),final);assert.deepEqual(errors,[]);
   writeFileSync(join(out,'ui.json'),JSON.stringify({result:'PASS',twoComponents:true,invalidAndOverlap:true,editDiscardDelete:true,undoRedo:true,reload:true,exportImport:true,originalAndOtherFieldsUnchanged:true,runtimeErrors:errors},null,2));
   console.log('PASS C2-B3-UI: two components, invalid/overlap, edit/delete/discard, undo/redo, reload, export/import, original preserved.');
 }finally{ws?.close();browser.kill();server.kill();}

@@ -1,4 +1,5 @@
 import {openEdgeDebugPage} from './browserHarness.mjs';
+import {importProjectPackageUi} from './packageImport.mjs';
 import {spawn} from 'node:child_process';
 import {existsSync,mkdirSync,readFileSync,writeFileSync,mkdtempSync,readdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
@@ -113,7 +114,6 @@ try{
   };
 
   console.log('1. Importing 04_eko package via ProjectPackageModal...');
-  await openPackageModal();
   const fixturePath='przyklady/04_eko/projekt-pokazowy.json';
   const fixture=JSON.parse(readFileSync(fixturePath,'utf8'));
   const baseline=JSON.parse(fixture.data.variantsRaw).variants.find(variant=>variant.id==='EKO-PARALLEL');
@@ -122,12 +122,7 @@ try{
   deepStrictEqual(reference.conditions,{batch:1,arrivalIntervalSeconds:1,transportMode:'configured'});
   const expected=reference.variants.find(variant=>variant.id===baseline.id);
   ok(expected,'Brak wzorca EKO-PARALLEL');
-  await upload('[aria-label="Plik pakietu projektu"]',fixturePath);
-  await until(`document.body.textContent.includes('Pakiet poprawny.')`);
-  await downloaded(()=>click('Pobierz kopię ratunkową przed wczytaniem'));
-  await evaluate(`document.querySelector('[aria-label="Pakiet projektu"] input[type=checkbox]').click()`);
-  await click('Wczytaj projekt i zastosuj');
-  await reloadReady();
+  await importProjectPackageUi({open:openPackageModal,upload,until,downloaded,click,evaluate,reload:reloadReady},fixturePath);
 
   console.log('2. Verifying loaded Eko project data...');
   const draft=await evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
