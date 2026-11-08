@@ -10,7 +10,9 @@ Status określa **rozstrzygnięcie ustalenia**, a nie ukończenie implementacji.
 
 ## 1. Pełna macierz BL-01–03 i S-01–18
 
-**Stan roboczy PT — 2026-11-08.** Sklasyfikowano 16 skryptów i podłączono wspólny import lub etap kopii. Eko pozostaje lokalnym materiałem regresyjnym. Pilot automatyczny wykonał obliczenia, porównanie, ponowny import oraz edycję CAD z Cofnij. Dwa kontrolowane błędy widocznego wyniku R01 spowodowały FAIL pełnego pilota. Sol potwierdził R01–R05 i R09 w zakresie opisanym w raporcie. Odtworzenie i poprawkę dodawania wyposażenia zweryfikowano w Edge z zapisem, historią i przejściem do 3D. Pozostają ponowienie na zamrożonym SHA, zewnętrzny odbiór i udział człowieka. Wiersze poniżej zachowują ustalenia historycznego RC1 i kryteria zamknięcia. [Raport PT](../weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md).
+**Stan roboczy PT — 2026-11-08.** Sklasyfikowano 16 skryptów i podłączono wspólny import lub etap kopii. Eko pozostaje lokalnym materiałem regresyjnym. Pilot automatyczny wykonał obliczenia, porównanie, ponowny import oraz edycję CAD z Cofnij. Dwa kontrolowane błędy widocznego wyniku R01 spowodowały FAIL pełnego pilota. Sol potwierdził R01–R05 i R09 w zakresie opisanym w raporcie. Odtworzenie i poprawkę dodawania wyposażenia zweryfikowano w Edge z zapisem, historią i przejściem do 3D. Pozostają ponowienie na SHA przyszłego kandydata, zewnętrzny odbiór i udział człowieka. Wiersze poniżej zachowują ustalenia historycznego RC1 i kryteria zamknięcia. [Raport PT](../weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md).
+
+Na roboczym SHA `f7e5def82aedbef615eceef99c9ef0fb73e5ddbb` powtórzono 16 skryptów oraz test CAD i kontrolowane awarie pilota, 18/18 procesów zakończyło się kodem 0. Dla odbioru wydania nadal wymagane są czyste środowisko kandydata, niezależny przegląd i pilot z człowiekiem.
 
 | ID / waga | Ustalenie i status weryfikacji | Dowód i luka | Pakiet | Test potwierdzający | Kryterium zamknięcia |
 |---|---|---|---|---|---|

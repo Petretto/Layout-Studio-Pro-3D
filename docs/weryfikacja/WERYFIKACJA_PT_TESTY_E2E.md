@@ -16,6 +16,8 @@ W A1 wykryto brak pola wyboru oryginału projektu 4 przy eksporcie ze źródła 
 
 ## Mapa 16 skryptów
 
+**Powtórzenie na wskazanym SHA.** Po pobraniu `origin/main` (nadal `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`) wykonano cały zestaw 16 skryptów, test dodawania CAD i test dwóch kontrolowanych błędów pilota na `f7e5def82aedbef615eceef99c9ef0fb73e5ddbb`. Wszystkie 18 procesów zakończyło się kodem 0. Wykonanie pilotów negatywnych obejmuje dwa oczekiwane błędy i kontrolę ich przyczyn. Identyczny HEAD i brak zmian w plikach śledzonych potwierdzono przed testem i po nim. Wyniki oraz oddzielne logi znajdują się w `outputs/qa/pt_e2e/regression_dfdca58dc3764baebb08bff38e70f577/`. Testy działały na wcześniejszym buildzie tego kodu w bieżącym katalogu, gdzie istnieją również pliki nieśledzone i lokalne fixtures. Nie jest to odbiór w czystym checkout ani nowy RC. Eko pozostaje testem wewnętrznym.
+
 | Skrypty | Klasyfikacja | Lokalny wynik i zakres |
 |---|---|---|
 | `verify_7_12a1` | aktywny | PASS; kopia, konflikty, rollback, źródła 4/5, dołączenie oryginału, eksport/reload |
