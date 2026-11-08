@@ -10,7 +10,7 @@ Status określa **rozstrzygnięcie ustalenia**, a nie ukończenie implementacji.
 
 ## 1. Pełna macierz BL-01–03 i S-01–18
 
-**Stan roboczy PT — 2026-11-08:** 16 skryptów sklasyfikowano i podłączono wspólny import lub etap kopii, z Eko jako lokalnym fixture. Pilot automatyczny wykonał obliczenia, porównanie, round-trip oraz edycję CAD z Cofnij. Dwa kontrolowane błędy widocznego wyniku R01 spowodowały FAIL pełnego pilota. Sol potwierdził R01–R05 i R09 w zakresie opisanym w raporcie. Potrzebne są ponowienie na zamrożonym SHA, pozostałe próby, wyjaśnienie dodawania wyposażenia, zewnętrzny odbiór i udział człowieka. Wiersze poniżej zachowują ustalenia historycznego RC1 i kryteria zamknięcia. [Raport PT](../weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md).
+**Stan roboczy PT — 2026-11-08.** Sklasyfikowano 16 skryptów i podłączono wspólny import lub etap kopii. Eko pozostaje lokalnym materiałem regresyjnym. Pilot automatyczny wykonał obliczenia, porównanie, ponowny import oraz edycję CAD z Cofnij. Dwa kontrolowane błędy widocznego wyniku R01 spowodowały FAIL pełnego pilota. Sol potwierdził R01–R05 i R09 w zakresie opisanym w raporcie. Odtworzenie i poprawkę dodawania wyposażenia zweryfikowano w Edge z zapisem, historią i przejściem do 3D. Pozostają ponowienie na zamrożonym SHA, zewnętrzny odbiór i udział człowieka. Wiersze poniżej zachowują ustalenia historycznego RC1 i kryteria zamknięcia. [Raport PT](../weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md).
 
 | ID / waga | Ustalenie i status weryfikacji | Dowód i luka | Pakiet | Test potwierdzający | Kryterium zamknięcia |
 |---|---|---|---|---|---|

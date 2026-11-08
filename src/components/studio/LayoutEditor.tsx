@@ -42,7 +42,9 @@ export function LayoutEditor({project:p,change,confirm,simulation,selectedIds:pr
       if(obj){setSelected(obj.id);setDraft({...obj});}
     }else if(selectedIds.length===0){
       setSelected('');
-      setDraft(null);
+      // Adding an object clears the selection before the new object exists in the layout.
+      // A project change still resets pending edits in the history/import effect below.
+      setDraft(current=>current&&!p.layoutObjects.some(o=>o.id===current.id)?current:null);
     }else{
       setSelected(selectedIds[0]??'');
       setDraft(null);

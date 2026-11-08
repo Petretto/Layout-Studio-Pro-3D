@@ -7,7 +7,7 @@ window.PLAN_DATA = {
     "baseVersion": "Layout Studio Pro 3D 0.4.0",
     "hostingUrl": "https://layout-studio-pro-3d.vercel.app/",
     "repoUrl": "https://github.com/Petretto/Layout-Studio-Pro-3D",
-    "extractedAt": "2026-11-08T17:47:22.892Z"
+    "extractedAt": "2026-11-08T17:54:03.035Z"
   },
   "overall": {
     "total": 72,
@@ -1299,7 +1299,7 @@ window.PLAN_DATA = {
       "tag": "Bieżący pakiet",
       "date": "2026-11-03",
       "historical": false,
-      "summary": "**P0 wdrożone lokalnie** na `codex/v1-p0-data-safety`: S-03 odtworzone w odizolowanym Edge przed poprawką; wspólny podgląd katalogu/pliku/tutorialu, ochrona formularzy i autosave, trwałe kopie sprzed zastąpienia oraz blokada niepotwierdzonego odzyskiwania po reload. Naprawiono atrapę BL-01 i ostrzeżenie regeneracji S-15. Formaty 4/5/6 i reguły obliczeń pozostają zgodne; nie wprowadzono integracji P2. [Raport P0](docs/weryfikacja/WERYFIKACJA_REMEDIACJI_P0_BEZPIECZENSTWO_DANYCH.md) zawiera dowody i ograniczenia.\n\nWeryfikacja końcowa: focused **24/24**, pełna regresja **507/507**, build i `verify:clean` PASS; rzeczywisty UI **17/17** scenariuszy, odzyskiwanie po reload i pobrane pliki. Instrukcja MD/HTML/PDF i snapshot osobnego pulpitu aktualizowane. Niezależny przegląd kontraktu odzyskiwania **NOT_VERIFIED**; G1 otwarta do PT i niezależnego odbioru. G2 nadal otwarta — architektura integracji wymaga osobnego zatwierdzenia.\n\nMetryka: RC1 i pobrany przed P0 `origin/main` = `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`; baza P0 = `f1ae9cbb8cffb9a72a244bab35e995063853e52f` (main + zatwierdzony plan/monitor). Main/RC1 nie zmieniono; brak deploymentu, aktualizacji zależności i RC2.\n\n**Bieżący pakiet: PT — wiarygodne E2E, w trakcie.** [Raport prób i kontroli wzorców Sol](docs/weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md). R01–R05 potwierdzone rachunkiem oraz w Edge, R09 z dokładnym `EKO-PARALLEL` w configured. Automatyczny pilot w Edge przeszedł edycję istniejącego obiektu CAD, Cofnij oraz 7.12.D z asercjami liczbowymi, porównaniem i ponownym importem. Dodanie wyposażenia bez formularza odtworzono niezależnie w czystym projekcie; test regresyjny pozostaje FAIL do naprawy, z zachowaniem rozdziału geometrii i technologii oraz kontroli zapisu i Cofnij/Ponów. Wspólny import i mapa 16 skryptów sprawdzone; w dwóch kontrolowanych próbach pełny pilot odrzucił brak wyniku i złą liczbę w UI. Pozostają pozostałe próby, powtórzenie na zamrożonym SHA, niezależny odbiór i pilot z człowiekiem. Analiza i weryfikacja poprawki stanu CAD: Sol; ograniczona implementacja React możliwa w Terra po ustaleniu kontraktu. Liczby referencyjne Sol i zewnętrzny Opus do niezależnego świadectwa pilota. Przed kolejnym pakietem pobrać ponownie main i sprawdzić jego zmiany. Postęp głównych ID pozostaje **61/72 = 84,7%**, V1 **61/68 = 89,7%**, Etap 7 **7/14 = 50,0%**. Nie oznacza to gotowości wydania."
+      "summary": "**P0 wdrożone lokalnie** na `codex/v1-p0-data-safety`: S-03 odtworzone w odizolowanym Edge przed poprawką; wspólny podgląd katalogu/pliku/tutorialu, ochrona formularzy i autosave, trwałe kopie sprzed zastąpienia oraz blokada niepotwierdzonego odzyskiwania po reload. Naprawiono atrapę BL-01 i ostrzeżenie regeneracji S-15. Formaty 4/5/6 i reguły obliczeń pozostają zgodne; nie wprowadzono integracji P2. [Raport P0](docs/weryfikacja/WERYFIKACJA_REMEDIACJI_P0_BEZPIECZENSTWO_DANYCH.md) zawiera dowody i ograniczenia.\n\nWeryfikacja końcowa: focused **24/24**, pełna regresja **507/507**, build i `verify:clean` PASS; rzeczywisty UI **17/17** scenariuszy, odzyskiwanie po reload i pobrane pliki. Instrukcja MD/HTML/PDF i snapshot osobnego pulpitu aktualizowane. Niezależny przegląd kontraktu odzyskiwania **NOT_VERIFIED**; G1 otwarta do PT i niezależnego odbioru. G2 nadal otwarta — architektura integracji wymaga osobnego zatwierdzenia.\n\nMetryka: RC1 i pobrany przed P0 `origin/main` = `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`; baza P0 = `f1ae9cbb8cffb9a72a244bab35e995063853e52f` (main + zatwierdzony plan/monitor). Main/RC1 nie zmieniono; brak deploymentu, aktualizacji zależności i RC2.\n\n**Bieżący pakiet PT — wiarygodne E2E, w trakcie.** R01–R05 potwierdzono rachunkiem i w Edge, R09 sprawdzono dla `EKO-PARALLEL` w trybie skonfigurowanym. Wspólny import i mapa 16 skryptów zostały sprawdzone. W dwóch kontrolowanych próbach pilot odrzucił brak wyniku i złą liczbę w UI. Dodawanie wyposażenia naprawiono po reprodukcji na czystym projekcie. Edge potwierdził zapis, Cofnij/Ponów, ponowne otwarcie, odczyt ID obiektu w 3D oraz zachowanie danych technologicznych. Po poprawce automatyczny pilot przeszedł edycję istniejącego obiektu CAD, Cofnij i 7.12.D z asercjami liczbowymi, porównaniem i ponownym importem. Pozostają powtórzenie na zamrożonym SHA, niezależny odbiór i pilot z człowiekiem. Techniczne ponowienie prowadzi Terra, wzorce liczbowe weryfikuje Sol, a niezależny przegląd należy do zewnętrznego audytora. Przed kolejnym pakietem pobrać ponownie main i sprawdzić jego zmiany. Postęp głównych ID wynosi **61/72 = 84,7%**, V1 **61/68 = 89,7%**, Etap 7 **7/14 = 50,0%**. [Raport PT](docs/weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md)."
     },
     {
       "tag": "**Wybór wersji po doprecyzowaniu właściciela",
@@ -3711,7 +3711,7 @@ window.PLAN_DATA = {
       "key": "main",
       "path": "PLAN_ROZWOJU.md",
       "available": true,
-      "modified": "2026-11-08T17:47:19.402Z"
+      "modified": "2026-11-08T17:53:58.181Z"
     },
     {
       "key": "plan",
@@ -3735,7 +3735,7 @@ window.PLAN_DATA = {
       "key": "matrix",
       "path": "docs/plany/MACIERZ_AUDYT_REMEDIACJA.md",
       "available": true,
-      "modified": "2026-11-08T17:42:22.590Z"
+      "modified": "2026-11-08T17:53:57.902Z"
     },
     {
       "key": "tests",
@@ -3744,5 +3744,5 @@ window.PLAN_DATA = {
       "modified": "2026-11-03T16:17:38.087Z"
     }
   ],
-  "signature": "1b5e4cf5ab689afc1161ecbfb0d3100fc61ea2012038c07165ebf486fe42ed54"
+  "signature": "d148dc5e78c2d0639d325c8e67305385ba9b47f824739001ead132963a704810"
 };
