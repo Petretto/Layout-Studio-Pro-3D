@@ -10,6 +10,8 @@ import {strictEqual,deepStrictEqual,ok} from 'node:assert';
 // 7.12.D: Comprehensive UI acceptance of all three demo packages in an isolated Edge profile.
 // Tests clean browser session, package 01, package 02, package 03, data isolation, simulation and export round-trip.
 const port=5548,sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const injectedFault=process.env.PT_TEST_FAULT ?? '';
+if(!['','missing-result','incorrect-result'].includes(injectedFault))throw new Error('Nieznany kontrolowany błąd PT');
 const edge=['C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe','C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe'].find(existsSync);
 if(!edge)throw new Error('Edge not found');
 const evidenceRoot=resolve('outputs/qa/pt_e2e/sol_reference/7_12d');
@@ -166,7 +168,11 @@ try{
     await setCheckbox('Symulacja bez transportu — just in time',jit);
     await click('Oblicz harmonogram szkicu 6');
     await until(`!!document.querySelector(${JSON.stringify(scheduleResult)})`);
-    assertScheduleResult(await evaluate(`document.querySelector(${JSON.stringify(scheduleResult)}).textContent`),expected[0].seconds);
+    if(refId==='R01' && injectedFault){
+      console.log(`PT fault injected: ${injectedFault}`);
+      await evaluate(`(()=>{const result=document.querySelector(${JSON.stringify(scheduleResult)});if(!result)throw Error('Brak celu iniekcji');if(${JSON.stringify(injectedFault)}==='missing-result')result.remove();else{const previous=result.textContent;const changed=previous.replace(/(koniec ostatniej sztuki:\\s*)(\\d+)(\\s*s)/,(_,prefix,value,suffix)=>prefix+(Number(value)+1)+suffix);if(changed===previous)throw Error('Nie znaleziono liczby do iniekcji');result.textContent=changed;}})()`);
+    }
+    assertScheduleResult(await evaluate(`document.querySelector(${JSON.stringify(scheduleResult)})?.textContent`),expected[0].seconds);
     strictEqual(await evaluate(`!!document.querySelector('[aria-label="Tryb transportu wyniku"]')`),jit);
     const windows = await readScheduleWindows(evaluate);
     assertOperationWindows(windows,baseline.operationWindows,tolerance);

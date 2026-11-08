@@ -10,6 +10,8 @@ Wspólny `tests/qa/packageImport.mjs` obsługuje obowiązkowy import pilota, 7.1
 
 Kontynuacja 8 listopada: do helpera podłączono 7.12.A2b1, osiem prób C2 B2a–B3f, edytor C2 B3 oraz wewnętrzny R09 Eko. Wszystkie przeszły w Edge po zmianie. A1 zachowuje oddzielne kroki potrzebne do wstrzykiwania błędów, korzysta jednak ze wspólnego przygotowania kopii; przeszedł pełną sekwencję ochrony i odzyskiwania (`7_12a1/run_yZskQr`). Po wydzieleniu tego kroku powtórzono również C2 B2a (`7_12c2_b2a/run_nCY4xG`). Dowody pozostałych prób znajdują się w nowych katalogach `run_*` pod `outputs/qa/pt_e2e/`; starsze dowody zachowano. Pierwsza próba edytora C2 B3 zakończyła się błędem testu wskutek niedostosowanego drugiego wywołania importu (`run_JhqZnK`); po poprawce przebieg `run_xhen2z` przeszedł. Potrzebna jest jeszcze kontrola kompletności mapy 16 skryptów i odbiór na zamrożonym SHA.
 
+Kontrola T07/T08 8 listopada: `ptCoverage.test.mjs` sprawdził wszystkie 16 nazw z planu, użycie wspólnego helpera (w A1 tylko etapu kopii) i brak dwóch historycznych etykiet importu. Nie zastępuje to uruchomienia wszystkich ścieżek na zamrożonym SHA. `verify_pt_pilot_faults.mjs` uruchomił dwukrotnie pełny pilot w odizolowanym Edge: po faktycznym obliczeniu R01 usunięcie widocznego wyniku i osobno zmiana odczytywanej liczby w DOM zakończyły pilot FAIL z właściwej przyczyny, bez komunikatu PASS. Iniekcje dotyczą wyłącznie UI testowego, nie danych projektu, algorytmu ani wzorców; logi `outputs/qa/pt_e2e/pilot_faults/run_qyb3dX/`. Normalny pilot bez iniekcji następnie przeszedł (`pilot_runs/run_S48vTR/`, zagnieżdżony 7.12.D `sol_reference/7_12d/run_XlgHVi/`). Nie są to testy błędów workera ani odbiór pilota przez człowieka.
+
 W A1 wykryto brak pola wyboru oryginału projektu 4 przy eksporcie ze źródła 5. Pole nie występowało już na RC1, chociaż rdzeń eksportu i podręcznik przewidywały taki przepływ. Dodano kontrolkę `Oryginał 4 do pakietu`; A1 sprawdza rzeczywisty plik, eksport, odczyt źródła 5 i zachowanie biblioteki wariantów. To odrębna poprawka UI, a nie regresja spowodowana przez P0.
 
 ## Mapa 16 skryptów
@@ -28,7 +30,7 @@ Wszystkie 16 uruchomiono na gałęzi roboczej w izolowanych profilach Edge; daty
 
 ## Wyniki i granice
 
-- `node --test tests/qa/packageImport.test.mjs tests/qa/scheduleAssertions.test.mjs`: 4/4 PASS; scenariusze negatywne są testami pomocniczych asercji.
+- `node --test tests/qa/ptCoverage.test.mjs tests/qa/packageImport.test.mjs tests/qa/scheduleAssertions.test.mjs`: 7/7 PASS; dodatkowo dwa negatywne uruchomienia pełnego pilota opisano wyżej.
 - `npm run build`: PASS po dodaniu pola. `verify_7_12a1` po tej zmianie: PASS w Edge. `verify_7_12d`: PASS i zawarty w końcowym pilocie; log `outputs/qa/pt_e2e/pilot-final.txt`.
 - Bufory B2a/B2b/B3a–d/B3 UI: PASS według osobnych logów; B3e/B3f oraz A2a/A2b1/B: PASS według osobnych `report.json`/`ui.json`.
 - Kontrolę źródła i interpretacji wzorców R01–R05/R09 wykonano w Sol. Wyniki i zakres są w sekcji poniżej.
@@ -53,7 +55,7 @@ W R01–R05 dla operacji szeregowych użyto maksimum gotowości i dostępności 
 
 **Wyniki wykonania.** `verify_7_12d.mjs` w odizolowanym Edge wykonał wszystkie pięć scenariuszy, z jawną bazą i trybem porównania. Asercje objęły 63 okna i ukończenia szkicu bazowego, makespan obu wariantów w widocznym UI i pobranym Markdown oraz zachowanie szkicu po ponownym imporcie. Wynik rzeczywisty `outputs/qa/pt_e2e/sol_reference/7_12d/run_iog6Tz/report.json`. Wewnętrzny test Eko uzyskał PASS dla bazy configured. Testy silnika 9/9 PASS pokrywają oba warianty, ich pełne okna, dostawę/blokadę oraz trzy warianty Eko. Dwa pierwsze uruchomienia UI zakończyły się błędem wyboru karty Edge lub portu CDP przed scenariuszem. Udany przebieg korzysta z przydzielanego portu i własnej karty w świeżym profilu. Źródłowe liczby referencyjne pozostają w plikach pakietów.
 
-**Pozostały odbiór PT.** Wzorce liczbowe R01–R05/R09 sprawdzone w opisanym zakresie. Okna kandydatów są sprawdzone na poziomie silnika, a UI porównuje ich makespan. Próby zasobów R06/R07 zachowują lokalne dowody PT i wymagają odbioru na nowym kandydacie. Terra konsoliduje pozostałe helpery importu i przeprowadza próby T08, w tym rzeczywistą edycję CAD z Cofnij oraz kontrolowane awarie pełnego przepływu testowego. Następnie potrzebne są ponowienie całego wymaganego zakresu na zamrożonym SHA, zewnętrzny odbiór oraz protokół pilota z człowiekiem. PT i G1 pozostają otwarte. P1 oraz G2 zachowują osobną ścieżkę zatwierdzenia.
+**Pozostały odbiór PT.** Wzorce liczbowe R01–R05/R09 sprawdzone w opisanym zakresie. Okna kandydatów są sprawdzone na poziomie silnika, a UI porównuje ich makespan. Próby zasobów R06/R07 zachowują lokalne dowody PT i wymagają odbioru na nowym kandydacie. T07 i wskazane w T08 dwa rodzaje negatywnej próby oraz edycję CAD wykonano lokalnie w zakresie opisanym powyżej; wymagane są ponowienie całego zakresu na zamrożonym SHA, wyjaśnienie dodawania wyposażenia, zewnętrzny odbiór oraz protokół pilota z człowiekiem. PT i G1 pozostają otwarte. P1 oraz G2 zachowują osobną ścieżkę zatwierdzenia.
 
 ## Bieżąca próba pilota CAD
 
@@ -61,4 +63,4 @@ W dwóch przebiegach pilota wejście do hali powiodło się, ale po wybraniu „
 
 8 listopada uruchomiono pilota w odizolowanym profilu Edge: **PASS** dla automatycznego przebiegu, w tym edycji współrzędnej X istniejącego obiektu, zapisu i porównania zapisanego layoutu po Cofnij. Następnie przebieg wykonał 7.12.D z pięcioma scenariuszami, porównaniem wyników i eksportem oraz ponownym importem. Dowody pilota: `outputs/qa/pt_e2e/pilot_runs/run_8DfLCP/`; dowody zagnieżdżonego 7.12.D: `outputs/qa/pt_e2e/sol_reference/7_12d/run_YXyIRH/`. Nie jest to potwierdzenie dodawania wyposażenia ani odbiór z człowiekiem.
 
-Kontrolowane awarie pełnego przepływu pilota i końcowa kontrola kompletności konsolidacji pozostają **NOT_VERIFIED**. Potrzebne są także niezależny odbiór i pełne powtórzenie na zamrożonym SHA. PT i G1 pozostają otwarte.
+Pozostałe scenariusze negatywne, niezależny odbiór i pełne powtórzenie na zamrożonym SHA pozostają **NOT_VERIFIED**. PT i G1 pozostają otwarte.
