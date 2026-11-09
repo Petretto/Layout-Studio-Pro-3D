@@ -16,6 +16,8 @@ Na roboczym SHA `f7e5def82aedbef615eceef99c9ef0fb73e5ddbb` powtórzono 16 skrypt
 
 **Stan roboczy P4b — 2026-11-09.** Lokalny katalog i build zawierają trzy syntetyczne pakiety. Stare pliki Eko usunięto z katalogu generowanego z zachowaniem kopii lokalnej. Skan i lokalne HTTP przeszły w zakresie opisanym w [raporcie P4b](../weryfikacja/WERYFIKACJA_P4B_EKO_DYSTRYBUCJA.md). Prawa, publiczne repozytorium i jego historia, archiwa oraz stare deploymenty nadal wymagają rozstrzygnięcia. S-14 pozostaje otwarte.
 
+Odczyt istniejącego hostingu 9 listopada potwierdził HTTP 200 oraz zgodne sumy wcześniejszych publicznych JSON i ZIP Eko. GitHub potwierdził publiczną widoczność repozytorium, brak GitHub Releases i brak zdalnych tagów. Szczegóły i granice sprawdzenia zawiera raport P4b.
+
 | ID / waga | Ustalenie i status weryfikacji | Dowód i luka | Pakiet | Test potwierdzający | Kryterium zamknięcia |
 |---|---|---|---|---|---|
 | BL-01 / średnia | **Nieaktualne w gałęzi P0 — poprawione i zweryfikowane.** Historyczny FAIL RC1 pozostaje ważnym dowodem | Dodano wymagane removeItem do atrapy; verify:clean DR round-trip PASS, core 24/24 i UI restore po reload PASS; raport P0. Nie jest to nowy odbiór web ani poprawka na main | P0 lokalnie wdrożone; P5 nowy kandydat | T04–T06, verify-clean.txt i regression-ui.result.json | Atrapa i lokalny round-trip zamknięte; regresja na przyszłym zamrożonym kandydacie nadal wymagana |

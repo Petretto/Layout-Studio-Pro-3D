@@ -24,3 +24,11 @@ Stan na 9 listopada 2026. Gałąź `codex/v1-p4b-eko` oparto na `c2b2d0467c55065
 ## Otwarte kryteria
 
 Potrzebny jest zewnętrzny przegląd kompletności ekspozycji, inwentaryzacja aktualnego publicznego repozytorium i historycznych dystrybucji oraz decyzja co do praw i retencji. Na nowym kandydacie należy powtórzyć skan wynikowego artefaktu i test HTTP z kontrolą treści, typu oraz odpowiedzi SPA. Weryfikacja docelowego hostingu nastąpi po osobnej zgodzie na deployment.
+
+## Sprawdzenie aktualnej ekspozycji — 9 listopada
+
+Odczyt `https://layout-studio-pro-3d.vercel.app` o 21:40 UTC wykazał, że indeks produkcyjny nadal zawiera `04_eko`. Adresy `/demo-projects/04_eko.project.json` i `/demo-projects/04_eko.zip` zwróciły HTTP 200, odpowiednio typ JSON i ZIP. Sumy SHA-256 obu odpowiedzi są identyczne z kopiami poprzednich wygenerowanych assetów. Wynik metadanych, bez zapisania pobranych danych, znajduje się w `outputs/qa/p4b/host_exposure.json`. Lokalna gałąź P4b nie została wdrożona; ten wynik dotyczy zastanego wdrożenia, a nie lokalnego builda.
+
+GitHub podaje widoczność repozytorium jako publiczną. Odczyt listy GitHub Releases zwrócił pustą listę, a `git ls-remote --tags origin` nie zwrócił tagów. Stan ten nie obejmuje innych kanałów dystrybucji, cache ani wcześniej pobranych kopii. W `origin/main` są śledzone pliki `przyklady/04_eko/`, `dane/eko/7_1/`, arkusze testowe, modele, fixtures i eksporty testowe. Wykryto również materiały instrukcji i zrzuty, dokumenty danych/weryfikacji, pliki w `outputs/` oraz przykładowy DXF i CSV z Eko w nazwie. Część innych plików może zawierać dane bez tego oznaczenia.
+
+Historia pakietu `przyklady/04_eko/projekt-pokazowy.json` obejmuje commit `cf41b47`, osiągalny przez zdalne `main`, `release/v1-audit-rc1` i `codex/model-process-2-1`. Wykrycie nazw oraz dostępności repozytorium nie stanowi kompletnego audytu każdej treści i wszystkich zewnętrznych kopii. Zakres ewentualnych działań wobec bieżącego wdrożenia i publicznego Git wymaga decyzji właściciela. Zmiana widoczności repozytorium, przepisanie historii, usuwanie śledzonych plików i deployment pozostają osobnymi działaniami.
