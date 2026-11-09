@@ -1,0 +1,35 @@
+import {test} from 'node:test';
+import {strict as assert} from 'node:assert';
+import {spawnSync} from 'node:child_process';
+import {cpSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,writeFileSync} from 'node:fs';
+import {join,resolve} from 'node:path';
+
+test('P4b: staged catalog preserves old assets, rejects extras and restricts packages',()=>{
+  const parent=resolve('outputs/qa/p4b');mkdirSync(parent,{recursive:true});
+  const root=mkdtempSync(join(parent,'catalog_test_'));
+  mkdirSync(join(root,'scripts'));mkdirSync(join(root,'przyklady'));mkdirSync(join(root,'public','demo-projects'),{recursive:true});
+  cpSync('scripts/prepare_demo_catalog.mjs',join(root,'scripts','prepare_demo_catalog.mjs'));
+  cpSync('przyklady/katalog.json',join(root,'przyklady','katalog.json'));
+  for(const name of ['01_zestaw_montazowy','02_wozek_warsztatowy','03_modul_urzadzenia'])cpSync(join('przyklady',name),join(root,'przyklady',name),{recursive:true});
+  const old=join(root,'public','demo-projects','04_eko.zip');
+  writeFileSync(old,'synthetic legacy file');
+  const run=(...args)=>spawnSync(process.execPath,[join(root,'scripts','prepare_demo_catalog.mjs'),...args],{encoding:'utf8'});
+  const built=run();assert.equal(built.status,0,built.stderr);
+  assert.equal(existsSync(old),false);
+  const backups=join(root,'outputs','qa','p4b_catalog_backups');
+  const saved=readdirSync(backups).find(name=>name.startsWith('run-'));
+  assert.equal(readFileSync(join(backups,saved,'demo-projects','04_eko.zip'),'utf8'),'synthetic legacy file');
+  assert.equal(run('--check').status,0);
+  const index=JSON.parse(readFileSync(join(root,'public','demo-projects','index.json'),'utf8'));
+  assert.deepEqual(index.projects.map(item=>item.id),['01_zestaw_montazowy','02_wozek_warsztatowy','03_modul_urzadzenia']);
+  const unexpected=join(root,'public','demo-projects','extra.txt');
+  writeFileSync(unexpected,'do not delete');
+  assert.notEqual(run().status,0);
+  assert.notEqual(run('--check').status,0);
+  assert.equal(readFileSync(unexpected,'utf8'),'do not delete');
+  const catalogPath=join(root,'przyklady','katalog.json');
+  const catalog=JSON.parse(readFileSync(catalogPath,'utf8'));
+  catalog.projects.push({directory:'04_eko'});
+  writeFileSync(catalogPath,JSON.stringify(catalog));
+  assert.notEqual(run().status,0);
+});

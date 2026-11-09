@@ -49,13 +49,13 @@ Menu obsługuje Tab, strzałki, Home/End i Escape; Escape przywraca focus do prz
 Bez zapisu lokalnego aplikacja otwiera **Nowy projekt linii**: zero operacji i materiałów. Istniejący poprawny zapis jest nadal odczytywany. Początkowe parametry hali i popytu są ustawieniami domyślnymi; sprawdź je przed analizą.
 
 - **Rozpocznij od zera** — pusty proces i BOM; zastąpienie bieżącego projektu wymaga dotychczasowego potwierdzenia.
-- **Wczytaj pakiet projektu** — otwiera importer z kopią ratunkową i potwierdzeniem. Wskaż plik projekt-pokazowy.json z wybranego katalogu: 01_zestaw_montazowy, 02_wozek_warsztatowy, 03_modul_urzadzenia lub 04_eko.
+- **Wczytaj pakiet projektu** — otwiera importer z kopią ratunkową i potwierdzeniem. Wskaż plik projekt-pokazowy.json z wybranego katalogu: 01_zestaw_montazowy, 02_wozek_warsztatowy lub 03_modul_urzadzenia.
 - **Importuj projekt JSON lub archiwum v4** — pojedynczy projekt główny.
 - **Kopia i odzyskiwanie** — pełne środowisko robocze.
 
 ![Pusty start i jawny import plików](../outputs/qa/review_demos_20261024/empty_start.png)
 
-Na Pulpicie rozwiń **Przykłady do pobrania**. Katalog zawiera trzy projekty o rosnącej złożoności oraz dodatkowe Eko. Każda karta podaje pochodzenie danych i rozwijane **Warunki i ograniczenia**. Przykłady nie wczytują się automatycznie. Źródła projektu głównego i warsztatu nadal są oddzielne.
+Na Pulpicie rozwiń **Przykłady do pobrania**. Katalog zawiera trzy projekty o rosnącej złożoności. Każda karta podaje pochodzenie danych i rozwijane **Warunki i ograniczenia**. Przykłady nie wczytują się automatycznie. Źródła projektu głównego i warsztatu nadal są oddzielne.
 
 1. Wybierz **Pobierz projekt JSON**, aby otrzymać jeden plik do importera pakietów. **Pobierz komplet ZIP** zawiera cały osobny katalog: 12 plików, w tym arkusze procesu/BOM, warianty, referencje, instrukcję i manifest SHA-256.
 2. Komunikat potwierdza sprawdzenie SHA-256 i przekazanie pliku do pobrania. Sprawdź jego zapis w pobranych plikach przeglądarki. Pobranie nie zmienia aktywnego projektu.
@@ -73,7 +73,7 @@ Próba C2: zmień tylko zapas początkowy **SUP-MU-ZASIL** na 0, zapisz zaopatrz
 
 **Ograniczenie C2:** pobrany przykład C2-A nadal ma nieograniczone bufory gałęzi. Dostępne są osobne pojemności każdego podzespołu, obie polityki operatora w odebranym zakresie, bezpośredni odbiór jednej partii przy wejściu 0 (również z dodatnimi/zerowymi buforami korpusów, odbiorcą zatrzymującym obsadę oraz lokalnym przekazaniem 0/0 na tej samej kopii) i formularz edycji buforów podmontaży. Więcej niż jedna partia bezpośrednia naraz oraz jednoczesne wejście 0 korpusu i podmontażu na tej samej operacji pozostają otwarte. Zatrzymanie operatora wymaga pełnej jawnej obecności podczas producenta. Nieobsługiwane kombinacje są odrzucane, nie upraszczane. Inspekcja partii nie oznacza oddzielnej animacji ich brył w 3D. Historia fizyczna pokazuje korpusy i wózki; bez geometrycznego przebiegu trasy pozycja w przejeździe pozostaje nieznana.
 
-C1/C2 mają też osobne wyniki procesowe przy jawnym JIT: C1 390/315 s, C2 320/270 s dla 3 sztuk i odstępu 1 s. JIT nie sprawdza fizycznego transportu ani zapasów. Pełny fizyczny odbiór C2 pozostaje otwarty do ograniczonych buforów gałęzi. Eko: 1 sztuka, odstęp 1 s, JIT wyłączony — 13550/14150/14150 s. Pakowanie Eko ma dwie osoby przez 1320 s, a przypisania innych ról są testowe; nie odtwarzają znanych tylko łącznie 13 osób pomiaru.
+C1/C2 mają też osobne wyniki procesowe przy jawnym JIT: C1 390/315 s, C2 320/270 s dla 3 sztuk i odstępu 1 s. JIT nie sprawdza fizycznego transportu ani zapasów. Pełny fizyczny odbiór C2 pozostaje otwarty do ograniczonych buforów gałęzi.
 
 ---
 

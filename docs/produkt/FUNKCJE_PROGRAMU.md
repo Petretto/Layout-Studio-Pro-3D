@@ -12,7 +12,7 @@ A2b2b (2026-10-25): odtwarzanie historii korpusów i wózków tego samego wyniku
 
 ## Aktualizacja 7.13.3 (2026-10-25)
 
-Pulpit udostępnia rozwijany katalog czterech zewnętrznych przykładów: JSON do importu i kompletny ZIP (12 plików, arkusze procesu/BOM, warianty, referencje, instrukcja, manifest). Pobranie sprawdza SHA-256 i nie zmienia aktywnego projektu; wczytanie pozostaje osobną operacją z kopią ratunkową i potwierdzeniem. Karty wskazują pochodzenie danych i zakres sprawdzonych eksperymentów. Lokalna dystrybucja zawiera pliki do pracy bez internetu; hostowana wymaga połączenia do pobrania.
+Pulpit udostępnia rozwijany katalog trzech syntetycznych przykładów: JSON do importu i ZIP z arkuszami procesu/BOM, wariantami, referencjami, instrukcją i manifestem. Pobranie sprawdza SHA-256 i nie zmienia aktywnego projektu; wczytanie pozostaje osobną operacją z kopią ratunkową i potwierdzeniem. Karty wskazują pochodzenie danych i zakres sprawdzonych eksperymentów. Lokalna dystrybucja zawiera pliki do pracy bez internetu; hostowana wymaga połączenia do pobrania.
 
 Przegląd 7.12/7.13 (2026-10-24): poprawiono równoległość C2 (320/270 s), dwuosobowe pakowanie i oznaczenia Eko oraz tryb jego wzorca (bez JIT). Pełna regresja 420/420, build i UI importu/pustego startu PASS. Wdrożono 7.13.2 bez wbudowanych projektów; poprawne zapisy zachowano. 7.12 ponownie w trakcie do pełnego zakresu fizycznego C/D/A2, 7.13 nadal w trakcie do dystrybucji i UI. Raport `docs/weryfikacja/WERYFIKACJA_PRZEGLADU_DEMO_I_STARTU_7_13.md`.
 

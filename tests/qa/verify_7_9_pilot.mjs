@@ -99,7 +99,7 @@ try{
   await sleep(400);
   await until(`!!document.querySelector('.demo-catalog-grid')`);
   const cardsCount = await evaluate(`document.querySelectorAll('.demo-catalog-grid article').length`);
-  strictEqual(cardsCount, 4, 'Katalog zawiera 4 zewnętrzne pakiety');
+  strictEqual(cardsCount, 3, 'Katalog zawiera 3 zewnętrzne pakiety dopuszczone do publikacji');
   await snap('02_demo_catalog_expanded');
 
   console.log('3. Uruchomienie interaktywnego tutorialu 7.14 na projekcie bazowym...');

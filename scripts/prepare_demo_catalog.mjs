@@ -1,9 +1,11 @@
 // Ship demos as external files, never import production data into the JS bundle.
-import {readFile,mkdir,writeFile,readdir} from 'node:fs/promises';
-import {resolve,relative,dirname} from 'node:path';
+import {readFile,mkdir,writeFile,readdir,lstat,mkdtemp,rename} from 'node:fs/promises';
+import {resolve,relative} from 'node:path';
 import {createHash} from 'node:crypto';
 const root=resolve(import.meta.dirname,'..'),destination=resolve(root,'public/demo-projects');
 const check=process.argv.includes('--check');
+const allowed=['01_zestaw_montazowy','02_wozek_warsztatowy','03_modul_urzadzenia'];
+const legacyAssets=new Set(['04_eko.project.json','04_eko.zip']);
 const digest=buffer=>createHash('sha256').update(buffer).digest('hex');
 function crc32(bytes){let c=0xffffffff;for(const b of bytes){c^=b;for(let k=0;k<8;k++)c=(c>>>1)^((c&1)?0xedb88320:0);}return (c^0xffffffff)>>>0;}
 // Deterministic, uncompressed ZIP, UTF-8 filenames, fixed DOS date 1980-01-01.
@@ -21,6 +23,7 @@ function zip(files){
 async function walk(directory,prefix=''){const result=[];for(const item of (await readdir(directory,{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name,'en'))){const path=prefix+item.name;if(item.isDirectory())result.push(...await walk(resolve(directory,item.name),path+'/'));else if(item.isFile())result.push([path,await readFile(resolve(directory,item.name))]);else throw new Error(`Unsupported asset: ${path}`);}return result;}
 const source=JSON.parse(await readFile(resolve(root,'przyklady/katalog.json'),'utf8'));
 if(source.formatVersion!==1||!Array.isArray(source.projects))throw new Error('Unsupported catalog');
+if(source.projects.length!==allowed.length||source.projects.some((item,index)=>item.directory!==allowed[index]))throw new Error('Public demo catalog must contain only the approved packages in order');
 const outputs=new Map(),projects=[],ids=new Set();
 for(const item of source.projects){
   if(!/^[0-9]{2}_[a-z0-9_]+$/.test(item.directory)||ids.has(item.directory))throw new Error('Invalid or duplicate demo directory');
@@ -34,5 +37,33 @@ for(const item of source.projects){
   projects.push({id:item.directory,title:manifest.title,level:manifest.level,dataOrigin:manifest.dataOrigin,summary:item.summary,scope:item.scope,version:manifest.packageVersion,fileCount:files.length,packagePath:jsonPath,archivePath:zipPath,archiveBytes:archive.length,packageSha256:digest(packageBytes),archiveSha256:digest(archive)});
 }
 outputs.set('index.json',Buffer.from(JSON.stringify({formatVersion:1,projects},null,2)+'\n'));
-for(const [path,bytes] of outputs){const target=resolve(destination,path);if(check){if(!(await readFile(target)).equals(bytes))throw new Error(`Outdated catalog asset: ${relative(root,target)}`);}else{await mkdir(dirname(target),{recursive:true});await writeFile(target,bytes);}}
+let existing=[];
+try{
+  const directory=await lstat(destination);
+  if(!directory.isDirectory()||directory.isSymbolicLink())throw new Error('Demo catalog destination must be a real directory');
+  existing=await readdir(destination,{withFileTypes:true});
+}catch(error){if(error.code!=='ENOENT')throw error;}
+for(const item of existing){
+  if(!item.isFile()||(!outputs.has(item.name)&&!(legacyAssets.has(item.name)&&!check)))throw new Error(`Unexpected catalog asset: ${item.name}`);
+}
+let matches=existing.length===outputs.size;
+for(const [path,bytes] of outputs){
+  try{if(!(await readFile(resolve(destination,path))).equals(bytes))matches=false;}
+  catch(error){if(error.code==='ENOENT')matches=false;else throw error;}
+}
+if(check&&!matches)throw new Error('Outdated or incomplete demo catalog');
+if(!check&&!matches){
+  const backupRoot=resolve(root,'outputs/qa/p4b_catalog_backups');
+  await mkdir(backupRoot,{recursive:true});
+  const stage=await mkdtemp(resolve(backupRoot,'stage-'));
+  for(const [path,bytes] of outputs)await writeFile(resolve(stage,path),bytes);
+  let previous;
+  if(await lstat(destination).catch(error=>error.code==='ENOENT'?null:Promise.reject(error))){
+    previous=resolve(await mkdtemp(resolve(backupRoot,'run-')),'demo-projects');
+    await rename(destination,previous);
+  }
+  try{await rename(stage,destination);}
+  catch(error){if(previous)await rename(previous,destination);throw error;}
+  if(previous)console.log(`Previous catalog retained locally: ${relative(root,previous)}`);
+}
 console.log(`${check?'PASS':'Prepared'} external demo catalog: ${projects.length} projects, ${outputs.size} assets; source manifests verified`);

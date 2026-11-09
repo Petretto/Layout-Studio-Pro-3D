@@ -8,7 +8,8 @@ import {strictEqual,ok} from 'node:assert';
 const port=5296,cdp=9396,sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const edge=['C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe','C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe'].find(existsSync);
 if(!edge)throw new Error('Edge not found');
-const out=resolve('outputs/qa/7_13_closure');mkdirSync(out,{recursive:true});
+const evidenceRoot=resolve('outputs/qa/p4b/7_13_closure');mkdirSync(evidenceRoot,{recursive:true});
+const out=mkdtempSync(join(evidenceRoot,'run_'));console.log('Evidence:',out);
 const server=spawn('node',['scripts/serve.mjs'],{env:{...process.env,PORT:String(port)},stdio:'ignore',windowsHide:true});
 const browser=spawn(edge,[`--remote-debugging-port=${cdp}`,`--user-data-dir=${mkdtempSync(join(tmpdir(),'edge-7-13-closure-'))}`,'--headless=new','--no-first-run','--disable-gpu','--window-size=1440,1100','--force-device-scale-factor=1','about:blank'],{stdio:'ignore',windowsHide:true});
 
@@ -79,15 +80,15 @@ try{
   await sleep(400);
   await until(`!!document.querySelector('.demo-catalog-grid')`);
   const demoCardsCount=await evaluate(`document.querySelectorAll('.demo-catalog-grid article').length`);
-  strictEqual(demoCardsCount, 4, 'Katalog powinien zawierać dokładnie 4 karty demonstracyjne');
+  strictEqual(demoCardsCount, 3, 'Katalog powinien zawierać dokładnie 3 karty demonstracyjne');
 
   const demoTitles=await evaluate(`[...document.querySelectorAll('.demo-catalog-grid article h3')].map(h=>h.textContent.trim())`);
   ok(demoTitles.some(t=>t.includes('Zestaw') || t.includes('uchwytu')),'Katalog zawiera pakiet 01: zestaw uchwytu: '+demoTitles[0]);
   ok(demoTitles.some(t=>t.includes('Wózek')),'Katalog zawiera pakiet 02: wózek warsztatowy: '+demoTitles[1]);
   ok(demoTitles.some(t=>t.includes('Moduł')),'Katalog zawiera pakiet 03: moduł urządzenia: '+demoTitles[2]);
-  ok(demoTitles.some(t=>t.includes('Eko') || t.includes('Rama')),'Katalog zawiera pakiet 04: Eko / Rama: '+demoTitles[3]);
+  ok(!demoTitles.some(t=>t.includes('Eko') || t.includes('Rama')),'Katalog nie udostępnia pakietu Eko');
   await snap('02_demo_catalog_expanded');
-  console.log('   Katalog przykładów zaliczony (wykryto 4 zewnętrzne pakiety):', demoTitles.join(', '));
+  console.log('   Katalog przykładów zaliczony (wykryto 3 zewnętrzne pakiety):', demoTitles.join(', '));
 
   console.log('4. Weryfikacja pobierania i kontroli SHA-256 w katalogu...');
   const firstCardDetails=await evaluate(`document.querySelector('.demo-catalog-grid article details summary')?.textContent.trim()`);
@@ -105,7 +106,7 @@ try{
   await snap('03_project_menu');
 
   strictEqual(errors.length, 0, 'Brak błędów w konsoli przeglądarki: '+JSON.stringify(errors));
-  console.log('WERYFIKACJA 7.13 ZAKOŃCZONA SUKCESEM! Czysty start, brak zaszytych projektów, rozwijany katalog 4 pakietów i menu projektu przetestowane.');
+  console.log('WERYFIKACJA 7.13 ZAKOŃCZONA SUKCESEM! Czysty start, brak zaszytych projektów, rozwijany katalog 3 pakietów i menu projektu przetestowane.');
 }finally{
   try{if(ws)ws.close();}catch{}
   try{browser.kill();}catch{}

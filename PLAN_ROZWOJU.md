@@ -17,6 +17,8 @@ Metryka: RC1 i pobrany przed P0 `origin/main` = `6aa84d8129b7f7cc4d92c3c00b4d8a9
 
 9 listopada uzupełniono próby pełnego pilota o ukryty wynik porównania i brak szkicu po ponownym imporcie. Cztery logi prób negatywnych potwierdzają właściwe przyczyny odrzucenia, a normalny pilot przeszedł. Szczegóły i ograniczenie statusu poprzedniej sesji znajdują się w raporcie PT.
 
+**P4b — w trakcie.** Lokalny katalog i build udostępniają trzy syntetyczne pakiety. Stare assety Eko zabezpieczono poza katalogiem publicznym, a wewnętrzna regresja przeszła. Nadal wymagane są niezależny odbiór, decyzja o prawach i analiza pozostałych powierzchni repozytorium oraz historycznych wdrożeń. [Raport P4b](docs/weryfikacja/WERYFIKACJA_P4B_EKO_DYSTRYBUCJA.md).
+
 ## Historyczny pakiet planistyczny — 2026-11-02: plan remediacji po reweryfikacji origin/main
 
 **Wybór wersji po doprecyzowaniu właściciela:** wykonano `git fetch origin` i porównano pobrany main z historycznym RC1. SHA RC1, aktualnego `origin/main` i podstawy utworzenia `codex/v1-audit-remediation` to `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`; różnica 0/0 commitów i brak różnic drzewa. Żadne ustalenie nie zostało poprawione na main od RC1; luki UI/runtime pozostają otwarte. Szczegóły i reweryfikacja 21 pozycji w planie remediacji/macierzy. Zachowano wcześniejsze commity planu oraz monitora; nie zmieniono `main`, RC1 ani kodu aplikacji. Aktualizacja obejmuje wyłącznie dokumentację/architekturę i pochodny snapshot monitora. Przed każdym przyszłym pakietem ponowny fetch i ocena aktualności; RC1 nie jest domyślną bazą rozwoju. Zakres, kolejność pakietów i rekomendacja C pozostają bez zmian, P0 nadal nierozpoczęte.
