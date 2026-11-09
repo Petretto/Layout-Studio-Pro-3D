@@ -16,6 +16,10 @@ W A1 wykryto brak pola wyboru oryginału projektu 4 przy eksporcie ze źródła 
 
 ## Mapa 16 skryptów
 
+**Próby negatywne pełnego pilota — 9 listopada.** Cztery logi w `outputs/qa/pt_e2e/pilot_faults/run_IC94dQ/` potwierdzają odrzucenie braku wyniku, błędnej liczby, ukrytego wiersza porównania i braku szkicu po ponownym imporcie. Każdy log zawiera znacznik iniekcji, oczekiwaną przyczynę asercji i komunikat NOT_VERIFIED pilota, bez komunikatu jego PASS. Zapisano je w zakończonej poprzedniej sesji, której końcowy status procesu nie był już dostępny; kontrolę powyższych warunków powtórzono na logach. Ukrycie dotyczy DOM porównania, a usunięcie szkicu odbywa się wyłącznie w izolowanym profilu na syntetycznym projekcie po imporcie. Normalny pilot po zmianie skryptów przeszedł w Edge, dowody `pilot_runs/run_2SrbCL/` i `sol_reference/7_12d/run_4mhByS/`. Testy pomocnicze 7/7 PASS. Zmiany skryptów nie były jeszcze częścią powtórzenia wszystkich 16 scenariuszy na jednym SHA.
+
+Zestaw czterech prób negatywnych ponowiono w `outputs/qa/pt_e2e/pilot_faults/run_peRdMd/`. Skrypt kontrolujący potwierdził właściwą przyczynę każdego odrzucenia i zakończył się kodem 0.
+
 **Powtórzenie na wskazanym SHA.** Po pobraniu `origin/main` (nadal `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`) wykonano cały zestaw 16 skryptów, test dodawania CAD i test dwóch kontrolowanych błędów pilota na `f7e5def82aedbef615eceef99c9ef0fb73e5ddbb`. Wszystkie 18 procesów zakończyło się kodem 0. Wykonanie pilotów negatywnych obejmuje dwa oczekiwane błędy i kontrolę ich przyczyn. Identyczny HEAD i brak zmian w plikach śledzonych potwierdzono przed testem i po nim. Wyniki oraz oddzielne logi znajdują się w `outputs/qa/pt_e2e/regression_dfdca58dc3764baebb08bff38e70f577/`. Testy działały na wcześniejszym buildzie tego kodu w bieżącym katalogu, gdzie istnieją również pliki nieśledzone i lokalne fixtures. Nie jest to odbiór w czystym checkout ani nowy RC. Eko pozostaje testem wewnętrznym.
 
 | Skrypty | Klasyfikacja | Lokalny wynik i zakres |

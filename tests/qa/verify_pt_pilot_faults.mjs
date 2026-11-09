@@ -3,10 +3,10 @@ import {mkdirSync,mkdtempSync,writeFileSync} from 'node:fs';
 import {join,resolve} from 'node:path';
 import {strict as assert} from 'node:assert';
 
-// Faults affect only a rendered test result in the isolated browser, never project data or reference fixtures.
+// Faults affect only the isolated browser's displayed result or its synthetic imported draft.
 const root=resolve('outputs/qa/pt_e2e/pilot_faults');mkdirSync(root,{recursive:true});
 const out=mkdtempSync(join(root,'run_'));console.log('Evidence:',out);
-for(const [fault,expected] of [['missing-result','Brak wyniku harmonogramu'],['incorrect-result','Niepoprawny koniec partii']]){
+for(const [fault,expected] of [['missing-result','Brak wyniku harmonogramu'],['incorrect-result','Niepoprawny koniec partii'],['hidden-comparison','Ukryty wynik'],['missing-reopened-draft','Otwarty ponownie szkic różni się od eksportu']]){
   const run=spawnSync(process.execPath,['tests/qa/verify_7_9_pilot.mjs'],{env:{...process.env,PT_TEST_FAULT:fault},encoding:'utf8',windowsHide:true,timeout:180000});
   const log=(run.stdout??'')+(run.stderr??'');writeFileSync(join(out,`${fault}.log`),log);
   assert.ifError(run.error);

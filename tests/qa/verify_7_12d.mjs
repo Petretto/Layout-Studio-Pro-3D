@@ -11,7 +11,7 @@ import {strictEqual,deepStrictEqual,ok} from 'node:assert';
 // Tests clean browser session, package 01, package 02, package 03, data isolation, simulation and export round-trip.
 const port=5548,sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const injectedFault=process.env.PT_TEST_FAULT ?? '';
-if(!['','missing-result','incorrect-result'].includes(injectedFault))throw new Error('Nieznany kontrolowany błąd PT');
+if(!['','missing-result','incorrect-result','hidden-comparison','missing-reopened-draft'].includes(injectedFault))throw new Error('Nieznany kontrolowany błąd PT');
 const edge=['C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe','C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe'].find(existsSync);
 if(!edge)throw new Error('Edge not found');
 const evidenceRoot=resolve('outputs/qa/pt_e2e/sol_reference/7_12d');
@@ -119,7 +119,7 @@ try{
 
   const importPackage=path=>importProjectPackageUi({open:openPackageModal,upload,until,downloaded,click,evaluate,reload:reloadReady},path);
 
-  const draft=()=>evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1')).project`);
+  const draft=()=>evaluate(`JSON.parse(localStorage.getItem('layout-studio-domain-v6-draft-v1'))?.project`);
   const comparisonScope=`document.querySelector('[aria-label="Porównanie wariantów szkicu 6"]')`;
   const verifyRows=async(expected)=>{const rows=await evaluate(`[...document.querySelectorAll('[aria-label="Tabela syntezy wskaźników 4.6"] tbody tr')].map(row=>({name:row.querySelector('td strong')?.textContent,baseline:row.querySelector('td')?.textContent.includes('BAZA'),visible:!!row.getClientRects().length&&getComputedStyle(row).visibility==='visible',makespan:[...row.querySelectorAll('td:nth-child(2) div')].find(div=>div.textContent.startsWith('Makespan:'))?.querySelector('strong')?.textContent}))`);assertComparisonRows(rows,expected);return rows;};
 
@@ -168,7 +168,7 @@ try{
     await setCheckbox('Symulacja bez transportu — just in time',jit);
     await click('Oblicz harmonogram szkicu 6');
     await until(`!!document.querySelector(${JSON.stringify(scheduleResult)})`);
-    if(refId==='R01' && injectedFault){
+    if(refId==='R01' && ['missing-result','incorrect-result'].includes(injectedFault)){
       console.log(`PT fault injected: ${injectedFault}`);
       await evaluate(`(()=>{const result=document.querySelector(${JSON.stringify(scheduleResult)});if(!result)throw Error('Brak celu iniekcji');if(${JSON.stringify(injectedFault)}==='missing-result')result.remove();else{const previous=result.textContent;const changed=previous.replace(/(koniec ostatniej sztuki:\\s*)(\\d+)(\\s*s)/,(_,prefix,value,suffix)=>prefix+(Number(value)+1)+suffix);if(changed===previous)throw Error('Nie znaleziono liczby do iniekcji');result.textContent=changed;}})()`);
     }
@@ -190,6 +190,10 @@ try{
     await until(`!!document.querySelector(${JSON.stringify(comparisonResult)})`);
     const heading = await evaluate(`document.querySelector(${JSON.stringify(comparisonResult)}).querySelector('h4').textContent`);
     ok(heading.includes(`partia ${conditions.batch} szt., odstęp przybycia ${conditions.arrivalIntervalSeconds} s, tryb: ${jit?'just in time':'skonfigurowany'}`),`Niezgodne warunki wyniku ${refId}: ${heading}`);
+    if(refId==='R01' && injectedFault==='hidden-comparison'){
+      await evaluate(`(()=>{const row=document.querySelector('[aria-label="Tabela syntezy wskaźników 4.6"] tbody tr');if(!row)throw Error('Brak wiersza do iniekcji');row.style.display='none'})()`);
+      console.log('PT fault injected: hidden-comparison');
+    }
     const rows = await verifyRows(expected);
     await snap(`${refId}_comparison`);
     const reportPath = await downloaded(()=>click('Pobierz raport porównania (.md)'));
@@ -237,6 +241,10 @@ try{
 
   console.log('5. Re-importing exported package to verify complete round-trip...');
   await importPackage(exportedPath);
+  if(injectedFault==='missing-reopened-draft'){
+    await evaluate(`localStorage.removeItem('layout-studio-domain-v6-draft-v1')`);
+    console.log('PT fault injected: missing-reopened-draft');
+  }
   assertReopenedDraft(await draft(),exportedDraft);
 
   ok(!errors.length,'Zero runtime exceptions expected: '+errors.join('; '));
