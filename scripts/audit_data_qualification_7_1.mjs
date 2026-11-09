@@ -132,8 +132,10 @@ if (existsSync(recipesPath) && existsSync(verificationPath)) {
 const demoCatalogPath = join(ROOT, 'public/demo-projects/index.json');
 if (existsSync(demoCatalogPath)) {
   const catalog = JSON.parse(readFileSync(demoCatalogPath, 'utf8'));
-  const catalogCountPass = Array.isArray(catalog.projects) && catalog.projects.length === 4;
-  recordCheck('Demo catalog externalization and clean start separation', catalogCountPass, {
+  const expectedIds = DEMO_PACKAGES.map(pkg => pkg.id);
+  const catalogIds = Array.isArray(catalog.projects) ? catalog.projects.map(project => project.id) : [];
+  const catalogPass = catalogIds.length === expectedIds.length && catalogIds.every((id, index) => id === expectedIds[index]);
+  recordCheck('Demo catalog externalization and clean start separation', catalogPass, {
     catalogProjects: catalog.projects?.map(p => p.id),
   });
 } else {

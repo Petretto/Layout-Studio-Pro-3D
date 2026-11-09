@@ -18,6 +18,7 @@ Stan na 9 listopada 2026. Gałąź `codex/v1-p4b-eko` oparto na `c2b2d0467c55065
 - Generator przygotowuje katalog w lokalnym stagingu, odmawia nieznanych plików i zachowuje poprzedni katalog przed wymianą. `p4b_catalog.test.mjs` sprawdza starą syntetyczną pozostałość Eko, zachowaną kopię, nadmiarowy plik, `--check` oraz odmowę dodatkowego projektu.
 - Build PASS. Skan objął 97 plików i wpisów archiwów bez dopasowania podanych markerów lub sum pełnych plików fixture.
 - `verify_p4b_distribution.mjs` PASS na lokalnym serwerze. Trzy JSON i ZIP mają sumy z indeksu. Dwa stare adresy zwracają 404 bez danych Eko. Reguła SPA i faktyczne odpowiedzi Vercel nie zostały zweryfikowane.
+- `scripts/audit_data_qualification_7_1.mjs` zaktualizowano do jawnej listy 01–03, zgodnie z A-04. Audyt zakończył się ALL PASS, w tym kontrolą wewnętrznego rejestru Eko oraz trzech syntetycznych pakietów.
 - Edge 7.13 PASS z trzema kartami, `outputs/qa/p4b/7_13_closure/run_KDoTK0/`. Odrzucenie zasymulowanego starego indeksu z Eko PASS. Wewnętrzny Eko R09 w Edge oraz pięć celowanych testów Eko PASS. Automatyczny pilot po zmianie walidatora UI PASS, `outputs/qa/pt_e2e/pilot_runs/run_5U675d/` i `outputs/qa/pt_e2e/sol_reference/7_12d/run_EgYcNX/`.
 - Instrukcję HTML/PDF wygenerowano ponownie. Weryfikator potwierdził 67 stron, 53 dostępne obrazy, zgodność HTML/MD, brak pustych stron i tekstu poza stroną. Zestawienie stron zapisano w `outputs/qa/p4b/manual/`. Ekstrakcja tekstu PDF nie wykazała słowa Eko. Obrazy i wszystkie pozostałe dokumenty repozytorium wymagają osobnej oceny zawartości.
 
