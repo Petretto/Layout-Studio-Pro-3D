@@ -7,7 +7,7 @@ window.PLAN_DATA = {
     "baseVersion": "Layout Studio Pro 3D 0.4.0",
     "hostingUrl": "https://layout-studio-pro-3d.vercel.app/",
     "repoUrl": "https://github.com/Petretto/Layout-Studio-Pro-3D",
-    "extractedAt": "2026-11-09T21:47:34.084Z"
+    "extractedAt": "2026-11-10T21:40:59.504Z"
   },
   "overall": {
     "total": 72,
@@ -3717,7 +3717,7 @@ window.PLAN_DATA = {
       "key": "plan",
       "path": "docs/plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md",
       "available": true,
-      "modified": "2026-11-09T21:47:30.627Z"
+      "modified": "2026-11-10T21:40:59.445Z"
     },
     {
       "key": "architecture",
@@ -3744,5 +3744,5 @@ window.PLAN_DATA = {
       "modified": "2026-11-03T16:17:38.087Z"
     }
   ],
-  "signature": "fafb79db013776f73ef117afecd636016da664d6d1e4283dffe5ef624334dbcf"
+  "signature": "9f01ff43b5512a3dd1b18188cbc30e28a24769a731b816e0ccbe25e937de87be"
 };
