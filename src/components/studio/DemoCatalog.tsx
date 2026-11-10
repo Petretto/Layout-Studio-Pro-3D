@@ -4,6 +4,7 @@ import {parseProjectPackage,importProjectPackage} from '../../core/projectPackag
 import {createWorkspaceBackup} from '../../core/workspaceBackup';
 import './DemoCatalog.css';
 type Demo={id:string;title:string;level:string;dataOrigin:string;summary:string;scope:string;version:string;fileCount:number;packagePath:string;archivePath:string;archiveBytes:number;packageSha256:string;archiveSha256:string};
+const PUBLIC_DEMO_IDS=['01_zestaw_montazowy','02_wozek_warsztatowy','03_modul_urzadzenia'];
 export function DemoCatalog({onImport}:{onImport:()=>void}){
   const [projects,setProjects]=useState<Demo[]|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
   const [downloading,setDownloading]=useState(''),[downloadMessage,setDownloadMessage]=useState('');
@@ -13,6 +14,7 @@ export function DemoCatalog({onImport}:{onImport:()=>void}){
     try{const response=await fetch(`${base}index.json`);if(!response.ok)throw new Error(`HTTP ${response.status}`);
       const data=await response.json();
       if(data.formatVersion!==1||!Array.isArray(data.projects)||!data.projects.length||data.projects.some((p:Demo)=>!p||typeof p.title!=='string'||typeof p.summary!=='string'||typeof p.scope!=='string'||!/^[0-9]{2}_[a-z0-9_]+\.project\.json$/.test(p.packagePath)||!/^[0-9]{2}_[a-z0-9_]+\.zip$/.test(p.archivePath)||!/^[a-f0-9]{64}$/.test(p.packageSha256)||!/^[a-f0-9]{64}$/.test(p.archiveSha256)))throw new Error('Nieprawidłowy katalog');
+      if(data.projects.length!==PUBLIC_DEMO_IDS.length||data.projects.some((p:Demo,index:number)=>p.id!==PUBLIC_DEMO_IDS[index]||p.packagePath!==`${p.id}.project.json`||p.archivePath!==`${p.id}.zip`))throw new Error('Niedozwolone pakiety w katalogu');
       setProjects(data.projects);
     }catch{setError('Nie udało się odczytać katalogu przykładów. Spróbuj ponownie lub wczytaj posiadany plik pakietu.');}finally{setBusy(false);}
   }

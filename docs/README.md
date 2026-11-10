@@ -14,6 +14,8 @@ Główny rejestr statusu pozostaje w [PLAN_ROZWOJU.md](../PLAN_ROZWOJU.md). Zasa
 
 Pozostałe materiały:
 
+- [Weryfikacja hotfixu katalogu Eko](weryfikacja/WERYFIKACJA_HOTFIX_EKO.md) — izolowany zakres, lokalne testy i granice odbioru.
+
 - [Plan audytu przedwydaniowego V1](plany/audit_plan.md) — zakres, kolejność i zasady niezależnego audytu.
 
 - [Przekazanie C2-B3-UI dla Terra](plany/PRZEKAZANIE_C2_B3_UI_TERRA.md) — formularz istniejących buforów podmontaży i kryteria odbioru; integracja harmonogramu pozostaje osobnym pakietem Sol.
