@@ -622,12 +622,12 @@
 <p>Niepotwierdzony rollback pozostawia trwałą blokadę odzyskiwania. Po ponownym otwarciu automatyczny zapis pozostaje zatrzymany, a aplikacja otwiera odzyskiwanie. Nie usuwa automatycznie blokady po kolejnym nieudanym odtworzeniu. Uszkodzoną surową kopię można pobrać do naprawy, lecz nie jest oferowana jako poprawna kopia do automatycznego odtworzenia. Przeglądarka nie zapewnia atomowej transakcji wielu kluczy; zachowuj plik także poza przeglądarką.</p>
 <p>Kopia ratunkowa zachowuje również surowe uszkodzone zapisy, jeżeli takie były przed odzyskiwaniem. Jest wtedy materiałem do naprawy, a nie plikiem gwarantującym poprawne wczytanie. Nie ma osobnego przycisku cofającego całe odzyskiwanie jednym kliknięciem; poprawną kopię ratunkową wczytuje się tą samą ścieżką.</p>
 <h3>5.10. Zgodność licencyjna, prawa do modeli 3D i bezpieczeństwo (Plan 7.7)</h3>
-<p>Przed komercyjnym wdrożeniem i instalacją na komputerach zakładowych przeprowadzono całościowy audyt prawno-autorski oraz bezpieczeństwa kodu:</p>
+<p>Przed wydaniem komercyjnym wymagany jest przegląd licencji, praw do materiałów i bezpieczeństwa kodu. Dostępne wyniki techniczne nie zastępują oceny prawnej:</p>
 <ul>
-<li><strong>Pełna zgodność licencyjna zależności runtime (100% Permissive)</strong>:</li>
+<li><strong>Licencje zależności</strong>:</li>
 <li>Biblioteki wykorzystywane w aplikacji obejmują <code>react</code>, <code>react-dom</code>, <code>three</code>, <code>lucide-react</code> i <code>xlsx</code>. Przegląd licencji i pochodzenia zależności jest wymagany przed wydaniem.</li>
-<li>W aplikacji <strong>nie występuje żadna zależność typu Copyleft</strong> (GPL / AGPL), co gwarantuje pełną ochronę własności intelektualnej modeli procesowych klienta i pełną swobodę komercyjnego wykorzystania wewnątrz przedsiębiorstwa.</li>
-<li>Narzędzia pomocnicze i kompilacyjne czasu budowania (np. <code>lightningcss</code> — MPL-2.0, <code>caniuse-lite</code> — CC-BY-4.0) są odseparowane i nie przenikają do kodu wynikowego klienta.</li>
+<li>Inwentarz zależności i zawartość wynikowej dystrybucji wymagają sprawdzenia wraz z właściwymi informacjami licencyjnymi.</li>
+<li>Narzędzia kompilacyjne również mają własne licencje; ich obowiązki należy ocenić zależnie od sposobu dystrybucji.</li>
 </ul>
 <ul>
 <li><strong>Prawa autorskie modeli 3D i wyposażenia</strong>:</li>
@@ -639,7 +639,7 @@
 <li><code>npm audit</code> wskazuje znane mu zgłoszenia dla konkretnego lockfile w chwili badania; wynik zerowy nie gwarantuje braku podatności.</li>
 <li>Wersja webowa pobiera aplikację i przykłady z serwera, który może rejestrować informacje techniczne o żądaniach. Dane projektu są zapisywane w pamięci przeglądarki; pobierz kopię przed wyczyszczeniem danych witryny. W tej wersji analityka Vercel nie jest uruchamiana. Dostępność offline i nagłówki CSP hostingu wymagają osobnych testów.</li>
 <li>Bezpieczne parsowanie formatów wejściowych (DXF, Excel, JSON): importy operują na rygorystycznie białej liście bezpiecznych struktur, uniemożliwiając wykonanie złośliwego kodu lub makr.</li>
-<li>Automatyczna weryfikacja stanu licencji i podatności: polecenie <code>npm run audit:licenses</code>.</li>
+<li>Inwentarz metadanych zależności: <code>npm run audit:licenses</code>. Osobny <code>npm audit</code> sprawdza zgłoszenia znane rejestrowi; oba wyniki wymagają dalszej oceny.</li>
 </ul>
 <h3>5.11. Profesjonalny raport inżynierski PDF i wykres Yamazumi (Plan 7.10)</h3>
 <p>W zakładce <code>7 Raport</code> dostępny jest dokument inżynierski przeznaczony do przeglądu i wydruku w formacie <strong>PDF / A4 portrait</strong>. Dokument nie zastępuje walidacji procesu ani odbioru przemysłowego:</p>

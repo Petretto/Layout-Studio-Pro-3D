@@ -315,3 +315,7 @@ Wyłączono uruchamianie Analytics w gałęzi P4a, skorygowano informacje o siec
 ## P4a.3 — 16 listopada 2026
 
 Zweryfikowano integralność pobranego SheetJS 0.20.3, dwie konkretne advisory i lokalną ścieżkę XLSX w Edge. Wykryto, że dotychczasowy audyt licencji nie obejmuje pełnego przechodniego drzewa runtime. Pełny inwentarz i ocena licencji pozostają otwarte. [Dowody i ograniczenia](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md).
+
+## P4a.4 — 16 listopada 2026
+
+Inwentarz rozdziela zależności runtime/build i nie ogłasza odbioru prawnego. Sześć zależności dołączonych do opcjonalnego archiwum builda pozostaje jawnie oznaczonych do przeglądu; wstępnie odczytano ich metadane. [Wyniki i ograniczenia](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md). P4a pozostaje w trakcie.

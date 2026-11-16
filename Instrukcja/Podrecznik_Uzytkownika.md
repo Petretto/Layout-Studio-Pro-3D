@@ -640,12 +640,12 @@ Kopia ratunkowa zachowuje również surowe uszkodzone zapisy, jeżeli takie był
 
 ### 5.10. Zgodność licencyjna, prawa do modeli 3D i bezpieczeństwo (Plan 7.7)
 
-Przed komercyjnym wdrożeniem i instalacją na komputerach zakładowych przeprowadzono całościowy audyt prawno-autorski oraz bezpieczeństwa kodu:
+Przed wydaniem komercyjnym wymagany jest przegląd licencji, praw do materiałów i bezpieczeństwa kodu. Dostępne wyniki techniczne nie zastępują oceny prawnej:
 
-- **Pełna zgodność licencyjna zależności runtime (100% Permissive)**:
+- **Licencje zależności**:
   - Biblioteki wykorzystywane w aplikacji obejmują `react`, `react-dom`, `three`, `lucide-react` i `xlsx`. Przegląd licencji i pochodzenia zależności jest wymagany przed wydaniem.
-  - W aplikacji **nie występuje żadna zależność typu Copyleft** (GPL / AGPL), co gwarantuje pełną ochronę własności intelektualnej modeli procesowych klienta i pełną swobodę komercyjnego wykorzystania wewnątrz przedsiębiorstwa.
-  - Narzędzia pomocnicze i kompilacyjne czasu budowania (np. `lightningcss` — MPL-2.0, `caniuse-lite` — CC-BY-4.0) są odseparowane i nie przenikają do kodu wynikowego klienta.
+  - Inwentarz zależności i zawartość wynikowej dystrybucji wymagają sprawdzenia wraz z właściwymi informacjami licencyjnymi.
+  - Narzędzia kompilacyjne również mają własne licencje; ich obowiązki należy ocenić zależnie od sposobu dystrybucji.
 
 - **Prawa autorskie modeli 3D i wyposażenia**:
   - Wszystkie standardowe modele wyposażenia (16 typów w standardzie 6.1: stoły montażowe, regały FIFO, palety EPAL, wózki, roboty AGV, przenośniki) są generowane proceduralnie z kodu źródłowego Three.js i objęte licencją projektu (**MIT**).
@@ -655,7 +655,7 @@ Przed komercyjnym wdrożeniem i instalacją na komputerach zakładowych przeprow
   - `npm audit` wskazuje znane mu zgłoszenia dla konkretnego lockfile w chwili badania; wynik zerowy nie gwarantuje braku podatności.
   - Wersja webowa pobiera aplikację i przykłady z serwera, który może rejestrować informacje techniczne o żądaniach. Dane projektu są zapisywane w pamięci przeglądarki; pobierz kopię przed wyczyszczeniem danych witryny. W tej wersji analityka Vercel nie jest uruchamiana. Dostępność offline i nagłówki CSP hostingu wymagają osobnych testów.
   - Bezpieczne parsowanie formatów wejściowych (DXF, Excel, JSON): importy operują na rygorystycznie białej liście bezpiecznych struktur, uniemożliwiając wykonanie złośliwego kodu lub makr.
-  - Automatyczna weryfikacja stanu licencji i podatności: polecenie `npm run audit:licenses`.
+  - Inwentarz metadanych zależności: `npm run audit:licenses`. Osobny `npm audit` sprawdza zgłoszenia znane rejestrowi; oba wyniki wymagają dalszej oceny.
 
 ### 5.11. Profesjonalny raport inżynierski PDF i wykres Yamazumi (Plan 7.10)
 
