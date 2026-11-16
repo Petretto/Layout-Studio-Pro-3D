@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {inventoryLock,resolveLockedPackage,manifestMismatches} from '../../scripts/license_inventory.mjs';
+import {inventoryLock,resolveLockedPackage,manifestMismatches,mergeBundledEvidence} from '../../scripts/license_inventory.mjs';
 
 const pkg=(version,extra={})=>({version,license:'MIT',integrity:'sha512-test',...extra});
 const fixture=()=>({lockfileVersion:3,packages:{
@@ -44,4 +44,11 @@ test('Zależności dołączone do paczki są oznaczane jako niezweryfikowane',()
 test('Rozbieżność manifestu i lockfile zostaje zgłoszona',()=>{
   const l=fixture();
   assert.deepEqual(manifestMismatches({dependencies:{a:'2','@scope/pkg':'1'},devDependencies:{tool:'1'}},l),[{type:'manifest_lock_mismatch',section:'dependencies'}]);
+});
+test('Dowód archiwum wyjaśnia tylko właściwe pakiety, brak pliku pozostaje otwarty',()=>{
+  const input={inventory:[],issues:[{type:'bundled_dependency_not_inspected',from:'pkg',name:'one'},{type:'bundled_dependency_not_inspected',from:'pkg',name:'two'}]};
+  const evidence={archiveIntegrityMatches:true,bundledPackages:[{name:'one',version:'1',declaredLicense:'MIT',licenseFilePresent:true},{name:'two',version:'1',declaredLicense:'MIT',licenseFilePresent:false}]};
+  assert.deepEqual(mergeBundledEvidence(input,'pkg',evidence).issues,[{type:'bundled_license_file_missing',from:'pkg',name:'two'}]);
+  assert.throws(()=>mergeBundledEvidence(input,'pkg',{...evidence,archiveIntegrityMatches:false}),/nie odpowiada/);
+  assert.throws(()=>mergeBundledEvidence(input,'pkg',{...evidence,bundledPackages:evidence.bundledPackages.slice(0,1)}),/nie odpowiada/);
 });

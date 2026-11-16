@@ -1,9 +1,17 @@
 import {mkdtempSync,mkdirSync,writeFileSync} from 'node:fs';
 import {join,resolve} from 'node:path';
-import {readInventory} from './license_inventory.mjs';
+import {spawnSync} from 'node:child_process';
+import {readInventory,mergeBundledEvidence} from './license_inventory.mjs';
 
 const root=resolve('.');
-const results=readInventory(root);
+let results=readInventory(root);
+const args=process.argv.slice(2);
+if(args.length){
+  if(args.length!==4||args[0]!=='--package'||args[2]!=='--archive')throw new Error('Użycie: npm run audit:licenses -- --package <klucz-lockfile> --archive <plik.tgz>');
+  const proc=spawnSync(process.env.PYTHON||'python',[join(root,'scripts','inspect_bundled_licenses.py'),join(root,'package-lock.json'),args[1],resolve(args[3])],{encoding:'utf8'});
+  if(proc.error||proc.status!==0)throw new Error('Nie udało się zweryfikować archiwum: '+(proc.error?.message||proc.stderr));
+  results=mergeBundledEvidence(results,args[1],JSON.parse(proc.stdout));
+}
 const parent=join(root,'outputs','qa','p4a_license');mkdirSync(parent,{recursive:true});
 const dir=mkdtempSync(join(parent,'run_'));
 const report={

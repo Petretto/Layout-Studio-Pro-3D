@@ -67,6 +67,19 @@ export function manifestMismatches(manifest,lock){
   }
   return issues;
 }
+// Evidence is produced by inspect_bundled_licenses.py after validating lockfile SRI.
+export function mergeBundledEvidence(result,parent,evidence){
+  const candidates=result.issues.filter(i=>i.type==='bundled_dependency_not_inspected'&&i.from===parent);
+  const entries=evidence?.bundledPackages;
+  if(evidence?.archiveIntegrityMatches!==true||!Array.isArray(entries)||entries.length!==candidates.length||
+     new Set(entries.map(e=>e.name)).size!==entries.length||
+     entries.some(e=>!candidates.some(i=>i.name===e.name)||typeof e.version!=='string'||typeof e.declaredLicense!=='string'||typeof e.licenseFilePresent!=='boolean')){
+    throw new Error('Dowód archiwum nie odpowiada liście zależności');
+  }
+  const retained=result.issues.filter(i=>!candidates.includes(i));
+  for(const item of entries)if(!item.licenseFilePresent)retained.push({type:'bundled_license_file_missing',from:parent,name:item.name});
+  return {...result,issues:retained,bundledEvidence:[{parent,...evidence}]};
+}
 export function readInventory(rootDir){
   const lock=JSON.parse(readFileSync(join(rootDir,'package-lock.json'),'utf8'));
   const manifest=JSON.parse(readFileSync(join(rootDir,'package.json'),'utf8'));

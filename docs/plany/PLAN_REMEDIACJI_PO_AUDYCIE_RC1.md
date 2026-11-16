@@ -319,3 +319,7 @@ Zweryfikowano integralność pobranego SheetJS 0.20.3, dwie konkretne advisory i
 ## P4a.4 — 16 listopada 2026
 
 Inwentarz rozdziela zależności runtime/build i nie ogłasza odbioru prawnego. Sześć zależności dołączonych do opcjonalnego archiwum builda pozostaje jawnie oznaczonych do przeglądu; wstępnie odczytano ich metadane. [Wyniki i ograniczenia](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md). P4a pozostaje w trakcie.
+
+## P4a.5 — 16 listopada 2026
+
+Dodano powtarzalne sprawdzenie zgodnego z lockfile archiwum i sześciu dołączonych składników. Dwa nie zawierają osobnego pliku licencji w swoich katalogach; inwentarz zachowuje je jako otwarte uwagi. Ocena notice i obowiązków licencyjnych pozostaje do wykonania. [Raport](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md).
