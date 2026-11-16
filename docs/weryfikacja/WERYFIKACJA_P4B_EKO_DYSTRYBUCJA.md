@@ -1,5 +1,7 @@
 # P4b — ograniczenie dystrybucji Eko
 
+Uzupełnienie 2026-11-16 na gałęzi P4a: podczas oględzin PDF instrukcji wykryto starszy zrzut mobilnego UI z nazwą projektu Eko. Odwołanie usunięto z nowej instrukcji MD/HTML/PDF, zachowując oryginalny plik dowodowy. Ten pojedynczy przegląd nie potwierdza, że wszystkie inne ilustracje i archiwa są wolne od Eko. Szczegóły [P4a.2](WERYFIKACJA_P4A_WEB_VITE.md).
+
 Stan na 9 listopada 2026. Gałąź `codex/v1-p4b-eko` oparto na `c2b2d0467c55065a4b176e04477ede1a12931828`. Pobrany `origin/main` oraz historyczny RC1 wskazują `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`. Pakiet pozostaje w trakcie do niezależnego odbioru, sprawdzenia historycznych powierzchni i testów kandydata.
 
 ## Powierzchnie

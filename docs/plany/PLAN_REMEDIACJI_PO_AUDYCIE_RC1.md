@@ -307,3 +307,7 @@ Za zgodą właściciela wdrożono osobny hotfix `1805f257fa71c12cc516d0b614a8be0
 ## P4a.1 — 10 listopada 2026
 
 Vite 7.3.8 w osobnej gałęzi P4a, czysta instalacja, build, audit i lokalne testy z Edge PASS w opisanym zakresie. P4a pozostaje w trakcie; prywatność, sieć, SheetJS i aktualizacja/odzyskiwanie nadal otwarte. [Raport](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md).
+
+## P4a.2 — 16 listopada 2026
+
+Wyłączono uruchamianie Analytics w gałęzi P4a, skorygowano informacje o sieci i offline, przeprowadzono lokalny test sieci z syntetycznym projektem oraz odświeżono instrukcję. Znaleziony zrzut z nazwą Eko wyłączono z instrukcji, zachowując dowód. Zakres, ograniczenia i nierozstrzygnięte zagadnienia zawiera [raport](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md). P4a i P4b pozostają w trakcie; zmiany nie są wdrożone na produkcję.

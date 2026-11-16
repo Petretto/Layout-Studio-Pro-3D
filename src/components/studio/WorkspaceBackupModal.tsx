@@ -392,22 +392,22 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
           <div className="p-3.5 bg-slate-950/60 rounded-xl border border-slate-800/80 text-xs text-slate-400 space-y-1.5">
             <div className="flex items-center space-x-1.5 text-slate-300 font-semibold">
               <Info className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Dystrybucja i Praca Offline (Zero Zależności Zewnętrznych)</span>
+              <span>Przechowywanie danych i dostęp do aplikacji</span>
             </div>
             <p className="leading-relaxed">
-              Layout Studio Pro działa całkowicie w przeglądarce klienta (lokalny runtime). Wszystkie obliczenia
-              balansu, symulacje stochastyczne Monte Carlo, silnik Three.js 3D i edytor CAD 2D wykonują się bez
-              wysyłania danych na serwery zewnętrzne.
+              Projekt jest przechowywany w pamięci tej przeglądarki. Obliczenia i edycja odbywają się lokalnie.
+              Wersja webowa pobiera pliki aplikacji i przykłady z serwera; hosting może rejestrować dane techniczne
+              żądań. Przed wyczyszczeniem pamięci witryny pobierz kopię projektu.
             </p>
             <p className="leading-relaxed">
               <strong>Środowisko lokalne / produkcyjne:</strong>{' '}
               {isLocalhost ? (
-                <span className="text-emerald-400 font-medium">Uruchomiono lokalnie (Offline Ready)</span>
+                <span className="text-emerald-400 font-medium">Uruchomiono lokalnie</span>
               ) : (
                 <span className="text-cyan-400 font-medium">Wersja webowa hosted (Vercel)</span>
               )}
-              . Na komputerze bez dostępu do Internetu aplikację uruchamia się poleceniem <code>npm start</code> lub
-              skryptem <code>Uruchom_Layout_Studio.bat</code> na porcie 4173.
+              . Lokalną instalację z przygotowanym buildem można uruchomić poleceniem <code>npm start</code> lub
+              skryptem <code>Uruchom_Layout_Studio.bat</code> na porcie 4173. Dostępność offline wymaga osobnej weryfikacji.
             </p>
           </div>
         </div>

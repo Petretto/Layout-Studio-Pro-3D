@@ -607,14 +607,13 @@ W module planowania zapotrzebowania i czasu taktu (`DemandWizardView`) wprowadzo
   - **Przycisk szybkiej korekty Lean**: pozwala jednym kliknięciem dostosować suwak OEE do sugerowanego poziomu rezydualnego, eliminując dublowanie strat.
   - **Podgląd Taksu netto**: prezentacja Taksu skorygowanego (`adjustedTaktSeconds`) w karcie głównej ze wskazaniem zysku czasu cyklu.
 
-### 5.9. Dystrybucja, uruchamianie offline i Disaster Recovery (Plan 7.6)
+### 5.9. Dystrybucja i odzyskiwanie danych (Plan 7.6)
 
-Wersja produkcyjna Layout Studio Pro 3D została zoptymalizowana pod kątem pełnej autonomii, bezpieczeństwa danych projektowych oraz niezawodności w środowiskach przemysłowych pozbawionych stałego dostępu do Internetu.
+Głównym kanałem wydania jest aplikacja webowa. Przeglądarka pobiera jej pliki oraz przykłady z serwera. Nie zadeklarowano obsługi offline bez osobnej weryfikacji.
 
-- **Dystrybucja i architektura 100% Offline-First**:
-  - Aplikacja nie pobiera żadnych zasobów, czcionek, skryptów ani stylów z zewnętrznych sieci CDN w trakcie działania.
-  - Wszystkie silniki (Three.js 3D, silnik fizyki, biblioteki DXF, generator PDF, Web Workery) są spakowane lokalnie w katalogu produkcyjnym `dist/`.
-  - Uruchomienie na czystym stanowisku (Windows/Linux/macOS) wymaga jedynie środowiska Node.js (v20.19.0 LTS lub nowszego) oraz dowolnej nowoczesnej przeglądarki (Edge, Chrome, Firefox).
+- **Uruchomienie lokalne**:
+  - Aplikację można uruchomić z przygotowanego katalogu `dist/` na lokalnym serwerze. Instalacja zależności i przygotowanie builda mogą wymagać dostępu do sieci.
+  - Wymagane środowisko Node.js określa pole `engines` w `package.json`; obsługa przeglądarek i komputerów wymaga potwierdzenia na docelowym środowisku.
 
 - **Skrót uruchomieniowy (`Uruchom_Layout_Studio.bat`)**:
   - Na komputerach z systemem Windows aplikację uruchamia się dwuklikiem w plik `Uruchom_Layout_Studio.bat`.
@@ -638,14 +637,13 @@ Niepotwierdzony rollback pozostawia trwałą blokadę odzyskiwania. Po ponownym 
 
 Kopia ratunkowa zachowuje również surowe uszkodzone zapisy, jeżeli takie były przed odzyskiwaniem. Jest wtedy materiałem do naprawy, a nie plikiem gwarantującym poprawne wczytanie. Nie ma osobnego przycisku cofającego całe odzyskiwanie jednym kliknięciem; poprawną kopię ratunkową wczytuje się tą samą ścieżką.
 
-![Przywracanie wymaga pobrania kopii ratunkowej i potwierdzenia — dane syntetyczne](../outputs/qa/7_6a_ui/copy_and_confirmation_required.png)
 
 ### 5.10. Zgodność licencyjna, prawa do modeli 3D i bezpieczeństwo (Plan 7.7)
 
 Przed komercyjnym wdrożeniem i instalacją na komputerach zakładowych przeprowadzono całościowy audyt prawno-autorski oraz bezpieczeństwa kodu:
 
 - **Pełna zgodność licencyjna zależności runtime (100% Permissive)**:
-  - Wszystkie biblioteki ładowane do środowiska wykonawczego aplikacji (`react`, `react-dom`, `three`, `lucide-react`, `xlsx`, `@vercel/analytics`) objęte są wyłącznie uznanymi licencjami permisywnymi (**MIT**, **Apache-2.0**, **ISC**).
+  - Biblioteki wykorzystywane w aplikacji obejmują `react`, `react-dom`, `three`, `lucide-react` i `xlsx`. Przegląd licencji i pochodzenia zależności jest wymagany przed wydaniem.
   - W aplikacji **nie występuje żadna zależność typu Copyleft** (GPL / AGPL), co gwarantuje pełną ochronę własności intelektualnej modeli procesowych klienta i pełną swobodę komercyjnego wykorzystania wewnątrz przedsiębiorstwa.
   - Narzędzia pomocnicze i kompilacyjne czasu budowania (np. `lightningcss` — MPL-2.0, `caniuse-lite` — CC-BY-4.0) są odseparowane i nie przenikają do kodu wynikowego klienta.
 
@@ -653,9 +651,9 @@ Przed komercyjnym wdrożeniem i instalacją na komputerach zakładowych przeprow
   - Wszystkie standardowe modele wyposażenia (16 typów w standardzie 6.1: stoły montażowe, regały FIFO, palety EPAL, wózki, roboty AGV, przenośniki) są generowane proceduralnie z kodu źródłowego Three.js i objęte licencją projektu (**MIT**).
   - Modele konceptualne (stanowisko z nadbudową, regał na części, wózek półkowy) stanowią autorskie opracowania demonstracyjne Blender/GLTF i nie naruszają praw osób trzecich ani wzorów przemysłowych.
 
-- **Bezpieczeństwo i brak podatności (0 Vulnerabilities)**:
-  - Przeprowadzono audyt bezpieczeństwa (`npm audit`), potwierdzając **0 luk podatności** (0 critical, 0 high, 0 moderate, 0 low).
-  - Architektura odcięta od Internetu (Air-Gapped): aplikacja nie wykonuje w runtime żadnych zapytań sieciowych, a nagłówki serwera wymuszają rygorystyczną politykę bezpieczeństwa Content-Security-Policy (CSP).
+- **Weryfikacja bezpieczeństwa**:
+  - `npm audit` wskazuje znane mu zgłoszenia dla konkretnego lockfile w chwili badania; wynik zerowy nie gwarantuje braku podatności.
+  - Wersja webowa pobiera aplikację i przykłady z serwera, który może rejestrować informacje techniczne o żądaniach. Dane projektu są zapisywane w pamięci przeglądarki; pobierz kopię przed wyczyszczeniem danych witryny. W tej wersji analityka Vercel nie jest uruchamiana. Dostępność offline i nagłówki CSP hostingu wymagają osobnych testów.
   - Bezpieczne parsowanie formatów wejściowych (DXF, Excel, JSON): importy operują na rygorystycznie białej liście bezpiecznych struktur, uniemożliwiając wykonanie złośliwego kodu lub makr.
   - Automatyczna weryfikacja stanu licencji i podatności: polecenie `npm run audit:licenses`.
 
@@ -805,7 +803,6 @@ Widok 3D wymaga WebGL. Jeżeli nie jest dostępny, komunikat zastępuje scenę, 
 
 Nagłówek zawiera 56 px wysokości na desktopie i dwa zwarte wiersze na telefonie. Na małym ekranie wszystkie sześć obszarów wybierzesz z jednej listy; dodatkowa lista pojawia się tylko w obszarze z kilkoma widokami. Pasek nie wymaga przewijania przez dziesięć zakładek. Zamknięcie menu nie zmienia danych.
 
-![Nawigacja mobilna UI1a](../outputs/qa/ui1/after_390.png)
 
 Ten pakiet zmienia dojście do istniejących funkcji. Same formularze, duży viewport CAD, panele sceny, raport i Pulpit są przebudowywane w kolejnych pakietach. Nie dodano importu STEP, nowych ocen ergonomii ani certyfikacji bezpieczeństwa. Wspólny nagłówek nie oznacza jeszcze połączenia zapisów projektu głównego i modelu domenowego.
 
