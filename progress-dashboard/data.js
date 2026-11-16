@@ -7,7 +7,7 @@ window.PLAN_DATA = {
     "baseVersion": "Layout Studio Pro 3D 0.4.0",
     "hostingUrl": "https://layout-studio-pro-3d.vercel.app/",
     "repoUrl": "https://github.com/Petretto/Layout-Studio-Pro-3D",
-    "extractedAt": "2026-11-10T21:40:59.504Z"
+    "extractedAt": "2026-11-16T18:49:20.900Z"
   },
   "overall": {
     "total": 72,
@@ -3270,7 +3270,7 @@ window.PLAN_DATA = {
         "order": 5,
         "id": "P4a",
         "name": "web, telemetria i zależności",
-        "status": "nierozpoczęte",
+        "status": "w trakcie",
         "dependencies": [],
         "condition": "Po G0; ustala środowisko i bezpieczną bazę builda",
         "analysis": "Terra; Sol aktualizacje danych",
@@ -3688,8 +3688,8 @@ window.PLAN_DATA = {
     "stats": {
       "total": 12,
       "done": 1,
-      "inProgress": 2,
-      "pending": 9
+      "inProgress": 3,
+      "pending": 8
     },
     "accepted": false,
     "next": {
@@ -3711,38 +3711,38 @@ window.PLAN_DATA = {
       "key": "main",
       "path": "PLAN_ROZWOJU.md",
       "available": true,
-      "modified": "2026-11-09T21:41:05.442Z"
+      "modified": "2026-11-10T21:43:21.732Z"
     },
     {
       "key": "plan",
       "path": "docs/plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md",
       "available": true,
-      "modified": "2026-11-10T21:40:59.445Z"
+      "modified": "2026-11-10T21:45:49.995Z"
     },
     {
       "key": "architecture",
       "path": "docs/plany/ARCHITEKTURA_INTEGRACJI_MODELI_V1.md",
       "available": true,
-      "modified": "2026-11-02T20:27:21.974Z"
+      "modified": "2026-11-10T21:43:21.762Z"
     },
     {
       "key": "scope",
       "path": "docs/plany/ZAKRES_WYDANIA_V1_0_0.md",
       "available": true,
-      "modified": "2026-11-03T16:18:06.242Z"
+      "modified": "2026-11-10T21:43:21.767Z"
     },
     {
       "key": "matrix",
       "path": "docs/plany/MACIERZ_AUDYT_REMEDIACJA.md",
       "available": true,
-      "modified": "2026-11-09T21:41:05.684Z"
+      "modified": "2026-11-10T21:45:50.023Z"
     },
     {
       "key": "tests",
       "path": "docs/plany/PLAN_TESTOW_RC2.md",
       "available": true,
-      "modified": "2026-11-03T16:17:38.087Z"
+      "modified": "2026-11-10T21:43:21.762Z"
     }
   ],
-  "signature": "9f01ff43b5512a3dd1b18188cbc30e28a24769a731b816e0ccbe25e937de87be"
+  "signature": "8ff6ca85d13e306022386c62d6726de32eecb1d0464cf983413e4124b16176cf"
 };

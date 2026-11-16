@@ -52,3 +52,5 @@ Pozostałe materiały:
 - [Mapa przeniesionych plików](relocations.json) — stare i nowe ścieżki przy porządkowaniu 2026-10-26.
 
 Po dodaniu dokumentacji lub zmianie jej ścieżek uruchom `node scripts/verify_documentation.mjs`. Nie twórz raportów, kontraktów i luźnych notatek w katalogu głównym.
+
+- [Weryfikacja P4a.1 — Vite i web](weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md) — aktualizacja zależności oraz otwarte kwestie web i prywatności.

@@ -2,6 +2,7 @@
 (function(root) {
 'use strict';
 function parsePlan(planContent) {
+  planContent = planContent.replace(/\r\n/g, '\n');
   // 1. Metadata
   const createdMatch = planContent.match(/Data utworzenia:\s*([^\n]+)/);
   const updatedMatch = planContent.match(/Ostatnia aktualizacja:\s*([^\n]+)/);

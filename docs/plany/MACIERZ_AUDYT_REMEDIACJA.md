@@ -93,3 +93,5 @@ Metoda: tożsamość SHA i całego drzewa potwierdza brak późniejszych zmian, 
 | S-18 | Nadal obecne w starym planie na main | Plan roboczy skorygowany, główne ID nadal otwarte; nie uznawać poprawek dokumentacji za wdrożenie funkcji |
 
 Gdy kolejny fetch ujawni nowszy main, nie wolno kopiować tej tabeli jako potwierdzenia nowej wersji. Wskazać zmienione ścieżki, powtórzyć odpowiednie odczyty/testy i podać commit każdej faktycznej poprawki; brak dowodu oznacza ponowną weryfikację, nie automatyczne zamknięcie ustalenia.
+
+Stan P4a.1 — 2026-11-10: Vite 7.3.8 i wstępna weryfikacja lokalna; BL-02 pozostaje otwarte do odbioru pełnej bazy web, S-13 oraz pozostały P4a bez zmian. Szczegóły: [raport](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md).

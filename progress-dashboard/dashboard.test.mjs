@@ -9,6 +9,15 @@ import {readDashboard,readSources,sources} from './sources.mjs';
 const {parsePlan,parseRemediation}=globalThis.ProgressDashboard;
 const input=readSources().text;
 
+test('Plan z końcami LF i CRLF zachowuje historię i kryteria etapów',()=>{
+  const lf=input.main.replace(/\r\n/g,'\n');
+  const crlf=lf.replace(/\n/g,'\r\n');
+  const left=parsePlan(lf),right=parsePlan(crlf);
+  assert.ok(left.packages.length>1,'Historia pakietów musi pozostać rozdzielona');
+  assert.deepEqual(right.packages,left.packages);
+  assert.deepEqual(right.stages,left.stages);
+});
+
 test('Główne liczniki odpowiadają plan_progress; pakiety nie są dodatkowymi ID',()=>{
   const d=readDashboard(),cli=execFileSync(process.execPath,['scripts/plan_progress.mjs'],{encoding:'utf8'});
   assert.match(cli,new RegExp(`Cały plan: ${d.overall.done}/${d.overall.total}`));
@@ -29,7 +38,7 @@ test('Nieaktualne podsumowanie wdrożone nie zamyka otwartych zadań etapu',()=>
 });
 test('Brakujące i uszkodzone źródła nie dają gotowości wydania',()=>{
   assert.equal(parseRemediation({...input,matrix:''}).available,false);
-  assert.equal(parseRemediation({...input,plan:input.plan.replace(/^\| G2 \|.*\n/m,'')}).available,false);
+  assert.equal(parseRemediation({...input,plan:input.plan.replace(/^\| G2 \|[^\r\n]*\r?\n/m,'')}).available,false);
   assert.equal(parseRemediation({...input,plan:input.plan.replace('| P0, PT |','| NIEZNANY |')}).available,false);
   assert.throws(()=>parsePlan('Nie jest planem'),/głównych ID/);
 });

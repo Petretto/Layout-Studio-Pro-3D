@@ -95,7 +95,7 @@ Statusy poniżej są źródłem dla osobnego `progress-dashboard`. Zmiana status
 | 2 | PT — przywrócenie wiarygodnych testów | w trakcie | P0 | 16 skryptów wykonano lokalnie. Sol sprawdził wzorce R01–R05/R09, w tym fizyczne porównania w Edge. Otwarte pozostają helpery, uzupełnienie T08 i niezależny odbiór |
 | 3 | P1 — odbiór kontraktów integracji | nierozpoczęte | P0, PT | Rozstrzyga trwałość, właścicieli i migrację przed zmianą zapisu |
 | 4 | P4b — zamknięcie publicznych powierzchni Eko | w trakcie | — | Lokalny katalog i assety builda ograniczono do 01–03; pozostaje przegląd repozytorium, historii i wdrożeń oraz niezależny odbiór. [Weryfikacja](../weryfikacja/WERYFIKACJA_P4B_EKO_DYSTRYBUCJA.md) |
-| 5 | P4a — web, telemetria i zależności | nierozpoczęte | — | Po G0; ustala środowisko i bezpieczną bazę builda |
+| 5 | P4a — web, telemetria i zależności | w trakcie | — | Po G0; ustala środowisko i bezpieczną bazę builda |
 | 6 | P2a — koperta, magazyn i migracje | nierozpoczęte | P0, PT, P1, P4a | Po G2; fundament wspólnej tożsamości, backupu i transakcji |
 | 7 | P2b — edytory, bilans i layout | nierozpoczęte | P2a | Wszyscy edytowalni konsumenci kierują zmiany do właściwego właściciela |
 | 8 | P2c — wyniki, silniki i warianty | nierozpoczęte | P2a, P2b | Bez przepisywania reguł fizycznych |
@@ -303,3 +303,7 @@ Wykonano `verify_documentation` (PASS: 137 dokumentów, 107 lokalnych odnośnik�
 ## Hotfix produkcyjny — 10 listopada 2026
 
 Za zgodą właściciela wdrożono osobny hotfix `1805f257fa71c12cc516d0b614a8be0d8e1afd9a`, oparty na wersji będącej uprzednio na produkcji (`6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`). Vercel: deployment `BGVGHPqRMFkco61xjY97Pbaa41in`, środowisko Production, status Ready, domena `layout-studio-pro-3d.vercel.app`. Odczyt produkcyjny: `/demo-projects/index.json` HTTP 200, JSON zawiera wyłącznie identyfikatory 01–03 i nie zawiera tekstu Eko; `/demo-projects/04_eko.project.json` i `/demo-projects/04_eko.zip` HTTP 404, typ text/plain. Nie jest to odbiór całego V1 ani zamknięcie P4b: publiczne repozytorium, historia i wcześniejsze wdrożenia pozostają przedmiotem osobnej decyzji. Hotfix nie obejmuje pozostałych zmian z gałęzi remediacji.
+
+## P4a.1 — 10 listopada 2026
+
+Vite 7.3.8 w osobnej gałęzi P4a, czysta instalacja, build, audit i lokalne testy z Edge PASS w opisanym zakresie. P4a pozostaje w trakcie; prywatność, sieć, SheetJS i aktualizacja/odzyskiwanie nadal otwarte. [Raport](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md).
