@@ -25,6 +25,8 @@ Na gałęzi roboczej `codex/v1-p4a-web` rozwiązano cztery konflikty. Zachowano 
 
 ## Materiał do niezależnego odbioru G1
 
+[Protokół odbioru G1](../weryfikacja/PROTOKOL_ODBIORU_G1_P0_PT.md) zawiera wskazany SHA, polecenia, oczekiwania dla T02–T08 i format niezależnego wyniku.
+
 Odbiór ma dotyczyć wskazanego SHA. Audytor przegląda własności ochrony projektów w [raporcie P0](../weryfikacja/WERYFIKACJA_REMEDIACJI_P0_BEZPIECZENSTWO_DANYCH.md) i dobiera niezależne próby T02–T06. Minimalne przypadki to odmowa przy braku kopii lub potwierdzenia, dokładne porównanie wcześniejszych zapisów 4/5/6 i wariantów po błędzie, blokada po niepotwierdzonym wycofaniu oraz odtworzenie z poprawnej kopii po ponownym otwarciu. Potrzebny jest osobny wynik dotyczący adekwatności asercji PT T07/T08. Każda próba powinna zapisać SHA, środowisko, oczekiwanie, rzeczywisty wynik i powód ewentualnego FAIL lub NOT_VERIFIED.
 
 - Punkt wejścia do P0 to `src/core/workspaceReplacement.ts` i `node tests/qa/verify_remediation_data_safety.mjs` po buildzie. Audytor porównuje surowe wartości slotów przed i po odmowie oraz po odtworzeniu, również dla zapisów w drugiej karcie. Własna próba audytora powinna sprawdzić zachowanie po przerwaniu wycofania przy użyciu wyłącznie syntetycznego zapisu.

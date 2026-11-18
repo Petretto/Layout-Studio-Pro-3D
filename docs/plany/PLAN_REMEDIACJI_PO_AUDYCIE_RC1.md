@@ -81,7 +81,7 @@ Statusy poniżej są źródłem dla osobnego `progress-dashboard`. Zmiana status
 | Bramka | Warunek | Status | Dowód |
 |---|---|---|---|
 | G0 | Zatwierdzenie planu remediacji przez właściciela | zamknięta | 2026-11-02: właściciel polecił działać zgodnie z planem; G2 pozostaje osobnym odbiorem architektury |
-| G1 | Ochrona danych P0 i wykonywalne testy PT odebrane | otwarta | Czysty SHA 766210c: 17/17 P0 w UI, 16/16 PT, cztery próby negatywne i DR PASS. Otwarte niezależne sprawdzenie kontraktu i adekwatności testów |
+| G1 | Ochrona danych P0 i wykonywalne testy PT odebrane | otwarta | SHA do odbioru 23d2397. Sprawdzono 35 awarii zapisu, konflikt dwóch kart i odtworzenie pięciu obszarów w świeżym profilu. Czeka na niezależną ocenę P0/PT. [Protokół](../weryfikacja/PROTOKOL_ODBIORU_G1_P0_PT.md) |
 | G2 | Właściciel zatwierdził projekt P1 po niezależnym przeglądzie | otwarta | Architektura C jest rekomendacją do zatwierdzenia |
 | G3 | Migracje, integracja, wspólny raport oraz UI3/UI4/X3 odebrane | otwarta | Pakiety P2a–d/P3 nierozpoczęte |
 | G4 | Ukończone zmiany i pełna weryfikacja kandydata przed RC2 | otwarta | Nie utworzono RC2; brak nowego pełnego baseline |
@@ -92,7 +92,7 @@ Statusy poniżej są źródłem dla osobnego `progress-dashboard`. Zmiana status
 | Kolejność | Pakiet | Status | Zależności | Warunek i uzasadnienie |
 |---|---|---|---|---|
 | 1 | P0 — ochrona danych i DR | wdrożone | — | Lokalnie 2026-11-03: 24/24 focused, 507/507 pełne, UI 17/17, build i DR PASS; niezależny przegląd kontraktu do odbioru G1 |
-| 2 | PT — przywrócenie wiarygodnych testów | w trakcie | P0 | Na czystym SHA 766210c: 16/16 skryptów, 7/7 testów pomocniczych i 4/4 prób negatywnych. Nadal wymagany niezależny odbiór. [Dowody](../weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md) |
+| 2 | PT — przywrócenie wiarygodnych testów | w trakcie | P0 | 16/16 skryptów na 766210c. Po poprawce harnessu 23d2397 przeszły 7.12.D, dwa pełne przebiegi pilota i cztery próby negatywne. Niezależny odbiór dotyczy 23d2397. [Dowody](../weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md) |
 | 3 | P1 — odbiór kontraktów integracji | nierozpoczęte | P0, PT | Rozstrzyga trwałość, właścicieli i migrację przed zmianą zapisu |
 | 4 | P4b — zamknięcie publicznych powierzchni Eko | w trakcie | — | Na produkcji hotfix 1805f25, katalog 01–03 i dwa HTTP 404 dla plików Eko. Otwarte są publiczne repozytorium, historia, starsze wdrożenia i niezależny odbiór. [Weryfikacja](../weryfikacja/WERYFIKACJA_P4B_EKO_DYSTRYBUCJA.md) |
 | 5 | P4a — web, telemetria i zależności | w trakcie | — | Lokalnie sprawdzono build, sieć, licencje i przejście A→B→A. Otwarty odbiór hostingu i przegląd prywatności/licencji. [Dowody](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md) |

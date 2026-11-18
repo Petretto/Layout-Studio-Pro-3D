@@ -1,5 +1,11 @@
 # PT — status testów E2E i kontrola wzorców
 
+## Stabilizacja zamykania pilota przed G1 — 18 listopada 2026
+
+Na czystym drzewie `81e51f5` próba 7.12.D zapisała PASS i poprawny raport obliczeń, ale proces wywołany przez pełny pilot nie zakończył się przed limitem 120 s. Pierwsza próba poprawki potwierdziła wprost błąd `ETIMEDOUT` przy synchronicznym wywołaniu. W `23d2397` pilot kończy pierwszą sesję Edge przed uruchomieniem 7.12.D, czeka asynchronicznie na kod wyjścia i zachowuje limit czasu. Obie sesje próbują zamknięcia przez CDP, z ograniczonym czasem oczekiwania i zakończeniem własnego procesu awaryjnie. Pilot nadal wymaga rzeczywistego kodu wyjścia 0. Asercje, wzorce liczbowe i kod produktu pozostały bez zmian.
+
+Pomiar wykonano na archiwum `81e51f5` z trzema plikami harnessu o wartości blob zgodnej z `23d2397`. 7.12.D osobno zakończył się kodem 0. Pełny pilot zakończył się dwukrotnie kodem 0 w 49,75 i 44,72 s. Wszystkie cztery kontrolowane błędy pilot odrzucił z oczekiwanych przyczyn, w tym błąd ostatniego kroku ponownego otwarcia. Surowe logi prób, w tym błędnych, są w `outputs/qa/g1_13c6c617/`. Mapa 16 skryptów zachowuje własne wcześniejsze dowody z `766210c`. [Protokół odbioru G1](PROTOKOL_ODBIORU_G1_P0_PT.md).
+
 ## Powtórzenie P0/PT na czystym SHA — 18 listopada 2026
 
 Źródło to archiwum śledzonych plików z `766210c3de2d423fba40657a48dae4772c84a5f9`. Windows, Node 24.14.0, npm 11.12.0 i izolowany Edge 157.0.4341.60. `npm ci --ignore-scripts --no-audit --no-fund` i build przeszły. SHA-256 `dist/index.html`: `58677e9ffca2d7c3aa468fe43f36814a84da8c9eed5daf6d2b843a339f913d06`. SHA-256 lockfile: `6b976d97b53e44208078bd7c9e37e253db3ad01da0deadda44e724559f8f4cdf`.

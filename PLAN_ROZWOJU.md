@@ -17,6 +17,8 @@ Metryka: RC1 i pobrany przed P0 `origin/main` = `6aa84d8129b7f7cc4d92c3c00b4d8a9
 
 9 listopada uzupełniono próby pełnego pilota o ukryty wynik porównania i brak szkicu po ponownym imporcie. Cztery logi prób negatywnych potwierdzają właściwe przyczyny odrzucenia, a normalny pilot przeszedł. Szczegóły i ograniczenie statusu poprzedniej sesji znajdują się w raporcie PT.
 
+**Odbiór G1 — 18 listopada 2026.** SHA do niezależnego odbioru `23d2397`. Uzupełniono dowody P0 o 35 kontrolowanych awarii dla pięciu obszarów danych, odmowę wczytania po zapisie w drugiej karcie oraz round-trip wszystkich pięciu obszarów w odrębnym profilu Edge. Poprawka PT dotyczy zamykania sesji Edge przed uruchomieniem obowiązkowego 7.12.D. Właściciel kieruje wskazany SHA do niezależnego odbioru P0/PT. [Protokół G1](docs/weryfikacja/PROTOKOL_ODBIORU_G1_P0_PT.md).
+
 **P4b — w trakcie.** Hotfix `1805f25` trafił do `origin/main` i jest aktywny na Vercel. Produkcyjny katalog zawiera wyłącznie przykłady 01–03, sześć plików ma sumy zgodne z indeksem, a oba dawne adresy Eko zwracają HTTP 404. Wewnętrzna regresja pozostaje dostępna. Do zamknięcia pakietu wymagane są niezależny odbiór, decyzja o prawach i analiza pozostałych powierzchni repozytorium oraz historycznych wdrożeń. [Raport P4b](docs/weryfikacja/WERYFIKACJA_P4B_EKO_DYSTRYBUCJA.md).
 
 Historyczny pomiar z 9 listopada potwierdził indeks produkcyjny z Eko i odpowiedzi HTTP 200 dla jego JSON i ZIP. Tego dnia publiczne repozytorium zawierało śledzone pliki Eko, a listy GitHub Releases i zdalnych tagów były puste. Zakres historii pozostaje przedmiotem osobnej decyzji właściciela.

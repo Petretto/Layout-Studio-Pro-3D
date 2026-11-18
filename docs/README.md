@@ -18,6 +18,7 @@ Pozostałe materiały:
 - [Weryfikacja hotfixu katalogu Eko](weryfikacja/WERYFIKACJA_HOTFIX_EKO.md) — izolowany zakres, lokalne testy i granice odbioru.
 
 - [Weryfikacja PT — testy E2E](weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md) — mapa skryptów, rzeczywiste próby UI i zadania do niezależnej kontroli Sol.
+- [Protokół niezależnego odbioru G1](weryfikacja/PROTOKOL_ODBIORU_G1_P0_PT.md) — SHA, próby T02–T08 i format wyniku audytora.
 
 - [Weryfikacja remediacji P0 — bezpieczeństwo danych](weryfikacja/WERYFIKACJA_REMEDIACJI_P0_BEZPIECZENSTWO_DANYCH.md) — reprodukcja S-03, trwała kopia/odzyskanie, formularze/autosave, BL-01 i S-15, wykonane testy i otwarty niezależny odbiór.
 
