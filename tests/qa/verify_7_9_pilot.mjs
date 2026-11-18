@@ -1,6 +1,7 @@
-import {spawn,spawnSync} from 'node:child_process';
+import {spawn} from 'node:child_process';
+import {once} from 'node:events';
 import {importProjectPackageUi} from './packageImport.mjs';
-import {openEdgeDebugPage} from './browserHarness.mjs';
+import {closeEdgeBrowser,openEdgeDebugPage} from './browserHarness.mjs';
 import {existsSync,mkdirSync,writeFileSync,mkdtempSync,readdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
@@ -211,11 +212,21 @@ try{
   console.log('8. Sprawdzenie błędów JavaScript w konsoli...');
   strictEqual(errors.length, 0, 'Brak błędów w konsoli Edge: ' + JSON.stringify(errors));
 
-  const acceptance=spawnSync(process.execPath,['tests/qa/verify_7_12d.mjs'],{stdio:'inherit',windowsHide:true,timeout:120000});
-  if(acceptance.error||acceptance.status!==0)throw new Error('NOT_VERIFIED: wymagany test obliczeń, wariantów i save/reopen nie przeszedł.');
-  console.log('PASS automatyczny pilot: tutorial, CAD/3D oraz wymagany test 7.12.D. Udział człowieka i niezależny odbiór pozostają otwarte.');
 }finally{
-  try{if(ws)ws.close();}catch{}
-  try{browser.kill();}catch{}
-  try{server.kill();}catch{}
+  try { await closeEdgeBrowser(browser, ws); }
+  finally { server.kill(); }
 }
+
+// The first profile has finished. Release it before testing a second isolated session.
+try {
+  const deadline = AbortSignal.timeout(120000);
+  const acceptance = spawn(process.execPath, ['tests/qa/verify_7_12d.mjs'], {
+    stdio: 'inherit', windowsHide: true, signal: deadline,
+  });
+  const [status, signal] = await once(acceptance, 'exit');
+  if (status !== 0) throw new Error(`kod ${status ?? 'brak'}, sygnał ${signal ?? 'brak'}`);
+} catch (error) {
+  const detail = error.code === 'ABORT_ERR' ? 'limit czasu 120 s' : error.message;
+  throw new Error(`NOT_VERIFIED: wymagany test obliczeń, wariantów i save/reopen nie przeszedł. Proces 7.12.D: ${detail}.`, {cause:error});
+}
+console.log('PASS automatyczny pilot: tutorial, CAD/3D oraz wymagany test 7.12.D. Udział człowieka i niezależny odbiór pozostają otwarte.');

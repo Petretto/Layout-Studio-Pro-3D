@@ -1,8 +1,24 @@
 import {spawn} from 'node:child_process';
+import {once} from 'node:events';
 import {existsSync,mkdtempSync,readFileSync,writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 export const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+export async function closeEdgeBrowser(browser, socket) {
+  try {
+    if (socket?.readyState === WebSocket.OPEN && browser.exitCode === null && browser.signalCode === null) {
+      socket.send(JSON.stringify({id: 0, method: 'Browser.close'}));
+      await once(browser, 'exit', {signal: AbortSignal.timeout(2500)});
+    }
+  } catch {
+    // Fall back to terminating our own isolated browser when CDP is unavailable.
+  } finally {
+    if (browser.exitCode === null && browser.signalCode === null) browser.kill();
+    browser.stderr?.destroy();
+    socket?.close();
+  }
+}
 
 // Edge launched with port 0 writes the actual debug port to its isolated profile.
 export async function openEdgeDebugPage(browser, profile) {

@@ -1,4 +1,4 @@
-import {openEdgeDebugPage} from './browserHarness.mjs';
+import {closeEdgeBrowser,openEdgeDebugPage} from './browserHarness.mjs';
 import {assertOperationWindows,assertScheduleResult,assertReopenedDraft,readScheduleWindows} from './scheduleAssertions.mjs';
 import {importProjectPackageUi,assertComparisonRows} from './packageImport.mjs';
 import {spawn} from 'node:child_process';
@@ -271,7 +271,6 @@ try{
   writeFileSync(join(out,'report.json'),JSON.stringify(report,null,2));
   console.log('PASS 7.12.D UI: all 3 demo packages imported, scheduled, isolated and verified with round-trip!');
 }finally{
-  ws?.close();
-  browser.kill();
-  server.kill();
+  try { await closeEdgeBrowser(browser, ws); }
+  finally { server.kill(); }
 }
