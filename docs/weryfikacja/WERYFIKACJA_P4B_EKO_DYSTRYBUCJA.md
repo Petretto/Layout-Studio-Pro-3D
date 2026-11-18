@@ -1,6 +1,6 @@
 # P4b — ograniczenie dystrybucji Eko
 
-18 listopada 2026 potwierdzono ponownie publiczne odpowiedzi: indeks HTTP 200 zawiera pakiety 01–03, a oba dawne pliki Eko zwracają HTTP 404. Na izolowanej gałęzi hotfixu `1805f257` przeszły test generatora i test HTTP. Na czystym snapshotcie remediacji `766210c` przeszedł również lokalny test katalogu i kontrola generatora `--check`. Publiczna historia, starsze wdrożenia i pozostałe materiały stanowią oddzielny otwarty zakres. [Warunki scalenia hotfixu](../plany/PLAN_SCALENIA_MAIN_I_ODBIORU_V1.md).
+18 listopada 2026 po akceptacji właściciela `origin/main` przesunięto na `1805f257fa71c12cc516d0b614a8be0d8e1afd9a`. Vercel oznaczył wdrożenie tego SHA jako Production, Ready i Current na domenie `layout-studio-pro-3d.vercel.app`. Indeks HTTP 200 zawiera pakiety 01–03, wszystkie trzy pary JSON i ZIP są zgodne z sumami SHA-256 z manifestu, a oba dawne adresy Eko zwracają HTTP 404 (text/plain). Publiczna historia, starsze wdrożenia i pozostałe materiały pozostają otwarte. [Wdrożenie Vercel](https://vercel.com/petrettos-projects/layout-studio-pro-3d/D4EfJZrTv2CrcBExrBfHHU1KD6cs) · [Rejestr scalenia](../plany/PLAN_SCALENIA_MAIN_I_ODBIORU_V1.md).
 
 Uzupełnienie 2026-11-16 na gałęzi P4a: podczas oględzin PDF instrukcji wykryto starszy zrzut mobilnego UI z nazwą projektu Eko. Odwołanie usunięto z nowej instrukcji MD/HTML/PDF, zachowując oryginalny plik dowodowy. Ten pojedynczy przegląd nie potwierdza, że wszystkie inne ilustracje i archiwa są wolne od Eko. Szczegóły [P4a.2](WERYFIKACJA_P4A_WEB_VITE.md).
 

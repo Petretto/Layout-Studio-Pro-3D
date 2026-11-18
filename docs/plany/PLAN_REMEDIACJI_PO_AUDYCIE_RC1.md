@@ -94,7 +94,7 @@ Statusy poniżej są źródłem dla osobnego `progress-dashboard`. Zmiana status
 | 1 | P0 — ochrona danych i DR | wdrożone | — | Lokalnie 2026-11-03: 24/24 focused, 507/507 pełne, UI 17/17, build i DR PASS; niezależny przegląd kontraktu do odbioru G1 |
 | 2 | PT — przywrócenie wiarygodnych testów | w trakcie | P0 | Na czystym SHA 766210c: 16/16 skryptów, 7/7 testów pomocniczych i 4/4 prób negatywnych. Nadal wymagany niezależny odbiór. [Dowody](../weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md) |
 | 3 | P1 — odbiór kontraktów integracji | nierozpoczęte | P0, PT | Rozstrzyga trwałość, właścicieli i migrację przed zmianą zapisu |
-| 4 | P4b — zamknięcie publicznych powierzchni Eko | w trakcie | — | Lokalny katalog i assety builda ograniczono do 01–03; pozostaje przegląd repozytorium, historii i wdrożeń oraz niezależny odbiór. [Weryfikacja](../weryfikacja/WERYFIKACJA_P4B_EKO_DYSTRYBUCJA.md) |
+| 4 | P4b — zamknięcie publicznych powierzchni Eko | w trakcie | — | Na produkcji hotfix 1805f25, katalog 01–03 i dwa HTTP 404 dla plików Eko. Otwarte są publiczne repozytorium, historia, starsze wdrożenia i niezależny odbiór. [Weryfikacja](../weryfikacja/WERYFIKACJA_P4B_EKO_DYSTRYBUCJA.md) |
 | 5 | P4a — web, telemetria i zależności | w trakcie | — | Lokalnie sprawdzono build, sieć, licencje i przejście A→B→A. Otwarty odbiór hostingu i przegląd prywatności/licencji. [Dowody](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md) |
 | 6 | P2a — koperta, magazyn i migracje | nierozpoczęte | P0, PT, P1, P4a | Po G2; fundament wspólnej tożsamości, backupu i transakcji |
 | 7 | P2b — edytory, bilans i layout | nierozpoczęte | P2a | Wszyscy edytowalni konsumenci kierują zmiany do właściwego właściciela |
@@ -334,4 +334,4 @@ Sprawdzono lokalnie aktualizację i powrót na tym samym adresie, konflikt dwóc
 
 ## Scalenie do main — 18 listopada 2026
 
-Sam hotfix Eko `1805f25` można scalić po osobnej zgodzie na aktualizację main i sprawdzeniu automatycznego wdrażania. Pełna remediacja może trafić do main po odbiorze RC2. [Warunki scalenia i odbioru](PLAN_SCALENIA_MAIN_I_ODBIORU_V1.md).
+Po zgodzie właściciela GitHub `origin/main` przesunięto na `1805f257fa71c12cc516d0b614a8be0d8e1afd9a`. RC1 wskazuje `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`. Vercel Production jest aktywne dla `1805f25`. Indeks i sześć publicznych plików 01–03 przeszły kontrolę, oba historyczne adresy Eko zwróciły HTTP 404. Następnym krokiem odbioru pełnej remediacji jest niezależna kontrola P0/PT w G1. Pełna remediacja może trafić do main po odbiorze RC2. [Warunki scalenia i odbioru](PLAN_SCALENIA_MAIN_I_ODBIORU_V1.md).

@@ -15,6 +15,7 @@ Główny rejestr statusu pozostaje w [PLAN_ROZWOJU.md](../PLAN_ROZWOJU.md). Zasa
 Pozostałe materiały:
 
 - [Weryfikacja P4b — dystrybucja Eko](weryfikacja/WERYFIKACJA_P4B_EKO_DYSTRYBUCJA.md) — lokalny katalog, assety i pozostałe powierzchnie ekspozycji.
+- [Weryfikacja hotfixu katalogu Eko](weryfikacja/WERYFIKACJA_HOTFIX_EKO.md) — izolowany zakres, lokalne testy i granice odbioru.
 
 - [Weryfikacja PT — testy E2E](weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md) — mapa skryptów, rzeczywiste próby UI i zadania do niezależnej kontroli Sol.
 
