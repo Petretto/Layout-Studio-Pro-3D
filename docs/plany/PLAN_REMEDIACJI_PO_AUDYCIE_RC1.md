@@ -81,7 +81,7 @@ Statusy poniżej są źródłem dla osobnego `progress-dashboard`. Zmiana status
 | Bramka | Warunek | Status | Dowód |
 |---|---|---|---|
 | G0 | Zatwierdzenie planu remediacji przez właściciela | zamknięta | 2026-11-02: właściciel polecił działać zgodnie z planem; G2 pozostaje osobnym odbiorem architektury |
-| G1 | Ochrona danych P0 i wykonywalne testy PT odebrane | otwarta | P0 lokalnie wdrożone i sprawdzone; PT oraz niezależny odbiór kontraktu odzyskiwania pozostają otwarte |
+| G1 | Ochrona danych P0 i wykonywalne testy PT odebrane | otwarta | Czysty SHA 766210c: 17/17 P0 w UI, 16/16 PT, cztery próby negatywne i DR PASS. Otwarte niezależne sprawdzenie kontraktu i adekwatności testów |
 | G2 | Właściciel zatwierdził projekt P1 po niezależnym przeglądzie | otwarta | Architektura C jest rekomendacją do zatwierdzenia |
 | G3 | Migracje, integracja, wspólny raport oraz UI3/UI4/X3 odebrane | otwarta | Pakiety P2a–d/P3 nierozpoczęte |
 | G4 | Ukończone zmiany i pełna weryfikacja kandydata przed RC2 | otwarta | Nie utworzono RC2; brak nowego pełnego baseline |
@@ -92,7 +92,7 @@ Statusy poniżej są źródłem dla osobnego `progress-dashboard`. Zmiana status
 | Kolejność | Pakiet | Status | Zależności | Warunek i uzasadnienie |
 |---|---|---|---|---|
 | 1 | P0 — ochrona danych i DR | wdrożone | — | Lokalnie 2026-11-03: 24/24 focused, 507/507 pełne, UI 17/17, build i DR PASS; niezależny przegląd kontraktu do odbioru G1 |
-| 2 | PT — przywrócenie wiarygodnych testów | w trakcie | P0 | 16 skryptów wykonano lokalnie. Sol sprawdził wzorce R01–R05/R09, w tym fizyczne porównania w Edge. Otwarte pozostają helpery, uzupełnienie T08 i niezależny odbiór |
+| 2 | PT — przywrócenie wiarygodnych testów | w trakcie | P0 | Na czystym SHA 766210c: 16/16 skryptów, 7/7 testów pomocniczych i 4/4 prób negatywnych. Nadal wymagany niezależny odbiór. [Dowody](../weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md) |
 | 3 | P1 — odbiór kontraktów integracji | nierozpoczęte | P0, PT | Rozstrzyga trwałość, właścicieli i migrację przed zmianą zapisu |
 | 4 | P4b — zamknięcie publicznych powierzchni Eko | w trakcie | — | Lokalny katalog i assety builda ograniczono do 01–03; pozostaje przegląd repozytorium, historii i wdrożeń oraz niezależny odbiór. [Weryfikacja](../weryfikacja/WERYFIKACJA_P4B_EKO_DYSTRYBUCJA.md) |
 | 5 | P4a — web, telemetria i zależności | w trakcie | — | Lokalnie sprawdzono build, sieć, licencje i przejście A→B→A. Otwarty odbiór hostingu i przegląd prywatności/licencji. [Dowody](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md) |
@@ -331,3 +331,7 @@ Zidentyfikowano sześć pakietów JavaScript i Tailwind CSS w lokalnym buildzie 
 ## P4a.7 — 18 listopada 2026
 
 Sprawdzono lokalnie aktualizację i powrót na tym samym adresie, konflikt dwóch kart, kopię starszego zapisu oraz zachowanie przy niedostępnej pamięci i pliku widoku 3D. Przygotowano reguły CSP i cache oraz projekt informacji o danych dla V1. Test transmisji objął także import, symulację i pobranie raportu z danymi syntetycznymi. [Raport](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md). P4a pozostaje otwarte do odbioru docelowego hostingu i przeglądu zewnętrznego. G2 dla architektury integracji 4/6 pozostaje osobnym krokiem zatwierdzenia.
+
+## Scalenie do main — 18 listopada 2026
+
+Sam hotfix Eko `1805f25` można scalić po osobnej zgodzie na aktualizację main i sprawdzeniu automatycznego wdrażania. Pełna remediacja może trafić do main po odbiorze RC2. [Warunki scalenia i odbioru](PLAN_SCALENIA_MAIN_I_ODBIORU_V1.md).

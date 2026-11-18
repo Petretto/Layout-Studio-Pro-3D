@@ -95,3 +95,7 @@ Metoda: tożsamość SHA i całego drzewa potwierdza brak późniejszych zmian, 
 Gdy kolejny fetch ujawni nowszy main, nie wolno kopiować tej tabeli jako potwierdzenia nowej wersji. Wskazać zmienione ścieżki, powtórzyć odpowiednie odczyty/testy i podać commit każdej faktycznej poprawki; brak dowodu oznacza ponowną weryfikację, nie automatyczne zamknięcie ustalenia.
 
 Stan P4a.1 — 2026-11-10: Vite 7.3.8 i wstępna weryfikacja lokalna; BL-02 pozostaje otwarte do odbioru pełnej bazy web, S-13 oraz pozostały P4a bez zmian. Szczegóły: [raport](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md).
+
+## Aktualizacja dowodów BL-01, BL-03, S-02 i S-04 — 18 listopada 2026
+
+Na czystym snapshotcie remediacji 766210c wykonano lokalny DR, 17 prób ochrony danych w Edge, pełen zestaw 16 skryptów PT i cztery kontrolowane przypadki negatywne pilota. Wyniki i granice zawiera [raport PT](../weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md). Niezależny odbiór G1, odbiór pilota przez człowieka i nowy RC pozostają otwarte. Statusy historycznego RC1 zachowano w powyższej macierzy.

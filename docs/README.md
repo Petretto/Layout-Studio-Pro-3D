@@ -55,3 +55,4 @@ Po dodaniu dokumentacji lub zmianie jej ścieżek uruchom `node scripts/verify_d
 
 - [Weryfikacja P4a.1 — Vite i web](weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md) — aktualizacja zależności oraz otwarte kwestie web i prywatności.
 - [Informacja o danych web V1](produkt/INFORMACJA_O_DANYCH_WEB_V1.md) — projekt informacji dla użytkownika i zakres weryfikacji przed publikacją.
+- [Scalenie do main i odbiór V1](plany/PLAN_SCALENIA_MAIN_I_ODBIORU_V1.md) — dowody dla hotfixu Eko, warunki scalenia pełnej remediacji i materiał do odbioru G1.

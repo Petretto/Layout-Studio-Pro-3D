@@ -1,5 +1,17 @@
 # PT — status testów E2E i kontrola wzorców
 
+## Powtórzenie P0/PT na czystym SHA — 18 listopada 2026
+
+Źródło to archiwum śledzonych plików z `766210c3de2d423fba40657a48dae4772c84a5f9`. Windows, Node 24.14.0, npm 11.12.0 i izolowany Edge 157.0.4341.60. `npm ci --ignore-scripts --no-audit --no-fund` i build przeszły. SHA-256 `dist/index.html`: `58677e9ffca2d7c3aa468fe43f36814a84da8c9eed5daf6d2b843a339f913d06`. SHA-256 lockfile: `6b976d97b53e44208078bd7c9e37e253db3ad01da0deadda44e724559f8f4cdf`.
+
+- **T07:** 16/16 skryptów z mapy PT zakończyło się kodem 0 na tym samym buildzie. Obejmuje to wewnętrzną próbę Eko i automatycznego pilota. Testy pomocnicze PT 7/7 PASS.
+- **T08:** automatyczny pilot przeszedł na syntetycznych projektach. Cztery kontrolowane przypadki błędne zostały odrzucone z oczekiwaną przyczyną: brak wyniku, błędna liczba, ukryty wiersz porównania i brak szkicu po ponownym imporcie.
+- **P0:** 17/17 scenariuszy ochrony danych w UI, w tym konflikt dwóch kart, niedostępne miejsce na kopię i weryfikacja rzeczywistego pobrania. `verify:clean` potwierdził lokalny start i odtworzenie kopii z zachowaniem sumy i tożsamości. Test lokalnego katalogu oraz kontrola generatora `--check` przeszły.
+
+Surowe dowody są pod `outputs/qa/pt_candidate_0fc7f053/`. `result.json` wskazuje wszystkie 17 procesów (16 skryptów i osobny test negatywny), `additional-results.json` wskazuje dodatkowe kontrole, a pliki logów pozwalają odtworzyć wynik każdej próby. Snapshot to roboczy kandydat do lokalnej weryfikacji. Niezależny odbiór P0/PT, pilot z człowiekiem oraz odbiór RC2 pozostają otwarte. [Warunki scalenia i materiał dla audytora](../plany/PLAN_SCALENIA_MAIN_I_ODBIORU_V1.md).
+
+## Wcześniejsze wykonania
+
 Data aktualizacji: 2026-11-07. Status: **w trakcie**. Gałąź `codex/v1-pt-e2e`, baza `744b7a5837ec9a51c91d42d5c3810e167a912dc6` (P0); pobrany przed rozpoczęciem i ponownie 2026-11-07 `origin/main` oraz RC1: `6aa84d8129b7f7cc4d92c3c00b4d8a99a255d3eb`. Dalsza praca wymaga ponownego fetch i oceny zmian main przed kolejnym pakietem.
 
 ## Wykonane prace

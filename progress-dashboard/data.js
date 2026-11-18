@@ -7,7 +7,7 @@ window.PLAN_DATA = {
     "baseVersion": "Layout Studio Pro 3D 0.4.0",
     "hostingUrl": "https://layout-studio-pro-3d.vercel.app/",
     "repoUrl": "https://github.com/Petretto/Layout-Studio-Pro-3D",
-    "extractedAt": "2026-11-18T16:46:22.143Z"
+    "extractedAt": "2026-11-18T17:01:19.233Z"
   },
   "overall": {
     "total": 72,
@@ -3236,7 +3236,7 @@ window.PLAN_DATA = {
         "dependencies": [
           "P0"
         ],
-        "condition": "16 skryptów wykonano lokalnie. Sol sprawdził wzorce R01–R05/R09, w tym fizyczne porównania w Edge. Otwarte pozostają helpery, uzupełnienie T08 i niezależny odbiór",
+        "condition": "Na czystym SHA 766210c: 16/16 skryptów, 7/7 testów pomocniczych i 4/4 prób negatywnych. Nadal wymagany niezależny odbiór. [Dowody](../weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md)",
         "analysis": "Terra",
         "implementation": "Terra / Luna mechaniczne selektory",
         "verification": "Terra; Sol referencje"
@@ -3423,7 +3423,7 @@ window.PLAN_DATA = {
         "id": "G1",
         "condition": "Ochrona danych P0 i wykonywalne testy PT odebrane",
         "status": "otwarta",
-        "evidence": "P0 lokalnie wdrożone i sprawdzone; PT oraz niezależny odbiór kontraktu odzyskiwania pozostają otwarte"
+        "evidence": "Czysty SHA 766210c: 17/17 P0 w UI, 16/16 PT, cztery próby negatywne i DR PASS. Otwarte niezależne sprawdzenie kontraktu i adekwatności testów"
       },
       {
         "id": "G2",
@@ -3700,7 +3700,7 @@ window.PLAN_DATA = {
       "dependencies": [
         "P0"
       ],
-      "condition": "16 skryptów wykonano lokalnie. Sol sprawdził wzorce R01–R05/R09, w tym fizyczne porównania w Edge. Otwarte pozostają helpery, uzupełnienie T08 i niezależny odbiór",
+      "condition": "Na czystym SHA 766210c: 16/16 skryptów, 7/7 testów pomocniczych i 4/4 prób negatywnych. Nadal wymagany niezależny odbiór. [Dowody](../weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md)",
       "analysis": "Terra",
       "implementation": "Terra / Luna mechaniczne selektory",
       "verification": "Terra; Sol referencje"
@@ -3717,7 +3717,7 @@ window.PLAN_DATA = {
       "key": "plan",
       "path": "docs/plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md",
       "available": true,
-      "modified": "2026-11-18T16:46:10.378Z"
+      "modified": "2026-11-18T17:01:14.489Z"
     },
     {
       "key": "architecture",
@@ -3735,7 +3735,7 @@ window.PLAN_DATA = {
       "key": "matrix",
       "path": "docs/plany/MACIERZ_AUDYT_REMEDIACJA.md",
       "available": true,
-      "modified": "2026-11-10T21:45:50.023Z"
+      "modified": "2026-11-18T17:01:19.167Z"
     },
     {
       "key": "tests",
@@ -3744,5 +3744,5 @@ window.PLAN_DATA = {
       "modified": "2026-11-10T21:43:21.762Z"
     }
   ],
-  "signature": "ab78aaac98cdfc30d57e725aafe4aa7f7a80480381bc7fc1eda6c52784c990b6"
+  "signature": "38bffeb20d523658f589a37f9382f0693622ac3558c49db60c6bfabbcb73ca64"
 };
