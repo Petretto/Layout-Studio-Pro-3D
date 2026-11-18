@@ -1,4 +1,5 @@
 import {strict as assert} from 'node:assert';
+import {readFileSync} from 'node:fs';
 import {withBrowser,sleep} from './browserHarness.mjs';
 
 const sentinel='SENTINEL_P4A_PROJECT_7359';
@@ -22,6 +23,31 @@ await withBrowser(async ({send,evaluate,until,click,errors})=>{
   await evaluate(`(()=>{const b=[...document.querySelectorAll('[role="menuitem"]')].find(e=>e.textContent.trim()==='Kopie i odzyskiwanie');if(!b)throw Error('Brak kopii');b.click()})()`);
   await until(`!!document.querySelector('[aria-label="Kopie i odzyskiwanie środowiska"]')`);
   assert.equal(await evaluate(`document.querySelector('[aria-label="Kopie i odzyskiwanie środowiska"]').textContent.includes('hosting może rejestrować dane techniczne')`),true);
+  const licenseLink='[aria-label="Kopie i odzyskiwanie środowiska"] a[href="/third-party-licenses/index.html"]';
+  const licenseUrl=await evaluate(`document.querySelector(${JSON.stringify(licenseLink)}).href`);
+  await click(licenseLink);
+  let licenseTarget;
+  for(let attempt=0;attempt<40;attempt++){
+    const targets=await send('Target.getTargets');
+    licenseTarget=targets.targetInfos.find(t=>t.type==='page'&&t.url===licenseUrl);
+    if(licenseTarget)break;
+    await sleep(100);
+  }
+  assert.ok(licenseTarget,'Kliknięcie nie otworzyło strony licencji');
+  const index=await fetch(licenseUrl);
+  assert.equal(index.status,200);
+  assert.match(index.headers.get('content-type'),/^text\/html/);
+  const indexText=await index.text();
+  const manifest=JSON.parse(readFileSync('dist/third-party-licenses/manifest.json','utf8'));
+  for(const {name,file} of manifest){
+    const path='/third-party-licenses/'+file;
+    assert.ok(indexText.includes(`href="${path}"`),`Brak linku dla ${name}`);
+    const response=await fetch(new URL(path,licenseUrl));
+    assert.equal(response.status,200);
+    assert.match(response.headers.get('content-type'),/^text\/plain/);
+    assert.deepEqual(Buffer.from(await response.arrayBuffer()),readFileSync('node_modules/'+name+'/LICENSE'));
+  }
+  await send('Target.closeTarget',{targetId:licenseTarget.targetId});
   await sleep(1500);
   for(const request of requests){
     if(request.hasPostData&&!request.postData){

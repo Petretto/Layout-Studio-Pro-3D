@@ -399,6 +399,7 @@ export const WorkspaceBackupModal: React.FC<WorkspaceBackupModalProps> = ({
               Wersja webowa pobiera pliki aplikacji i przykłady z serwera; hosting może rejestrować dane techniczne
               żądań. Przed wyczyszczeniem pamięci witryny pobierz kopię projektu.
             </p>
+            <p><a href={`${import.meta.env.BASE_URL}third-party-licenses/index.html`} target="_blank" rel="noopener noreferrer">Licencje bibliotek użytych w aplikacji</a></p>
             <p className="leading-relaxed">
               <strong>Środowisko lokalne / produkcyjne:</strong>{' '}
               {isLocalhost ? (

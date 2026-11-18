@@ -323,3 +323,7 @@ Inwentarz rozdziela zależności runtime/build i nie ogłasza odbioru prawnego. 
 ## P4a.5 — 16 listopada 2026
 
 Dodano powtarzalne sprawdzenie zgodnego z lockfile archiwum i sześciu dołączonych składników. Dwa nie zawierają osobnego pliku licencji w swoich katalogach; inwentarz zachowuje je jako otwarte uwagi. Ocena notice i obowiązków licencyjnych pozostaje do wykonania. [Raport](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md).
+
+## P4a.6 — 18 listopada 2026
+
+Zidentyfikowano sześć pakietów JavaScript i Tailwind CSS w lokalnym buildzie webowym. Strona licencji udostępnia siedem tekstów i przeszła lokalny test Edge. Ustalenia dotyczące innych materiałów i ocena licencyjna pozostają otwarte. [Raport](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md).

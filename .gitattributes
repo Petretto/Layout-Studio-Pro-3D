@@ -8,3 +8,5 @@ przyklady/03_modul_urzadzenia/dane/*.xlsx -text
 przyklady/04_eko/** text eol=lf
 przyklady/04_eko/dane/*.xlsx -text
 tests/fixtures/ekoDemoSource4.json text eol=lf
+# Preserve the upstream license texts byte for byte.
+public/third-party-licenses/*.txt -text
