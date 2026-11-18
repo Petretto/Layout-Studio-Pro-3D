@@ -7,7 +7,7 @@ window.PLAN_DATA = {
     "baseVersion": "Layout Studio Pro 3D 0.4.0",
     "hostingUrl": "https://layout-studio-pro-3d.vercel.app/",
     "repoUrl": "https://github.com/Petretto/Layout-Studio-Pro-3D",
-    "extractedAt": "2026-11-18T17:16:57.798Z"
+    "extractedAt": "2026-11-18T17:19:26.372Z"
   },
   "overall": {
     "total": 72,
@@ -3598,8 +3598,8 @@ window.PLAN_DATA = {
       {
         "id": "S-14",
         "label": "S-14 / średnia",
-        "status": "Potwierdzone i wymaga poprawki dla publikacji; prawa do danych wymagają dodatkowego testu/weryfikacji dokumentów",
-        "evidence": "Eko w katalogu i generatorze; lokalne public JSON/ZIP potwierdzone. A-04 zakazuje publicznego demo do potwierdzenia praw. Nie zweryfikowano starego hostingu/archiwów/historii i kopii osób trzecich",
+        "status": "Potwierdzone i wymaga poprawki dla pozostałych powierzchni publikacji; prawa do danych wymagają dodatkowego testu/weryfikacji dokumentów",
+        "evidence": "RC1 udostępniał Eko. Na aktywnym Vercel po 1805f25 indeks zawiera 01–03, sześć plików zgodnych z sumami i dwa dawne adresy Eko zwracające HTTP 404. A-04 obowiązuje do potwierdzenia praw. Do rozstrzygnięcia publiczny Git, historia, archiwa, starsze deploymenty i kopie osób trzecich",
         "packages": "P4b/P5",
         "test": "T21/T22 + rejestr praw/ekspozycji",
         "closure": "Brak Eko w nowych public assetach i indeksie, stare URL zinwentaryzowane/rozstrzygnięte, regresja wewnętrzna zachowana; osobna decyzja o publicznym Git, bez przepisywania historii"
@@ -3735,7 +3735,7 @@ window.PLAN_DATA = {
       "key": "matrix",
       "path": "docs/plany/MACIERZ_AUDYT_REMEDIACJA.md",
       "available": true,
-      "modified": "2026-11-18T17:01:19.167Z"
+      "modified": "2026-11-18T17:19:15.431Z"
     },
     {
       "key": "tests",
@@ -3744,5 +3744,5 @@ window.PLAN_DATA = {
       "modified": "2026-11-10T21:43:21.762Z"
     }
   ],
-  "signature": "da308edd00718f110065c79d1b5e0bef901f6ef091716c709c50ecead08b3fe1"
+  "signature": "57ab7b2f6ec49b9405f5c933f4fb944120ad4167d2282e9f26ee88372333c75d"
 };
