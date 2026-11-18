@@ -4,7 +4,8 @@ import {domainModelSignature,domainPlaybackFrame,type DomainPlayback} from '../.
 import {SIMULATION_SPEEDS,stepSimulationTime} from '../../core/algorithms/simulation';
 import {domainPhysicalPlaybackFrame,type DomainPhysicalPlayback} from '../../core/domainPhysicalPlayback';
 import {prepareDomainPhysicalScene,domainPhysicalSceneFrame} from '../../core/domainPhysicalScene';
-const View3D=lazy(()=>import('./DomainPlayback3D').then(m=>({default:m.DomainPlayback3D})));
+import {Unavailable3DView} from './Unavailable3DView';
+const View3D=lazy(()=>import('./DomainPlayback3D').then(m=>({default:m.DomainPlayback3D}),()=>({default:Unavailable3DView})));
 const labels={work:'Praca', 'calendar-pause':'Przerwa kalendarza',held:'Zajęcie stanowiska po obróbce',waiting:'Oczekiwanie na start'};
 
 export function DomainSchedulePlayback({project,playback,physicalPlayback,physicalError=''}:{project:DomainProjectV6;playback:DomainPlayback|null;physicalPlayback:DomainPhysicalPlayback|null;physicalError?:string}){

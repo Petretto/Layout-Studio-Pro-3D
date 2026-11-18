@@ -111,9 +111,9 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
 /**
  * Odczytuje stan tutorialu z localStorage.
  */
-export function loadTutorialProgress(storage: Storage = localStorage): TutorialProgress {
+export function loadTutorialProgress(storage?: Storage): TutorialProgress {
   try {
-    const raw = storage.getItem(TUTORIAL_STORAGE_KEY);
+    const raw = (storage ?? localStorage).getItem(TUTORIAL_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && parsed.version === TUTORIAL_VERSION && typeof parsed.currentStepIndex === 'number') {
@@ -143,9 +143,9 @@ export function loadTutorialProgress(storage: Storage = localStorage): TutorialP
 /**
  * Zapisuje stan tutorialu w localStorage.
  */
-export function saveTutorialProgress(progress: TutorialProgress, storage: Storage = localStorage): void {
+export function saveTutorialProgress(progress: TutorialProgress, storage?: Storage): void {
   try {
-    storage.setItem(TUTORIAL_STORAGE_KEY, JSON.stringify({
+    (storage ?? localStorage).setItem(TUTORIAL_STORAGE_KEY, JSON.stringify({
       ...progress,
       savedAt: new Date().toISOString()
     }));
@@ -157,9 +157,9 @@ export function saveTutorialProgress(progress: TutorialProgress, storage: Storag
 /**
  * Czyści zapisany stan tutorialu.
  */
-export function clearTutorialProgress(storage: Storage = localStorage): void {
+export function clearTutorialProgress(storage?: Storage): void {
   try {
-    storage.removeItem(TUTORIAL_STORAGE_KEY);
+    (storage ?? localStorage).removeItem(TUTORIAL_STORAGE_KEY);
   } catch {
     // Ignoruj
   }

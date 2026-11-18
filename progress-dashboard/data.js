@@ -7,7 +7,7 @@ window.PLAN_DATA = {
     "baseVersion": "Layout Studio Pro 3D 0.4.0",
     "hostingUrl": "https://layout-studio-pro-3d.vercel.app/",
     "repoUrl": "https://github.com/Petretto/Layout-Studio-Pro-3D",
-    "extractedAt": "2026-11-18T16:34:53.448Z"
+    "extractedAt": "2026-11-18T16:46:22.143Z"
   },
   "overall": {
     "total": 72,
@@ -3272,7 +3272,7 @@ window.PLAN_DATA = {
         "name": "web, telemetria i zależności",
         "status": "w trakcie",
         "dependencies": [],
-        "condition": "Po G0; ustala środowisko i bezpieczną bazę builda",
+        "condition": "Lokalnie sprawdzono build, sieć, licencje i przejście A→B→A. Otwarty odbiór hostingu i przegląd prywatności/licencji. [Dowody](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md)",
         "analysis": "Terra; Sol aktualizacje danych",
         "implementation": "Terra",
         "verification": "Terra + Sol recovery; Opus przegląd"
@@ -3717,7 +3717,7 @@ window.PLAN_DATA = {
       "key": "plan",
       "path": "docs/plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md",
       "available": true,
-      "modified": "2026-11-18T16:34:52.727Z"
+      "modified": "2026-11-18T16:46:10.378Z"
     },
     {
       "key": "architecture",
@@ -3744,5 +3744,5 @@ window.PLAN_DATA = {
       "modified": "2026-11-10T21:43:21.762Z"
     }
   ],
-  "signature": "42bbb8def6ef186b1f127ff78d771a7b9d3588971eefb86560244d63e1b08946"
+  "signature": "ab78aaac98cdfc30d57e725aafe4aa7f7a80480381bc7fc1eda6c52784c990b6"
 };

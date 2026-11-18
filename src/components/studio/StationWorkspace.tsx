@@ -18,7 +18,8 @@ import {StationGeometryEditor} from './StationGeometryEditor';
 import {Simulation} from './Simulation';
 import {DomainDraftPanel} from './DomainDraftPanel';
 
-const Scene = lazy(() => import('./Scene').then(module => ({default: module.Scene})));
+import {Unavailable3DView} from './Unavailable3DView';
+const Scene = lazy(() => import('./Scene').then(module => ({default: module.Scene}), () => ({default:Unavailable3DView})));
 
 const STORAGE = 'layout-studio-stations-v5';
 type Saved = {project: StationProjectV5; originalJson: string; importSourceBase64?: string; at: string};

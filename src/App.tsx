@@ -34,7 +34,8 @@ import { EngineeringReportView } from './components/report/EngineeringReportView
 import { TutorialOverlay } from './components/tutorial/TutorialOverlay';
 import { loadTutorialProgress, saveTutorialProgress, type TutorialProgress } from './core/tutorial';
 import { type WorkspaceBackupPayload } from './core/workspaceBackup';
-const Scene=lazy(()=>import('./components/studio/Scene').then(m=>({default:m.Scene})));
+import {Unavailable3DView} from './components/studio/Unavailable3DView';
+const Scene=lazy(()=>import('./components/studio/Scene').then(m=>({default:m.Scene}),()=>({default:Unavailable3DView})));
 const KEY='layout-studio-v3',LIBRARY='layout-studio-scenarios-v3';
 type Saved={id:string;name:string;at:string;project:ProjectData};
 type HistoryEntry={project:ProjectData; importSourceBase64:string};
