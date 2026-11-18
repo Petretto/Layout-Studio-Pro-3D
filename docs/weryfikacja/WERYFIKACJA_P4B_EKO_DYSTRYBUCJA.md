@@ -30,6 +30,16 @@ Stan na 9 listopada 2026. Gałąź `codex/v1-p4b-eko` oparto na `c2b2d0467c55065
 
 Potrzebny jest zewnętrzny przegląd kompletności ekspozycji, inwentaryzacja aktualnego publicznego repozytorium i historycznych dystrybucji oraz decyzja co do praw i retencji. Na nowym kandydacie należy powtórzyć skan wynikowego artefaktu i test HTTP z kontrolą treści, typu oraz odpowiedzi SPA. Weryfikacja docelowego hostingu nastąpi po osobnej zgodzie na deployment.
 
+## Kontrola dystrybucji i historii Git — 18 listopada 2026
+
+W lokalnym buildzie `81e51f5` o tych samych plikach produktu i konfiguracji co `d3242ba`, generator `--check`, HTTP 01–03 z weryfikacją sum plików oraz dwoma 404 i Edge ze starym indeksem zawierającym Eko zakończyły się pomyślnie. Próby dotyczą lokalnego artefaktu i katalogu.
+
+GitHub potwierdził publiczną widoczność repozytorium. Pierwsza strona publicznych list Releases i Forks była pusta (HTTP 200). Zdalny odczyt tagów był pusty. To odczyt publicznych list w chwili kontroli. Dostępność historycznych wdrożeń, archiwów i kopii pozostaje otwarta.
+
+Metadane drzewa `origin/main` zawierają 59 ścieżek z wyraźnym oznaczeniem Eko. W tej liczbie jest 27 ścieżek w przykładowych danych i testach, osiem w dokumentacji lub instrukcji i 24 w pozostałych miejscach. Ten pomiar dotyczy nazw plików i katalogów. W `public/` takich nazw nie ma w śledzonej zawartości, a gotowy katalog publiczny sprawdzono osobno. Zweryfikowany historyczny commit źródłowy pozostaje osiągalny z `main`, zamrożonego RC1, `codex/model-process-2-1` i `codex/v1-p4a-web`. [Metadane publicznego repozytorium](https://github.com/Petretto/Layout-Studio-Pro-3D).
+
+Do odbioru T22 trzeba zestawić obecny alias, starsze wdrożenia i potencjalne archiwa z rejestrem retencji. Dla każdej powierzchni zapisać widoczność lub HTTP status i typ oraz przypisać decyzję właściciela. Ochrona wewnętrznej regresji pozostaje warunkiem przed jakąkolwiek zmianą danych. P4b pozostaje w trakcie.
+
 ## Sprawdzenie aktualnej ekspozycji — 9 listopada
 
 Odczyt `https://layout-studio-pro-3d.vercel.app` o 21:40 UTC wykazał, że indeks produkcyjny nadal zawiera `04_eko`. Adresy `/demo-projects/04_eko.project.json` i `/demo-projects/04_eko.zip` zwróciły HTTP 200, odpowiednio typ JSON i ZIP. Sumy SHA-256 obu odpowiedzi są identyczne z kopiami poprzednich wygenerowanych assetów. Wynik metadanych, bez zapisania pobranych danych, znajduje się w `outputs/qa/p4b/host_exposure.json`. Lokalna gałąź P4b nie została wdrożona; ten wynik dotyczy zastanego wdrożenia, a nie lokalnego builda.

@@ -94,8 +94,8 @@ Statusy poniżej są źródłem dla osobnego `progress-dashboard`. Zmiana status
 | 1 | P0 — ochrona danych i DR | wdrożone | — | Lokalnie 2026-11-03: 24/24 focused, 507/507 pełne, UI 17/17, build i DR PASS; niezależny przegląd kontraktu do odbioru G1 |
 | 2 | PT — przywrócenie wiarygodnych testów | w trakcie | P0 | 16/16 skryptów na 766210c. Po poprawce harnessu 23d2397 przeszły 7.12.D, dwa pełne przebiegi pilota i cztery próby negatywne. Niezależny odbiór dotyczy 23d2397. [Dowody](../weryfikacja/WERYFIKACJA_PT_TESTY_E2E.md) |
 | 3 | P1 — odbiór kontraktów integracji | nierozpoczęte | P0, PT | Rozstrzyga trwałość, właścicieli i migrację przed zmianą zapisu |
-| 4 | P4b — zamknięcie publicznych powierzchni Eko | w trakcie | — | Na produkcji hotfix 1805f25, katalog 01–03 i dwa HTTP 404 dla plików Eko. Otwarte są publiczne repozytorium, historia, starsze wdrożenia i niezależny odbiór. [Weryfikacja](../weryfikacja/WERYFIKACJA_P4B_EKO_DYSTRYBUCJA.md) |
-| 5 | P4a — web, telemetria i zależności | w trakcie | — | Lokalnie sprawdzono build, sieć, licencje i przejście A→B→A. Otwarty odbiór hostingu i przegląd prywatności/licencji. [Dowody](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md) |
+| 4 | P4b — zamknięcie publicznych powierzchni Eko | w trakcie | — | Produkcja 1805f25, katalog 01–03. Powtórzono lokalne HTTP i Edge oraz potwierdzono osiągalność Eko w publicznej historii Git. Otwarte starsze wdrożenia i decyzja o retencji. [Weryfikacja](../weryfikacja/WERYFIKACJA_P4B_EKO_DYSTRYBUCJA.md) |
+| 5 | P4a — web, telemetria i zależności | w trakcie | — | Na d3242ba pełny i runtime npm audit po 0 zgłoszeń. Powtórzono kontrolę sieci i inwentarz lokalnego builda. Przygotowano kolejność prób na docelowym hostingu. [Dowody](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md) |
 | 6 | P2a — koperta, magazyn i migracje | nierozpoczęte | P0, PT, P1, P4a | Po G2; fundament wspólnej tożsamości, backupu i transakcji |
 | 7 | P2b — edytory, bilans i layout | nierozpoczęte | P2a | Wszyscy edytowalni konsumenci kierują zmiany do właściwego właściciela |
 | 8 | P2c — wyniki, silniki i warianty | nierozpoczęte | P2a, P2b | Bez przepisywania reguł fizycznych |

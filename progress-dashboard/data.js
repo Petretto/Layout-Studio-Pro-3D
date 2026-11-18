@@ -7,7 +7,7 @@ window.PLAN_DATA = {
     "baseVersion": "Layout Studio Pro 3D 0.4.0",
     "hostingUrl": "https://layout-studio-pro-3d.vercel.app/",
     "repoUrl": "https://github.com/Petretto/Layout-Studio-Pro-3D",
-    "extractedAt": "2026-11-18T17:35:45.399Z"
+    "extractedAt": "2026-11-18T22:57:19.653Z"
   },
   "overall": {
     "total": 72,
@@ -3261,7 +3261,7 @@ window.PLAN_DATA = {
         "name": "zamknięcie publicznych powierzchni Eko",
         "status": "w trakcie",
         "dependencies": [],
-        "condition": "Na produkcji hotfix 1805f25, katalog 01–03 i dwa HTTP 404 dla plików Eko. Otwarte są publiczne repozytorium, historia, starsze wdrożenia i niezależny odbiór. [Weryfikacja](../weryfikacja/WERYFIKACJA_P4B_EKO_DYSTRYBUCJA.md)",
+        "condition": "Produkcja 1805f25, katalog 01–03. Powtórzono lokalne HTTP i Edge oraz potwierdzono osiągalność Eko w publicznej historii Git. Otwarte starsze wdrożenia i decyzja o retencji. [Weryfikacja](../weryfikacja/WERYFIKACJA_P4B_EKO_DYSTRYBUCJA.md)",
         "analysis": "Terra",
         "implementation": "Terra / Luna katalog",
         "verification": "Terra + Opus powierzchnie"
@@ -3272,7 +3272,7 @@ window.PLAN_DATA = {
         "name": "web, telemetria i zależności",
         "status": "w trakcie",
         "dependencies": [],
-        "condition": "Lokalnie sprawdzono build, sieć, licencje i przejście A→B→A. Otwarty odbiór hostingu i przegląd prywatności/licencji. [Dowody](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md)",
+        "condition": "Na d3242ba pełny i runtime npm audit po 0 zgłoszeń. Powtórzono kontrolę sieci i inwentarz lokalnego builda. Przygotowano kolejność prób na docelowym hostingu. [Dowody](../weryfikacja/WERYFIKACJA_P4A_WEB_VITE.md)",
         "analysis": "Terra; Sol aktualizacje danych",
         "implementation": "Terra",
         "verification": "Terra + Sol recovery; Opus przegląd"
@@ -3717,7 +3717,7 @@ window.PLAN_DATA = {
       "key": "plan",
       "path": "docs/plany/PLAN_REMEDIACJI_PO_AUDYCIE_RC1.md",
       "available": true,
-      "modified": "2026-11-18T17:35:14.651Z"
+      "modified": "2026-11-18T22:57:12.515Z"
     },
     {
       "key": "architecture",
@@ -3744,5 +3744,5 @@ window.PLAN_DATA = {
       "modified": "2026-11-10T21:43:21.762Z"
     }
   ],
-  "signature": "62d89f5f939a4f63468bc2eb87179dc7acabaf199c84fe0bb7377bcf700cc85d"
+  "signature": "94040e041bfa052421d281fbbee89e236150e737ae5007b347f3d348bba58345"
 };
